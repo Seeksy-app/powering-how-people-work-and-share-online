@@ -411,12 +411,31 @@ export const InteractiveSpreadsheet = () => {
       </div>
 
       <Tabs defaultValue="assumptions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="ai-proforma">AI Proforma</TabsTrigger>
           <TabsTrigger value="assumptions">Assumptions</TabsTrigger>
           <TabsTrigger value="monthly">Monthly Forecast</TabsTrigger>
           <TabsTrigger value="annual">Annual Summary</TabsTrigger>
           <TabsTrigger value="download">3-Year Download</TabsTrigger>
         </TabsList>
+
+        {/* AI Proforma Tab */}
+        <TabsContent value="ai-proforma">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI-Generated Pro Forma (Coming Soon)</CardTitle>
+              <CardDescription>
+                This tab will display AI-generated projections with PDF export and business model notes.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                AI Proforma feature will be available soon with pre-calculated projections,
+                business model notes, and PDF export capabilities.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Assumptions Tab */}
         <TabsContent value="assumptions" className="space-y-4">
