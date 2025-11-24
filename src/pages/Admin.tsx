@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, BarChart3, UserCheck, Users, Loader2, DollarSign, MessageSquare, FileText, Plus, Network, Eye, Calculator } from "lucide-react";
+import { ArrowLeft, BarChart3, UserCheck, Users, Loader2, DollarSign, MessageSquare, FileText, Plus, Eye, Calculator } from "lucide-react";
 import SubscriptionsAdmin from "@/components/admin/SubscriptionsAdmin";
 import AdminCRM from "@/components/admin/AdminCRM";
 import { AdminOverview } from "@/components/admin/AdminOverview";
@@ -292,10 +292,6 @@ export default function Admin() {
               <MessageSquare className="h-4 w-4 text-[hsl(var(--brand-gold))]" />
               Chat
             </TabsTrigger>
-            <TabsTrigger value="architecture" className="gap-2">
-              <Network className="h-4 w-4" />
-              Architecture
-            </TabsTrigger>
             <TabsTrigger value="legal">Legal</TabsTrigger>
           </TabsList>
 
@@ -429,25 +425,6 @@ export default function Admin() {
               </CardHeader>
               <CardContent>
                 <AdminInternalChat />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="architecture" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Network className="h-5 w-5" />
-                  Seeksy.io System Architecture
-                </CardTitle>
-                <CardDescription>
-                  Complete system diagrams and workflows for the Seeksy platform
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={() => navigate("/admin/architecture")}>
-                  View Architecture Diagrams
-                </Button>
               </CardContent>
             </Card>
           </TabsContent>
