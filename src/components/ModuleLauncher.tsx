@@ -165,20 +165,20 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
   const availableModules = ALL_MODULES.filter(m => enabledModules.includes(m.key));
 
   const moduleColors = [
-    "from-blue-500 to-cyan-500",
-    "from-purple-500 to-pink-500",
-    "from-orange-500 to-red-500",
-    "from-green-500 to-emerald-500",
-    "from-yellow-500 to-amber-500",
-    "from-indigo-500 to-blue-500",
-    "from-pink-500 to-rose-500",
-    "from-teal-500 to-cyan-500",
-    "from-violet-500 to-purple-500",
-    "from-amber-500 to-orange-500",
-    "from-lime-500 to-green-500",
-    "from-sky-500 to-blue-500",
-    "from-fuchsia-500 to-pink-500",
-    "from-rose-500 to-red-500",
+    "from-blue-500 via-blue-400 to-cyan-400",
+    "from-purple-500 via-purple-400 to-pink-400",
+    "from-orange-500 via-orange-400 to-red-400",
+    "from-green-500 via-green-400 to-emerald-400",
+    "from-yellow-500 via-yellow-400 to-amber-400",
+    "from-indigo-500 via-indigo-400 to-blue-400",
+    "from-pink-500 via-pink-400 to-rose-400",
+    "from-teal-500 via-teal-400 to-cyan-400",
+    "from-violet-500 via-violet-400 to-purple-400",
+    "from-amber-500 via-amber-400 to-orange-400",
+    "from-lime-500 via-lime-400 to-green-400",
+    "from-sky-500 via-sky-400 to-blue-400",
+    "from-fuchsia-500 via-fuchsia-400 to-pink-400",
+    "from-rose-500 via-rose-400 to-red-400",
   ];
 
   return (
@@ -203,13 +203,13 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
               <Card
                 key={module.key}
                 className={cn(
-                  "relative cursor-pointer transition-all hover:shadow-xl hover:-translate-y-1 border-0 overflow-hidden group"
+                  "relative cursor-pointer transition-all hover:shadow-2xl hover:shadow-primary/20 hover:-translate-y-1 border-0 overflow-hidden group"
                 )}
                 onClick={() => handleModuleClick(module.route)}
               >
-                <div className={cn("absolute inset-0 bg-gradient-to-br opacity-10", gradientClass)} />
+                <div className={cn("absolute inset-0 bg-gradient-to-br opacity-15", gradientClass)} />
                 <CardContent className="relative p-6 flex flex-col items-center gap-3">
-                  <div className={cn("p-4 rounded-xl bg-gradient-to-br shadow-lg", gradientClass)}>
+                  <div className={cn("p-4 rounded-xl bg-gradient-to-br shadow-lg transition-transform group-hover:scale-110", gradientClass)}>
                     <Icon className="h-8 w-8 text-white" />
                   </div>
                   <span className="font-semibold text-center text-base">{module.label}</span>

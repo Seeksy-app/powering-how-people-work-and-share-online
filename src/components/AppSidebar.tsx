@@ -1227,16 +1227,16 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
               className="relative group cursor-pointer hover:opacity-80 transition-opacity"
               aria-label="Open Module Launcher"
             >
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="10" cy="10" r="5.5" fill="hsl(207, 100%, 50%)" />
-                <circle cx="20" cy="10" r="5.5" fill="hsl(280, 70%, 60%)" />
-                <circle cx="30" cy="10" r="5.5" fill="hsl(25, 100%, 55%)" />
-                <circle cx="10" cy="20" r="5.5" fill="hsl(150, 70%, 45%)" />
-                <circle cx="20" cy="20" r="5.5" fill="hsl(45, 100%, 55%)" />
-                <circle cx="30" cy="20" r="5.5" fill="hsl(240, 70%, 60%)" />
-                <circle cx="10" cy="30" r="5.5" fill="hsl(330, 80%, 60%)" />
-                <circle cx="20" cy="30" r="5.5" fill="hsl(180, 70%, 50%)" />
-                <circle cx="30" cy="30" r="5.5" fill="hsl(0, 80%, 55%)" />
+              <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="10" r="5" fill="hsl(207, 90%, 65%)" />
+                <circle cx="22" cy="10" r="5" fill="hsl(280, 65%, 70%)" />
+                <circle cx="34" cy="10" r="5" fill="hsl(25, 90%, 65%)" />
+                <circle cx="10" cy="22" r="5" fill="hsl(150, 65%, 60%)" />
+                <circle cx="22" cy="22" r="5" fill="hsl(45, 90%, 65%)" />
+                <circle cx="34" cy="22" r="5" fill="hsl(240, 65%, 70%)" />
+                <circle cx="10" cy="34" r="5" fill="hsl(330, 75%, 70%)" />
+                <circle cx="22" cy="34" r="5" fill="hsl(180, 65%, 60%)" />
+                <circle cx="34" cy="34" r="5" fill="hsl(0, 75%, 65%)" />
               </svg>
             </button>
             {!collapsed && (
