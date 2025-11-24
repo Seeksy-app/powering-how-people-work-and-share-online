@@ -410,16 +410,14 @@ export const InteractiveSpreadsheet = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="proforma-comparison" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="proforma-comparison">Pro Forma Comparison</TabsTrigger>
+      <Tabs defaultValue="forecasting" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="forecasting">Forecasting</TabsTrigger>
           <TabsTrigger value="assumptions">Assumptions</TabsTrigger>
-          <TabsTrigger value="monthly">Monthly Forecast</TabsTrigger>
-          <TabsTrigger value="annual">Annual Summary</TabsTrigger>
         </TabsList>
 
-        {/* Pro Forma Comparison Tab - AI vs Custom side by side */}
-        <TabsContent value="proforma-comparison">
+        {/* Forecasting Tab - AI vs Custom side by side */}
+        <TabsContent value="forecasting">
           <div className="grid gap-6 lg:grid-cols-2">
             {/* AI Proforma */}
             <Card>
@@ -978,189 +976,6 @@ export const InteractiveSpreadsheet = () => {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        {/* Monthly Forecast Tab */}
-        <TabsContent value="monthly" className="space-y-4">
-          <div className="flex justify-end gap-2">
-            <Button onClick={() => exportToCSV('forecast-summary')} variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export Summary
-            </Button>
-            <Button onClick={() => exportToCSV('forecast-detailed')} size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export All Details
-            </Button>
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>36-Month Detailed Forecast</CardTitle>
-              <CardDescription>Scroll horizontally to see all columns • All line items included</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12 sticky left-0 bg-background z-10">Mo</TableHead>
-                      <TableHead className="w-16">Year</TableHead>
-                      <TableHead colSpan={7} className="text-center bg-muted/50">Customer Counts</TableHead>
-                      <TableHead colSpan={7} className="text-center bg-blue-50 dark:bg-blue-950">Revenue Streams</TableHead>
-                      <TableHead colSpan={8} className="text-center bg-orange-50 dark:bg-orange-950">Cost Breakdown</TableHead>
-                      <TableHead colSpan={4} className="text-center bg-green-50 dark:bg-green-950">Margins & Profit</TableHead>
-                    </TableRow>
-                    <TableRow>
-                      <TableHead className="sticky left-0 bg-background z-10">Mo</TableHead>
-                      <TableHead>Year</TableHead>
-                      {/* Customer Counts */}
-                      <TableHead>Total</TableHead>
-                      <TableHead>Podcasters</TableHead>
-                      <TableHead>Events</TableHead>
-                      <TableHead>Orgs</TableHead>
-                      <TableHead>Political</TableHead>
-                      <TableHead>My Page</TableHead>
-                      <TableHead>Industry</TableHead>
-                      {/* Revenue */}
-                      <TableHead>Podcaster</TableHead>
-                      <TableHead>Event Creator</TableHead>
-                      <TableHead>Event Org</TableHead>
-                      <TableHead>Political</TableHead>
-                      <TableHead>My Page</TableHead>
-                      <TableHead>Industry</TableHead>
-                      <TableHead>Ad Rev</TableHead>
-                      {/* Costs */}
-                      <TableHead>AI</TableHead>
-                      <TableHead>Storage</TableHead>
-                      <TableHead>Bandwidth</TableHead>
-                      <TableHead>Streaming</TableHead>
-                      <TableHead>Support</TableHead>
-                      <TableHead>Marketing</TableHead>
-                      <TableHead>Payment</TableHead>
-                      <TableHead>Creator Pay</TableHead>
-                      {/* Margins */}
-                      <TableHead>Total Rev</TableHead>
-                      <TableHead>Total Cost</TableHead>
-                      <TableHead>Net Profit</TableHead>
-                      <TableHead>Margin %</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {forecast.map((m) => (
-                      <TableRow key={m.month}>
-                        <TableCell className="sticky left-0 bg-background font-medium z-10">{m.month}</TableCell>
-                        <TableCell>{m.year}</TableCell>
-                        {/* Customers */}
-                        <TableCell>{m.totalUsers}</TableCell>
-                        <TableCell>{m.podcasters}</TableCell>
-                        <TableCell>{m.eventCreators}</TableCell>
-                        <TableCell>{m.eventOrgs}</TableCell>
-                        <TableCell>{m.political}</TableCell>
-                        <TableCell>{m.myPage}</TableCell>
-                        <TableCell>{m.industryCreators}</TableCell>
-                        {/* Revenue */}
-                        <TableCell>${Math.round(m.podcasterRevenue).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.eventCreatorRevenue).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.eventOrgRevenue).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.politicalRevenue).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.myPageRevenue).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.industryCreatorRevenue).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.adRevenuePlatform).toLocaleString()}</TableCell>
-                        {/* Costs */}
-                        <TableCell>${Math.round(m.aiCosts).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.storageCosts).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.bandwidthCosts).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.streamingCosts).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.supportCosts).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.marketingCosts).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.paymentProcessingCosts).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.creatorPayouts).toLocaleString()}</TableCell>
-                        {/* Margins */}
-                        <TableCell className="font-semibold">${Math.round(m.totalRevenue).toLocaleString()}</TableCell>
-                        <TableCell>${Math.round(m.totalCosts).toLocaleString()}</TableCell>
-                        <TableCell className={m.netProfit >= 0 ? "text-primary font-semibold" : "text-destructive"}>
-                          ${Math.round(m.netProfit).toLocaleString()}
-                        </TableCell>
-                        <TableCell>{m.netMargin.toFixed(1)}%</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Annual Summary Tab */}
-        <TabsContent value="annual" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            {annualSummaries.map((year) => (
-              <Card key={year.year}>
-                <CardHeader>
-                  <CardTitle>{year.year}</CardTitle>
-                  <CardDescription>Annual Performance</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div>
-                    <span className="text-sm text-muted-foreground">Total Revenue</span>
-                    <p className="text-2xl font-bold">${Math.round(year.totalRevenue).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Total Costs</span>
-                    <p className="text-xl">${Math.round(year.totalCosts).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Net Profit</span>
-                    <p className={`text-xl font-semibold ${year.netProfit >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                      ${Math.round(year.netProfit).toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="pt-2 border-t">
-                    <span className="text-sm text-muted-foreground">Users (Avg)</span>
-                    <p className="text-lg">{year.avgUsers.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Users (End)</span>
-                    <p className="text-lg">{year.endUsers.toLocaleString()}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>3-Year Summary Table</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Year</TableHead>
-                    <TableHead className="text-right">Total Revenue</TableHead>
-                    <TableHead className="text-right">Total Costs</TableHead>
-                    <TableHead className="text-right">Net Profit</TableHead>
-                    <TableHead className="text-right">Avg Users</TableHead>
-                    <TableHead className="text-right">End Users</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {annualSummaries.map((year) => (
-                    <TableRow key={year.year}>
-                      <TableCell className="font-medium">{year.year}</TableCell>
-                      <TableCell className="text-right">${Math.round(year.totalRevenue).toLocaleString()}</TableCell>
-                      <TableCell className="text-right">${Math.round(year.totalCosts).toLocaleString()}</TableCell>
-                      <TableCell className={`text-right font-semibold ${year.netProfit >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                        ${Math.round(year.netProfit).toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right">{year.avgUsers.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{year.endUsers.toLocaleString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>
