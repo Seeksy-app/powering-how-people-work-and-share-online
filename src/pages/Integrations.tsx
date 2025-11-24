@@ -43,6 +43,7 @@ const Integrations = () => {
     blog: false,
     rss_podcast_posting: false,
     my_page: false,
+    advertiser: false,
   });
   const [socialConnections, setSocialConnections] = useState<any[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -109,6 +110,8 @@ const Integrations = () => {
           team_chat: (prefs as any).module_team_chat_enabled || false,
           blog: (prefs as any).module_blog_enabled || false,
           rss_podcast_posting: (prefs as any).module_rss_podcast_posting_enabled || false,
+          my_page: (prefs as any).my_page_enabled !== false,
+          advertiser: (prefs as any).module_advertiser_enabled || false,
         });
       }
 
@@ -445,6 +448,25 @@ const Integrations = () => {
                 isAdmin={isAdmin}
                 onToggle={() => toggleModule('my_page')}
                 onEdit={() => handleEditMetadata('my_page')}
+              />
+
+              <IntegrationCard
+                id="advertiser"
+                icon={TrendingUp}
+                iconGradient="from-orange-500 to-red-600"
+                title="Advertiser Account"
+                description="Create an advertiser account to run campaigns, manage ad budgets, and reach engaged podcast audiences."
+                tooltip="Enable to access advertiser features and campaign management"
+                isActive={modules.advertiser}
+                isAdmin={isAdmin}
+                onToggle={() => {
+                  if (!modules.advertiser) {
+                    navigate('/advertiser/signup');
+                  } else {
+                    toggleModule('advertiser');
+                  }
+                }}
+                onEdit={() => handleEditMetadata('advertiser')}
               />
             </div>
           </section>
