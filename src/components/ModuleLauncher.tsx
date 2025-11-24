@@ -205,7 +205,7 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
             <div className="text-center space-y-2">
               <h3 className="text-xl font-semibold text-foreground">Add your first app</h3>
               <p className="text-muted-foreground max-w-md">
-                Visit the Integrations page to enable apps, then come back here to pin them to your sidebar.
+                Visit Apps in Account Settings to enable apps, then come back here to pin them to your sidebar (see All Apps).
               </p>
             </div>
           </div>
