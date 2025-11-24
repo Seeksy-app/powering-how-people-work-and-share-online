@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, BarChart3, UserCheck, Users, Loader2, DollarSign, MessageSquare, FileText, Plus, Eye, Calculator } from "lucide-react";
+import { ArrowLeft, BarChart3, UserCheck, Users, Loader2, DollarSign, MessageSquare, FileText, Plus, Eye, Calculator, Trash2 } from "lucide-react";
 import SubscriptionsAdmin from "@/components/admin/SubscriptionsAdmin";
 import AdminCRM from "@/components/admin/AdminCRM";
 import { AdminOverview } from "@/components/admin/AdminOverview";
@@ -36,6 +36,7 @@ export default function Admin() {
   const [showImpersonateDialog, setShowImpersonateDialog] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [demoMode, setDemoMode] = useState(false);
+  const [deletingUsers, setDeletingUsers] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -186,6 +187,35 @@ export default function Admin() {
     navigate("/dashboard");
   };
 
+  const handleDeleteTestUsers = async () => {
+    if (!window.confirm("⚠️ WARNING: This will delete ALL users except yourself. This cannot be undone!\n\nAre you absolutely sure?")) {
+      return;
+    }
+
+    setDeletingUsers(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      const { data, error } = await supabase.functions.invoke('delete-test-users', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`Deleted ${data.deletedUsers?.length || 0} test users. Your account was kept.`);
+      await fetchUsers();
+    } catch (error: any) {
+      toast.error("Failed to delete users: " + error.message);
+    } finally {
+      setDeletingUsers(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -218,6 +248,18 @@ export default function Admin() {
                 Demo Mode
               </Label>
             </div>
+            {isSuperAdmin && (
+              <Button 
+                onClick={handleDeleteTestUsers} 
+                disabled={deletingUsers}
+                variant="destructive"
+                size="sm"
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {deletingUsers ? "Deleting..." : "Delete Test Users"}
+              </Button>
+            )}
             <Button 
               variant="outline"
               onClick={() => setShowImpersonateDialog(true)}
