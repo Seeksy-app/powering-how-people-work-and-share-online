@@ -1705,12 +1705,12 @@ export const InteractiveSpreadsheet = () => {
 
                   <div className="space-y-3 mt-6">
                     <p className="font-semibold text-xs">Download Reports:</p>
-                    <div className="space-y-2">
-                      <Button variant="outline" size="sm" className="w-full justify-start" onClick={handleExportAIPDF}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" className="w-full" onClick={handleExportAIPDF}>
                         <Download className="mr-2 h-4 w-4" />
                         PDF Report
                       </Button>
-                      <Button variant="outline" size="sm" className="w-full justify-start" onClick={handleExportAIExcel}>
+                      <Button variant="outline" size="sm" className="w-full" onClick={handleExportAIExcel}>
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
                         Excel (.xlsx)
                       </Button>
@@ -1788,11 +1788,11 @@ export const InteractiveSpreadsheet = () => {
 
                   <div className="space-y-3 mt-6">
                     <p className="font-semibold text-xs">Download Reports:</p>
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant="outline" 
                         size="sm"
-                        className="w-full justify-start"
+                        className="w-full"
                         onClick={handleExportCustomPDF}
                       >
                         <Download className="mr-2 h-4 w-4" />

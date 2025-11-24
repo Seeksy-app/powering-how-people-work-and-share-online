@@ -135,7 +135,24 @@ export const CFOAIChat = ({ financialData }: CFOAIChatProps) => {
                       : "bg-muted"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                  <div className="text-sm whitespace-pre-wrap prose prose-sm dark:prose-invert max-w-none">
+                    {msg.content.split('\n').map((line, i) => {
+                      // Remove markdown headers (# symbols)
+                      const cleanLine = line.replace(/^#+\s*/, '');
+                      
+                      // Handle bold text
+                      const boldFormatted = cleanLine.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                      
+                      // If line is empty, add spacing
+                      if (cleanLine.trim() === '') {
+                        return <br key={i} />;
+                      }
+                      
+                      return (
+                        <p key={i} className="mb-2 last:mb-0" dangerouslySetInnerHTML={{ __html: boldFormatted }} />
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ))}

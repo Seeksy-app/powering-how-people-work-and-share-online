@@ -875,12 +875,12 @@ const CFODashboard = () => {
 
         {/* Financial Models Tab - AI vs Custom Pro Forma */}
         <TabsContent value="financial-models" className="space-y-6">
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-2">
               <InteractiveSpreadsheet />
             </div>
             <div>
-              <CFOAIChat />
+              <CFOAIChat financialData={realTimeMetrics} />
             </div>
           </div>
         </TabsContent>
@@ -898,7 +898,7 @@ const CFODashboard = () => {
               </p>
             </CardContent>
           </Card>
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-2">
               <ForecastTab assumptions={assumptions} />
             </div>
