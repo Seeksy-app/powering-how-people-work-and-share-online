@@ -410,95 +410,165 @@ export const InteractiveSpreadsheet = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="assumptions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="ai-proforma">AI Proforma</TabsTrigger>
+      <Tabs defaultValue="proforma-comparison" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="proforma-comparison">Pro Forma Comparison</TabsTrigger>
           <TabsTrigger value="assumptions">Assumptions</TabsTrigger>
           <TabsTrigger value="monthly">Monthly Forecast</TabsTrigger>
           <TabsTrigger value="annual">Annual Summary</TabsTrigger>
-          <TabsTrigger value="download">3-Year Proforma</TabsTrigger>
         </TabsList>
 
-        {/* AI Proforma Tab */}
-        <TabsContent value="ai-proforma">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI-Generated Pro Forma</CardTitle>
-              <CardDescription>
-                Based on Seeksy's market research and industry benchmarks. Updates in real-time as actual revenue data comes in.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-sm space-y-4">
-                <p className="font-semibold">Business Model Overview:</p>
-                <p className="text-muted-foreground">
-                  Seeksy operates a multi-sided platform serving creators, event organizers, political campaigns, 
-                  and advertisers. Revenue streams include subscription tiers across different user segments, 
-                  podcast ad insertion revenue share (30% platform fee at $15 CPM), and Quick Ads advertiser 
-                  subscriptions ranging from $199-$25,000/month. The platform leverages AI-powered content creation, 
-                  automated distribution, and integrated monetization tools to drive user growth at an estimated 15% monthly rate.
-                </p>
-                
-                <p className="font-semibold mt-6">Key Financial Assumptions:</p>
-                <ul className="text-muted-foreground space-y-2 list-disc list-inside">
-                  <li>Starting with 100 users, growing 15% monthly</li>
-                  <li>Subscription ARPU ranges from $19-$299/month depending on tier</li>
-                  <li>Podcast ad insertion generates $15 CPM with 65% fill rate</li>
-                  <li>Quick Ads advertisers contribute $199-$25,000/month across 4 tiers</li>
-                  <li>CAC of $45 with 5% monthly churn rate</li>
-                  <li>AI compute costs $2.50/user/month, streaming $0.75/user/month</li>
-                </ul>
+        {/* Pro Forma Comparison Tab - AI vs Custom side by side */}
+        <TabsContent value="proforma-comparison">
+          <div className="grid gap-6 lg:grid-cols-2">
+            {/* AI Proforma */}
+            <Card>
+              <CardHeader>
+                <CardTitle>AI-Generated Pro Forma</CardTitle>
+                <CardDescription>
+                  Based on Seeksy's market research and industry benchmarks. Updates in real-time as actual revenue data comes in.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="text-sm space-y-4">
+                  <p className="font-semibold">Business Model Overview:</p>
+                  <p className="text-muted-foreground">
+                    Seeksy operates a multi-sided platform serving creators, event organizers, political campaigns, 
+                    and advertisers. Revenue streams include subscription tiers across different user segments, 
+                    podcast ad insertion revenue share (30% platform fee at $15 CPM), and Quick Ads advertiser 
+                    subscriptions ranging from $199-$25,000/month. The platform leverages AI-powered content creation, 
+                    automated distribution, and integrated monetization tools to drive user growth at an estimated 15% monthly rate.
+                  </p>
+                  
+                  <p className="font-semibold mt-6">Key Financial Assumptions:</p>
+                  <ul className="text-muted-foreground space-y-2 list-disc list-inside text-xs">
+                    <li>Starting with 100 users, growing 15% monthly</li>
+                    <li>Subscription ARPU ranges from $19-$299/month depending on tier</li>
+                    <li>Podcast ad insertion generates $15 CPM with 65% fill rate</li>
+                    <li>Quick Ads advertisers contribute $199-$25,000/month across 4 tiers</li>
+                    <li>CAC of $45 with 5% monthly churn rate</li>
+                    <li>AI compute costs $2.50/user/month, streaming $0.75/user/month</li>
+                  </ul>
 
-                <div className="mt-8 p-4 bg-muted rounded-lg">
-                  <p className="font-semibold mb-2">3-Year Projections Summary:</p>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Year 1 Revenue</p>
-                      <p className="text-xl font-bold">$2.1M</p>
+                  <div className="mt-8 p-4 bg-muted rounded-lg">
+                    <p className="font-semibold mb-2">3-Year Projections Summary:</p>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div>
+                        <p className="text-muted-foreground">Year 1 Revenue</p>
+                        <p className="text-lg font-bold">$2.1M</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Year 2 Revenue</p>
+                        <p className="text-lg font-bold">$8.7M</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Year 3 Revenue</p>
+                        <p className="text-lg font-bold">$35.8M</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Year 2 Revenue</p>
-                      <p className="text-xl font-bold">$8.7M</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Year 3 Revenue</p>
-                      <p className="text-xl font-bold">$35.8M</p>
+                    <div className="grid grid-cols-3 gap-2 text-xs mt-3">
+                      <div>
+                        <p className="text-muted-foreground">Year 1 Net Profit</p>
+                        <p className="text-lg font-bold text-green-600">$523K</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Year 2 Net Profit</p>
+                        <p className="text-lg font-bold text-green-600">$2.4M</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Year 3 Net Profit</p>
+                        <p className="text-lg font-bold text-green-600">$10.8M</p>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4 text-sm mt-4">
-                    <div>
-                      <p className="text-muted-foreground">Year 1 Net Profit</p>
-                      <p className="text-xl font-bold text-green-600">$523K</p>
+
+                  <div className="mt-6 flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <Download className="mr-2 h-4 w-4" />
+                      PDF
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <FileSpreadsheet className="mr-2 h-4 w-4" />
+                      Excel
+                    </Button>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground mt-4">
+                    * These projections are based on AI analysis of industry benchmarks and will automatically 
+                    update to reflect actual performance data as revenue is generated.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Custom 3-Year Proforma */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Custom 3-Year Pro Forma</CardTitle>
+                <CardDescription>
+                  Based on your custom assumptions. Edit values in the Assumptions tab to see changes reflected here.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="text-sm space-y-4">
+                  <p className="font-semibold">Your Custom Projections:</p>
+                  <p className="text-muted-foreground">
+                    This pro forma reflects the assumptions you've configured in the Assumptions tab. 
+                    All calculations are dynamic and update automatically when you modify pricing, 
+                    growth rates, cost structures, or other parameters.
+                  </p>
+
+                  <div className="mt-8 p-4 bg-muted rounded-lg">
+                    <p className="font-semibold mb-2">3-Year Summary (Your Assumptions):</p>
+                    <div className="grid grid-cols-3 gap-2 text-xs">
+                      <div>
+                        <p className="text-muted-foreground">Year 1 Revenue</p>
+                        <p className="text-lg font-bold">${Math.round(annualSummaries[0]?.totalRevenue / 1000)}K</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Year 2 Revenue</p>
+                        <p className="text-lg font-bold">${Math.round(annualSummaries[1]?.totalRevenue / 1000)}K</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Year 3 Revenue</p>
+                        <p className="text-lg font-bold">${Math.round(annualSummaries[2]?.totalRevenue / 1000)}K</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">Year 2 Net Profit</p>
-                      <p className="text-xl font-bold text-green-600">$2.4M</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Year 3 Net Profit</p>
-                      <p className="text-xl font-bold text-green-600">$10.8M</p>
+                    <div className="grid grid-cols-3 gap-2 text-xs mt-3">
+                      <div>
+                        <p className="text-muted-foreground">Year 1 Net Profit</p>
+                        <p className={`text-lg font-bold ${annualSummaries[0]?.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ${Math.round(annualSummaries[0]?.netProfit / 1000)}K
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Year 2 Net Profit</p>
+                        <p className={`text-lg font-bold ${annualSummaries[1]?.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ${Math.round(annualSummaries[1]?.netProfit / 1000)}K
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Year 3 Net Profit</p>
+                        <p className={`text-lg font-bold ${annualSummaries[2]?.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          ${Math.round(annualSummaries[2]?.netProfit / 1000)}K
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="mt-6 flex gap-4">
-                  <Button variant="outline" className="flex-1">
-                    <Download className="mr-2 h-4 w-4" />
-                    Export as PDF
-                  </Button>
-                  <Button variant="outline" className="flex-1">
-                    <FileSpreadsheet className="mr-2 h-4 w-4" />
-                    Download Full Spreadsheet
-                  </Button>
-                </div>
+                  <div className="space-y-3 mt-6">
+                    <p className="font-semibold text-xs">Download Full Spreadsheet:</p>
+                    <ProFormaSpreadsheetGenerator />
+                  </div>
 
-                <p className="text-xs text-muted-foreground mt-4">
-                  * These projections are based on AI analysis of industry benchmarks and will automatically 
-                  update to reflect actual performance data as revenue is generated.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                  <p className="text-xs text-muted-foreground mt-4">
+                    * Export comprehensive Excel file with all 7 tabs: Executive Summary, Assumptions, 
+                    36-Month Forecast, Annual Summary, Revenue Breakdown, Cost Breakdown, and Unit Economics
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Assumptions Tab */}
@@ -1089,22 +1159,6 @@ export const InteractiveSpreadsheet = () => {
                   ))}
                 </TableBody>
               </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* 3-Year Download Tab */}
-        <TabsContent value="download" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Download Full 3-Year Pro Forma Spreadsheet</CardTitle>
-              <CardDescription>
-                Export comprehensive Excel file with all 7 tabs: Executive Summary, Assumptions, 36-Month Forecast, 
-                Annual Summary, Revenue Breakdown, Cost Breakdown, and Unit Economics
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ProFormaSpreadsheetGenerator />
             </CardContent>
           </Card>
         </TabsContent>
