@@ -116,7 +116,7 @@ const Auth = () => {
           navigate(intent);
         } else {
           // Redirect based on user role
-          navigate(isAdmin ? "/cfo-dashboard" : "/dashboard");
+          navigate(isAdmin ? "/admin" : "/dashboard");
         }
       } else {
         // Validate password
