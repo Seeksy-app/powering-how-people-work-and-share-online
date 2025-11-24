@@ -396,7 +396,6 @@ const CFODashboard = () => {
           <TabsTrigger value="revenue" className="flex-shrink-0">Revenue</TabsTrigger>
           <TabsTrigger value="ad-breakdown" className="flex-shrink-0">Ads</TabsTrigger>
           <TabsTrigger value="financial-models" className="flex-shrink-0">Financial Models</TabsTrigger>
-          <TabsTrigger value="projections" className="flex-shrink-0">Projections</TabsTrigger>
           <TabsTrigger value="forecast" className="flex-shrink-0">Forecast</TabsTrigger>
         </TabsList>
 
@@ -871,74 +870,7 @@ const CFODashboard = () => {
           </Card>
         </TabsContent>
 
-        {/* Projections Tab */}
-        <TabsContent value="projections" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>12-Month Revenue Projection</CardTitle>
-              <CardDescription>Based on current metrics and growth assumptions</CardDescription>
-            </CardHeader>
-            <CardContent className="overflow-x-auto -mx-6 px-6">
-              <div className="min-w-[500px]">
-                <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={projections}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip formatter={(value: number) => `$${Math.round(value).toLocaleString()}`} />
-                  <Legend />
-                  <Line type="monotone" dataKey="mrr" stroke="#0088FE" name="MRR" strokeWidth={2} />
-                  <Line type="monotone" dataKey="adRevenue" stroke="#00C49F" name="Ad Revenue" strokeWidth={2} />
-                  <Line type="monotone" dataKey="totalRevenue" stroke="#FF8042" name="Total Revenue" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Projected Users</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <LineChart data={projections}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="users" stroke="hsl(var(--primary))" strokeWidth={2} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Key Projections (Month 12)</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Projected Users</span>
-                  <span className="font-semibold">{projections[11]?.users.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Projected MRR</span>
-                  <span className="font-semibold">${Math.round(projections[11]?.mrr || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Projected ARR</span>
-                  <span className="font-semibold">${Math.round(projections[11]?.arr || 0).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t">
-                  <span className="text-sm font-bold">Total Revenue</span>
-                  <span className="text-xl font-bold">${Math.round(projections[11]?.totalRevenue || 0).toLocaleString()}</span>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+        {/* Projections Tab - Removed per user request */}
 
         {/* Financial Models Tab - AI vs Custom Pro Forma */}
         <TabsContent value="financial-models" className="space-y-6">

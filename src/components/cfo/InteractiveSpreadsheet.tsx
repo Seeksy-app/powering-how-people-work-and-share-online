@@ -639,6 +639,142 @@ export const InteractiveSpreadsheet = () => {
     toast.info(`Email ${type === 'ai' ? 'AI' : 'Custom'} report feature coming soon! You'll be able to send reports to stakeholders directly from here.`);
   };
 
+  const handleExportCustomPDF = async () => {
+    try {
+      const doc = new jsPDF();
+      let yPos = 20;
+      
+      // Title
+      doc.setFontSize(20);
+      doc.text("Seeksy Custom Pro Forma", 20, yPos);
+      yPos += 10;
+      
+      // Subtitle
+      doc.setFontSize(12);
+      doc.text("3-Year Financial Projections - Based on Your Custom Assumptions", 20, yPos);
+      yPos += 15;
+      
+      // 3-Year Summary
+      doc.setFontSize(14);
+      doc.text("3-Year Summary", 20, yPos);
+      yPos += 8;
+      
+      doc.setFontSize(10);
+      const year1Rev = annualSummaries[0]?.totalRevenue || 0;
+      const year2Rev = annualSummaries[1]?.totalRevenue || 0;
+      const year3Rev = annualSummaries[2]?.totalRevenue || 0;
+      const year1Profit = annualSummaries[0]?.netProfit || 0;
+      const year2Profit = annualSummaries[1]?.netProfit || 0;
+      const year3Profit = annualSummaries[2]?.netProfit || 0;
+      
+      doc.text("Year 1:", 20, yPos);
+      doc.text(`Revenue: $${Math.round(year1Rev / 1000)}K`, 40, yPos);
+      doc.text(`Net Profit: $${Math.round(year1Profit / 1000)}K`, 100, yPos);
+      yPos += 6;
+      
+      doc.text("Year 2:", 20, yPos);
+      doc.text(`Revenue: $${Math.round(year2Rev / 1000)}K`, 40, yPos);
+      doc.text(`Net Profit: $${Math.round(year2Profit / 1000)}K`, 100, yPos);
+      yPos += 6;
+      
+      doc.text("Year 3:", 20, yPos);
+      doc.text(`Revenue: $${Math.round(year3Rev / 1000)}K`, 40, yPos);
+      doc.text(`Net Profit: $${Math.round(year3Profit / 1000)}K`, 100, yPos);
+      yPos += 15;
+      
+      // Revenue Growth Chart Section
+      doc.setFontSize(12);
+      doc.text("Revenue Growth Trajectory", 20, yPos);
+      yPos += 8;
+      
+      // Simple bar chart visualization
+      const chartX = 30;
+      const chartWidth = 150;
+      const chartHeight = 40;
+      const maxRevenue = Math.max(year1Rev, year2Rev, year3Rev);
+      
+      // Year 1 bar
+      const bar1Height = (year1Rev / maxRevenue) * chartHeight;
+      doc.setFillColor(102, 126, 234);
+      doc.rect(chartX, yPos + chartHeight - bar1Height, 40, bar1Height, 'F');
+      doc.setFontSize(8);
+      doc.text("Year 1", chartX + 8, yPos + chartHeight + 4);
+      doc.text(`$${Math.round(year1Rev / 1000)}K`, chartX + 5, yPos + chartHeight - bar1Height - 2);
+      
+      // Year 2 bar
+      const bar2Height = (year2Rev / maxRevenue) * chartHeight;
+      doc.setFillColor(0, 196, 159);
+      doc.rect(chartX + 50, yPos + chartHeight - bar2Height, 40, bar2Height, 'F');
+      doc.text("Year 2", chartX + 58, yPos + chartHeight + 4);
+      doc.text(`$${Math.round(year2Rev / 1000)}K`, chartX + 55, yPos + chartHeight - bar2Height - 2);
+      
+      // Year 3 bar
+      const bar3Height = (year3Rev / maxRevenue) * chartHeight;
+      doc.setFillColor(255, 136, 66);
+      doc.rect(chartX + 100, yPos + chartHeight - bar3Height, 40, bar3Height, 'F');
+      doc.text("Year 3", chartX + 108, yPos + chartHeight + 4);
+      doc.text(`$${Math.round(year3Rev / 1000)}K`, chartX + 105, yPos + chartHeight - bar3Height - 2);
+      
+      yPos += chartHeight + 15;
+      
+      // Key Metrics
+      doc.setFontSize(12);
+      doc.text("Key Financial Metrics", 20, yPos);
+      yPos += 8;
+      
+      doc.setFontSize(9);
+      const totalRevenue3Yr = year1Rev + year2Rev + year3Rev;
+      const totalProfit3Yr = year1Profit + year2Profit + year3Profit;
+      const avgMargin = totalRevenue3Yr > 0 ? (totalProfit3Yr / totalRevenue3Yr * 100).toFixed(1) : "0";
+      
+      doc.text(`• Total 3-Year Revenue: $${Math.round(totalRevenue3Yr / 1000)}K`, 25, yPos);
+      yPos += 6;
+      doc.text(`• Total 3-Year Net Profit: $${Math.round(totalProfit3Yr / 1000)}K`, 25, yPos);
+      yPos += 6;
+      doc.text(`• Average Net Margin: ${avgMargin}%`, 25, yPos);
+      yPos += 6;
+      doc.text(`• Year-over-Year Growth Rate: ${year1Rev > 0 ? Math.round((year2Rev - year1Rev) / year1Rev * 100) : 0}% (Y1→Y2)`, 25, yPos);
+      yPos += 15;
+      
+      // Monthly Metrics Summary
+      doc.setFontSize(12);
+      doc.text("First Year Monthly Breakdown (Selected Months)", 20, yPos);
+      yPos += 8;
+      
+      doc.setFontSize(8);
+      doc.text("Month", 25, yPos);
+      doc.text("Revenue", 60, yPos);
+      doc.text("Costs", 95, yPos);
+      doc.text("Profit", 125, yPos);
+      doc.text("Margin %", 155, yPos);
+      yPos += 5;
+      
+      // Show months 1, 6, and 12
+      [0, 5, 11].forEach((monthIdx) => {
+        const month = forecast[monthIdx];
+        if (month) {
+          doc.text(`M${month.month}`, 25, yPos);
+          doc.text(`$${Math.round(month.totalRevenue).toLocaleString()}`, 60, yPos);
+          doc.text(`$${Math.round(month.totalCosts).toLocaleString()}`, 95, yPos);
+          doc.text(`$${Math.round(month.netProfit).toLocaleString()}`, 125, yPos);
+          doc.text(`${month.netMargin.toFixed(1)}%`, 155, yPos);
+          yPos += 5;
+        }
+      });
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.text("Generated by Seeksy Financial Models | Custom assumptions configured by CFO", 20, 280);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 285);
+      
+      doc.save("seeksy-custom-proforma.pdf");
+      toast.success("Custom Pro Forma PDF exported with charts!");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF. Please try again.");
+    }
+  };
+
   const annualSummaries = getAnnualSummaries();
 
   return (
@@ -807,8 +943,19 @@ export const InteractiveSpreadsheet = () => {
                   </div>
 
                   <div className="space-y-3 mt-6">
-                    <p className="font-semibold text-xs">Download Full Spreadsheet:</p>
-                    <ProFormaSpreadsheetGenerator />
+                    <p className="font-semibold text-xs">Download Reports:</p>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={handleExportCustomPDF}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        PDF Report
+                      </Button>
+                      <ProFormaSpreadsheetGenerator />
+                    </div>
                     <Button 
                       variant="default" 
                       size="sm" 
@@ -820,8 +967,7 @@ export const InteractiveSpreadsheet = () => {
                   </div>
 
                   <p className="text-xs text-muted-foreground mt-4">
-                    * Export comprehensive Excel file with all 7 tabs: Executive Summary, Assumptions, 
-                    36-Month Forecast, Annual Summary, Revenue Breakdown, Cost Breakdown, and Unit Economics
+                    * PDF includes formatted charts and graphs. Excel file contains all 7 tabs with detailed data and formulas.
                   </p>
                 </div>
               </CardContent>
