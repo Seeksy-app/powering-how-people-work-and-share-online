@@ -1,0 +1,1243 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, TrendingUp, DollarSign, Users, Sparkles, Download, Radio, Activity, ToggleLeft, ArrowLeft } from "lucide-react";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { ProformaTemplate } from "@/components/cfo/ProformaTemplate";
+import { TalkingPointsWidget } from "@/components/dashboard/TalkingPointsWidget";
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B9D'];
+
+const CFODashboard = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [useRealTimeData, setUseRealTimeData] = useState(true);
+  
+  // Expanded assumptions with multiple ad types
+  const [assumptions, setAssumptions] = useState({
+    // Growth Assumptions
+    monthlyUserGrowth: 15,
+    creatorGrowth: 20,
+    avgSubscriptionPrice: 19,
+    conversionRate: 5,
+    churnRate: 5,
+    
+    // Cash & Runway
+    cashReserves: 500000, // Starting cash reserves
+    
+    // Ad Type CPMs and Fill Rates
+    hostReadCpm: 35, // $18-$50
+    hostReadFillRate: 95, // 90-100%
+    announcerReadCpm: 17, // $12-$22
+    announcerReadFillRate: 85,
+    programmaticAudioCpm: 5, // $2-$8
+    programmaticFillRate: 40, // 20-60%
+    videoAdsCpm: 12, // $6-$18
+    videoFillRate: 60,
+    displayAdsCpm: 7, // $3-$12
+    displayFillRate: 55, // 30-80%
+    
+    // PPI/PPC Call-Based Ads
+    ppiPayoutPerInquiry: 65, // $15-$120
+    ppiInquiriesPerCampaign: 25,
+    ppiConversionRate: 8, // Percentage of calls that qualify
+    ppiCallDurationThreshold: 3, // Minutes
+    
+    // Ad Inventory Split (%)
+    preRollPercent: 35,
+    midRollPercent: 50,
+    postRollPercent: 15,
+    
+    // Creator Tiers
+    creatorTierBasicPercent: 60,
+    creatorTierProPercent: 30,
+    creatorTierEnterprisePercent: 10,
+    
+    // Awards Revenue
+    veteranAwardsRevenue: 250000,
+    additionalAwardsProgramsCount: 2,
+    avgAwardProgramRevenue: 75000,
+    sponsorshipTiersAvg: 15000,
+    ticketMerchRevenue: 25000,
+    
+    // Cost Structure
+    storageCostPerGB: 0.10,
+    bandwidthCostPerGB: 0.05,
+    aiProcessingCostPerHour: 2.50,
+    aiCostPerEpisode: 3.00,
+    
+    // Payout Splits
+    creatorPayoutPercent: 75,
+    platformSharePercent: 25,
+  });
+
+  // Fetch real-time metrics from database
+  const { data: realTimeMetrics, isLoading: metricsLoading } = useQuery({
+    queryKey: ['real-time-metrics'],
+    queryFn: async () => {
+      // Fetch all metrics in parallel
+      const [
+        { count: totalUsers },
+        { count: activeCreators },
+        { count: totalPodcasts },
+        { count: totalEpisodes },
+        { data: subscriptions },
+        { data: impressions },
+        { data: campaigns },
+        { data: advertisers },
+        { data: sponsorships },
+        { data: callInquiries },
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('account_type', 'creator'),
+        supabase.from('podcasts').select('*', { count: 'exact', head: true }),
+        supabase.from('episodes').select('*', { count: 'exact', head: true }),
+        supabase.from('subscriptions').select('plan_name').eq('status', 'active'),
+        supabase.from('ad_impressions').select('*'),
+        supabase.from('ad_campaigns').select('budget, total_spent'),
+        supabase.from('advertisers').select('account_balance'),
+        supabase.from('award_sponsorships').select('amount_paid').eq('status', 'paid'),
+        supabase.from('ad_call_inquiries').select('*'),
+      ]);
+
+      // Use demo data if no real data exists
+      const hasRealData = (totalUsers || 0) > 0 || (totalEpisodes || 0) > 0 || (impressions?.length || 0) > 0;
+      
+      if (!hasRealData) {
+        // Return demo data for visualization
+        return {
+          totalUsers: 2847,
+          activeCreators: 342,
+          totalPodcasts: 156,
+          totalEpisodes: 892,
+          mrr: 54180,
+          arr: 650160,
+          hostReadRevenue: 15680,
+          announcerRevenue: 8940,
+          programmaticRevenue: 2560,
+          videoRevenue: 4320,
+          displayRevenue: 1890,
+          adRevenue: 33390,
+          ppiRevenue: 16250,
+          sponsorshipRevenue: 12500,
+          awardsRevenue: 375000,
+          totalRevenue: 491320,
+          totalImpressions: 425600,
+          creatorPayouts: 46605,
+          storageCosts: 446,
+          bandwidthCosts: 2128,
+          aiComputeCosts: 2676,
+          paymentProcessingCosts: 14248,
+          totalCosts: 66103,
+          grossMargin: 86.5,
+          burnRate: -425217,
+          runwayMonths: 999,
+          cac: 25,
+          ltv: 456,
+          totalInquiries: 312,
+          qualifiedInquiries: 25,
+        };
+      }
+
+      // Calculate subscription MRR
+      const paidSubscriptions = subscriptions?.filter((s: any) => s.plan_name !== 'free') || [];
+      const mrr = paidSubscriptions.length * assumptions.avgSubscriptionPrice;
+      const arr = mrr * 12;
+
+      // Calculate ad revenue by type (simplified - would pull from actual ad slots)
+      const totalImpressions = impressions?.length || 0;
+      const estimatedHostReadImpressions = totalImpressions * 0.3;
+      const estimatedAnnouncerReadImpressions = totalImpressions * 0.25;
+      const estimatedProgrammaticImpressions = totalImpressions * 0.25;
+      const estimatedVideoImpressions = totalImpressions * 0.15;
+      const estimatedDisplayImpressions = totalImpressions * 0.05;
+
+      const hostReadRevenue = (estimatedHostReadImpressions / 1000) * assumptions.hostReadCpm * (assumptions.hostReadFillRate / 100);
+      const announcerRevenue = (estimatedAnnouncerReadImpressions / 1000) * assumptions.announcerReadCpm * (assumptions.announcerReadFillRate / 100);
+      const programmaticRevenue = (estimatedProgrammaticImpressions / 1000) * assumptions.programmaticAudioCpm * (assumptions.programmaticFillRate / 100);
+      const videoRevenue = (estimatedVideoImpressions / 1000) * assumptions.videoAdsCpm * (assumptions.videoFillRate / 100);
+      const displayRevenue = (estimatedDisplayImpressions / 1000) * assumptions.displayAdsCpm * (assumptions.displayFillRate / 100);
+
+      const adRevenue = hostReadRevenue + announcerRevenue + programmaticRevenue + videoRevenue + displayRevenue;
+
+      // Calculate PPI/PPC revenue
+      const qualifiedInquiries = (callInquiries?.length || 0) * (assumptions.ppiConversionRate / 100);
+      const ppiRevenue = qualifiedInquiries * assumptions.ppiPayoutPerInquiry;
+
+      // Calculate sponsorship revenue
+      const sponsorshipRevenue = sponsorships?.reduce((sum: number, s: any) => sum + Number(s.amount_paid), 0) || 0;
+
+      // Calculate awards revenue
+      const awardsRevenue = assumptions.veteranAwardsRevenue + 
+        (assumptions.additionalAwardsProgramsCount * assumptions.avgAwardProgramRevenue) +
+        assumptions.ticketMerchRevenue;
+
+      // Calculate costs
+      const creatorPayouts = (adRevenue + sponsorshipRevenue + ppiRevenue) * (assumptions.creatorPayoutPercent / 100);
+      const storageCosts = (totalEpisodes || 0) * 0.5 * assumptions.storageCostPerGB; // Estimate 500MB per episode
+      const bandwidthCosts = totalImpressions * 0.1 * assumptions.bandwidthCostPerGB; // Estimate 100MB per stream
+      const aiComputeCosts = (totalEpisodes || 0) * assumptions.aiCostPerEpisode;
+      const paymentProcessing = (mrr + adRevenue + sponsorshipRevenue + ppiRevenue + awardsRevenue) * 0.029; // 2.9% + 30¢
+
+      const totalRevenue = mrr + adRevenue + sponsorshipRevenue + ppiRevenue + awardsRevenue;
+      const totalCosts = creatorPayouts + storageCosts + bandwidthCosts + aiComputeCosts + paymentProcessing;
+      const grossMargin = totalRevenue > 0 ? ((totalRevenue - totalCosts) / totalRevenue) * 100 : 0;
+      const burnRate = totalCosts - totalRevenue;
+      const runwayMonths = burnRate > 0 ? Math.floor(assumptions.cashReserves / Math.abs(burnRate)) : 999;
+      
+      // Calculate CAC and LTV estimates
+      const cac = 25; // Placeholder - would calculate from marketing spend
+      const ltv = mrr > 0 ? (mrr / (paidSubscriptions.length || 1)) * 12 / (assumptions.churnRate / 100) : 0;
+
+      return {
+        totalUsers: totalUsers || 0,
+        activeCreators: activeCreators || 0,
+        totalPodcasts: totalPodcasts || 0,
+        totalEpisodes: totalEpisodes || 0,
+        mrr,
+        arr,
+        // Ad Revenue Breakdown
+        hostReadRevenue,
+        announcerRevenue,
+        programmaticRevenue,
+        videoRevenue,
+        displayRevenue,
+        adRevenue,
+        ppiRevenue,
+        sponsorshipRevenue,
+        awardsRevenue,
+        totalRevenue,
+        totalImpressions,
+        // Cost Breakdown
+        creatorPayouts,
+        storageCosts,
+        bandwidthCosts,
+        aiComputeCosts,
+        paymentProcessingCosts: paymentProcessing,
+        totalCosts,
+        grossMargin,
+        burnRate,
+        runwayMonths,
+        cac,
+        ltv,
+        // PPI Metrics
+        totalInquiries: callInquiries?.length || 0,
+        qualifiedInquiries,
+      };
+    },
+  });
+
+  // Calculate projected revenue based on assumptions (not real-time data)
+  const calculateProjectedRevenue = () => {
+    // Use assumptions to project revenue without real-time data
+    const projectedUsers = assumptions.monthlyUserGrowth * 100; // Estimate
+    const projectedCreators = assumptions.creatorGrowth * 50; // Estimate
+    const projectedEpisodes = projectedCreators * 10; // Estimate 10 episodes per creator
+    const projectedImpressions = projectedEpisodes * 1000; // Estimate 1000 impressions per episode
+    
+    // Calculate projected MRR
+    const projectedPaidUsers = Math.round(projectedUsers * (assumptions.conversionRate / 100));
+    const projectedMrr = projectedPaidUsers * assumptions.avgSubscriptionPrice;
+    const projectedArr = projectedMrr * 12;
+    
+    // Calculate projected ad revenue by type
+    const projHostReadImpressions = projectedImpressions * 0.3;
+    const projAnnouncerReadImpressions = projectedImpressions * 0.25;
+    const projProgrammaticImpressions = projectedImpressions * 0.25;
+    const projVideoImpressions = projectedImpressions * 0.15;
+    const projDisplayImpressions = projectedImpressions * 0.05;
+    
+    const projHostReadRevenue = (projHostReadImpressions / 1000) * assumptions.hostReadCpm * (assumptions.hostReadFillRate / 100);
+    const projAnnouncerRevenue = (projAnnouncerReadImpressions / 1000) * assumptions.announcerReadCpm * (assumptions.announcerReadFillRate / 100);
+    const projProgrammaticRevenue = (projProgrammaticImpressions / 1000) * assumptions.programmaticAudioCpm * (assumptions.programmaticFillRate / 100);
+    const projVideoRevenue = (projVideoImpressions / 1000) * assumptions.videoAdsCpm * (assumptions.videoFillRate / 100);
+    const projDisplayRevenue = (projDisplayImpressions / 1000) * assumptions.displayAdsCpm * (assumptions.displayFillRate / 100);
+    
+    const projAdRevenue = projHostReadRevenue + projAnnouncerRevenue + projProgrammaticRevenue + projVideoRevenue + projDisplayRevenue;
+    
+    // Calculate projected PPI revenue
+    const projInquiries = Math.round(projectedImpressions * 0.001); // 0.1% inquiry rate
+    const projQualifiedInquiries = projInquiries * (assumptions.ppiConversionRate / 100);
+    const projPpiRevenue = projQualifiedInquiries * assumptions.ppiPayoutPerInquiry;
+    
+    // Calculate projected sponsorship revenue
+    const projSponsorshipRevenue = assumptions.sponsorshipTiersAvg * 5; // Assume 5 sponsors
+    
+    // Calculate projected awards revenue
+    const projAwardsRevenue = assumptions.veteranAwardsRevenue + 
+      (assumptions.additionalAwardsProgramsCount * assumptions.avgAwardProgramRevenue) +
+      assumptions.ticketMerchRevenue;
+    
+    const projTotalRevenue = projectedMrr + projAdRevenue + projPpiRevenue + projSponsorshipRevenue + projAwardsRevenue;
+    
+    // Calculate projected costs
+    const projCreatorPayouts = (projAdRevenue + projSponsorshipRevenue + projPpiRevenue) * (assumptions.creatorPayoutPercent / 100);
+    const projStorageCosts = projectedEpisodes * 0.5 * assumptions.storageCostPerGB;
+    const projBandwidthCosts = projectedImpressions * 0.1 * assumptions.bandwidthCostPerGB;
+    const projAiComputeCosts = projectedEpisodes * assumptions.aiCostPerEpisode;
+    const projPaymentProcessing = projTotalRevenue * 0.029;
+    
+    const projTotalCosts = projCreatorPayouts + projStorageCosts + projBandwidthCosts + projAiComputeCosts + projPaymentProcessing;
+    const projGrossMargin = projTotalRevenue > 0 ? ((projTotalRevenue - projTotalCosts) / projTotalRevenue) * 100 : 0;
+    const projBurnRate = projTotalCosts - projTotalRevenue;
+    const projRunwayMonths = projBurnRate > 0 ? Math.floor(assumptions.cashReserves / Math.abs(projBurnRate)) : 999;
+    
+    return {
+      projectedMrr,
+      projectedArr,
+      projTotalRevenue,
+      projGrossMargin,
+      projBurnRate,
+      projRunwayMonths,
+      projAdRevenue,
+      projPpiRevenue,
+      projSponsorshipRevenue,
+      projAwardsRevenue,
+    };
+  };
+
+  const projectedMetrics = calculateProjectedRevenue();
+
+  // Calculate projections based on assumptions
+  const calculateProjections = () => {
+    if (!realTimeMetrics) return [];
+
+    const projections = [];
+    const userGrowth = assumptions.monthlyUserGrowth / 100;
+    const conversionRate = assumptions.conversionRate / 100;
+    const avgPrice = assumptions.avgSubscriptionPrice;
+    const churnRate = assumptions.churnRate / 100;
+
+    let currentUsers = realTimeMetrics.totalUsers;
+    let currentMrr = realTimeMetrics.mrr;
+    let currentAdRevenue = realTimeMetrics.adRevenue;
+
+    for (let month = 1; month <= 12; month++) {
+      currentUsers = Math.round(currentUsers * (1 + userGrowth));
+      const newPaidUsers = Math.round(currentUsers * conversionRate);
+      const churnedUsers = Math.round((currentMrr / avgPrice) * churnRate);
+      const netNewUsers = newPaidUsers - churnedUsers;
+      currentMrr = Math.max(0, currentMrr + (netNewUsers * avgPrice));
+      currentAdRevenue = currentAdRevenue * (1 + userGrowth * 0.5); // Ad revenue grows with user growth
+
+      projections.push({
+        month: `Month ${month}`,
+        users: currentUsers,
+        mrr: currentMrr,
+        arr: currentMrr * 12,
+        adRevenue: currentAdRevenue,
+        totalRevenue: currentMrr + currentAdRevenue + realTimeMetrics.sponsorshipRevenue,
+      });
+    }
+
+    return projections;
+  };
+
+  const projections = calculateProjections();
+
+  // Update assumption value
+  const updateAssumption = (key: string, value: number) => {
+    setAssumptions(prev => ({ ...prev, [key]: value }));
+  };
+
+  if (metricsLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-7xl overflow-x-hidden">
+      <div className="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div className="max-w-full">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/dashboard')}
+            className="mb-2 -ml-2"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <h1 className="text-3xl font-bold mb-2">CFO Financial Dashboard</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Comprehensive financial modeling with multi-tier ad revenue & real-time data
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Label htmlFor="data-mode" className="text-sm font-medium">
+            {useRealTimeData ? "Real-Time Mode" : "Projection Mode"}
+          </Label>
+          <Switch
+            id="data-mode"
+            checked={useRealTimeData}
+            onCheckedChange={setUseRealTimeData}
+          />
+        </div>
+      </div>
+
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="inline-flex w-full overflow-x-auto -mx-4 px-4 scrollbar-hide">
+          <TabsTrigger value="overview" className="flex-shrink-0">Overview</TabsTrigger>
+          <TabsTrigger value="revenue" className="flex-shrink-0">Revenue</TabsTrigger>
+          <TabsTrigger value="ad-breakdown" className="flex-shrink-0">Ads</TabsTrigger>
+          <TabsTrigger value="projections" className="flex-shrink-0">Projections</TabsTrigger>
+          <TabsTrigger value="proforma" className="flex-shrink-0">Proforma</TabsTrigger>
+          <TabsTrigger value="assumptions" className="flex-shrink-0">Assumptions</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Investor Talking Points Widget */}
+          <TalkingPointsWidget 
+            teamType="cfo"
+            title="Investor Talking Points"
+            description="AI-generated insights and narratives for investor conversations"
+          />
+          
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">MRR</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">${Math.round(realTimeMetrics?.mrr || 0).toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  ARR: ${Math.round(realTimeMetrics?.arr || 0).toLocaleString()}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">${Math.round(realTimeMetrics?.totalRevenue || 0).toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground mt-1">This month</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Gross Margin</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{realTimeMetrics?.grossMargin.toFixed(1)}%</div>
+                <p className="text-xs text-muted-foreground mt-1">After creator payouts</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Runway</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">
+                  {realTimeMetrics?.runwayMonths === 999 ? '∞' : `${realTimeMetrics?.runwayMonths} months`}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Burn: ${Math.round(Math.abs(realTimeMetrics?.burnRate || 0)).toLocaleString()}/mo
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Projected Revenue Card - Based on Assumptions (Show in Real-Time Mode for comparison) */}
+          {useRealTimeData && (
+            <Card className="border-2 border-secondary/50 bg-secondary/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Projected Revenue (Based on Assumptions)
+                </CardTitle>
+                <CardDescription>Financial projections using assumption models for comparison</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Projected MRR</div>
+                    <div className="text-2xl font-bold">${Math.round(projectedMetrics.projectedMrr).toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ARR: ${Math.round(projectedMetrics.projectedArr).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Total Revenue</div>
+                    <div className="text-2xl font-bold">${Math.round(projectedMetrics.projTotalRevenue).toLocaleString()}</div>
+                    <p className="text-xs text-muted-foreground mt-1">Monthly projection</p>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Gross Margin</div>
+                    <div className="text-2xl font-bold">{projectedMetrics.projGrossMargin.toFixed(1)}%</div>
+                    <p className="text-xs text-muted-foreground mt-1">After payouts</p>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground mb-1">Projected Runway</div>
+                    <div className="text-2xl font-bold">
+                      {projectedMetrics.projRunwayMonths === 999 ? '∞' : `${projectedMetrics.projRunwayMonths} months`}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Burn: ${Math.round(Math.abs(projectedMetrics.projBurnRate)).toLocaleString()}/mo
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Revenue Breakdown Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Revenue Breakdown</CardTitle>
+              <CardDescription>Current month revenue streams with expanded categories</CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto -mx-6 px-6">
+              <div className="min-w-[600px]">
+                <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={[
+                  { name: 'Subscriptions', value: realTimeMetrics?.mrr || 0 },
+                  { name: 'Host-Read Ads', value: realTimeMetrics?.hostReadRevenue || 0 },
+                  { name: 'Announcer Ads', value: realTimeMetrics?.announcerRevenue || 0 },
+                  { name: 'Programmatic', value: realTimeMetrics?.programmaticRevenue || 0 },
+                  { name: 'Video Ads', value: realTimeMetrics?.videoRevenue || 0 },
+                  { name: 'Display Ads', value: realTimeMetrics?.displayRevenue || 0 },
+                  { name: 'PPI/PPC Calls', value: realTimeMetrics?.ppiRevenue || 0 },
+                  { name: 'Sponsorships', value: realTimeMetrics?.sponsorshipRevenue || 0 },
+                  { name: 'Awards', value: realTimeMetrics?.awardsRevenue || 0 },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => `$${Math.round(value).toLocaleString()}`} />
+                  <Bar dataKey="value" fill="hsl(var(--primary))" />
+                </BarChart>
+              </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Key Metrics Grid */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Growth Metrics</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total Users</span>
+                  <span className="font-semibold">{realTimeMetrics?.totalUsers.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Active Creators</span>
+                  <span className="font-semibold">{realTimeMetrics?.activeCreators.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total Podcasts</span>
+                  <span className="font-semibold">{realTimeMetrics?.totalPodcasts.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total Episodes</span>
+                  <span className="font-semibold">{realTimeMetrics?.totalEpisodes.toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Ad Performance</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total Impressions</span>
+                  <span className="font-semibold">{realTimeMetrics?.totalImpressions.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Ad Revenue</span>
+                  <span className="font-semibold">${Math.round(realTimeMetrics?.adRevenue || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">PPI Revenue</span>
+                  <span className="font-semibold">${Math.round(realTimeMetrics?.ppiRevenue || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Qualified Inquiries</span>
+                  <span className="font-semibold">{realTimeMetrics?.qualifiedInquiries.toFixed(0)}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Unit Economics</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">CAC</span>
+                  <span className="font-semibold">${realTimeMetrics?.cac.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">LTV</span>
+                  <span className="font-semibold">${realTimeMetrics?.ltv.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">LTV:CAC Ratio</span>
+                  <span className="font-semibold">
+                    {realTimeMetrics?.cac > 0 ? (realTimeMetrics.ltv / realTimeMetrics.cac).toFixed(1) : 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Payback Period</span>
+                  <span className="font-semibold">
+                    {realTimeMetrics?.mrr > 0 ? Math.round((realTimeMetrics.cac / (realTimeMetrics.mrr / (realTimeMetrics.totalUsers || 1)))) : 'N/A'}mo
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Revenue Details Tab */}
+        <TabsContent value="revenue" className="space-y-6">
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Revenue by Source</CardTitle>
+                <CardDescription>Breakdown of all revenue streams</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Subscriptions', value: realTimeMetrics?.mrr || 0 },
+                        { name: 'Ads', value: realTimeMetrics?.adRevenue || 0 },
+                        { name: 'PPI/PPC', value: realTimeMetrics?.ppiRevenue || 0 },
+                        { name: 'Sponsorships', value: realTimeMetrics?.sponsorshipRevenue || 0 },
+                        { name: 'Awards', value: realTimeMetrics?.awardsRevenue || 0 },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {COLORS.map((color, index) => (
+                        <Cell key={`cell-${index}`} fill={color} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => `$${Math.round(value).toLocaleString()}`} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Cost Structure</CardTitle>
+                <CardDescription>Operating expenses breakdown</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Creator Payouts</span>
+                  <span className="text-xl font-bold">${Math.round(realTimeMetrics?.creatorPayouts || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Storage Costs</span>
+                  <span className="font-semibold">${Math.round(realTimeMetrics?.storageCosts || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Bandwidth Costs</span>
+                  <span className="font-semibold">${Math.round(realTimeMetrics?.bandwidthCosts || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">AI Compute</span>
+                  <span className="font-semibold">${Math.round(realTimeMetrics?.aiComputeCosts || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Payment Processing</span>
+                  <span className="font-semibold">${Math.round(realTimeMetrics?.paymentProcessingCosts || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t">
+                  <span className="text-sm font-bold">Total Costs</span>
+                  <span className="text-xl font-bold">${Math.round(realTimeMetrics?.totalCosts || 0).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Awards Revenue Program</CardTitle>
+              <CardDescription>Revenue from awards programs and sponsorships</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Veteran Podcast Awards</span>
+                <span className="font-semibold">${Math.round(assumptions.veteranAwardsRevenue).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Additional Programs ({assumptions.additionalAwardsProgramsCount})</span>
+                <span className="font-semibold">${Math.round(assumptions.additionalAwardsProgramsCount * assumptions.avgAwardProgramRevenue).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">Tickets & Merch</span>
+                <span className="font-semibold">${Math.round(assumptions.ticketMerchRevenue).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t">
+                <span className="text-sm font-bold">Total Awards Revenue</span>
+                <span className="text-xl font-bold">${Math.round(realTimeMetrics?.awardsRevenue || 0).toLocaleString()}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Ad Breakdown Tab */}
+        <TabsContent value="ad-breakdown" className="space-y-6">
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Host-Read Ads</CardTitle>
+                <CardDescription>Premium podcast advertising</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">CPM</span>
+                  <span className="font-semibold">${assumptions.hostReadCpm}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Fill Rate</span>
+                  <span className="font-semibold">{assumptions.hostReadFillRate}%</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t">
+                  <span className="text-sm font-bold">Revenue</span>
+                  <span className="text-lg font-bold">${Math.round(realTimeMetrics?.hostReadRevenue || 0).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Announcer-Read Ads</CardTitle>
+                <CardDescription>Standard audio advertising</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">CPM</span>
+                  <span className="font-semibold">${assumptions.announcerReadCpm}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Fill Rate</span>
+                  <span className="font-semibold">{assumptions.announcerReadFillRate}%</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t">
+                  <span className="text-sm font-bold">Revenue</span>
+                  <span className="text-lg font-bold">${Math.round(realTimeMetrics?.announcerRevenue || 0).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Programmatic Audio</CardTitle>
+                <CardDescription>Automated ad placement</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">CPM</span>
+                  <span className="font-semibold">${assumptions.programmaticAudioCpm}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Fill Rate</span>
+                  <span className="font-semibold">{assumptions.programmaticFillRate}%</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t">
+                  <span className="text-sm font-bold">Revenue</span>
+                  <span className="text-lg font-bold">${Math.round(realTimeMetrics?.programmaticRevenue || 0).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Video Ads</CardTitle>
+                <CardDescription>Video advertising</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">CPM</span>
+                  <span className="font-semibold">${assumptions.videoAdsCpm}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Fill Rate</span>
+                  <span className="font-semibold">{assumptions.videoFillRate}%</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t">
+                  <span className="text-sm font-bold">Revenue</span>
+                  <span className="text-lg font-bold">${Math.round(realTimeMetrics?.videoRevenue || 0).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Display Ads</CardTitle>
+                <CardDescription>Banner and display</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">CPM</span>
+                  <span className="font-semibold">${assumptions.displayAdsCpm}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Fill Rate</span>
+                  <span className="font-semibold">{assumptions.displayFillRate}%</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t">
+                  <span className="text-sm font-bold">Revenue</span>
+                  <span className="text-lg font-bold">${Math.round(realTimeMetrics?.displayRevenue || 0).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">PPI/PPC Calls</CardTitle>
+                <CardDescription>Call-based advertising</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Payout/Inquiry</span>
+                  <span className="font-semibold">${assumptions.ppiPayoutPerInquiry}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Qualified Calls</span>
+                  <span className="font-semibold">{realTimeMetrics?.qualifiedInquiries.toFixed(0)}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t">
+                  <span className="text-sm font-bold">Revenue</span>
+                  <span className="text-lg font-bold">${Math.round(realTimeMetrics?.ppiRevenue || 0).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Ad Inventory Distribution</CardTitle>
+              <CardDescription>Pre-roll, mid-roll, and post-roll split</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Pre-Roll', value: assumptions.preRollPercent },
+                      { name: 'Mid-Roll', value: assumptions.midRollPercent },
+                      { name: 'Post-Roll', value: assumptions.postRollPercent },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {COLORS.slice(0, 3).map((color, index) => (
+                      <Cell key={`cell-${index}`} fill={color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Projections Tab */}
+        <TabsContent value="projections" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>12-Month Revenue Projection</CardTitle>
+              <CardDescription>Based on current metrics and growth assumptions</CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto -mx-6 px-6">
+              <div className="min-w-[500px]">
+                <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={projections}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => `$${Math.round(value).toLocaleString()}`} />
+                  <Legend />
+                  <Line type="monotone" dataKey="mrr" stroke="#0088FE" name="MRR" strokeWidth={2} />
+                  <Line type="monotone" dataKey="adRevenue" stroke="#00C49F" name="Ad Revenue" strokeWidth={2} />
+                  <Line type="monotone" dataKey="totalRevenue" stroke="#FF8042" name="Total Revenue" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Projected Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={projections}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="users" stroke="hsl(var(--primary))" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Key Projections (Month 12)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Projected Users</span>
+                  <span className="font-semibold">{projections[11]?.users.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Projected MRR</span>
+                  <span className="font-semibold">${Math.round(projections[11]?.mrr || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Projected ARR</span>
+                  <span className="font-semibold">${Math.round(projections[11]?.arr || 0).toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t">
+                  <span className="text-sm font-bold">Total Revenue</span>
+                  <span className="text-xl font-bold">${Math.round(projections[11]?.totalRevenue || 0).toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Proforma Tab */}
+        <TabsContent value="proforma" className="space-y-6">
+          <ProformaTemplate 
+            assumptions={assumptions}
+            projectedRevenue={{
+              revenueData: projections
+            }}
+          />
+        </TabsContent>
+
+        {/* Assumptions Tab */}
+        <TabsContent value="assumptions" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Edit Financial Assumptions</CardTitle>
+              <CardDescription>Adjust these values to model different scenarios</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Growth Assumptions */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Growth Assumptions</h3>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="monthlyUserGrowth">Monthly User Growth (%)</Label>
+                    <Input
+                      id="monthlyUserGrowth"
+                      type="number"
+                      value={assumptions.monthlyUserGrowth}
+                      onChange={(e) => updateAssumption('monthlyUserGrowth', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="creatorGrowth">Creator Growth (%)</Label>
+                    <Input
+                      id="creatorGrowth"
+                      type="number"
+                      value={assumptions.creatorGrowth}
+                      onChange={(e) => updateAssumption('creatorGrowth', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="conversionRate">Conversion Rate (%)</Label>
+                    <Input
+                      id="conversionRate"
+                      type="number"
+                      value={assumptions.conversionRate}
+                      onChange={(e) => updateAssumption('conversionRate', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="churnRate">Churn Rate (%)</Label>
+                    <Input
+                      id="churnRate"
+                      type="number"
+                      value={assumptions.churnRate}
+                      onChange={(e) => updateAssumption('churnRate', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cashReserves">Cash Reserves ($)</Label>
+                    <Input
+                      id="cashReserves"
+                      type="number"
+                      value={assumptions.cashReserves}
+                      onChange={(e) => updateAssumption('cashReserves', parseFloat(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">Used to calculate runway</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ad Type CPMs */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Ad Type CPMs ($)</h3>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="hostReadCpm">Host-Read CPM</Label>
+                    <Input
+                      id="hostReadCpm"
+                      type="number"
+                      value={assumptions.hostReadCpm}
+                      onChange={(e) => updateAssumption('hostReadCpm', parseFloat(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">Range: $18-$50</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="announcerReadCpm">Announcer-Read CPM</Label>
+                    <Input
+                      id="announcerReadCpm"
+                      type="number"
+                      value={assumptions.announcerReadCpm}
+                      onChange={(e) => updateAssumption('announcerReadCpm', parseFloat(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">Range: $12-$22</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="programmaticAudioCpm">Programmatic CPM</Label>
+                    <Input
+                      id="programmaticAudioCpm"
+                      type="number"
+                      value={assumptions.programmaticAudioCpm}
+                      onChange={(e) => updateAssumption('programmaticAudioCpm', parseFloat(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">Range: $2-$8</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="videoAdsCpm">Video Ads CPM</Label>
+                    <Input
+                      id="videoAdsCpm"
+                      type="number"
+                      value={assumptions.videoAdsCpm}
+                      onChange={(e) => updateAssumption('videoAdsCpm', parseFloat(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">Range: $6-$18</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="displayAdsCpm">Display Ads CPM</Label>
+                    <Input
+                      id="displayAdsCpm"
+                      type="number"
+                      value={assumptions.displayAdsCpm}
+                      onChange={(e) => updateAssumption('displayAdsCpm', parseFloat(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">Range: $3-$12</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Fill Rates */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Ad Fill Rates (%)</h3>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="hostReadFillRate">Host-Read Fill Rate</Label>
+                    <Input
+                      id="hostReadFillRate"
+                      type="number"
+                      value={assumptions.hostReadFillRate}
+                      onChange={(e) => updateAssumption('hostReadFillRate', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="announcerReadFillRate">Announcer Fill Rate</Label>
+                    <Input
+                      id="announcerReadFillRate"
+                      type="number"
+                      value={assumptions.announcerReadFillRate}
+                      onChange={(e) => updateAssumption('announcerReadFillRate', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="programmaticFillRate">Programmatic Fill Rate</Label>
+                    <Input
+                      id="programmaticFillRate"
+                      type="number"
+                      value={assumptions.programmaticFillRate}
+                      onChange={(e) => updateAssumption('programmaticFillRate', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="videoFillRate">Video Fill Rate</Label>
+                    <Input
+                      id="videoFillRate"
+                      type="number"
+                      value={assumptions.videoFillRate}
+                      onChange={(e) => updateAssumption('videoFillRate', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="displayFillRate">Display Fill Rate</Label>
+                    <Input
+                      id="displayFillRate"
+                      type="number"
+                      value={assumptions.displayFillRate}
+                      onChange={(e) => updateAssumption('displayFillRate', parseFloat(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* PPI/PPC Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">PPI/PPC Call-Based Ads</h3>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="ppiPayoutPerInquiry">Payout per Inquiry ($)</Label>
+                    <Input
+                      id="ppiPayoutPerInquiry"
+                      type="number"
+                      value={assumptions.ppiPayoutPerInquiry}
+                      onChange={(e) => updateAssumption('ppiPayoutPerInquiry', parseFloat(e.target.value))}
+                    />
+                    <p className="text-xs text-muted-foreground">Range: $15-$120</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ppiConversionRate">Conversion Rate (%)</Label>
+                    <Input
+                      id="ppiConversionRate"
+                      type="number"
+                      value={assumptions.ppiConversionRate}
+                      onChange={(e) => updateAssumption('ppiConversionRate', parseFloat(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Awards Revenue */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Awards Program Revenue</h3>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="veteranAwardsRevenue">Veteran Awards Revenue ($)</Label>
+                    <Input
+                      id="veteranAwardsRevenue"
+                      type="number"
+                      value={assumptions.veteranAwardsRevenue}
+                      onChange={(e) => updateAssumption('veteranAwardsRevenue', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="additionalAwardsProgramsCount">Additional Programs Count</Label>
+                    <Input
+                      id="additionalAwardsProgramsCount"
+                      type="number"
+                      value={assumptions.additionalAwardsProgramsCount}
+                      onChange={(e) => updateAssumption('additionalAwardsProgramsCount', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="avgAwardProgramRevenue">Avg Program Revenue ($)</Label>
+                    <Input
+                      id="avgAwardProgramRevenue"
+                      type="number"
+                      value={assumptions.avgAwardProgramRevenue}
+                      onChange={(e) => updateAssumption('avgAwardProgramRevenue', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ticketMerchRevenue">Ticket & Merch Revenue ($)</Label>
+                    <Input
+                      id="ticketMerchRevenue"
+                      type="number"
+                      value={assumptions.ticketMerchRevenue}
+                      onChange={(e) => updateAssumption('ticketMerchRevenue', parseFloat(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Cost Structure */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Cost Structure</h3>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="storageCostPerGB">Storage Cost per GB ($)</Label>
+                    <Input
+                      id="storageCostPerGB"
+                      type="number"
+                      step="0.01"
+                      value={assumptions.storageCostPerGB}
+                      onChange={(e) => updateAssumption('storageCostPerGB', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bandwidthCostPerGB">Bandwidth Cost per GB ($)</Label>
+                    <Input
+                      id="bandwidthCostPerGB"
+                      type="number"
+                      step="0.01"
+                      value={assumptions.bandwidthCostPerGB}
+                      onChange={(e) => updateAssumption('bandwidthCostPerGB', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="aiCostPerEpisode">AI Cost per Episode ($)</Label>
+                    <Input
+                      id="aiCostPerEpisode"
+                      type="number"
+                      step="0.01"
+                      value={assumptions.aiCostPerEpisode}
+                      onChange={(e) => updateAssumption('aiCostPerEpisode', parseFloat(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="creatorPayoutPercent">Creator Payout (%)</Label>
+                    <Input
+                      id="creatorPayoutPercent"
+                      type="number"
+                      value={assumptions.creatorPayoutPercent}
+                      onChange={(e) => updateAssumption('creatorPayoutPercent', parseFloat(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default CFODashboard;
