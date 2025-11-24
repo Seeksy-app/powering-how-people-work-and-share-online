@@ -584,7 +584,7 @@ export function ProFormaSpreadsheetGenerator() {
   };
 
   return (
-    <Button onClick={generateSpreadsheet} disabled={generating} variant="outline" size="sm" className="w-full justify-start">
+    <Button onClick={generateSpreadsheet} disabled={generating} variant="outline" size="sm" className="w-full">
       <FileSpreadsheet className="h-4 w-4 mr-2" />
       {generating ? "Generating..." : "Excel (.xlsx)"}
     </Button>
