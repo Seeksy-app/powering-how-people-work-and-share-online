@@ -243,7 +243,7 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-background/50"
+                        className="absolute top-2 right-2 h-8 w-8 hover:bg-background/50"
                         onClick={(e) => {
                           e.stopPropagation();
                           togglePin(module.key);
