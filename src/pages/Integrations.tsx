@@ -195,7 +195,7 @@ const Integrations = () => {
       if (error) throw error;
 
       toast({
-        title: newValue ? "App Activated" : "App Deactivated",
+        title: newValue ? "Seeky Activated" : "Seeky Deactivated",
         description: `${moduleNameStr.charAt(0).toUpperCase() + moduleNameStr.slice(1).replace(/_/g, ' ')} has been ${newValue ? 'activated' : 'deactivated'}.`,
       });
       
@@ -203,7 +203,7 @@ const Integrations = () => {
       window.dispatchEvent(new Event("pinnedModulesChanged"));
     } catch (error: any) {
       toast({
-        title: "Error updating app",
+        title: "Error updating Seeky",
         description: error.message,
         variant: "destructive",
       });
@@ -353,22 +353,22 @@ const Integrations = () => {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Apps</BreadcrumbPage>
+              <BreadcrumbPage>Seekies</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
 
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-3">Apps</h1>
+          <h1 className="text-4xl font-bold mb-3">Seekies</h1>
           <p className="text-muted-foreground text-lg mb-6">
-            Connect your tools and activate apps
+            Connect your tools and explore available Seekies
           </p>
           
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search apps..."
+              placeholder="Search Seekies..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9"
@@ -1085,9 +1085,9 @@ const Integrations = () => {
       <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deactivate App?</AlertDialogTitle>
+            <AlertDialogTitle>Deactivate Seeky?</AlertDialogTitle>
             <AlertDialogDescription>
-              Your data won't be deleted by deactivating this app. You can reactivate it anytime and your data will still be there.
+              Your data won&apos;t be deleted by deactivating this Seeky. You can reactivate it anytime and your data will still be there.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

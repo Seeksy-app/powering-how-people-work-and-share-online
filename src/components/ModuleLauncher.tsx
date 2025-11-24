@@ -151,18 +151,18 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
       .eq("user_id", user.id);
 
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update pinned apps",
-        variant: "destructive",
-      });
+    toast({
+      title: "Error",
+      description: "Failed to update pinned Seekies",
+      variant: "destructive",
+    });
       return;
     }
 
     setPinnedModules(newPinned);
     toast({
       title: pinnedModules.includes(moduleKey) ? "Unpinned" : "Pinned",
-      description: `App ${pinnedModules.includes(moduleKey) ? "removed from" : "added to"} sidebar`,
+      description: `Seeky ${pinnedModules.includes(moduleKey) ? "removed from" : "added to"} sidebar`,
     });
 
     // Trigger sidebar refresh
@@ -198,10 +198,10 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
       <DialogContent className="max-w-5xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Active Apps
+            Active Seekies
           </DialogTitle>
           <DialogDescription className="text-base">
-            Select an app to open. Pin or unpin apps to customize your sidebar.
+            Select a Seeky to open. Pin or unpin Seekies to customize your sidebar.
           </DialogDescription>
         </DialogHeader>
 
@@ -211,9 +211,9 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
               <Grid3x3 className="h-12 w-12 text-primary/50" />
             </div>
             <div className="text-center space-y-2">
-              <h3 className="text-xl font-semibold text-foreground">Add your first app</h3>
+              <h3 className="text-xl font-semibold text-foreground">Add your first Seeky</h3>
               <p className="text-muted-foreground max-w-md">
-                Visit Apps in Account Settings to enable apps, then come back here to pin them to your sidebar (see All Apps).
+                Visit Seekies in Account Settings to enable Seekies, then come back here to pin them to your sidebar (see All Seekies).
               </p>
             </div>
           </div>
@@ -267,7 +267,7 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
                 <Target className="h-4 w-4 text-primary" />
                 <AlertTitle className="text-primary font-semibold">Keep Your Sidebar Clean! 🎯</AlertTitle>
                 <AlertDescription className="text-base">
-                  Only pin the apps you use most often to keep your sidebar uncluttered. All your apps are always accessible here.
+                  Only pin the Seekies you use most often to keep your sidebar uncluttered. All your Seekies are always accessible here.
                 </AlertDescription>
                 <Button
                   variant="ghost"
