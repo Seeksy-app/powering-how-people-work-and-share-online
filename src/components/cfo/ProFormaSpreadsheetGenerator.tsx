@@ -8,44 +8,203 @@ import * as XLSX from "xlsx";
 export function ProFormaSpreadsheetGenerator() {
   const [generating, setGenerating] = useState(false);
 
+  // Core assumptions
+  const assumptions = {
+    // Subscription pricing
+    podcasterBasic: 29,
+    podcasterPro: 79,
+    podcasterEnterprise: 199,
+    eventCreator: 49,
+    eventOrganization: 149,
+    politicalCampaign: 299,
+    myPageBasic: 19,
+    myPagePro: 49,
+    industryCreator: 99,
+    
+    // Growth
+    startingUsers: 100,
+    monthlyGrowthRate: 0.15, // 15%
+    
+    // Segment distribution
+    podcastersPct: 0.35,
+    eventCreatorsPct: 0.20,
+    eventOrgsPct: 0.10,
+    politicalPct: 0.05,
+    myPagePct: 0.25,
+    industryPct: 0.05,
+    
+    // Ad revenue
+    platformCPM: 15,
+    episodesPerPodcaster: 4,
+    listenersPerEpisode: 500,
+    adFillRate: 0.65,
+    platformRevShare: 0.30,
+    
+    // Quick Ads
+    quickAdsStarter: 199,
+    quickAdsGrowth: 499,
+    quickAdsPro: 999,
+    quickAdsEnterpriseLow: 2500,
+    quickAdsEnterpriseHigh: 25000,
+    startingAdvertisers: 50,
+    advertiserGrowth: 0.20,
+    tierMixStarter: 0.50,
+    tierMixGrowth: 0.30,
+    tierMixPro: 0.15,
+    tierMixEnterprise: 0.05,
+    
+    // Costs
+    aiComputePerUser: 2.5,
+    storageCostPerGB: 0.02,
+    storagePerUser: 5,
+    bandwidthCostPerGB: 0.08,
+    bandwidthPerUser: 10,
+    streamingCostPerHour: 0.15,
+    streamingHoursPerUser: 5,
+    supportCostPerUser: 1.5,
+    cac: 45,
+    paymentProcessingFee: 0.029,
+    churnRate: 0.05,
+  };
+
+  // Calculate 36 months of projections
+  const calculateMonthlyData = () => {
+    const months = [];
+    
+    for (let i = 0; i < 36; i++) {
+      const totalUsers = Math.round(assumptions.startingUsers * Math.pow(1 + assumptions.monthlyGrowthRate, i));
+      const podcasters = Math.round(totalUsers * assumptions.podcastersPct);
+      const eventCreators = Math.round(totalUsers * assumptions.eventCreatorsPct);
+      const eventOrgs = Math.round(totalUsers * assumptions.eventOrgsPct);
+      const political = Math.round(totalUsers * assumptions.politicalPct);
+      const myPageUsers = Math.round(totalUsers * assumptions.myPagePct);
+      const industryCreators = Math.round(totalUsers * assumptions.industryPct);
+      
+      // Revenue calculations
+      const podcasterRev = podcasters * ((assumptions.podcasterBasic * 0.4) + (assumptions.podcasterPro * 0.4) + (assumptions.podcasterEnterprise * 0.2));
+      const eventToolsRev = (eventCreators * assumptions.eventCreator) + (eventOrgs * assumptions.eventOrganization);
+      const politicalRev = political * assumptions.politicalCampaign;
+      const myPageRev = myPageUsers * ((assumptions.myPageBasic * 0.7) + (assumptions.myPagePro * 0.3));
+      const industryRev = industryCreators * assumptions.industryCreator;
+      
+      // Ad insertion revenue
+      const adInsertionRev = (podcasters * assumptions.episodesPerPodcaster * assumptions.listenersPerEpisode * 
+        (assumptions.platformCPM / 1000) * assumptions.adFillRate) * assumptions.platformRevShare;
+      
+      // Quick Ads revenue
+      const advertisers = Math.round(assumptions.startingAdvertisers * Math.pow(1 + assumptions.advertiserGrowth, i));
+      const quickAdsRev = advertisers * (
+        (assumptions.tierMixStarter * assumptions.quickAdsStarter) +
+        (assumptions.tierMixGrowth * assumptions.quickAdsGrowth) +
+        (assumptions.tierMixPro * assumptions.quickAdsPro) +
+        (assumptions.tierMixEnterprise * ((assumptions.quickAdsEnterpriseLow + assumptions.quickAdsEnterpriseHigh) / 2))
+      );
+      
+      // Additional revenue streams
+      const blogModuleRev = totalUsers * 0.15 * 25; // 15% adoption at $25/mo
+      const rssAutoPostRev = podcasters * 0.2 * 15; // 20% adoption at $15/mo
+      const autoPublishRev = totalUsers * 0.1 * 10; // 10% adoption at $10/mo
+      
+      const totalRevenue = podcasterRev + eventToolsRev + politicalRev + myPageRev + industryRev + 
+        adInsertionRev + quickAdsRev + blogModuleRev + rssAutoPostRev + autoPublishRev;
+      
+      // Cost calculations
+      const aiComputeCost = totalUsers * assumptions.aiComputePerUser;
+      const storageCost = totalUsers * assumptions.storagePerUser * assumptions.storageCostPerGB;
+      const bandwidthCost = totalUsers * assumptions.bandwidthPerUser * assumptions.bandwidthCostPerGB;
+      const streamingCost = totalUsers * assumptions.streamingHoursPerUser * assumptions.streamingCostPerHour;
+      const supportCost = totalUsers * assumptions.supportCostPerUser;
+      const cacCost = i === 0 ? (totalUsers * assumptions.cac) : ((totalUsers - months[i-1].totalUsers) * assumptions.cac);
+      const paymentProcessingCost = totalRevenue * assumptions.paymentProcessingFee;
+      const churnImpact = totalUsers * assumptions.churnRate * ((assumptions.podcasterBasic + assumptions.myPageBasic) / 2);
+      
+      const totalCosts = aiComputeCost + storageCost + bandwidthCost + streamingCost + supportCost + 
+        cacCost + paymentProcessingCost + churnImpact;
+      
+      const grossMargin = totalRevenue - totalCosts;
+      const grossMarginPct = totalRevenue > 0 ? grossMargin / totalRevenue : 0;
+      const netProfit = grossMargin;
+      const netMarginPct = totalRevenue > 0 ? netProfit / totalRevenue : 0;
+      
+      months.push({
+        month: i + 1,
+        totalUsers,
+        podcasters,
+        eventCreators,
+        eventOrgs,
+        political,
+        myPageUsers,
+        industryCreators,
+        podcasterRev,
+        eventToolsRev,
+        politicalRev,
+        myPageRev,
+        industryRev,
+        adInsertionRev,
+        quickAdsRev,
+        blogModuleRev,
+        rssAutoPostRev,
+        autoPublishRev,
+        totalRevenue,
+        aiComputeCost,
+        storageCost,
+        bandwidthCost,
+        streamingCost,
+        supportCost,
+        cacCost,
+        paymentProcessingCost,
+        churnImpact,
+        totalCosts,
+        grossMargin,
+        grossMarginPct,
+        netProfit,
+        netMarginPct,
+        advertisers,
+      });
+    }
+    
+    return months;
+  };
+
   const generateSpreadsheet = () => {
     setGenerating(true);
     
     try {
+      const monthlyData = calculateMonthlyData();
       const workbook = XLSX.utils.book_new();
 
       // TAB 1: Executive Summary
-      const executiveSummary = generateExecutiveSummary();
+      const executiveSummary = generateExecutiveSummary(monthlyData);
       const ws1 = XLSX.utils.aoa_to_sheet(executiveSummary);
       XLSX.utils.book_append_sheet(workbook, ws1, "Executive Summary");
 
       // TAB 2: Assumptions
-      const assumptions = generateAssumptions();
-      const ws2 = XLSX.utils.aoa_to_sheet(assumptions);
+      const assumptionsSheet = generateAssumptions();
+      const ws2 = XLSX.utils.aoa_to_sheet(assumptionsSheet);
       XLSX.utils.book_append_sheet(workbook, ws2, "Assumptions");
 
       // TAB 3: 36-Month Forecast
-      const monthlyForecast = generateMonthlyForecast();
+      const monthlyForecast = generateMonthlyForecast(monthlyData);
       const ws3 = XLSX.utils.aoa_to_sheet(monthlyForecast);
       XLSX.utils.book_append_sheet(workbook, ws3, "36-Month Forecast");
 
       // TAB 4: Annual Summary
-      const annualSummary = generateAnnualSummary();
+      const annualSummary = generateAnnualSummary(monthlyData);
       const ws4 = XLSX.utils.aoa_to_sheet(annualSummary);
       XLSX.utils.book_append_sheet(workbook, ws4, "Annual Summary");
 
       // TAB 5: Revenue Breakdown
-      const revenueBreakdown = generateRevenueBreakdown();
+      const revenueBreakdown = generateRevenueBreakdown(monthlyData);
       const ws5 = XLSX.utils.aoa_to_sheet(revenueBreakdown);
       XLSX.utils.book_append_sheet(workbook, ws5, "Revenue Breakdown");
 
       // TAB 6: Cost Breakdown
-      const costBreakdown = generateCostBreakdown();
+      const costBreakdown = generateCostBreakdown(monthlyData);
       const ws6 = XLSX.utils.aoa_to_sheet(costBreakdown);
       XLSX.utils.book_append_sheet(workbook, ws6, "Cost Breakdown");
 
       // TAB 7: Unit Economics
-      const unitEconomics = generateUnitEconomics();
+      const unitEconomics = generateUnitEconomics(monthlyData);
       const ws7 = XLSX.utils.aoa_to_sheet(unitEconomics);
       XLSX.utils.book_append_sheet(workbook, ws7, "Unit Economics");
 
@@ -68,34 +227,55 @@ export function ProFormaSpreadsheetGenerator() {
     }
   };
 
-  const generateExecutiveSummary = () => {
+  const generateExecutiveSummary = (data: any[]) => {
+    // Calculate annual totals
+    const year1Revenue = data.slice(0, 12).reduce((sum, m) => sum + m.totalRevenue, 0);
+    const year2Revenue = data.slice(12, 24).reduce((sum, m) => sum + m.totalRevenue, 0);
+    const year3Revenue = data.slice(24, 36).reduce((sum, m) => sum + m.totalRevenue, 0);
+    
+    const year1Costs = data.slice(0, 12).reduce((sum, m) => sum + m.totalCosts, 0);
+    const year2Costs = data.slice(12, 24).reduce((sum, m) => sum + m.totalCosts, 0);
+    const year3Costs = data.slice(24, 36).reduce((sum, m) => sum + m.totalCosts, 0);
+    
+    const year1Profit = year1Revenue - year1Costs;
+    const year2Profit = year2Revenue - year2Costs;
+    const year3Profit = year3Revenue - year3Costs;
+    
+    const avgUsers1 = data.slice(0, 12).reduce((sum, m) => sum + m.totalUsers, 0) / 12;
+    const avgUsers2 = data.slice(12, 24).reduce((sum, m) => sum + m.totalUsers, 0) / 12;
+    const avgUsers3 = data.slice(24, 36).reduce((sum, m) => sum + m.totalUsers, 0) / 12;
+    
+    const endUsers1 = data[11].totalUsers;
+    const endUsers2 = data[23].totalUsers;
+    const endUsers3 = data[35].totalUsers;
+    
     return [
       ["SEEKSY - EXECUTIVE SUMMARY", "", "", "", ""],
       ["3-Year Financial Pro Forma", "", "", "", ""],
       ["", "", "", "", ""],
       ["", "Year 1", "Year 2", "Year 3", "Total"],
-      ["Annual Revenue", "=SUM('36-Month Forecast'!B50:M50)", "=SUM('36-Month Forecast'!N50:Y50)", "=SUM('36-Month Forecast'!Z50:AK50)", "=SUM(B5:D5)"],
-      ["Annual Costs", "=SUM('36-Month Forecast'!B65:M65)", "=SUM('36-Month Forecast'!N65:Y65)", "=SUM('36-Month Forecast'!Z65:AK65)", "=SUM(B6:D6)"],
-      ["Net Profit", "=B5-B6", "=C5-C6", "=D5-D6", "=E5-E6"],
+      ["Annual Revenue", Math.round(year1Revenue), Math.round(year2Revenue), Math.round(year3Revenue), Math.round(year1Revenue + year2Revenue + year3Revenue)],
+      ["Annual Costs", Math.round(year1Costs), Math.round(year2Costs), Math.round(year3Costs), Math.round(year1Costs + year2Costs + year3Costs)],
+      ["Net Profit", Math.round(year1Profit), Math.round(year2Profit), Math.round(year3Profit), Math.round(year1Profit + year2Profit + year3Profit)],
       ["", "", "", "", ""],
-      ["Gross Margin %", "=(B5-B6)/B5", "=(C5-C6)/C5", "=(D5-D6)/D5", "=(E5-E6)/E5"],
-      ["Net Margin %", "=B7/B5", "=C7/C5", "=D7/D5", "=E7/E5"],
+      ["Gross Margin %", `${((year1Revenue - year1Costs) / year1Revenue * 100).toFixed(1)}%`, `${((year2Revenue - year2Costs) / year2Revenue * 100).toFixed(1)}%`, `${((year3Revenue - year3Costs) / year3Revenue * 100).toFixed(1)}%`, ""],
+      ["Net Margin %", `${(year1Profit / year1Revenue * 100).toFixed(1)}%`, `${(year2Profit / year2Revenue * 100).toFixed(1)}%`, `${(year3Profit / year3Revenue * 100).toFixed(1)}%`, ""],
       ["", "", "", "", ""],
-      ["Average Users", "=AVERAGE('36-Month Forecast'!B10:M10)", "=AVERAGE('36-Month Forecast'!N10:Y10)", "=AVERAGE('36-Month Forecast'!Z10:AK10)", ""],
-      ["Ending Users", "='36-Month Forecast'!M10", "='36-Month Forecast'!Y10", "='36-Month Forecast'!AK10", ""],
-      ["YoY Growth %", "", "=(C13-B13)/B13", "=(D13-C13)/C13", ""],
+      ["Average Users", Math.round(avgUsers1), Math.round(avgUsers2), Math.round(avgUsers3), ""],
+      ["Ending Users", endUsers1, endUsers2, endUsers3, ""],
+      ["YoY Growth %", "", `${((endUsers2 - endUsers1) / endUsers1 * 100).toFixed(1)}%`, `${((endUsers3 - endUsers2) / endUsers2 * 100).toFixed(1)}%`, ""],
       ["", "", "", "", ""],
       ["KEY DRIVERS", "", "", "", ""],
-      ["Subscription ARPU", "=B5/B12", "=C5/C12", "=D5/D12", ""],
-      ["CAC", "=Assumptions!B28", "", "", ""],
-      ["LTV", "=(Assumptions!B6*12)/Assumptions!B31", "", "", ""],
-      ["Payback Period (months)", "=Assumptions!B28/(Assumptions!B6*Assumptions!B31)", "", "", ""],
+      ["Subscription ARPU", `$${Math.round(year1Revenue / avgUsers1)}`, `$${Math.round(year2Revenue / avgUsers2)}`, `$${Math.round(year3Revenue / avgUsers3)}`, ""],
+      ["CAC", `$${assumptions.cac}`, "", "", ""],
+      ["LTV", `$${Math.round((year1Revenue / avgUsers1) * 12 / assumptions.churnRate)}`, "", "", ""],
+      ["Payback Period (months)", Math.round(assumptions.cac / ((year1Revenue / avgUsers1) / 12)), "", "", ""],
       ["", "", "", "", ""],
       ["KEY ASSUMPTIONS", "", "", "", ""],
-      ["Starting Users", "=Assumptions!B14", "", "", ""],
-      ["Monthly Growth %", "=Assumptions!B15", "", "", ""],
-      ["Platform CPM", "=Assumptions!B20", "", "", ""],
-      ["Ad Fill Rate", "=Assumptions!B22", "", "", ""],
+      ["Starting Users", assumptions.startingUsers, "", "", ""],
+      ["Monthly Growth %", `${(assumptions.monthlyGrowthRate * 100).toFixed(0)}%`, "", "", ""],
+      ["Platform CPM", `$${assumptions.platformCPM}`, "", "", ""],
+      ["Ad Fill Rate", `${(assumptions.adFillRate * 100).toFixed(0)}%`, "", "", ""],
     ];
   };
 
@@ -105,212 +285,233 @@ export function ProFormaSpreadsheetGenerator() {
       ["All pricing and growth assumptions", "", ""],
       ["", "", ""],
       ["SUBSCRIPTION PRICING (Monthly)", "", ""],
-      ["Podcaster Basic", 29, ""],
-      ["Podcaster Pro", 79, ""],
-      ["Podcaster Enterprise", 199, ""],
-      ["Event Creator", 49, ""],
-      ["Event Organization", 149, ""],
-      ["Political Campaign", 299, ""],
-      ["My Page Basic", 19, ""],
-      ["My Page Pro", 49, ""],
-      ["Industry Creator", 99, ""],
+      ["Podcaster Basic", assumptions.podcasterBasic, ""],
+      ["Podcaster Pro", assumptions.podcasterPro, ""],
+      ["Podcaster Enterprise", assumptions.podcasterEnterprise, ""],
+      ["Event Creator", assumptions.eventCreator, ""],
+      ["Event Organization", assumptions.eventOrganization, ""],
+      ["Political Campaign", assumptions.politicalCampaign, ""],
+      ["My Page Basic", assumptions.myPageBasic, ""],
+      ["My Page Pro", assumptions.myPagePro, ""],
+      ["Industry Creator", assumptions.industryCreator, ""],
       ["", "", ""],
       ["CUSTOMER GROWTH", "", ""],
-      ["Starting Total Users", 100, ""],
-      ["Monthly Growth Rate %", 15, "%"],
+      ["Starting Total Users", assumptions.startingUsers, ""],
+      ["Monthly Growth Rate %", `${(assumptions.monthlyGrowthRate * 100).toFixed(0)}%`, ""],
       ["", "", ""],
       ["SEGMENT DISTRIBUTION %", "", ""],
-      ["Podcasters %", 35, "%"],
-      ["Event Creators %", 20, "%"],
-      ["Event Organizations %", 10, "%"],
-      ["Political Campaigns %", 5, "%"],
-      ["My Page Users %", 25, "%"],
-      ["Industry Creators %", 5, "%"],
+      ["Podcasters %", `${(assumptions.podcastersPct * 100).toFixed(0)}%`, ""],
+      ["Event Creators %", `${(assumptions.eventCreatorsPct * 100).toFixed(0)}%`, ""],
+      ["Event Organizations %", `${(assumptions.eventOrgsPct * 100).toFixed(0)}%`, ""],
+      ["Political Campaigns %", `${(assumptions.politicalPct * 100).toFixed(0)}%`, ""],
+      ["My Page Users %", `${(assumptions.myPagePct * 100).toFixed(0)}%`, ""],
+      ["Industry Creators %", `${(assumptions.industryPct * 100).toFixed(0)}%`, ""],
       ["", "", ""],
       ["AD REVENUE ASSUMPTIONS", "", ""],
-      ["Platform CPM", 15, "per 1000"],
-      ["Episodes per Podcaster/Month", 4, ""],
-      ["Avg Listeners per Episode", 500, ""],
-      ["Ad Fill Rate %", 65, "%"],
-      ["Platform Rev Share %", 30, "%"],
+      ["Platform CPM", assumptions.platformCPM, "per 1000"],
+      ["Episodes per Podcaster/Month", assumptions.episodesPerPodcaster, ""],
+      ["Avg Listeners per Episode", assumptions.listenersPerEpisode, ""],
+      ["Ad Fill Rate %", `${(assumptions.adFillRate * 100).toFixed(0)}%`, ""],
+      ["Platform Rev Share %", `${(assumptions.platformRevShare * 100).toFixed(0)}%`, ""],
       ["", "", ""],
       ["QUICK ADS - ADVERTISER PRICING", "", ""],
-      ["Quick Ads Starter - Monthly", 199, "1 ad, 10k impressions"],
-      ["Quick Ads Growth - Monthly", 499, "3 ads, 50k impressions"],
-      ["Quick Ads Pro - Monthly", 999, "Unlimited ads, 200k impressions"],
-      ["Quick Ads Enterprise - Low", 2500, "Custom campaigns"],
-      ["Quick Ads Enterprise - High", 25000, "Full enterprise solution"],
-      ["Quick Ads Avg Advertisers/Month", 50, "Starting count"],
-      ["Quick Ads Growth Rate %", 20, "%"],
-      ["Quick Ads Tier Mix: Starter %", 50, "%"],
-      ["Quick Ads Tier Mix: Growth %", 30, "%"],
-      ["Quick Ads Tier Mix: Pro %", 15, "%"],
-      ["Quick Ads Tier Mix: Enterprise %", 5, "%"],
+      ["Quick Ads Starter - Monthly", assumptions.quickAdsStarter, "1 ad, 10k impressions"],
+      ["Quick Ads Growth - Monthly", assumptions.quickAdsGrowth, "3 ads, 50k impressions"],
+      ["Quick Ads Pro - Monthly", assumptions.quickAdsPro, "Unlimited ads, 200k impressions"],
+      ["Quick Ads Enterprise - Low", assumptions.quickAdsEnterpriseLow, "Custom campaigns"],
+      ["Quick Ads Enterprise - High", assumptions.quickAdsEnterpriseHigh, "Full enterprise solution"],
+      ["Quick Ads Avg Advertisers/Month", assumptions.startingAdvertisers, "Starting count"],
+      ["Quick Ads Growth Rate %", `${(assumptions.advertiserGrowth * 100).toFixed(0)}%`, ""],
+      ["Quick Ads Tier Mix: Starter %", `${(assumptions.tierMixStarter * 100).toFixed(0)}%`, ""],
+      ["Quick Ads Tier Mix: Growth %", `${(assumptions.tierMixGrowth * 100).toFixed(0)}%`, ""],
+      ["Quick Ads Tier Mix: Pro %", `${(assumptions.tierMixPro * 100).toFixed(0)}%`, ""],
+      ["Quick Ads Tier Mix: Enterprise %", `${(assumptions.tierMixEnterprise * 100).toFixed(0)}%`, ""],
       ["", "", ""],
       ["COST STRUCTURE", "", ""],
-      ["AI Compute Cost per User", 2.5, "per month"],
-      ["Storage Cost per GB", 0.02, ""],
-      ["Avg Storage per User (GB)", 5, ""],
-      ["Bandwidth Cost per GB", 0.08, ""],
-      ["Avg Bandwidth per User (GB)", 10, ""],
-      ["Streaming Cost per Hour", 0.15, ""],
-      ["Avg Streaming Hours per User", 5, ""],
-      ["Support Cost per User", 1.5, "per month"],
-      ["CAC (Customer Acquisition Cost)", 45, ""],
-      ["Payment Processing Fee %", 2.9, "%"],
-      ["Monthly Churn Rate %", 5, "%"],
+      ["AI Compute Cost per User", assumptions.aiComputePerUser, "per month"],
+      ["Storage Cost per GB", assumptions.storageCostPerGB, ""],
+      ["Avg Storage per User (GB)", assumptions.storagePerUser, ""],
+      ["Bandwidth Cost per GB", assumptions.bandwidthCostPerGB, ""],
+      ["Avg Bandwidth per User (GB)", assumptions.bandwidthPerUser, ""],
+      ["Streaming Cost per Hour", assumptions.streamingCostPerHour, ""],
+      ["Avg Streaming Hours per User", assumptions.streamingHoursPerUser, ""],
+      ["Support Cost per User", assumptions.supportCostPerUser, "per month"],
+      ["CAC (Customer Acquisition Cost)", assumptions.cac, ""],
+      ["Payment Processing Fee %", `${(assumptions.paymentProcessingFee * 100).toFixed(1)}%`, ""],
+      ["Monthly Churn Rate %", `${(assumptions.churnRate * 100).toFixed(0)}%`, ""],
     ];
   };
 
-  const generateMonthlyForecast = () => {
-    const headers = ["METRIC", ...Array.from({ length: 36 }, (_, i) => `Month ${i + 1}`)];
+  const generateMonthlyForecast = (data: any[]) => {
+    const headers = ["METRIC", ...data.map(m => `Month ${m.month}`)];
     
-    const rows = [
+    return [
       ["SEEKSY - 36 MONTH FORECAST"],
       [""],
       headers,
       [""],
       ["USER COUNTS"],
-      ["Total Users", ...Array.from({ length: 36 }, (_, i) => 
-        i === 0 
-          ? "=Assumptions!B14" 
-          : `=B10*(1+Assumptions!$B$15)`
-      )],
-      ["Podcasters", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$19`)],
-      ["Event Creators", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$20`)],
-      ["Event Organizations", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$21`)],
-      ["Political Campaigns", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$22`)],
-      ["My Page Users", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$23`)],
-      ["Industry Creators", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$24`)],
+      ["Total Users", ...data.map(m => m.totalUsers)],
+      ["Podcasters", ...data.map(m => m.podcasters)],
+      ["Event Creators", ...data.map(m => m.eventCreators)],
+      ["Event Organizations", ...data.map(m => m.eventOrgs)],
+      ["Political Campaigns", ...data.map(m => m.political)],
+      ["My Page Users", ...data.map(m => m.myPageUsers)],
+      ["Industry Creators", ...data.map(m => m.industryCreators)],
       [""],
       ["REVENUE"],
-      ["Podcaster Subscriptions", ...Array.from({ length: 36 }, (_, i) => `=B11*((Assumptions!$B$6*0.4)+(Assumptions!$B$7*0.4)+(Assumptions!$B$8*0.2))`)],
-      ["Event Tools Revenue", ...Array.from({ length: 36 }, (_, i) => `=(B12*Assumptions!$B$9)+(B13*Assumptions!$B$10)`)],
-      ["Political Campaign Revenue", ...Array.from({ length: 36 }, (_, i) => `=B14*Assumptions!$B$11`)],
-      ["My Page Revenue", ...Array.from({ length: 36 }, (_, i) => `=B15*((Assumptions!$B$12*0.7)+(Assumptions!$B$13*0.3))`)],
-      ["Industry Creator Revenue", ...Array.from({ length: 36 }, (_, i) => `=B16*Assumptions!$B$14`)],
-      ["Podcast Ad Insertion Revenue", ...Array.from({ length: 36 }, (_, i) => `=(B11*Assumptions!$B$27*Assumptions!$B$28*(Assumptions!$B$26/1000)*Assumptions!$B$29)*Assumptions!$B$30`)],
-      ["Quick Ads Advertiser Revenue", ...Array.from({ length: 36 }, (_, i) => {
-        if (i === 0) {
-          return `=(Assumptions!$B$38*Assumptions!$B$41*Assumptions!$B$33)+(Assumptions!$B$38*Assumptions!$B$42*Assumptions!$B$34)+(Assumptions!$B$38*Assumptions!$B$43*Assumptions!$B$35)+(Assumptions!$B$38*Assumptions!$B$44*((Assumptions!$B$36+Assumptions!$B$37)/2))`;
-        }
-        return `=(Assumptions!$B$38*(1+Assumptions!$B$39)^${i})*((Assumptions!$B$41*Assumptions!$B$33)+(Assumptions!$B$42*Assumptions!$B$34)+(Assumptions!$B$43*Assumptions!$B$35)+(Assumptions!$B$44*((Assumptions!$B$36+Assumptions!$B$37)/2)))`;
-      })],
-      ["Blog Module Revenue", ...Array.from({ length: 36 }, (_, i) => `=B10*0.15*25`)],
-      ["RSS Auto-Posting Revenue", ...Array.from({ length: 36 }, (_, i) => `=B11*0.2*15`)],
-      ["Auto-Publishing Tools", ...Array.from({ length: 36 }, (_, i) => `=B10*0.1*10`)],
+      ["Podcaster Subscriptions", ...data.map(m => Math.round(m.podcasterRev))],
+      ["Event Tools Revenue", ...data.map(m => Math.round(m.eventToolsRev))],
+      ["Political Campaign Revenue", ...data.map(m => Math.round(m.politicalRev))],
+      ["My Page Revenue", ...data.map(m => Math.round(m.myPageRev))],
+      ["Industry Creator Revenue", ...data.map(m => Math.round(m.industryRev))],
+      ["Podcast Ad Insertion Revenue", ...data.map(m => Math.round(m.adInsertionRev))],
+      ["Quick Ads Advertiser Revenue", ...data.map(m => Math.round(m.quickAdsRev))],
+      ["Blog Module Revenue", ...data.map(m => Math.round(m.blogModuleRev))],
+      ["RSS Auto-Posting Revenue", ...data.map(m => Math.round(m.rssAutoPostRev))],
+      ["Auto-Publishing Tools", ...data.map(m => Math.round(m.autoPublishRev))],
       [""],
-      ["TOTAL REVENUE", ...Array.from({ length: 36 }, (_, i) => `=SUM(B19:B27)`)],
+      ["TOTAL REVENUE", ...data.map(m => Math.round(m.totalRevenue))],
       [""],
       ["COSTS"],
-      ["AI Compute Costs", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$47`)],
-      ["Storage Costs", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$49*Assumptions!$B$48`)],
-      ["Bandwidth Costs", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$51*Assumptions!$B$50`)],
-      ["Streaming Costs", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$53*Assumptions!$B$52`)],
-      ["Support Costs", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$54`)],
-      ["CAC (New Users)", ...Array.from({ length: 36 }, (_, i) => 
-        i === 0 
-          ? `=Assumptions!$B$14*Assumptions!$B$55` 
-          : `=(B10-${String.fromCharCode(66 + Math.min(i - 1, 25))}10)*Assumptions!$B$55`
-      )],
-      ["Payment Processing", ...Array.from({ length: 36 }, (_, i) => `=B29*Assumptions!$B$56`)],
-      ["Churn Impact", ...Array.from({ length: 36 }, (_, i) => `=B10*Assumptions!$B$57*((Assumptions!$B$6+Assumptions!$B$12)/2)`)],
+      ["AI Compute Costs", ...data.map(m => Math.round(m.aiComputeCost))],
+      ["Storage Costs", ...data.map(m => Math.round(m.storageCost))],
+      ["Bandwidth Costs", ...data.map(m => Math.round(m.bandwidthCost))],
+      ["Streaming Costs", ...data.map(m => Math.round(m.streamingCost))],
+      ["Support Costs", ...data.map(m => Math.round(m.supportCost))],
+      ["CAC (New Users)", ...data.map(m => Math.round(m.cacCost))],
+      ["Payment Processing", ...data.map(m => Math.round(m.paymentProcessingCost))],
+      ["Churn Impact", ...data.map(m => Math.round(m.churnImpact))],
       [""],
-      ["TOTAL COSTS", ...Array.from({ length: 36 }, (_, i) => `=SUM(B32:B39)`)],
+      ["TOTAL COSTS", ...data.map(m => Math.round(m.totalCosts))],
       [""],
       ["FINANCIAL METRICS"],
-      ["Gross Margin", ...Array.from({ length: 36 }, (_, i) => `=B29-B41`)],
-      ["Gross Margin %", ...Array.from({ length: 36 }, (_, i) => `=IF(B29>0,B44/B29,0)`)],
-      ["Net Profit", ...Array.from({ length: 36 }, (_, i) => `=B29-B41`)],
-      ["Net Margin %", ...Array.from({ length: 36 }, (_, i) => `=IF(B29>0,B46/B29,0)`)],
+      ["Gross Margin", ...data.map(m => Math.round(m.grossMargin))],
+      ["Gross Margin %", ...data.map(m => `${(m.grossMarginPct * 100).toFixed(1)}%`)],
+      ["Net Profit", ...data.map(m => Math.round(m.netProfit))],
+      ["Net Margin %", ...data.map(m => `${(m.netMarginPct * 100).toFixed(1)}%`)],
     ];
-
-    return rows;
   };
 
-  const generateAnnualSummary = () => {
+  const generateAnnualSummary = (data: any[]) => {
+    const year1Revenue = data.slice(0, 12).reduce((sum, m) => sum + m.totalRevenue, 0);
+    const year2Revenue = data.slice(12, 24).reduce((sum, m) => sum + m.totalRevenue, 0);
+    const year3Revenue = data.slice(24, 36).reduce((sum, m) => sum + m.totalRevenue, 0);
+    
+    const year1Costs = data.slice(0, 12).reduce((sum, m) => sum + m.totalCosts, 0);
+    const year2Costs = data.slice(12, 24).reduce((sum, m) => sum + m.totalCosts, 0);
+    const year3Costs = data.slice(24, 36).reduce((sum, m) => sum + m.totalCosts, 0);
+    
+    const avgUsers1 = data.slice(0, 12).reduce((sum, m) => sum + m.totalUsers, 0) / 12;
+    const avgUsers2 = data.slice(12, 24).reduce((sum, m) => sum + m.totalUsers, 0) / 12;
+    const avgUsers3 = data.slice(24, 36).reduce((sum, m) => sum + m.totalUsers, 0) / 12;
+    
+    const endUsers1 = data[11].totalUsers;
+    const endUsers2 = data[23].totalUsers;
+    const endUsers3 = data[35].totalUsers;
+    
     return [
       ["SEEKSY - ANNUAL SUMMARY"],
       [""],
       ["METRIC", "Year 1", "Year 2", "Year 3"],
       [""],
-      ["Total Revenue", "=SUM('36-Month Forecast'!B29:M29)", "=SUM('36-Month Forecast'!N29:Y29)", "=SUM('36-Month Forecast'!Z29:AK29)"],
-      ["Total Costs", "=SUM('36-Month Forecast'!B41:M41)", "=SUM('36-Month Forecast'!N41:Y41)", "=SUM('36-Month Forecast'!Z41:AK41)"],
-      ["Net Profit", "=B5-B6", "=C5-C6", "=D5-D6"],
+      ["Total Revenue", Math.round(year1Revenue), Math.round(year2Revenue), Math.round(year3Revenue)],
+      ["Total Costs", Math.round(year1Costs), Math.round(year2Costs), Math.round(year3Costs)],
+      ["Net Profit", Math.round(year1Revenue - year1Costs), Math.round(year2Revenue - year2Costs), Math.round(year3Revenue - year3Costs)],
       [""],
-      ["Average Users", "=AVERAGE('36-Month Forecast'!B10:M10)", "=AVERAGE('36-Month Forecast'!N10:Y10)", "=AVERAGE('36-Month Forecast'!Z10:AK10)"],
-      ["Ending Users", "='36-Month Forecast'!M10", "='36-Month Forecast'!Y10", "='36-Month Forecast'!AK10"],
-      ["User Growth", "=B10", "=C10-B10", "=D10-C10"],
-      ["YoY Growth %", "", "=C11/B10", "=D11/C10"],
+      ["Average Users", Math.round(avgUsers1), Math.round(avgUsers2), Math.round(avgUsers3)],
+      ["Ending Users", endUsers1, endUsers2, endUsers3],
+      ["User Growth", Math.round(avgUsers1), Math.round(avgUsers2 - avgUsers1), Math.round(avgUsers3 - avgUsers2)],
+      ["YoY Growth %", "", `${((endUsers2 - endUsers1) / endUsers1 * 100).toFixed(1)}%`, `${((endUsers3 - endUsers2) / endUsers2 * 100).toFixed(1)}%`],
       [""],
-      ["Gross Margin %", "=(B5-B6)/B5", "=(C5-C6)/C5", "=(D5-D6)/D5"],
-      ["Net Margin %", "=B7/B5", "=C7/C5", "=D7/D5"],
+      ["Gross Margin %", `${((year1Revenue - year1Costs) / year1Revenue * 100).toFixed(1)}%`, `${((year2Revenue - year2Costs) / year2Revenue * 100).toFixed(1)}%`, `${((year3Revenue - year3Costs) / year3Revenue * 100).toFixed(1)}%`],
+      ["Net Margin %", `${((year1Revenue - year1Costs) / year1Revenue * 100).toFixed(1)}%`, `${((year2Revenue - year2Costs) / year2Revenue * 100).toFixed(1)}%`, `${((year3Revenue - year3Costs) / year3Revenue * 100).toFixed(1)}%`],
       [""],
-      ["ARPU (Annual)", "=B5/B9", "=C5/C9", "=D5/D9"],
-      ["ARPU (Monthly)", "=B17/12", "=C17/12", "=D17/12"],
+      ["ARPU (Annual)", Math.round(year1Revenue / avgUsers1), Math.round(year2Revenue / avgUsers2), Math.round(year3Revenue / avgUsers3)],
+      ["ARPU (Monthly)", Math.round(year1Revenue / avgUsers1 / 12), Math.round(year2Revenue / avgUsers2 / 12), Math.round(year3Revenue / avgUsers3 / 12)],
     ];
   };
 
-  const generateRevenueBreakdown = () => {
-    const headers = ["REVENUE STREAM", ...Array.from({ length: 36 }, (_, i) => `Month ${i + 1}`), "Year 1", "Year 2", "Year 3"];
+  const generateRevenueBreakdown = (data: any[]) => {
+    const headers = ["REVENUE STREAM", ...data.map(m => `Month ${m.month}`), "Year 1", "Year 2", "Year 3"];
+    
+    const year1 = (key: string) => Math.round(data.slice(0, 12).reduce((sum: number, m: any) => sum + m[key], 0));
+    const year2 = (key: string) => Math.round(data.slice(12, 24).reduce((sum: number, m: any) => sum + m[key], 0));
+    const year3 = (key: string) => Math.round(data.slice(24, 36).reduce((sum: number, m: any) => sum + m[key], 0));
     
     return [
       ["SEEKSY - REVENUE BREAKDOWN"],
       [""],
       headers,
-      ["Podcaster Subscriptions", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}19`), "=SUM(B4:M4)", "=SUM(N4:Y4)", "=SUM(Z4:AK4)"],
-      ["Event Tools", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}20`), "=SUM(B5:M5)", "=SUM(N5:Y5)", "=SUM(Z5:AK5)"],
-      ["Political Campaigns", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}21`), "=SUM(B6:M6)", "=SUM(N6:Y6)", "=SUM(Z6:AK6)"],
-      ["My Page", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}22`), "=SUM(B7:M7)", "=SUM(N7:Y7)", "=SUM(Z7:AK7)"],
-      ["Industry Creators", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}23`), "=SUM(B8:M8)", "=SUM(N8:Y8)", "=SUM(Z8:AK8)"],
-      ["Podcast Ad Insertion", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}24`), "=SUM(B9:M9)", "=SUM(N9:Y9)", "=SUM(Z9:AK9)"],
-      ["Quick Ads (Advertisers)", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}25`), "=SUM(B10:M10)", "=SUM(N10:Y10)", "=SUM(Z10:AK10)"],
-      ["Blog Module", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}26`), "=SUM(B11:M11)", "=SUM(N11:Y11)", "=SUM(Z11:AK11)"],
-      ["RSS Auto-Posting", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}27`), "=SUM(B12:M12)", "=SUM(N12:Y12)", "=SUM(Z12:AK12)"],
-      ["Auto-Publishing", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}28`), "=SUM(B13:M13)", "=SUM(N13:Y13)", "=SUM(Z13:AK13)"],
+      ["Podcaster Subscriptions", ...data.map(m => Math.round(m.podcasterRev)), year1('podcasterRev'), year2('podcasterRev'), year3('podcasterRev')],
+      ["Event Tools", ...data.map(m => Math.round(m.eventToolsRev)), year1('eventToolsRev'), year2('eventToolsRev'), year3('eventToolsRev')],
+      ["Political Campaigns", ...data.map(m => Math.round(m.politicalRev)), year1('politicalRev'), year2('politicalRev'), year3('politicalRev')],
+      ["My Page", ...data.map(m => Math.round(m.myPageRev)), year1('myPageRev'), year2('myPageRev'), year3('myPageRev')],
+      ["Industry Creators", ...data.map(m => Math.round(m.industryRev)), year1('industryRev'), year2('industryRev'), year3('industryRev')],
+      ["Podcast Ad Insertion", ...data.map(m => Math.round(m.adInsertionRev)), year1('adInsertionRev'), year2('adInsertionRev'), year3('adInsertionRev')],
+      ["Quick Ads (Advertisers)", ...data.map(m => Math.round(m.quickAdsRev)), year1('quickAdsRev'), year2('quickAdsRev'), year3('quickAdsRev')],
+      ["Blog Module", ...data.map(m => Math.round(m.blogModuleRev)), year1('blogModuleRev'), year2('blogModuleRev'), year3('blogModuleRev')],
+      ["RSS Auto-Posting", ...data.map(m => Math.round(m.rssAutoPostRev)), year1('rssAutoPostRev'), year2('rssAutoPostRev'), year3('rssAutoPostRev')],
+      ["Auto-Publishing", ...data.map(m => Math.round(m.autoPublishRev)), year1('autoPublishRev'), year2('autoPublishRev'), year3('autoPublishRev')],
       [""],
-      ["TOTAL REVENUE", ...Array.from({ length: 36 }, (_, i) => `=SUM(B4:B13)`), "=SUM(B15:M15)", "=SUM(N15:Y15)", "=SUM(Z15:AK15)"],
+      ["TOTAL REVENUE", ...data.map(m => Math.round(m.totalRevenue)), year1('totalRevenue'), year2('totalRevenue'), year3('totalRevenue')],
     ];
   };
 
-  const generateCostBreakdown = () => {
-    const headers = ["COST CATEGORY", ...Array.from({ length: 36 }, (_, i) => `Month ${i + 1}`), "Year 1", "Year 2", "Year 3"];
+  const generateCostBreakdown = (data: any[]) => {
+    const headers = ["COST CATEGORY", ...data.map(m => `Month ${m.month}`), "Year 1", "Year 2", "Year 3"];
+    
+    const year1 = (key: string) => Math.round(data.slice(0, 12).reduce((sum: number, m: any) => sum + m[key], 0));
+    const year2 = (key: string) => Math.round(data.slice(12, 24).reduce((sum: number, m: any) => sum + m[key], 0));
+    const year3 = (key: string) => Math.round(data.slice(24, 36).reduce((sum: number, m: any) => sum + m[key], 0));
     
     return [
       ["SEEKSY - COST BREAKDOWN"],
       [""],
       headers,
-      ["AI Compute", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}32`), "=SUM(B4:M4)", "=SUM(N4:Y4)", "=SUM(Z4:AK4)"],
-      ["Storage", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}33`), "=SUM(B5:M5)", "=SUM(N5:Y5)", "=SUM(Z5:AK5)"],
-      ["Bandwidth", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}34`), "=SUM(B6:M6)", "=SUM(N6:Y6)", "=SUM(Z6:AK6)"],
-      ["Streaming", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}35`), "=SUM(B7:M7)", "=SUM(N7:Y7)", "=SUM(Z7:AK7)"],
-      ["Support", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}36`), "=SUM(B8:M8)", "=SUM(N8:Y8)", "=SUM(Z8:AK8)"],
-      ["CAC", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}37`), "=SUM(B9:M9)", "=SUM(N9:Y9)", "=SUM(Z9:AK9)"],
-      ["Payment Processing", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}38`), "=SUM(B10:M10)", "=SUM(N10:Y10)", "=SUM(Z10:AK10)"],
-      ["Churn Impact", ...Array.from({ length: 36 }, (_, i) => `='36-Month Forecast'!${String.fromCharCode(66 + i)}39`), "=SUM(B11:M11)", "=SUM(N11:Y11)", "=SUM(Z11:AK11)"],
+      ["AI Compute", ...data.map(m => Math.round(m.aiComputeCost)), year1('aiComputeCost'), year2('aiComputeCost'), year3('aiComputeCost')],
+      ["Storage", ...data.map(m => Math.round(m.storageCost)), year1('storageCost'), year2('storageCost'), year3('storageCost')],
+      ["Bandwidth", ...data.map(m => Math.round(m.bandwidthCost)), year1('bandwidthCost'), year2('bandwidthCost'), year3('bandwidthCost')],
+      ["Streaming", ...data.map(m => Math.round(m.streamingCost)), year1('streamingCost'), year2('streamingCost'), year3('streamingCost')],
+      ["Support", ...data.map(m => Math.round(m.supportCost)), year1('supportCost'), year2('supportCost'), year3('supportCost')],
+      ["CAC", ...data.map(m => Math.round(m.cacCost)), year1('cacCost'), year2('cacCost'), year3('cacCost')],
+      ["Payment Processing", ...data.map(m => Math.round(m.paymentProcessingCost)), year1('paymentProcessingCost'), year2('paymentProcessingCost'), year3('paymentProcessingCost')],
+      ["Churn Impact", ...data.map(m => Math.round(m.churnImpact)), year1('churnImpact'), year2('churnImpact'), year3('churnImpact')],
       [""],
-      ["TOTAL COSTS", ...Array.from({ length: 36 }, (_, i) => `=SUM(B4:B11)`), "=SUM(B13:M13)", "=SUM(N13:Y13)", "=SUM(Z13:AK13)"],
+      ["TOTAL COSTS", ...data.map(m => Math.round(m.totalCosts)), year1('totalCosts'), year2('totalCosts'), year3('totalCosts')],
     ];
   };
 
-  const generateUnitEconomics = () => {
+  const generateUnitEconomics = (data: any[]) => {
+    const avgPodcasters = data.reduce((sum, m) => sum + m.podcasters, 0) / 36;
+    const avgEventCreators = data.reduce((sum, m) => sum + m.eventCreators, 0) / 36;
+    const avgEventOrgs = data.reduce((sum, m) => sum + m.eventOrgs, 0) / 36;
+    const avgPolitical = data.reduce((sum, m) => sum + m.political, 0) / 36;
+    const avgMyPage = data.reduce((sum, m) => sum + m.myPageUsers, 0) / 36;
+    const avgIndustry = data.reduce((sum, m) => sum + m.industryCreators, 0) / 36;
+    const avgAdvertisers = data.reduce((sum, m) => sum + m.advertisers, 0) / 36;
+    
+    const podcasterARPU = (assumptions.podcasterBasic * 0.4) + (assumptions.podcasterPro * 0.4) + (assumptions.podcasterEnterprise * 0.2);
+    const myPageARPU = (assumptions.myPageBasic * 0.7) + (assumptions.myPagePro * 0.3);
+    const quickAdsAvgARPU = (assumptions.quickAdsStarter * 0.5) + (assumptions.quickAdsGrowth * 0.3) + (assumptions.quickAdsPro * 0.15) + (((assumptions.quickAdsEnterpriseLow + assumptions.quickAdsEnterpriseHigh) / 2) * 0.05);
+    
     return [
       ["SEEKSY - UNIT ECONOMICS"],
       [""],
       ["SEGMENT", "Users (Avg)", "ARPU", "CAC", "LTV", "Gross Margin %", "Payback (Months)"],
       [""],
-      ["Podcasters", "=AVERAGE('36-Month Forecast'!B11:AK11)", "=(Assumptions!B6*0.4+Assumptions!B7*0.4+Assumptions!B8*0.2)", "=Assumptions!B55", "=C5*12/Assumptions!B57", "=0.65", "=D5/C5"],
-      ["Event Creators", "=AVERAGE('36-Month Forecast'!B12:AK12)", "=Assumptions!B9", "=Assumptions!B55", "=C6*12/Assumptions!B57", "=0.70", "=D6/C6"],
-      ["Event Organizations", "=AVERAGE('36-Month Forecast'!B13:AK13)", "=Assumptions!B10", "=Assumptions!B55", "=C7*12/Assumptions!B57", "=0.72", "=D7/C7"],
-      ["Political Campaigns", "=AVERAGE('36-Month Forecast'!B14:AK14)", "=Assumptions!B11", "=Assumptions!B55", "=C8*12/Assumptions!B57", "=0.75", "=D8/C8"],
-      ["My Page Users", "=AVERAGE('36-Month Forecast'!B15:AK15)", "=(Assumptions!B12*0.7+Assumptions!B13*0.3)", "=Assumptions!B55", "=C9*12/Assumptions!B57", "=0.68", "=D9/C9"],
-      ["Industry Creators", "=AVERAGE('36-Month Forecast'!B16:AK16)", "=Assumptions!B14", "=Assumptions!B55", "=C10*12/Assumptions!B57", "=0.73", "=D10/C10"],
+      ["Podcasters", Math.round(avgPodcasters), Math.round(podcasterARPU), assumptions.cac, Math.round(podcasterARPU * 12 / assumptions.churnRate), "65%", Math.round(assumptions.cac / podcasterARPU)],
+      ["Event Creators", Math.round(avgEventCreators), assumptions.eventCreator, assumptions.cac, Math.round(assumptions.eventCreator * 12 / assumptions.churnRate), "70%", Math.round(assumptions.cac / assumptions.eventCreator)],
+      ["Event Organizations", Math.round(avgEventOrgs), assumptions.eventOrganization, assumptions.cac, Math.round(assumptions.eventOrganization * 12 / assumptions.churnRate), "72%", Math.round(assumptions.cac / assumptions.eventOrganization)],
+      ["Political Campaigns", Math.round(avgPolitical), assumptions.politicalCampaign, assumptions.cac, Math.round(assumptions.politicalCampaign * 12 / assumptions.churnRate), "75%", Math.round(assumptions.cac / assumptions.politicalCampaign)],
+      ["My Page Users", Math.round(avgMyPage), Math.round(myPageARPU), assumptions.cac, Math.round(myPageARPU * 12 / assumptions.churnRate), "68%", Math.round(assumptions.cac / myPageARPU)],
+      ["Industry Creators", Math.round(avgIndustry), assumptions.industryCreator, assumptions.cac, Math.round(assumptions.industryCreator * 12 / assumptions.churnRate), "73%", Math.round(assumptions.cac / assumptions.industryCreator)],
       [""],
       ["QUICK ADS ADVERTISERS", "", "", "", "", "", ""],
-      ["Starter Tier", "=Assumptions!B38*Assumptions!B41", "=Assumptions!B33", "=Assumptions!B55*2", "=C13*12/0.15", "=0.80", "=D13/C13"],
-      ["Growth Tier", "=Assumptions!B38*Assumptions!B42", "=Assumptions!B34", "=Assumptions!B55*2", "=C14*12/0.15", "=0.82", "=D14/C14"],
-      ["Pro Tier", "=Assumptions!B38*Assumptions!B43", "=Assumptions!B35", "=Assumptions!B55*2", "=C15*12/0.15", "=0.85", "=D15/C15"],
-      ["Enterprise Tier", "=Assumptions!B38*Assumptions!B44", "=(Assumptions!B36+Assumptions!B37)/2", "=Assumptions!B55*3", "=C16*12/0.10", "=0.88", "=D16/C16"],
+      ["Starter Tier", Math.round(avgAdvertisers * 0.5), assumptions.quickAdsStarter, assumptions.cac * 2, Math.round(assumptions.quickAdsStarter * 12 / 0.15), "80%", Math.round((assumptions.cac * 2) / assumptions.quickAdsStarter)],
+      ["Growth Tier", Math.round(avgAdvertisers * 0.3), assumptions.quickAdsGrowth, assumptions.cac * 2, Math.round(assumptions.quickAdsGrowth * 12 / 0.15), "82%", Math.round((assumptions.cac * 2) / assumptions.quickAdsGrowth)],
+      ["Pro Tier", Math.round(avgAdvertisers * 0.15), assumptions.quickAdsPro, assumptions.cac * 2, Math.round(assumptions.quickAdsPro * 12 / 0.15), "85%", Math.round((assumptions.cac * 2) / assumptions.quickAdsPro)],
+      ["Enterprise Tier", Math.round(avgAdvertisers * 0.05), Math.round((assumptions.quickAdsEnterpriseLow + assumptions.quickAdsEnterpriseHigh) / 2), assumptions.cac * 3, Math.round(((assumptions.quickAdsEnterpriseLow + assumptions.quickAdsEnterpriseHigh) / 2) * 12 / 0.10), "88%", Math.round((assumptions.cac * 3) / ((assumptions.quickAdsEnterpriseLow + assumptions.quickAdsEnterpriseHigh) / 2))],
     ];
   };
 
@@ -319,63 +520,22 @@ export function ProFormaSpreadsheetGenerator() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileSpreadsheet className="h-5 w-5" />
-          Full 3-Year Pro Forma Spreadsheet
+          3-Year Financial Model Download
         </CardTitle>
         <CardDescription>
-          Download a comprehensive Excel file with 7 tabs, all formulas, assumptions, and detailed financial projections
+          Download a comprehensive Excel spreadsheet with calculated projections across 7 tabs including Executive Summary, Assumptions, 36-Month Forecast, Annual Summary, Revenue Breakdown, Cost Breakdown, and Unit Economics.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="bg-muted p-4 rounded-lg">
-            <h4 className="font-semibold mb-2">Included Tabs:</h4>
-            <ul className="space-y-1 text-sm">
-              <li>✓ Executive Summary - Investor-ready overview</li>
-              <li>✓ Assumptions - All pricing, growth, and cost drivers</li>
-              <li>✓ 36-Month Forecast - Detailed monthly projections</li>
-              <li>✓ Annual Summary - Yearly rollups and KPIs</li>
-              <li>✓ Revenue Breakdown - All revenue streams by product</li>
-              <li>✓ Cost Breakdown - Infrastructure and scaling costs</li>
-              <li>✓ Unit Economics - CAC, LTV, ARPU, payback by segment</li>
-            </ul>
-          </div>
-
-          <div className="bg-muted p-4 rounded-lg">
-            <h4 className="font-semibold mb-2">Revenue Streams Included:</h4>
-            <ul className="grid grid-cols-2 gap-2 text-sm">
-              <li>• Podcaster subscriptions (3 tiers)</li>
-              <li>• Event tools (Creator + Org)</li>
-              <li>• Political campaigns</li>
-              <li>• My Page Basic & Pro</li>
-              <li>• Industry creators</li>
-              <li>• Podcast ad insertion</li>
-              <li>• Quick Ads (4 advertiser tiers)</li>
-              <li>• Blog module</li>
-              <li>• RSS auto-posting</li>
-              <li>• Auto-publishing tools</li>
-            </ul>
-          </div>
-
-          <Button 
-            onClick={generateSpreadsheet} 
-            disabled={generating}
-            size="lg"
-            className="w-full"
-          >
-            {generating ? (
-              "Generating..."
-            ) : (
-              <>
-                <Download className="h-5 w-5 mr-2" />
-                Download Full Pro Forma Spreadsheet (.xlsx)
-              </>
-            )}
-          </Button>
-
-          <p className="text-xs text-muted-foreground text-center">
-            All formulas reference the Assumptions tab. Edit assumptions in Excel to dynamically update all projections.
-          </p>
-        </div>
+        <Button 
+          onClick={generateSpreadsheet}
+          disabled={generating}
+          className="w-full"
+          size="lg"
+        >
+          <Download className="h-4 w-4 mr-2" />
+          {generating ? "Generating..." : "Download Pro Forma Spreadsheet (.xlsx)"}
+        </Button>
       </CardContent>
     </Card>
   );
