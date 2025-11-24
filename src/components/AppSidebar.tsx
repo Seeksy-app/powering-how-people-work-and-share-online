@@ -422,7 +422,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
   const allSettingsItems = [
     { title: "Profile Settings", url: "/settings", icon: Settings },
     { title: "Team", url: "/team", icon: Contact },
-    { title: "Apps", url: "/integrations", icon: Puzzle },
+    { title: "Seekies", url: "/integrations", icon: Puzzle },
     { title: "System Status", url: "/system-status", icon: Activity },
     { title: "Architecture", url: "/seeksy-architecture", icon: Network },
     { title: "Tech Stack", url: "/tech-stack", icon: Code },
