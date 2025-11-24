@@ -300,6 +300,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
   const mainItems = isAdvertiser 
     ? []
     : [
+        ...(isAdmin ? [{ title: "Admin", url: "/admin", icon: Shield }] : []),
         { title: "My Page", url: `/${username || 'profile'}`, icon: UserIcon },
         { title: "AI Assistant", url: "/ai-assistant", icon: Sparkles },
       ];
@@ -507,46 +508,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     );
   };
 
-  const renderAdminSection = () => {
-    if (!isAdmin) return null;
-    return (
-      <Collapsible
-        key="admin"
-        open={openSections.admin}
-        onOpenChange={(open) => setOpenSections({ ...openSections, admin: open })}
-      >
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <SidebarMenuButton asChild>
-                        <NavLink 
-                          to="/admin" 
-                          className="hover:bg-accent hover:text-accent-foreground text-sm"
-                          activeClassName="bg-accent text-accent-foreground font-medium"
-                        >
-                          <Shield className="h-4 w-4" />
-                          {!collapsed && <span>Admin</span>}
-                        </NavLink>
-                      </SidebarMenuButton>
-                    </TooltipTrigger>
-                    {collapsed && (
-                      <TooltipContent side="right">
-                        <p>Admin</p>
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </Collapsible>
-    );
-  };
 
   const renderAdvertisingSection = () => {
     if (!isAdvertiser || advertiserStatus !== "approved") return null;
@@ -1200,7 +1161,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
   const sectionRenderers: Record<string, () => React.ReactNode> = {
     main: renderMainSection,
     settings: renderSettingsSection,
-    admin: renderAdminSection,
     advertising: renderAdvertisingSection,
     seekies: renderSeeksiesSection,
     media: renderMediaSection,
