@@ -332,8 +332,8 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     ? []
     : [
         ...(isAdmin ? [{ title: "Admin", url: "/admin", icon: Shield }] : []),
-        { title: "My Page", url: `/${username || 'profile'}`, icon: UserIcon },
-        { title: "AI Assistant", url: "/ai-assistant", icon: Sparkles },
+        ...(pinnedModules.includes("my_page") ? [{ title: "My Page", url: `/${username || 'profile'}`, icon: UserIcon }] : []),
+        ...(pinnedModules.includes("ai_assistant") ? [{ title: "AI Assistant", url: "/ai-assistant", icon: Sparkles }] : []),
       ];
 
   const seeksiesItems = [

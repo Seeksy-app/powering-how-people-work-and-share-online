@@ -18,7 +18,9 @@ import {
   Smartphone,
   Pin,
   PinOff,
-  X
+  X,
+  User,
+  Sparkles
 } from "lucide-react";
 import {
   Dialog,
@@ -55,6 +57,8 @@ interface Module {
 }
 
 const ALL_MODULES: Module[] = [
+  { key: "my_page", label: "My Page", icon: User, route: "/profile", enabledKey: "my_page" },
+  { key: "ai_assistant", label: "AI Assistant", icon: Sparkles, route: "/ai-assistant", enabledKey: "ai_assistant" },
   { key: "meetings", label: "Meetings", icon: Calendar, route: "/meetings", enabledKey: "meetings" },
   { key: "events", label: "Events", icon: CalendarDays, route: "/events", enabledKey: "module_events_enabled" },
   { key: "signup_sheets", label: "Sign-up Sheets", icon: ClipboardList, route: "/signup-sheets", enabledKey: "module_signup_sheets_enabled" },
@@ -101,7 +105,7 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
       .single();
 
     if (data) {
-      const enabled: string[] = ["meetings", "contacts", "podcasts"]; // Always enabled
+      const enabled: string[] = ["my_page", "ai_assistant", "meetings", "contacts", "podcasts"]; // Always enabled
       
       if (data.module_events_enabled) enabled.push("events");
       if (data.module_signup_sheets_enabled) enabled.push("signup_sheets");
