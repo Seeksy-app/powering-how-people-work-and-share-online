@@ -146,15 +146,17 @@ const Settings = () => {
 
     setSaving(true);
     try {
-      // Update account profile (not public profile)
+      // Update or insert account profile (not public profile)
       const { error: profileError } = await supabase
         .from("profiles")
-        .update({ 
+        .upsert({ 
+          id: user.id,
           account_full_name: formData.full_name,
           account_avatar_url: profileData.avatar_url,
           account_phone: formData.phone
-        })
-        .eq("id", user.id);
+        } as any, {
+          onConflict: 'id'
+        });
 
       if (profileError) throw profileError;
 
@@ -354,8 +356,12 @@ const Settings = () => {
                     try {
                       const { error } = await supabase
                         .from("profiles")
-                        .update({ account_avatar_url: url })
-                        .eq("id", user.id);
+                        .upsert({ 
+                          id: user.id,
+                          account_avatar_url: url 
+                        } as any, {
+                          onConflict: 'id'
+                        });
                       
                       if (error) throw error;
                       
