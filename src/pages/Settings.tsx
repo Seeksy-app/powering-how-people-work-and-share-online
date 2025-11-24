@@ -692,6 +692,31 @@ const Settings = () => {
               </code>
             </CardContent>
           </Card>
+
+          {/* System Status */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>System Status</CardTitle>
+                  <CardDescription>Platform health, security, and technical architecture</CardDescription>
+                </div>
+                <Button onClick={() => navigate("/system-status")}>
+                  View Full Status
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={() => navigate("/seeksy-architecture")}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Tech Stack & Architecture
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
