@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -402,6 +402,11 @@ export const InteractiveSpreadsheet = () => {
     toast.info("AI Pro Forma Excel download coming soon! Use the Custom Pro Forma spreadsheet below.");
   };
 
+  const handleEmailReport = (type: 'ai' | 'custom') => {
+    // Placeholder for email functionality
+    toast.info(`Email ${type === 'ai' ? 'AI' : 'Custom'} report feature coming soon! You'll be able to send reports to stakeholders directly from here.`);
+  };
+
   const annualSummaries = getAnnualSummaries();
 
   return (
@@ -410,21 +415,20 @@ export const InteractiveSpreadsheet = () => {
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <FileSpreadsheet className="h-6 w-6" />
-            Interactive Pro Forma Spreadsheet
+            Financial Models
           </h2>
           <p className="text-muted-foreground mt-1">
-            Edit assumptions and watch the forecast update in real-time
+            Compare AI-generated projections with your custom financial scenarios
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="forecasting" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="forecasting">Forecasting</TabsTrigger>
-          <TabsTrigger value="assumptions">Assumptions</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-1">
+          <TabsTrigger value="forecasting">Financial Models</TabsTrigger>
         </TabsList>
 
-        {/* Forecasting Tab - AI vs Custom side by side */}
+        {/* Financial Models Tab - AI vs Custom side by side */}
         <TabsContent value="forecasting">
           <div className="grid gap-6 lg:grid-cols-2">
             {/* AI Proforma */}
@@ -498,6 +502,15 @@ export const InteractiveSpreadsheet = () => {
                       Excel
                     </Button>
                   </div>
+                  
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="w-full mt-3"
+                    onClick={() => handleEmailReport('ai')}
+                  >
+                    Email AI Report
+                  </Button>
 
                   <p className="text-xs text-muted-foreground mt-4">
                     * These projections are based on AI analysis of industry benchmarks and will automatically 
@@ -512,16 +525,15 @@ export const InteractiveSpreadsheet = () => {
               <CardHeader>
                 <CardTitle>Custom 3-Year Pro Forma</CardTitle>
                 <CardDescription>
-                  Based on your custom assumptions. Edit values in the Assumptions tab to see changes reflected here.
+                  Based on your custom assumptions configured in the downloadable spreadsheet.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="text-sm space-y-4">
                   <p className="font-semibold">Your Custom Projections:</p>
                   <p className="text-muted-foreground">
-                    This pro forma reflects the assumptions you've configured in the Assumptions tab. 
-                    All calculations are dynamic and update automatically when you modify pricing, 
-                    growth rates, cost structures, or other parameters.
+                    This pro forma reflects your configured assumptions and updates dynamically 
+                    as you modify pricing, growth rates, cost structures, or other parameters in the interactive spreadsheet.
                   </p>
 
                   <div className="mt-8 p-4 bg-muted rounded-lg">
@@ -565,421 +577,20 @@ export const InteractiveSpreadsheet = () => {
                   <div className="space-y-3 mt-6">
                     <p className="font-semibold text-xs">Download Full Spreadsheet:</p>
                     <ProFormaSpreadsheetGenerator />
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="w-full mt-3"
+                      onClick={() => handleEmailReport('custom')}
+                    >
+                      Email Custom Report
+                    </Button>
                   </div>
 
                   <p className="text-xs text-muted-foreground mt-4">
                     * Export comprehensive Excel file with all 7 tabs: Executive Summary, Assumptions, 
                     36-Month Forecast, Annual Summary, Revenue Breakdown, Cost Breakdown, and Unit Economics
                   </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        {/* Assumptions Tab */}
-        <TabsContent value="assumptions" className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={() => exportToCSV('assumptions')} variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export Assumptions
-            </Button>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Pricing */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Pricing (Monthly)</CardTitle>
-                <CardDescription>Revenue per customer per month</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Podcaster Basic</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.podcasterBasicPrice}
-                      onChange={(e) => updateAssumption('podcasterBasicPrice', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Podcaster Pro</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.podcasterProPrice}
-                      onChange={(e) => updateAssumption('podcasterProPrice', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Podcaster Enterprise</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.podcasterEnterprisePrice}
-                      onChange={(e) => updateAssumption('podcasterEnterprisePrice', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Event Creator</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.eventCreatorPrice}
-                      onChange={(e) => updateAssumption('eventCreatorPrice', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Event Organization</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.eventOrgPrice}
-                      onChange={(e) => updateAssumption('eventOrgPrice', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Political Campaign</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.politicalCampaignPrice}
-                      onChange={(e) => updateAssumption('politicalCampaignPrice', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">My Page Basic</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.myPageBasicPrice}
-                      onChange={(e) => updateAssumption('myPageBasicPrice', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">My Page Pro</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.myPageProPrice}
-                      onChange={(e) => updateAssumption('myPageProPrice', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Industry Creator</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.industryCreatorPrice}
-                      onChange={(e) => updateAssumption('industryCreatorPrice', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Starting Customers & Growth */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer Growth</CardTitle>
-                <CardDescription>Starting count and monthly growth rate</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-3 gap-2 items-center text-xs font-medium text-muted-foreground">
-                  <span>Segment</span>
-                  <span className="text-center">Starting</span>
-                  <span className="text-center">Growth %</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 items-center">
-                  <label className="text-sm">Podcasters</label>
-                  <Input
-                    type="number"
-                    value={assumptions.startingPodcasters}
-                    onChange={(e) => updateAssumption('startingPodcasters', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                  <Input
-                    type="number"
-                    value={assumptions.podcasterGrowthRate}
-                    onChange={(e) => updateAssumption('podcasterGrowthRate', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2 items-center">
-                  <label className="text-sm">Event Creators</label>
-                  <Input
-                    type="number"
-                    value={assumptions.startingEventCreators}
-                    onChange={(e) => updateAssumption('startingEventCreators', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                  <Input
-                    type="number"
-                    value={assumptions.eventCreatorGrowthRate}
-                    onChange={(e) => updateAssumption('eventCreatorGrowthRate', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2 items-center">
-                  <label className="text-sm">Event Orgs</label>
-                  <Input
-                    type="number"
-                    value={assumptions.startingEventOrgs}
-                    onChange={(e) => updateAssumption('startingEventOrgs', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                  <Input
-                    type="number"
-                    value={assumptions.eventOrgGrowthRate}
-                    onChange={(e) => updateAssumption('eventOrgGrowthRate', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2 items-center">
-                  <label className="text-sm">Political</label>
-                  <Input
-                    type="number"
-                    value={assumptions.startingPolitical}
-                    onChange={(e) => updateAssumption('startingPolitical', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                  <Input
-                    type="number"
-                    value={assumptions.politicalGrowthRate}
-                    onChange={(e) => updateAssumption('politicalGrowthRate', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2 items-center">
-                  <label className="text-sm">My Page</label>
-                  <Input
-                    type="number"
-                    value={assumptions.startingMyPage}
-                    onChange={(e) => updateAssumption('startingMyPage', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                  <Input
-                    type="number"
-                    value={assumptions.myPageGrowthRate}
-                    onChange={(e) => updateAssumption('myPageGrowthRate', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2 items-center">
-                  <label className="text-sm">Industry Creators</label>
-                  <Input
-                    type="number"
-                    value={assumptions.startingIndustryCreators}
-                    onChange={(e) => updateAssumption('startingIndustryCreators', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                  <Input
-                    type="number"
-                    value={assumptions.industryCreatorGrowthRate}
-                    onChange={(e) => updateAssumption('industryCreatorGrowthRate', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Ad Revenue */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Ad Revenue</CardTitle>
-                <CardDescription>Monetization through advertising</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Average CPM</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.avgCPM}
-                      onChange={(e) => updateAssumption('avgCPM', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Episodes/Month</label>
-                  <Input
-                    type="number"
-                    value={assumptions.avgEpisodesPerMonth}
-                    onChange={(e) => updateAssumption('avgEpisodesPerMonth', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Listeners/Episode</label>
-                  <Input
-                    type="number"
-                    value={assumptions.avgListenersPerEpisode}
-                    onChange={(e) => updateAssumption('avgListenersPerEpisode', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Ad Fill Rate %</label>
-                  <Input
-                    type="number"
-                    value={assumptions.adFillRate}
-                    onChange={(e) => updateAssumption('adFillRate', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Platform Rev Share %</label>
-                  <Input
-                    type="number"
-                    value={assumptions.platformAdRevShare}
-                    onChange={(e) => updateAssumption('platformAdRevShare', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Costs */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Cost Structure</CardTitle>
-                <CardDescription>Per user per month unless noted</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">AI Compute</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={assumptions.aiComputeCost}
-                      onChange={(e) => updateAssumption('aiComputeCost', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Storage $/GB</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      step="0.001"
-                      value={assumptions.storageCostPerGB}
-                      onChange={(e) => updateAssumption('storageCostPerGB', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Avg Storage GB</label>
-                  <Input
-                    type="number"
-                    value={assumptions.avgStoragePerUserGB}
-                    onChange={(e) => updateAssumption('avgStoragePerUserGB', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Bandwidth $/GB</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={assumptions.bandwidthCostPerGB}
-                      onChange={(e) => updateAssumption('bandwidthCostPerGB', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Streaming $/Hour</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={assumptions.streamingCostPerHour}
-                      onChange={(e) => updateAssumption('streamingCostPerHour', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Support Cost</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={assumptions.supportCostPerUser}
-                      onChange={(e) => updateAssumption('supportCostPerUser', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Marketing CAC</label>
-                  <div className="flex items-center">
-                    <span className="text-sm mr-1">$</span>
-                    <Input
-                      type="number"
-                      value={assumptions.marketingCAC}
-                      onChange={(e) => updateAssumption('marketingCAC', parseFloat(e.target.value) || 0)}
-                      className="h-8"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Payment Processing %</label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={assumptions.paymentProcessingRate}
-                    onChange={(e) => updateAssumption('paymentProcessingRate', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2 items-center">
-                  <label className="text-sm">Monthly Churn %</label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    value={assumptions.monthlyChurnRate}
-                    onChange={(e) => updateAssumption('monthlyChurnRate', parseFloat(e.target.value) || 0)}
-                    className="h-8"
-                  />
                 </div>
               </CardContent>
             </Card>
