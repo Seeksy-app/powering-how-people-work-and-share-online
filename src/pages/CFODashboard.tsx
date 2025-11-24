@@ -16,6 +16,7 @@ import { ProformaTemplate } from "@/components/cfo/ProformaTemplate";
 import { TalkingPointsWidget } from "@/components/dashboard/TalkingPointsWidget";
 import { ForecastTab } from "@/components/cfo/ForecastTab";
 import { InteractiveSpreadsheet } from "@/components/cfo/InteractiveSpreadsheet";
+import { CFOAIChat } from "@/components/cfo/CFOAIChat";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B9D'];
 
@@ -874,12 +875,26 @@ const CFODashboard = () => {
 
         {/* Financial Models Tab - AI vs Custom Pro Forma */}
         <TabsContent value="financial-models" className="space-y-6">
-          <InteractiveSpreadsheet />
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <InteractiveSpreadsheet />
+            </div>
+            <div>
+              <CFOAIChat />
+            </div>
+          </div>
         </TabsContent>
 
         {/* Forecast Tab */}
         <TabsContent value="forecast" className="space-y-6">
-          <ForecastTab assumptions={assumptions} />
+          <div className="grid lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <ForecastTab assumptions={assumptions} />
+            </div>
+            <div>
+              <CFOAIChat financialData={realTimeMetrics} />
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

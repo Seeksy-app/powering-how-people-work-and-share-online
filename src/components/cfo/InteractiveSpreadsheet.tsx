@@ -1548,16 +1548,9 @@ export const InteractiveSpreadsheet = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="forecasting" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-1">
-          <TabsTrigger value="forecasting">Financial Models</TabsTrigger>
-        </TabsList>
-
-        {/* Financial Models Tab - AI vs Custom side by side */}
-        <TabsContent value="forecasting">
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* AI Proforma */}
-            <Card>
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* AI Proforma */}
+        <Card>
               <CardHeader>
                 <CardTitle>AI-Generated Pro Forma</CardTitle>
                 <CardDescription>
@@ -1606,14 +1599,14 @@ export const InteractiveSpreadsheet = () => {
 
                   <div className="space-y-3 mt-6">
                     <p className="font-semibold text-xs">Download Reports:</p>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1" onClick={handleExportAIPDF}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" onClick={handleExportAIPDF}>
                         <Download className="mr-2 h-4 w-4" />
                         PDF Report
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1" onClick={handleExportAIExcel}>
+                      <Button variant="outline" size="sm" onClick={handleExportAIExcel}>
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
-                        Download Pro Forma Spreadsheet (.xlsx)
+                        Excel (.xlsx)
                       </Button>
                     </div>
                     <Button 
@@ -1689,11 +1682,10 @@ export const InteractiveSpreadsheet = () => {
 
                   <div className="space-y-3 mt-6">
                     <p className="font-semibold text-xs">Download Reports:</p>
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant="outline" 
-                        size="sm" 
-                        className="flex-1"
+                        size="sm"
                         onClick={handleExportCustomPDF}
                       >
                         <Download className="mr-2 h-4 w-4" />
@@ -1704,7 +1696,7 @@ export const InteractiveSpreadsheet = () => {
                     <Button 
                       variant="default" 
                       size="sm" 
-                      className="w-full mt-3"
+                      className="w-full"
                       onClick={() => handleEmailReport('custom')}
                     >
                       Email Custom Report
@@ -1718,8 +1710,6 @@ export const InteractiveSpreadsheet = () => {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 };
