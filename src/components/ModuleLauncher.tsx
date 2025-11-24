@@ -189,7 +189,7 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
             Active Apps
           </DialogTitle>
           <DialogDescription className="text-base">
-            Click an app to open it. Click the pin icon to add/remove from your sidebar.
+            Select an app to open. Pin or unpin apps to customize your sidebar.
           </DialogDescription>
         </DialogHeader>
 
