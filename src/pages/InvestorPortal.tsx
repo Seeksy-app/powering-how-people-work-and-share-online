@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Lock, FileSpreadsheet, TrendingUp } from "lucide-react";
 import { ForecastTab } from "@/components/cfo/ForecastTab";
 import { InteractiveSpreadsheet } from "@/components/cfo/InteractiveSpreadsheet";
+import { CFOAIChat } from "@/components/cfo/CFOAIChat";
 
 export default function InvestorPortal() {
   const [searchParams] = useSearchParams();
@@ -138,12 +139,26 @@ export default function InvestorPortal() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="forecast">
-            <ForecastTab isReadOnly={true} />
+          <TabsContent value="forecast" className="space-y-6">
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <ForecastTab isReadOnly={true} />
+              </div>
+              <div>
+                <CFOAIChat />
+              </div>
+            </div>
           </TabsContent>
 
-          <TabsContent value="models">
-            <InteractiveSpreadsheet />
+          <TabsContent value="models" className="space-y-6">
+            <div className="grid lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <InteractiveSpreadsheet />
+              </div>
+              <div>
+                <CFOAIChat />
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
