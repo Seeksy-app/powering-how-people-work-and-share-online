@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, Users, Clock, Mail, TrendingUp, MousePointerClick, BarChart3, ArrowRight, CalendarDays, Vote, Link as LinkIcon, ExternalLink, Info, Building2 } from "lucide-react";
 import { ProfileCompletionCard } from "@/components/ProfileCompletionCard";
 import { useToast } from "@/hooks/use-toast";
+import { useMyPageEnabled } from "@/hooks/useMyPageEnabled";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -142,6 +143,7 @@ const Dashboard = () => {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: myPageEnabled } = useMyPageEnabled();
 
   const handleWidgetsSave = (newWidgets: WidgetConfig[]) => {
     setWidgets(newWidgets);
@@ -599,45 +601,47 @@ const Dashboard = () => {
         {/* Customizable Widgets */}
         {stats && (
           <div className="space-y-6 mb-8">
-            {/* MY PAGE SECTION */}
-            <div className="space-y-4">
-              {/* Small My Page widgets */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {widgets.filter(w => w.enabled && ['profile-views', 'link-clicks', 'engagement', 'stream-analytics'].includes(w.id)).map(widget => {
-                  switch (widget.id) {
-                    case "profile-views":
-                      return <ProfileViewsWidget key={widget.id} data={stats} />;
-                    case "link-clicks":
-                      return <LinkClicksWidget key={widget.id} data={stats} />;
-                    case "engagement":
-                      return <EngagementWidget key={widget.id} data={stats} />;
-                    case "stream-analytics":
-                      return <StreamAnalyticsWidget key={widget.id} />;
-                    default:
-                      return null;
-                  }
-                })}
+            {/* MY PAGE SECTION - Only show if My Page integration is enabled */}
+            {myPageEnabled && (
+              <div className="space-y-4">
+                {/* Small My Page widgets */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {widgets.filter(w => w.enabled && ['profile-views', 'link-clicks', 'engagement', 'stream-analytics'].includes(w.id)).map(widget => {
+                    switch (widget.id) {
+                      case "profile-views":
+                        return <ProfileViewsWidget key={widget.id} data={stats} />;
+                      case "link-clicks":
+                        return <LinkClicksWidget key={widget.id} data={stats} />;
+                      case "engagement":
+                        return <EngagementWidget key={widget.id} data={stats} />;
+                      case "stream-analytics":
+                        return <StreamAnalyticsWidget key={widget.id} />;
+                      default:
+                        return null;
+                    }
+                  })}
+                </div>
+
+                {/* Large My Page widgets */}
+                {stats.linkClicks > 0 && (widgets.find(w => w.id === 'clicks-by-type' && w.enabled) || widgets.find(w => w.id === 'top-links' && w.enabled)) && (
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {widgets.find(w => w.id === 'clicks-by-type' && w.enabled) && (
+                      <ClicksByTypeWidget clickBreakdown={clickBreakdown} totalClicks={stats.linkClicks} />
+                    )}
+                    {widgets.find(w => w.id === 'top-links' && w.enabled) && (
+                      <TopLinksWidget topLinks={topLinks} />
+                    )}
+                  </div>
+                )}
+
+                {/* Social Media Analytics */}
+                {widgets.find(w => w.id === 'social-media' && w.enabled) && (
+                  <div>
+                    <SocialMediaAnalytics />
+                  </div>
+                )}
               </div>
-
-              {/* Large My Page widgets */}
-              {stats.linkClicks > 0 && (widgets.find(w => w.id === 'clicks-by-type' && w.enabled) || widgets.find(w => w.id === 'top-links' && w.enabled)) && (
-                <div className="grid gap-6 md:grid-cols-2">
-                  {widgets.find(w => w.id === 'clicks-by-type' && w.enabled) && (
-                    <ClicksByTypeWidget clickBreakdown={clickBreakdown} totalClicks={stats.linkClicks} />
-                  )}
-                  {widgets.find(w => w.id === 'top-links' && w.enabled) && (
-                    <TopLinksWidget topLinks={topLinks} />
-                  )}
-                </div>
-              )}
-
-              {/* Social Media Analytics */}
-              {widgets.find(w => w.id === 'social-media' && w.enabled) && (
-                <div>
-                  <SocialMediaAnalytics />
-                </div>
-              )}
-            </div>
+            )}
 
             {/* ENGAGEMENT & TRAFFIC SECTION - moved from My Page */}
 
