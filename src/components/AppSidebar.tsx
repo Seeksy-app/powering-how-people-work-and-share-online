@@ -41,7 +41,8 @@ import {
   FolderKanban,
   Network,
   Code,
-  Grid3x3
+  Grid3x3,
+  Pin
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import seeksyLogo from "@/assets/seeksy-logo.png";
@@ -451,6 +452,37 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     });
   };
 
+  const togglePin = async (moduleKey: string) => {
+    if (!user) return;
+
+    const newPinned = pinnedModules.includes(moduleKey)
+      ? pinnedModules.filter(k => k !== moduleKey)
+      : [...pinnedModules, moduleKey];
+
+    const { error } = await supabase
+      .from("user_preferences")
+      .update({ pinned_modules: newPinned })
+      .eq("user_id", user.id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update pinned Seeky",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPinnedModules(newPinned);
+    toast({
+      title: pinnedModules.includes(moduleKey) ? "Unpinned" : "Pinned",
+      description: `Seeky ${pinnedModules.includes(moduleKey) ? "removed from" : "added to"} sidebar`,
+    });
+
+    // Trigger ModuleLauncher refresh
+    window.dispatchEvent(new Event("pinnedModulesChanged"));
+  };
+
   // Filter sections based on user role
   const getVisibleSections = () => {
     let sections = [...navigationSections];
@@ -612,6 +644,27 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
 
   const renderSeeksiesSection = () => {
     if (isAdvertiser) return null;
+    
+    // Map item titles to module keys
+    const getModuleKey = (title: string): string => {
+      const keyMap: Record<string, string> = {
+        "Meetings": "meetings",
+        "Events": "events",
+        "Sign-up Sheets": "signup_sheets",
+        "Polls": "polls",
+        "Awards": "awards",
+        "QR Codes": "qr_codes",
+        "Contacts": "contacts",
+        "Podcasts": "podcasts",
+        "Media Library": "media",
+        "Civic Tools": "civic",
+        "Team Chat": "team_chat",
+        "Marketing": "marketing",
+        "SMS": "sms",
+      };
+      return keyMap[title] || title.toLowerCase();
+    };
+    
     return (
       <Collapsible
         key="seekies"
@@ -628,32 +681,54 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
           <CollapsibleContent>
             <SidebarGroupContent>
               <SidebarMenu className="space-y-0">
-                {seeksiesItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SidebarMenuButton asChild>
-                            <NavLink
-                              to={item.url}
-                              end
-                              className="hover:bg-accent hover:text-accent-foreground text-sm py-0.5 h-8"
-                              activeClassName="bg-accent text-accent-foreground font-medium"
-                            >
-                              <item.icon className="h-4 w-4" />
-                              {!collapsed && <span>{item.title}</span>}
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </TooltipTrigger>
-                        {collapsed && (
-                          <TooltipContent side="right">
-                            <p>{item.title}</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </TooltipProvider>
-                  </SidebarMenuItem>
-                ))}
+                {seeksiesItems.map((item) => {
+                  const moduleKey = getModuleKey(item.title);
+                  const isPinned = pinnedModules.includes(moduleKey);
+                  
+                  return (
+                    <SidebarMenuItem key={item.title} className="relative group">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <SidebarMenuButton asChild>
+                              <NavLink
+                                to={item.url}
+                                end
+                                className="hover:bg-accent hover:text-accent-foreground text-sm py-0.5 h-8"
+                                activeClassName="bg-accent text-accent-foreground font-medium"
+                              >
+                                <item.icon className="h-4 w-4" />
+                                {!collapsed && <span>{item.title}</span>}
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </TooltipTrigger>
+                          {collapsed && (
+                            <TooltipContent side="right">
+                              <p>{item.title}</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                      {!collapsed && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            togglePin(moduleKey);
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1 opacity-100 hover:bg-accent rounded transition-colors"
+                          aria-label={isPinned ? "Unpin" : "Pin"}
+                        >
+                          <Pin
+                            className={`h-3.5 w-3.5 ${
+                              isPinned ? "fill-primary text-primary" : "text-muted-foreground"
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </CollapsibleContent>
