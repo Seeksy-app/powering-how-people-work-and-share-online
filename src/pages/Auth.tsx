@@ -69,6 +69,26 @@ const Auth = () => {
           description: "You've successfully logged in.",
         });
         
+        // Get user from session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) {
+          navigate("/dashboard");
+          return;
+        }
+        
+        // Check if onboarding is completed
+        const { data: prefs } = await supabase
+          .from('user_preferences')
+          .select('onboarding_completed')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+        
+        // Redirect to onboarding if not completed (for existing users who haven't onboarded)
+        if (prefs && !prefs.onboarding_completed) {
+          navigate("/onboarding");
+          return;
+        }
+        
         // Check for signup intent and redirect
         const intent = localStorage.getItem("signupIntent");
         if (intent) {
@@ -125,14 +145,8 @@ const Auth = () => {
         // Mark that user just signed up to show welcome modal on first login
         localStorage.setItem("justSignedUp", "true");
         
-        // Check for signup intent and redirect
-        const intent = localStorage.getItem("signupIntent");
-        if (intent) {
-          localStorage.removeItem("signupIntent");
-          navigate(intent);
-        } else {
-          navigate("/dashboard");
-        }
+        // Redirect new users to onboarding
+        navigate("/onboarding");
       }
     } catch (error: any) {
       toast({

@@ -81,8 +81,20 @@ export default function Onboarding() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // For now, just navigate - we'll add proper storage later via migration
-      // The user type preference can be inferred from their usage patterns
+      // Determine if My Page should be enabled based on user type
+      const myPageEnabledForType = selectedType !== 'business';
+
+      // Save onboarding preferences
+      await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          onboarding_completed: true,
+          user_type: selectedType,
+          my_page_enabled: myPageEnabledForType,
+        }, {
+          onConflict: 'user_id'
+        });
       
       toast.success("Welcome to Seeksy! 🎉");
       navigate("/dashboard");

@@ -5868,12 +5868,15 @@ export type Database = {
           module_project_management_enabled: boolean | null
           module_rss_podcast_posting_enabled: boolean | null
           module_team_chat_enabled: boolean | null
+          my_page_enabled: boolean | null
           my_page_visited: boolean | null
+          onboarding_completed: boolean | null
           task_reminder_enabled: boolean | null
           task_reminder_frequency: string | null
           theme_preference: string | null
           updated_at: string | null
           user_id: string
+          user_type: string | null
         }
         Insert: {
           created_at?: string | null
@@ -5888,12 +5891,15 @@ export type Database = {
           module_project_management_enabled?: boolean | null
           module_rss_podcast_posting_enabled?: boolean | null
           module_team_chat_enabled?: boolean | null
+          my_page_enabled?: boolean | null
           my_page_visited?: boolean | null
+          onboarding_completed?: boolean | null
           task_reminder_enabled?: boolean | null
           task_reminder_frequency?: string | null
           theme_preference?: string | null
           updated_at?: string | null
           user_id: string
+          user_type?: string | null
         }
         Update: {
           created_at?: string | null
@@ -5908,12 +5914,15 @@ export type Database = {
           module_project_management_enabled?: boolean | null
           module_rss_podcast_posting_enabled?: boolean | null
           module_team_chat_enabled?: boolean | null
+          my_page_enabled?: boolean | null
           my_page_visited?: boolean | null
+          onboarding_completed?: boolean | null
           task_reminder_enabled?: boolean | null
           task_reminder_frequency?: string | null
           theme_preference?: string | null
           updated_at?: string | null
           user_id?: string
+          user_type?: string | null
         }
         Relationships: []
       }

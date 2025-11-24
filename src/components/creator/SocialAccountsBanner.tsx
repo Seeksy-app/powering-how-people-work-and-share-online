@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Instagram, Facebook, TrendingUp, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useMyPageEnabled } from "@/hooks/useMyPageEnabled";
 
 export function SocialAccountsBanner() {
   const navigate = useNavigate();
+  const { data: myPageEnabled, isLoading: myPageLoading } = useMyPageEnabled();
+  
   // Initialize from localStorage to prevent flash
   const [dismissed, setDismissed] = useState(() => {
     return localStorage.getItem("socialAccountsBannerDismissed") === "true";
@@ -30,6 +33,11 @@ export function SocialAccountsBanner() {
       return data;
     },
   });
+
+  // Don't show if My Page integration is disabled
+  if (!myPageEnabled || myPageLoading) {
+    return null;
+  }
 
   // Don't show while loading, if dismissed, or if they have accounts connected
   if (isLoading || dismissed || (accounts && accounts.length > 0)) {

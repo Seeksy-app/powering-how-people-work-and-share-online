@@ -5,6 +5,7 @@ import { CheckCircle2, Circle, User, Phone, ImageIcon, Layout, X } from "lucide-
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { MyPageWelcomeDialog } from "./MyPageWelcomeDialog";
+import { useMyPageEnabled } from "@/hooks/useMyPageEnabled";
 
 interface ProfileCompletionCardProps {
   fullName: string;
@@ -15,17 +16,30 @@ interface ProfileCompletionCardProps {
 
 export const ProfileCompletionCard = ({ fullName, phone, avatarUrl, myPageVisited }: ProfileCompletionCardProps) => {
   const navigate = useNavigate();
+  const { data: myPageEnabled, isLoading: myPageLoading } = useMyPageEnabled();
   const [isDismissed, setIsDismissed] = useState(() => {
     return localStorage.getItem("profileCompletionDismissed") === "true";
   });
   const [showMyPageWelcome, setShowMyPageWelcome] = useState(false);
 
-  const fields = [
+  // Define base fields
+  const baseFields: Array<{ 
+    name: string; 
+    value: string; 
+    icon: any; 
+    page: string; 
+    fieldId: string;
+    isMyPage?: boolean;
+  }> = [
     { name: "Full Name", value: fullName, icon: User, page: "settings", fieldId: "full_name" },
     { name: "Phone Number", value: phone, icon: Phone, page: "settings", fieldId: "phone" },
     { name: "Profile Picture", value: avatarUrl, icon: ImageIcon, page: "settings", fieldId: "avatar" },
-    { name: "Create My Page", value: myPageVisited ? "visited" : "", icon: Layout, page: "profile-edit", fieldId: "bio", isMyPage: true },
   ];
+
+  // Only add My Page field if integration is enabled
+  const fields = myPageEnabled 
+    ? [...baseFields, { name: "Create My Page", value: myPageVisited ? "visited" : "", icon: Layout, page: "profile-edit", fieldId: "bio", isMyPage: true }]
+    : baseFields;
 
   // More robust check: consider field complete if it has a truthy value with actual content
   const completedFields = fields.filter(field => {
