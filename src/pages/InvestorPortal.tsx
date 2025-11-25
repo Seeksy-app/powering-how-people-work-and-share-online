@@ -175,23 +175,23 @@ export default function InvestorPortal() {
 
         {/* Confidentiality Agreement Dialog */}
         <AlertDialog open={showDisclosure} onOpenChange={setShowDisclosure}>
-          <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <AlertDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <AlertDialogHeader>
-              <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                <ShieldCheck className="h-6 w-6 text-primary" />
+              <div className="mx-auto w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center mb-2">
+                <ShieldCheck className="h-5 w-5 text-primary" />
               </div>
-              <AlertDialogTitle className="text-2xl text-center">
+              <AlertDialogTitle className="text-xl text-center">
                 Confidentiality & Non-Disclosure Agreement
               </AlertDialogTitle>
-              <AlertDialogDescription className="text-left space-y-4 pt-4">
-                <p className="text-base">
+              <AlertDialogDescription className="text-left space-y-3 pt-2">
+                <p className="text-sm">
                   By accessing this financial information, you acknowledge and agree to the following terms:
                 </p>
                 
-                <div className="space-y-3">
+                <div className="space-y-2 text-xs">
                   <div>
-                    <h4 className="font-semibold text-foreground mb-1">1. Confidential Information</h4>
-                    <p className="text-sm">
+                    <h4 className="font-semibold text-foreground mb-0.5">1. Confidential Information</h4>
+                    <p>
                       All financial forecasts, models, assumptions, projections, and business information 
                       (collectively, "Confidential Information") shared through this portal are proprietary 
                       and confidential to Seeksy and its stakeholders.
@@ -199,8 +199,8 @@ export default function InvestorPortal() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-foreground mb-1">2. Non-Disclosure Obligation</h4>
-                    <p className="text-sm">
+                    <h4 className="font-semibold text-foreground mb-0.5">2. Non-Disclosure Obligation</h4>
+                    <p>
                       You agree to maintain the confidentiality of all Confidential Information and not to 
                       disclose, share, distribute, or make available such information to any third party 
                       without prior written consent from Seeksy.
@@ -208,8 +208,8 @@ export default function InvestorPortal() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-foreground mb-1">3. Limited Use</h4>
-                    <p className="text-sm">
+                    <h4 className="font-semibold text-foreground mb-0.5">3. Limited Use</h4>
+                    <p>
                       The Confidential Information is provided solely for your evaluation purposes as a 
                       potential or current investor. You may not use this information for any other purpose, 
                       including competitive analysis or business development.
@@ -217,8 +217,8 @@ export default function InvestorPortal() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-foreground mb-1">4. No Guarantees</h4>
-                    <p className="text-sm">
+                    <h4 className="font-semibold text-foreground mb-0.5">4. No Guarantees</h4>
+                    <p>
                       All projections and forecasts are based on assumptions and estimates. Actual results 
                       may differ materially. This information does not constitute investment advice or a 
                       recommendation to invest.
@@ -226,8 +226,8 @@ export default function InvestorPortal() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-foreground mb-1">5. Read-Only Access</h4>
-                    <p className="text-sm">
+                    <h4 className="font-semibold text-foreground mb-0.5">5. Read-Only Access</h4>
+                    <p>
                       Your access is read-only and for viewing purposes only. You may not download, copy, 
                       reproduce, or create derivative works from the Confidential Information without 
                       express written permission.
@@ -235,16 +235,16 @@ export default function InvestorPortal() {
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-foreground mb-1">6. Access Termination</h4>
-                    <p className="text-sm">
+                    <h4 className="font-semibold text-foreground mb-0.5">6. Access Termination</h4>
+                    <p>
                       Seeksy reserves the right to revoke your access at any time. Upon termination or 
                       expiration of access, you agree to cease all use of the Confidential Information.
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <p className="text-sm font-medium text-foreground">
+                <div className="pt-2 border-t">
+                  <p className="text-xs font-medium text-foreground">
                     By clicking "I Accept" below, you confirm that you have read, understood, and agree 
                     to be bound by these terms and will maintain the confidentiality of all information 
                     accessed through this portal.
@@ -252,7 +252,7 @@ export default function InvestorPortal() {
                 </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-2">
               <AlertDialogCancel onClick={declineDisclosure}>
                 Decline
               </AlertDialogCancel>
