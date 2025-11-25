@@ -44,12 +44,14 @@ The studio interface consists of four main areas:
    - Smaller PiP window shows edited version with effects applied
    - Visual overlays indicate edit types (close-up, zoom, trim, ad placement)
    - Progress updates for each processing stage
-4. **After processing completes**, AI Edit Completion Dialog appears with two options:
-   - **Save Edits**: Apply all AI changes to timeline (recommended)
-   - **Keep Original**: Discard AI changes and return to original video
-5. If you choose "Save Edits":
+4. **After processing completes**, AI Edit Completion Dialog appears with three options:
+   - **Save Edits Only**: Apply AI changes, discard original
+   - **Keep Original Only**: Discard AI changes, keep original
+   - **Save Both Versions**: Keep both original and AI-edited (appears in "AI Edited" tab)
+5. If you choose "Save Edits" or "Save Both":
    - All AI markers appear in your timeline
-   - **NEW:** AI clip suggestions are automatically marked (orange markers)
+   - AI clip suggestions are automatically marked (orange markers)
+   - AI uses your uploaded B-roll clips if available (purple markers)
    - Video displays with edits ready for review
    - Click "Generate Clips" button to create clips from AI suggestions
    - You can continue with manual edits or export immediately
@@ -60,6 +62,13 @@ The studio interface consists of four main areas:
 - First-time editors who want guidance
 - Time-sensitive content creation
 - Establishing foundation before manual refinement
+
+**What the AI includes:**
+- ✨ **Camera Focus** - Virtual multi-camera angles throughout entire video
+- ✂️ **Smart Trim** - Filler word and pause removal
+- 🎬 **Ad Placements** - Natural break detection for monetization
+- 🎞️ **B-Roll Insertions** - Uses your uploaded B-roll clips automatically
+- 🔶 **Clip Suggestions** - Viral-worthy segment recommendations
 
 **Pro Tips:**
 - Let the full AI enhancement run first, then refine manually
@@ -182,13 +191,24 @@ The studio interface consists of four main areas:
 
 ### Insert B-Roll
 
-**What it does:** Places supplemental footage or images at specific timestamps to add visual interest.
+**What it does:** Places supplemental footage or images at specific timestamps to add visual interest. You can upload your own B-roll clips that AI will automatically use, or manually mark B-roll positions.
 
-**How to use:**
-1. Navigate to where you want B-roll
-2. Click **Insert B-Roll**
-3. A marker is placed
-4. Upload or select B-roll footage
+**How to upload B-roll:**
+1. Go to **Media Library**
+2. In the **Uploads** tab, find the **B-Roll Library** card
+3. Click **Upload B-Roll Clip** and select your video
+4. Your B-roll is now available for AI to use automatically
+
+**How to manually mark B-roll:**
+1. Navigate to where you want B-roll in the video
+2. Click **Insert B-Roll** in manual tools
+3. A purple marker is placed at that timestamp
+4. Select from your uploaded B-roll clips or add new ones
+
+**How AI uses your B-roll:**
+- When you run Full AI Enhancement, AI automatically inserts your uploaded B-roll clips at optimal moments
+- AI places B-roll during voiceover segments or to cover visual transitions
+- Purple markers show where AI placed B-roll
 
 **Best for:**
 - Illustrating points being discussed
@@ -430,4 +450,4 @@ If you need additional assistance:
 ---
 
 **Last Updated:** 2025-11-25
-**Version:** 1.4
+**Version:** 1.5

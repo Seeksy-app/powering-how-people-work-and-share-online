@@ -18,6 +18,7 @@ interface AICameraProcessingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   videoUrl: string;
+  videoDuration: number;
   onComplete: (edits: any) => void;
 }
 
@@ -25,6 +26,7 @@ export const AICameraProcessingDialog = ({
   open, 
   onOpenChange, 
   videoUrl,
+  videoDuration,
   onComplete 
 }: AICameraProcessingDialogProps) => {
   const [currentStageIndex, setCurrentStageIndex] = useState(0);
@@ -86,29 +88,44 @@ export const AICameraProcessingDialog = ({
       setProgress((prev) => {
         const newProgress = Math.min(prev + 1.5, 100);
         
-        // Add realistic change notifications at specific progress points
+        // Add realistic change notifications at specific progress points (based on video duration)
+        const formatTimestamp = (seconds: number) => {
+          const mins = Math.floor(seconds / 60);
+          const secs = Math.floor(seconds % 60);
+          return `${mins}:${secs.toString().padStart(2, '0')}`;
+        };
+        
+        const duration = videoDuration || 120;
+        const timestamps = [
+          Math.floor(duration * 0.05),
+          Math.floor(duration * 0.20),
+          Math.floor(duration * 0.40),
+          Math.floor(duration * 0.60),
+          Math.floor(duration * 0.80)
+        ];
+        
         if (newProgress >= 20 && newProgress < 22 && detectedChanges.length === 0) {
-          setDetectedChanges(['Found speaker at 0:05 - creating close-up shot']);
+          setDetectedChanges([`Found speaker at ${formatTimestamp(timestamps[0])} - creating close-up shot`]);
           setCurrentEdit({ type: 'close_up', label: 'Focusing on Speaker' });
           setPipScale(1.5);
         }
         if (newProgress >= 35 && newProgress < 37 && detectedChanges.length === 1) {
-          setDetectedChanges(prev => [...prev, 'Emphasis detected at 0:18 - adding punch-in']);
+          setDetectedChanges(prev => [...prev, `Emphasis detected at ${formatTimestamp(timestamps[1])} - adding punch-in`]);
           setCurrentEdit({ type: 'punch_in', label: 'Adding Punch-In Effect' });
           setPipScale(1.8);
         }
         if (newProgress >= 50 && newProgress < 52 && detectedChanges.length === 2) {
-          setDetectedChanges(prev => [...prev, 'Conversation flow at 0:32 - alternating to wide shot']);
+          setDetectedChanges(prev => [...prev, `Conversation flow at ${formatTimestamp(timestamps[2])} - alternating to wide shot`]);
           setCurrentEdit({ type: 'wide', label: 'Switching to Wide Angle' });
           setPipScale(0.9);
         }
         if (newProgress >= 65 && newProgress < 67 && detectedChanges.length === 3) {
-          setDetectedChanges(prev => [...prev, 'Energy shift at 0:47 - adding digital zoom']);
+          setDetectedChanges(prev => [...prev, `Energy shift at ${formatTimestamp(timestamps[3])} - adding digital zoom`]);
           setCurrentEdit({ type: 'zoom', label: 'Applying Digital Zoom' });
           setPipScale(1.6);
         }
         if (newProgress >= 80 && newProgress < 82 && detectedChanges.length === 4) {
-          setDetectedChanges(prev => [...prev, 'Smoothing transition at 1:02 - medium shot']);
+          setDetectedChanges(prev => [...prev, `Smoothing transition at ${formatTimestamp(timestamps[4])} - medium shot`]);
           setCurrentEdit({ type: 'medium', label: 'Creating Medium Shot' });
           setPipScale(1.2);
         }
@@ -130,16 +147,25 @@ export const AICameraProcessingDialog = ({
         // Complete processing
         if (newProgress === 100) {
           setTimeout(() => {
+            const duration = videoDuration || 120;
+            const timestamps = [
+              Math.floor(duration * 0.05),
+              Math.floor(duration * 0.20),
+              Math.floor(duration * 0.40),
+              Math.floor(duration * 0.60),
+              Math.floor(duration * 0.80)
+            ];
+            
             onComplete({
               edits: [
-                { timestamp: 5, type: 'close_up', description: 'Speaker emphasis - close-up shot' },
-                { timestamp: 18, type: 'punch_in', description: 'Key point - digital punch-in' },
-                { timestamp: 32, type: 'wide', description: 'Conversational flow - wide angle' },
-                { timestamp: 47, type: 'zoom', description: 'Energy shift - smooth zoom in' },
-                { timestamp: 62, type: 'medium', description: 'Natural transition - medium shot' }
+                { timestamp: timestamps[0], type: 'close_up', description: 'Speaker emphasis - close-up shot' },
+                { timestamp: timestamps[1], type: 'punch_in', description: 'Key point - digital punch-in' },
+                { timestamp: timestamps[2], type: 'wide', description: 'Conversational flow - wide angle' },
+                { timestamp: timestamps[3], type: 'zoom', description: 'Energy shift - smooth zoom in' },
+                { timestamp: timestamps[4], type: 'medium', description: 'Natural transition - medium shot' }
               ],
               totalShots: 5,
-              avgShotLength: 15,
+              avgShotLength: Math.floor(duration / 5),
               multicamStyle: 'professional'
             });
             onOpenChange(false);

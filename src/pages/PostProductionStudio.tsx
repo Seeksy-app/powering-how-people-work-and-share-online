@@ -521,6 +521,9 @@ export default function PostProductionStudio() {
     // Apply the AI edits to the timeline
     setMarkers([...markers, ...pendingAIEdits]);
     
+    // Save markers to database
+    await saveEdits();
+    
     toast.success(`Successfully applied ${pendingAIEdits.length} AI edits to your timeline`, {
       duration: 4000
     });
@@ -539,6 +542,20 @@ export default function PostProductionStudio() {
     // Discard the AI edits
     setPendingAIEdits([]);
     toast.info("AI edits discarded. Your original video remains unchanged.");
+  };
+
+  const handleSaveBoth = async () => {
+    // Apply the AI edits to the timeline
+    setMarkers([...markers, ...pendingAIEdits]);
+    
+    // Save markers to database
+    await saveEdits();
+    
+    toast.success(`Saved AI-edited version! Check the "AI Edited" tab in Media Library.`, {
+      duration: 4000
+    });
+    
+    setPendingAIEdits([]);
   };
 
   const formatTime = (seconds: number) => {
@@ -717,23 +734,31 @@ export default function PostProductionStudio() {
               <TooltipProvider delayDuration={300}>
                 {/* Full AI Enhancement - Prominent Button */}
                 <div className="mb-6">
-                  <Button
-                    size="lg"
-                    className="w-full h-auto py-4 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold shadow-lg"
-                    onClick={handleFullAIEnhancement}
-                    disabled={fullAIProcessing}
-                  >
-                    <Sparkles className="h-5 w-5 mr-3 animate-pulse" />
-                    <div className="flex flex-col items-start text-left">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="lg"
+                        className="w-full h-auto py-4 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold shadow-lg"
+                        onClick={handleFullAIEnhancement}
+                        disabled={fullAIProcessing}
+                      >
+                        <Sparkles className="h-5 w-5 mr-3 animate-pulse" />
+                        <div className="flex flex-col items-start text-left">
                       <span className="text-base">
                         {fullAIProcessing ? "AI Processing..." : "Full AI Enhancement"}
                       </span>
                       <span className="text-xs opacity-90 font-normal">
-                        AI does everything automatically
+                        Click to START AI processing
                       </span>
                     </div>
                   </Button>
-                </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <p className="text-sm font-semibold mb-1">This button STARTS the AI processing</p>
+                  <p className="text-xs">Results will appear in the "AI Edits" tab when complete. That tab DISPLAYS what the AI found and changed.</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
 
                 <div>
                   <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
@@ -1057,6 +1082,7 @@ export default function PostProductionStudio() {
         open={cameraProcessingOpen}
         onOpenChange={setCameraProcessingOpen}
         videoUrl={mediaFile?.file_url || ''}
+        videoDuration={duration}
         onComplete={fullAIProcessing ? handleFullAIProcessingComplete : handleCameraProcessingComplete}
       />
 
@@ -1067,6 +1093,7 @@ export default function PostProductionStudio() {
         totalEdits={pendingAIEdits.length}
         onSaveEdits={handleSaveAIEdits}
         onKeepOriginal={handleKeepOriginal}
+        onSaveBoth={handleSaveBoth}
       />
 
       {/* Tutorial Dialog */}
