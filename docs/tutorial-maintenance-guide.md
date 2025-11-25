@@ -59,9 +59,20 @@ This guide ensures that tutorials and documentation stay synchronized with actua
 
 ---
 
-## Recent Updates Log
+## Version History
 
-### 2025-11-25 - Color-Coded Markers and AI Clip Suggestions
+### Version 1.5
+- Added B-Roll upload and management in Media Library
+- Studio markers now automatically transfer to AI Studio via video_markers table
+- Users can manually mark B-roll positions using VideoMarkerPanel
+- AI automatically uses uploaded B-roll clips during Full AI Enhancement
+- Added "Save Both Versions" option in AI completion dialog
+- Added "AI Edited" tab in Media Library to view all AI-processed videos
+- AI processing now processes entire video duration (not just first minute)
+- Added tooltips clarifying difference between "Full AI Enhancement" button (STARTS processing) and "AI Edits" tab (DISPLAYS results)
+- Color-coded markers by type: Yellow (Ad), Blue (Camera Focus), Red (Cut), Green (Lower Third), Purple (B-roll), Orange (Clip Suggestion)
+
+### Version 1.4
 
 **Changes made:**
 - **Color-Coded Timeline Markers**: Each marker type now has a distinct color on the timeline
@@ -175,7 +186,7 @@ When creating new tutorial images:
 - **Minor version (1.X)**: New features or significant improvements
 - **Patch (1.1.X)**: Bug fixes, small copy updates, minor tweaks
 
-Current version: **1.4**
+Current version: **1.5**
 
 ---
 

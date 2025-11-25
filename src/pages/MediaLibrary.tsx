@@ -817,6 +817,13 @@ export default function MediaLibrary() {
               >
                 Podcasts
               </TabsTrigger>
+              <TabsTrigger 
+                value="ai-edited" 
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3"
+              >
+                <Sparkles className="h-4 w-4 mr-1.5" />
+                AI Edited
+              </TabsTrigger>
             </TabsList>
 
             {/* Filter Button */}
@@ -1422,6 +1429,100 @@ export default function MediaLibrary() {
                   Manage your podcast episodes
                 </p>
                 <Button onClick={() => navigate("/podcasts")}>View Podcasts</Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="ai-edited" className="mt-0">
+              <div className="py-4">
+                <div className="mb-4 flex items-center gap-3 p-4 rounded-lg bg-primary/5 border border-primary/10">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-semibold">AI Edited Videos</p>
+                    <p className="text-sm text-muted-foreground">Videos that have been processed with AI enhancements</p>
+                  </div>
+                </div>
+
+                {sortedMediaFiles.filter(f => f.edit_status === 'edited').length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16">
+                    <Sparkles className="h-16 w-16 text-muted-foreground mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No AI edited videos yet</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Use the Post Production Studio to apply AI enhancements
+                    </p>
+                    <Button onClick={() => navigate("/media-library")}>
+                      Go to Media Library
+                    </Button>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-96">Video</TableHead>
+                        <TableHead>AI Edits</TableHead>
+                        <TableHead>Date Edited</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedMediaFiles.filter(f => f.edit_status === 'edited').map((file) => (
+                        <TableRow key={file.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="relative w-32 h-20 bg-black rounded overflow-hidden flex-shrink-0">
+                                <video
+                                  src={file.file_url}
+                                  className="w-full h-full object-cover"
+                                  muted
+                                />
+                                <div className="absolute top-1 left-1">
+                                  <Badge className="text-[10px] bg-primary/90">
+                                    <Sparkles className="h-2.5 w-2.5 mr-1" />
+                                    AI
+                                  </Badge>
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{file.file_name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {file.duration_seconds && `${Math.floor(file.duration_seconds / 60)}:${String(file.duration_seconds % 60).padStart(2, '0')}`}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Badge variant="secondary" className="text-xs">Camera Focus</Badge>
+                              <Badge variant="secondary" className="text-xs">Trim</Badge>
+                              <Badge variant="secondary" className="text-xs">Ads</Badge>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {format(new Date(file.created_at), "MMM d, yyyy")}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => navigate(`/post-production-studio?id=${file.id}`)}
+                              >
+                                <Edit3 className="h-4 w-4 mr-1" />
+                                Edit More
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDownload(file.file_url, file.file_name)}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </div>
             </TabsContent>
           </Tabs>

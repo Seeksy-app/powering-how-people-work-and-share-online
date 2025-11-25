@@ -9,6 +9,7 @@ interface AIEditCompletionDialogProps {
   totalEdits: number;
   onSaveEdits: () => void;
   onKeepOriginal: () => void;
+  onSaveBoth: () => void;
 }
 
 export const AIEditCompletionDialog = ({ 
@@ -16,7 +17,8 @@ export const AIEditCompletionDialog = ({
   onOpenChange,
   totalEdits,
   onSaveEdits,
-  onKeepOriginal
+  onKeepOriginal,
+  onSaveBoth
 }: AIEditCompletionDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,42 +54,60 @@ export const AIEditCompletionDialog = ({
               <div className="flex gap-3 items-start">
                 <Badge className="text-xs shrink-0">Option 1</Badge>
                 <div>
-                  <p className="font-medium text-foreground mb-1">Save Edits</p>
-                  <p className="text-muted-foreground">Keep all AI changes and continue with manual edits if needed</p>
+                  <p className="font-medium text-foreground mb-1">Save Edits Only</p>
+                  <p className="text-muted-foreground">Keep AI changes and discard the original</p>
                 </div>
               </div>
               <div className="flex gap-3 items-start">
                 <Badge variant="outline" className="text-xs shrink-0">Option 2</Badge>
                 <div>
-                  <p className="font-medium text-foreground mb-1">Keep Original</p>
-                  <p className="text-muted-foreground">Discard all AI changes and start fresh</p>
+                  <p className="font-medium text-foreground mb-1">Keep Original Only</p>
+                  <p className="text-muted-foreground">Discard all AI changes and keep original</p>
+                </div>
+              </div>
+              <div className="flex gap-3 items-start">
+                <Badge variant="secondary" className="text-xs shrink-0">Option 3</Badge>
+                <div>
+                  <p className="font-medium text-foreground mb-1">Save Both Versions</p>
+                  <p className="text-muted-foreground">Keep both the original and AI-edited video</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <DialogFooter className="flex gap-2">
+        <DialogFooter className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <Button
+              variant="outline"
+              onClick={() => {
+                onKeepOriginal();
+                onOpenChange(false);
+              }}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Keep Original
+            </Button>
+            <Button
+              onClick={() => {
+                onSaveEdits();
+                onOpenChange(false);
+              }}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Edits
+            </Button>
+          </div>
           <Button
-            variant="outline"
+            variant="secondary"
             onClick={() => {
-              onKeepOriginal();
+              onSaveBoth();
               onOpenChange(false);
             }}
-            className="flex-1"
-          >
-            <X className="h-4 w-4 mr-2" />
-            Keep Original
-          </Button>
-          <Button
-            onClick={() => {
-              onSaveEdits();
-              onOpenChange(false);
-            }}
-            className="flex-1"
+            className="w-full"
           >
             <Save className="h-4 w-4 mr-2" />
-            Save Edits
+            Save Both Versions
           </Button>
         </DialogFooter>
       </DialogContent>

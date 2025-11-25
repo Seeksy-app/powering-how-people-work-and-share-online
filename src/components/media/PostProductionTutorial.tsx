@@ -34,31 +34,38 @@ const tutorialSteps: TutorialStep[] = [
   },
   {
     title: "AI-Powered Editing Tools",
-    description: "Let AI do the heavy lifting with intelligent camera focusing, ad placement, and smart trimming. Watch real-time picture-in-picture previews showing exactly what the AI is doing. After processing, review all changes in the AI Edits tab.",
+    description: "Let AI do the heavy lifting with intelligent camera focusing, ad placement, smart trimming, B-roll integration, and clip suggestions. The big blue button STARTS the AI processing. The AI Edits tab DISPLAYS the results after processing completes.",
     image: aiTools,
     tips: [
+      "Full AI Enhancement button (big blue) STARTS the AI processing",
+      "AI Edits tab DISPLAYS what the AI found and changed after processing",
+      "Upload your own B-roll clips - AI will automatically use them",
       "AI Camera Focus creates multicam-style edits with punch-ins and zooms",
       "Real-time PiP preview shows AI edits as they're applied",
-      "Click the AI Edits tab to see a detailed list of all changes with timestamps",
+      "AI suggests viral-worthy clips automatically (orange markers)",
       "AI Ad Insertion finds natural breaks for ad placement",
       "Smart Trim removes filler words and awkward pauses automatically"
     ]
   },
   {
     title: "Manual Editing Tools",
-    description: "Take full control with manual tools for lower thirds, B-roll, and precise cuts.",
+    description: "Take full control with manual tools for lower thirds, B-roll marking, and precise cuts. Upload B-roll clips in Media Library for AI to use automatically.",
     image: manualTools,
     tips: [
+      "Upload B-roll clips in Media Library's B-Roll Library card",
       "Add lower thirds at any timestamp for name tags and titles",
-      "Insert B-roll footage to add visual interest",
+      "Manually mark B-roll positions using VideoMarkerPanel",
+      "Studio markers automatically transfer to AI Studio",
       "Mark manual cut points to remove unwanted sections"
     ]
   },
   {
     title: "Save and Export",
-    description: "Save your work and export your polished video when you're ready.",
+    description: "Save your work and export your polished video when you're ready. Choose to save edits only, keep original, or save both versions.",
     image: exportSave,
     tips: [
+      "Save Both Versions keeps original + AI-edited in Media Library",
+      "AI-edited videos appear in the 'AI Edited' tab",
       "Click Save to preserve your markers and edits",
       "Export renders your final video with all changes applied",
       "Review the Markers tab to see all your edits at a glance"
