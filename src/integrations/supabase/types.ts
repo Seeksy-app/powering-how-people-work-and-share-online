@@ -6947,6 +6947,41 @@ export type Database = {
           },
         ]
       }
+      video_post_production_edits: {
+        Row: {
+          created_at: string
+          id: string
+          markers: Json
+          media_file_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          markers?: Json
+          media_file_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          markers?: Json
+          media_file_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_post_production_edits_media_file_id_fkey"
+            columns: ["media_file_id"]
+            isOneToOne: false
+            referencedRelation: "media_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zoom_connections: {
         Row: {
           access_token: string
