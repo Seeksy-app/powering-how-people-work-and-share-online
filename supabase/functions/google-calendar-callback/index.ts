@@ -10,10 +10,9 @@ serve(async (req) => {
 
     if (error) {
       console.error('OAuth error:', error);
-      const baseUrl = Deno.env.get('SUPABASE_URL') || '';
       return new Response(null, {
         status: 302,
-        headers: { Location: `${baseUrl.replace('.supabase.co', '.lovableproject.com')}/integrations?error=oauth_failed` }
+        headers: { Location: `https://seeksy.io/integrations?error=oauth_failed` }
       });
     }
 
@@ -103,18 +102,16 @@ serve(async (req) => {
 
     console.log('Successfully stored calendar connection for user:', state);
 
-    // Redirect back to app
-    const baseUrl = Deno.env.get('SUPABASE_URL') || '';
+    // Redirect back to integrations page on custom domain
     return new Response(null, {
       status: 302,
-      headers: { Location: `${baseUrl.replace('.supabase.co', '.lovableproject.com')}/integrations?success=true` }
+      headers: { Location: `https://seeksy.io/integrations?google_success=true` }
     });
   } catch (error) {
     console.error('Error in google-calendar-callback:', error);
-    const baseUrl = Deno.env.get('SUPABASE_URL') || '';
     return new Response(null, {
       status: 302,
-      headers: { Location: `${baseUrl.replace('.supabase.co', '.lovableproject.com')}/integrations?error=connection_failed` }
+      headers: { Location: `https://seeksy.io/integrations?error=google_connection_failed` }
     });
   }
 });
