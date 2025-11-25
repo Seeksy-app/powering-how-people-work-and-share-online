@@ -168,12 +168,8 @@ serve(async (req) => {
       
       const inviterName = inviterProfile?.account_full_name || inviterProfile?.username || "A team member";
       
-      // Construct proper app URL for dashboard
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-      const projectId = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
-      const dashboardUrl = projectId 
-        ? `https://${projectId}.lovableproject.com/dashboard`
-        : `${supabaseUrl}/dashboard`;
+      // Use the actual deployed domain
+      const dashboardUrl = "https://seeksy.io/dashboard";
       
       // Add to contacts table
       if (actualTeamId) {
