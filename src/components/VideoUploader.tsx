@@ -250,6 +250,8 @@ export default function VideoUploader({
 
     // Extract duration
     const duration = await extractDuration(file);
+    const durationInt = duration ? Math.floor(Number(duration)) : null;
+    console.log('📊 Duration extracted:', { raw: duration, rounded: durationInt });
 
     // Create media file record
     const { error: dbError } = await supabase
@@ -260,7 +262,7 @@ export default function VideoUploader({
         file_url: publicUrl,
         file_type: file.type.startsWith('video') ? 'video' : 'audio',
         file_size_bytes: file.size,
-        duration_seconds: duration ? Math.round(duration) : null,
+        duration_seconds: durationInt,
         source: 'upload',
       });
 
@@ -373,6 +375,8 @@ export default function VideoUploader({
 
             // Extract duration
             const duration = await extractDuration(file);
+            const durationInt = duration ? Math.floor(Number(duration)) : null;
+            console.log('📊 Duration extracted:', { raw: duration, rounded: durationInt });
 
             const { error: dbError } = await supabase
               .from('media_files')
@@ -382,7 +386,7 @@ export default function VideoUploader({
                 file_url: publicUrl,
                 file_type: file.type.startsWith('video') ? 'video' : 'audio',
                 file_size_bytes: file.size,
-                duration_seconds: duration ? Math.round(duration) : null,
+                duration_seconds: durationInt,
                 source: 'upload',
               });
 
