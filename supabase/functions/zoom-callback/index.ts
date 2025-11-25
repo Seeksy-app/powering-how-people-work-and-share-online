@@ -105,10 +105,10 @@ serve(async (req) => {
 
     console.log('Successfully stored Zoom connection for user:', state);
 
-    // Redirect back to app
+    // Redirect back to availability page where users manage meeting settings
     return new Response(null, {
       status: 302,
-      headers: { Location: `https://seeksy.io/integrations?zoom_success=true` }
+      headers: { Location: `https://seeksy.io/availability?zoom_success=true` }
     });
   } catch (error) {
     console.error('Error in zoom-callback:', error);
