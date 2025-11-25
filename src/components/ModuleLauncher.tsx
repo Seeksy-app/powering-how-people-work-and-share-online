@@ -16,9 +16,6 @@ import {
   QrCode,
   Mail,
   Smartphone,
-  Pin,
-  PinOff,
-  X,
   User,
   Sparkles
 } from "lucide-react";
@@ -33,14 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 interface ModuleLauncherProps {
@@ -79,19 +69,11 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [enabledModules, setEnabledModules] = useState<string[]>([]);
-  const [pinnedModules, setPinnedModules] = useState<string[]>(["meetings"]);
-  const [showTooltips, setShowTooltips] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (open) {
       loadModulePreferences();
-      // Check if user has seen tooltips before
-      const hasSeenTooltips = localStorage.getItem("hasSeenModuleLauncherTooltips");
-      if (!hasSeenTooltips) {
-        setShowTooltips(true);
-        localStorage.setItem("hasSeenModuleLauncherTooltips", "true");
-      }
     }
   }, [open]);
 
@@ -133,46 +115,8 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
       if (data.module_sms_enabled) enabled.push("sms");
 
       setEnabledModules(enabled);
-      
-      // Parse pinned_modules safely
-      const pinned = Array.isArray(data.pinned_modules) 
-        ? data.pinned_modules 
-        : ["meetings"];
-      setPinnedModules(pinned as string[]);
     }
     setIsLoading(false);
-  };
-
-  const togglePin = async (moduleKey: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const newPinned = pinnedModules.includes(moduleKey)
-      ? pinnedModules.filter(k => k !== moduleKey)
-      : [...pinnedModules, moduleKey];
-
-    const { error } = await supabase
-      .from("user_preferences")
-      .update({ pinned_modules: newPinned })
-      .eq("user_id", user.id);
-
-    if (error) {
-    toast({
-      title: "Error",
-      description: "Failed to update pinned Seekies",
-      variant: "destructive",
-    });
-      return;
-    }
-
-    setPinnedModules(newPinned);
-    toast({
-      title: pinnedModules.includes(moduleKey) ? "Unpinned" : "Pinned",
-      description: `Seeky ${pinnedModules.includes(moduleKey) ? "removed from" : "added to"} sidebar`,
-    });
-
-    // Trigger sidebar refresh
-    window.dispatchEvent(new Event("pinnedModulesChanged"));
   };
 
   const handleModuleClick = (route: string) => {
@@ -207,7 +151,7 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
             Active Apps
           </DialogTitle>
           <DialogDescription className="text-base">
-            Select an app to open. Pin or unpin apps to customize your sidebar.
+            Select an app to open. Manage pins from the sidebar.
           </DialogDescription>
         </DialogHeader>
 
@@ -235,7 +179,6 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-6">
               {availableModules.map((module, index) => {
                 const Icon = module.icon;
-                const isPinned = pinnedModules.includes(module.key);
                 const gradientClass = moduleColors[index % moduleColors.length];
 
                 return (
@@ -252,46 +195,11 @@ export const ModuleLauncher = ({ open, onOpenChange }: ModuleLauncherProps) => {
                         <Icon className="h-8 w-8 text-white" />
                       </div>
                       <span className="font-semibold text-center text-base">{module.label}</span>
-                      
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-2 right-2 h-8 w-8 hover:bg-background/50"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          togglePin(module.key);
-                        }}
-                      >
-                        <Pin
-                          className={cn(
-                            "h-4 w-4",
-                            isPinned ? "fill-primary text-primary" : "text-muted-foreground"
-                          )}
-                        />
-                      </Button>
                     </CardContent>
                   </Card>
                 );
               })}
             </div>
-
-            {showTooltips && (
-              <Alert className="mt-4 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-                <Target className="h-4 w-4 text-primary" />
-                <AlertTitle className="text-primary font-semibold">Keep Your Sidebar Clean! 🎯</AlertTitle>
-                <AlertDescription className="text-base">
-                  Only pin the Seekies you use most often to keep your sidebar uncluttered. All your Seekies are always accessible here.
-                </AlertDescription>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={() => setShowTooltips(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </Alert>
-            )}
 
             <div className="mt-6 pt-4 border-t border-border">
               <Button
