@@ -105,63 +105,61 @@ export default function VideoUploader({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      console.log(`Starting R2 upload: ${file.name} (${formatBytes(file.size)})`);
+      console.log(`Starting Supabase Storage upload: ${file.name} (${formatBytes(file.size)})`);
 
-      // Create FormData for multipart upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('userId', session.user.id);
-      formData.append('fileName', file.name);
+      // Create unique file path
+      const timestamp = Date.now();
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${session.user.id}/${timestamp}-${file.name}`;
 
-      console.log('Uploading via r2-upload function...');
-      
-      // Upload using XMLHttpRequest to track progress
-      const xhr = new XMLHttpRequest();
-      
-      const uploadPromise = new Promise((resolve, reject) => {
-        xhr.upload.addEventListener('progress', (e) => {
-          if (e.lengthComputable) {
-            const percentage = (e.loaded / e.total) * 100;
-            const elapsed = (Date.now() - uploadStartTime.current) / 1000;
-            const speed = e.loaded / elapsed;
-            
-            setUploadProgress(percentage);
-            setUploadSpeed(speed);
-            console.log(`Upload progress: ${Math.round(percentage)}%`);
-          }
+      // Simulate progress updates since Supabase SDK doesn't provide native progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) return prev;
+          const elapsed = (Date.now() - uploadStartTime.current) / 1000;
+          const estimatedSpeed = file.size / 10; // Estimate 10 seconds for upload
+          const newProgress = Math.min(90, (elapsed / 10) * 100);
+          setUploadSpeed(estimatedSpeed);
+          return newProgress;
+        });
+      }, 500);
+
+      // Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('episode-files')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
         });
 
-        xhr.addEventListener('load', () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const response = JSON.parse(xhr.responseText);
-              if (response.success) {
-                resolve(response);
-              } else {
-                reject(new Error(response.error || 'Upload failed'));
-              }
-            } catch (e) {
-              reject(new Error('Invalid response from server'));
-            }
-          } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`));
-          }
-        });
+      clearInterval(progressInterval);
 
-        xhr.addEventListener('error', () => reject(new Error('Network error during upload')));
-        xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
+      if (uploadError) throw uploadError;
 
-        // Get the function URL
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const functionUrl = `${supabaseUrl}/functions/v1/r2-upload`;
-        
-        xhr.open('POST', functionUrl);
-        xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
-        xhr.setRequestHeader('apikey', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
-        xhr.send(formData);
-      });
+      console.log('File uploaded to storage, creating database record...');
+      setUploadProgress(95);
 
-      await uploadPromise;
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('episode-files')
+        .getPublicUrl(fileName);
+
+      // Create media file record
+      const { data: mediaFile, error: dbError } = await supabase
+        .from('media_files')
+        .insert({
+          user_id: session.user.id,
+          file_name: file.name,
+          file_url: publicUrl,
+          file_type: file.type.startsWith('video') ? 'video' : 'audio',
+          file_size_bytes: file.size,
+          source: 'upload',
+        })
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
       console.log('Upload complete!');
       setUploadProgress(100);
 
@@ -326,7 +324,7 @@ export default function VideoUploader({
 
         {uploadStatus === 'idle' && (
           <p className="text-xs text-center text-muted-foreground mt-4">
-            Powered by Cloudflare Stream. Supports files up to 30GB with guaranteed reliable delivery.
+            Secure cloud storage with support for files up to 5GB.
           </p>
         )}
       </CardContent>
