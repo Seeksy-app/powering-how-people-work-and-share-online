@@ -3,6 +3,12 @@ project_id = "taxqcioheqdqtlmjeaht"
 [functions.analyze-video-content]
 verify_jwt = true
 
+[functions.gmail-auth]
+verify_jwt = true
+
+[functions.gmail-callback]
+verify_jwt = false
+
 [functions.cfo-ai-assistant]
 verify_jwt = false
 

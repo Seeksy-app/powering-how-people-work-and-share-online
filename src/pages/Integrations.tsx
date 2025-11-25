@@ -173,6 +173,50 @@ const Integrations = () => {
     }
   };
 
+  const handleConnect = async (platform: string) => {
+    try {
+      let endpoint = '';
+      
+      switch(platform.toLowerCase()) {
+        case 'google calendar':
+          endpoint = 'google-calendar-auth';
+          break;
+        case 'google email':
+        case 'gmail':
+          endpoint = 'gmail-auth';
+          break;
+        case 'zoom':
+          endpoint = 'zoom-auth';
+          break;
+        default:
+          toast({
+            title: "Coming Soon",
+            description: `Connect your ${platform} account to unlock more features.`,
+          });
+          return;
+      }
+
+      const { data, error } = await supabase.functions.invoke(endpoint, {
+        headers: {
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.authUrl) {
+        window.location.href = data.authUrl;
+      }
+    } catch (error) {
+      console.error('Connection error:', error);
+      toast({
+        title: "Connection Failed",
+        description: "Unable to initiate connection. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const toggleModule = async (moduleName: keyof ModuleStatus) => {
     if (!user) return;
 
@@ -1276,16 +1320,11 @@ const Integrations = () => {
                     </p>
                   </div>
                   
-                  <Button 
+                  <Button
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => {
-                      toast({
-                        title: "Zoom Integration Coming Soon",
-                        description: "Connect your Zoom account to schedule and host virtual meetings directly from Seeksy.",
-                      });
-                    }}
+                    onClick={() => handleConnect('Zoom')}
                   >
                     Connect
                   </Button>
@@ -1312,16 +1351,11 @@ const Integrations = () => {
                     </p>
                   </div>
                   
-                  <Button 
+                  <Button
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => {
-                      toast({
-                        title: "Google Calendar Integration Coming Soon",
-                        description: "Sync your Seeksy meetings and events with Google Calendar automatically.",
-                      });
-                    }}
+                    onClick={() => handleConnect('Google Calendar')}
                   >
                     Connect
                   </Button>
@@ -1348,16 +1382,11 @@ const Integrations = () => {
                     </p>
                   </div>
                   
-                  <Button 
+                  <Button
                     variant="outline"
                     size="sm"
                     className="w-full"
-                    onClick={() => {
-                      toast({
-                        title: "Google Email Integration Coming Soon",
-                        description: "Connect Gmail to manage email communications and sync contacts directly from Seeksy.",
-                      });
-                    }}
+                    onClick={() => handleConnect('Gmail')}
                   >
                     Connect
                   </Button>
