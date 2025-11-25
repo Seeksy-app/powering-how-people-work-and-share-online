@@ -380,7 +380,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
 
   const engagementItems = [
     ...(pinnedModules.includes("contacts") ? [{ title: "Contacts", url: "/crm", icon: Users }] : []),
-    ...(pinnedModules.includes("marketing") && modulePrefs.marketing ? [{ title: "Emails", url: "/email-history", icon: Mail }] : []),
+    ...(pinnedModules.includes("marketing") && modulePrefs.marketing ? [{ title: "Email", url: "/email-history", icon: Mail }] : []),
     ...(pinnedModules.includes("sms") && modulePrefs.sms ? [{ title: "SMS", url: "/sms", icon: Smartphone }] : []),
     ...(pinnedModules.includes("team_chat") && modulePrefs.team_chat ? [{ title: "Team Chat", url: "/team-chat", icon: MessageSquare }] : []),
   ];
@@ -763,7 +763,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     // Map engagement items to their module keys for pin functionality
     const engagementModuleMap: Record<string, string> = {
       "Contacts": "contacts",
-      "Emails": "marketing",
+      "Email": "marketing",
       "SMS": "sms",
       "Team Chat": "team_chat"
     };
