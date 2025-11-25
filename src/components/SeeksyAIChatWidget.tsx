@@ -223,7 +223,7 @@ export const SeeksyAIChatWidget = () => {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90 z-50"
+        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90 z-50"
         size="icon"
       >
         <MessageCircle className="h-6 w-6" />
@@ -233,7 +233,7 @@ export const SeeksyAIChatWidget = () => {
 
   return (
     <Card className={cn(
-      "fixed bottom-6 left-6 shadow-2xl transition-all duration-300 z-50 flex flex-col",
+      "fixed bottom-6 right-6 shadow-2xl transition-all duration-300 z-50 flex flex-col",
       isMinimized ? "h-14 w-80" : "h-[600px] w-[400px]"
     )}>
       {/* Header */}
