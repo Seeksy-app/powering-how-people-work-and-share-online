@@ -46,6 +46,7 @@ const BookMeetingSlot = () => {
   const [attendeePhone, setAttendeePhone] = useState("");
   const [notes, setNotes] = useState("");
   const [questionResponses, setQuestionResponses] = useState<Record<string, string>>({});
+  const [smsConsent, setSmsConsent] = useState(false);
   
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   
@@ -201,6 +202,18 @@ const BookMeetingSlot = () => {
         }
       }
 
+      // Store SMS consent if phone provided and consent given
+      if (attendeePhone && smsConsent) {
+        await supabase.from('sms_consent_records').insert({
+          user_id: null, // Public booking, no auth user
+          phone_number: attendeePhone,
+          consent_given: true,
+          consent_text: 'I agree to receive SMS notifications about my meeting booking. Message and data rates may apply.',
+          ip_address: null,
+          user_agent: navigator.userAgent,
+        });
+      }
+
       console.log('=== BOOKING DEBUG START ===');
       console.log('Profile ID:', profile.id);
       console.log('Meeting Type ID:', meetingType.id);
@@ -278,8 +291,8 @@ const BookMeetingSlot = () => {
         console.error("Error sending confirmation email:", emailError);
       }
 
-      // Send SMS confirmation if phone provided
-      if (attendeePhone && meetingId) {
+      // Send SMS confirmation if phone provided and consent given
+      if (attendeePhone && smsConsent && meetingId) {
         try {
           await supabase.functions.invoke("send-meeting-confirmation-sms", {
             body: { meetingId },
@@ -530,6 +543,33 @@ const BookMeetingSlot = () => {
                         required
                         placeholder="+1 (555) 123-4567"
                       />
+                    </div>
+                  )}
+
+                  {meetingType.location_type !== "phone" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="phone-optional">Phone Number (optional for SMS)</Label>
+                      <Input
+                        id="phone-optional"
+                        type="tel"
+                        value={attendeePhone}
+                        onChange={(e) => setAttendeePhone(e.target.value)}
+                        placeholder="+1 (555) 123-4567"
+                      />
+                      {attendeePhone && (
+                        <div className="flex items-start space-x-2 mt-2">
+                          <input
+                            type="checkbox"
+                            id="sms-consent-meeting"
+                            checked={smsConsent}
+                            onChange={(e) => setSmsConsent(e.target.checked)}
+                            className="mt-1"
+                          />
+                          <label htmlFor="sms-consent-meeting" className="text-sm text-muted-foreground">
+                            I agree to receive SMS notifications about my meeting. Message and data rates may apply.
+                          </label>
+                        </div>
+                      )}
                     </div>
                   )}
 

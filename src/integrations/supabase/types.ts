@@ -4603,6 +4603,36 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string
+          email_enabled: boolean
+          id: string
+          notification_type: string
+          sms_enabled: boolean
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          notification_type: string
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          notification_type?: string
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           category: string | null
@@ -5850,6 +5880,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sms_consent_records: {
+        Row: {
+          consent_given: boolean
+          consent_text: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          phone_number: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          consent_given?: boolean
+          consent_text: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          phone_number: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          consent_given?: boolean
+          consent_text?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          phone_number?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       social_accounts: {
         Row: {
