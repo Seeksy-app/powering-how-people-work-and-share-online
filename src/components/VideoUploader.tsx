@@ -320,9 +320,14 @@ export default function VideoUploader({
       const fileSizeMB = file.size / (1024 * 1024);
       console.log(`Starting upload: ${file.name} (${formatBytes(file.size)})`);
 
-      // Use edge function for all uploads to avoid browser timeout issues
-      console.log('Using server-side upload...');
-      await uploadViaEdgeFunction(file, session);
+      // Use resumable uploads for files larger than 100MB
+      if (fileSizeMB > 100) {
+        console.log('Using resumable upload for large file...');
+        await uploadLargeFile(file, session);
+      } else {
+        console.log('Using standard upload for small file...');
+        await uploadSmallFile(file, session);
+      }
 
       console.log('Upload complete!');
       setUploadProgress(100);
