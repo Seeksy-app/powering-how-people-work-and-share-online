@@ -3123,6 +3123,7 @@ export type Database = {
         Row: {
           attendee_email: string
           attendee_name: string
+          attendee_phone: string | null
           checked_in: boolean | null
           custom_responses: Json | null
           event_id: string
@@ -3132,6 +3133,7 @@ export type Database = {
         Insert: {
           attendee_email: string
           attendee_name: string
+          attendee_phone?: string | null
           checked_in?: boolean | null
           custom_responses?: Json | null
           event_id: string
@@ -3141,6 +3143,7 @@ export type Database = {
         Update: {
           attendee_email?: string
           attendee_name?: string
+          attendee_phone?: string | null
           checked_in?: boolean | null
           custom_responses?: Json | null
           event_id?: string

@@ -44,6 +44,7 @@ const EventDetail = () => {
   
   const [attendeeName, setAttendeeName] = useState("");
   const [attendeeEmail, setAttendeeEmail] = useState("");
+  const [attendeePhone, setAttendeePhone] = useState("");
 
   const isOwner = user?.id === event?.user_id;
 
@@ -110,15 +111,18 @@ const EventDetail = () => {
     setRegistering(true);
 
     try {
-      const { error } = await supabase
+      const { data: registration, error } = await supabase
         .from("event_registrations")
         .insert([
           {
             event_id: id,
             attendee_name: attendeeName,
             attendee_email: attendeeEmail,
+            attendee_phone: attendeePhone || null,
           },
-        ]);
+        ])
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -140,6 +144,17 @@ const EventDetail = () => {
         console.error("Error sending confirmation email:", emailError);
       }
 
+      // Send SMS confirmation if phone provided
+      if (attendeePhone && registration?.id) {
+        try {
+          await supabase.functions.invoke("send-event-confirmation-sms", {
+            body: { registrationId: registration.id },
+          });
+        } catch (smsError) {
+          console.error("Error sending SMS confirmation:", smsError);
+        }
+      }
+
       toast({
         title: "Registration successful!",
         description: "You're all set for this event. Check your email for confirmation.",
@@ -147,6 +162,7 @@ const EventDetail = () => {
 
       setAttendeeName("");
       setAttendeeEmail("");
+      setAttendeePhone("");
       
       if (isOwner) {
         loadRegistrations();
@@ -254,6 +270,17 @@ const EventDetail = () => {
                       value={attendeeEmail}
                       onChange={(e) => setAttendeeEmail(e.target.value)}
                       required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Your Phone (optional)</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={attendeePhone}
+                      onChange={(e) => setAttendeePhone(e.target.value)}
+                      placeholder="+1 (555) 123-4567"
                     />
                   </div>
                   

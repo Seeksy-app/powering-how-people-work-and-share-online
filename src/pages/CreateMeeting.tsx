@@ -189,7 +189,7 @@ const CreateMeeting = () => {
         }
       }
 
-      const { error } = await supabase.from("meetings").insert([
+      const { data: meetingData, error } = await supabase.from("meetings").insert([
         {
           user_id: user?.id,
           title,
@@ -204,9 +204,22 @@ const CreateMeeting = () => {
           meeting_type_id: selectedMeetingType && selectedMeetingType !== "custom" ? selectedMeetingType : null,
           status: "scheduled",
         },
-      ]);
+      ])
+      .select()
+      .single();
 
       if (error) throw error;
+
+      // Send SMS confirmation if phone provided
+      if (attendeePhone && meetingData?.id) {
+        try {
+          await supabase.functions.invoke("send-meeting-confirmation-sms", {
+            body: { meetingId: meetingData.id },
+          });
+        } catch (smsError) {
+          console.error("Error sending SMS confirmation:", smsError);
+        }
+      }
 
       // Create calendar event if requested and calendar is connected
       // OR if locationType is 'meet' (which requires calendar for Google Meet links)
