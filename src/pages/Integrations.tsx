@@ -183,12 +183,33 @@ const Integrations = () => {
         ? `${moduleNameStr}_enabled`
         : `module_${moduleNameStr}_enabled`;
 
+      // If enabling, auto-pin to sidebar
+      let updateData: any = {
+        user_id: user.id,
+        [columnName]: newValue,
+      };
+
+      if (newValue) {
+        // Fetch current pinned_modules
+        const { data: currentPrefs } = await supabase
+          .from("user_preferences")
+          .select("pinned_modules")
+          .eq("user_id", user.id)
+          .single();
+
+        const currentPinned = Array.isArray(currentPrefs?.pinned_modules) 
+          ? currentPrefs.pinned_modules 
+          : ["meetings"];
+
+        // Add module to pinned if not already there
+        if (!currentPinned.includes(moduleNameStr)) {
+          updateData.pinned_modules = [...currentPinned, moduleNameStr];
+        }
+      }
+
       const { error } = await supabase
         .from("user_preferences")
-        .upsert({
-          user_id: user.id,
-          [columnName]: newValue,
-        }, {
+        .upsert(updateData, {
           onConflict: 'user_id'
         });
 
