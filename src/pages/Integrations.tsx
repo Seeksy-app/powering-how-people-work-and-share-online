@@ -201,14 +201,19 @@ const Integrations = () => {
           ? currentPrefs.pinned_modules 
           : [];
 
+        console.log("Current pinned before toggle:", currentPinned);
+
         // Add module to pinned if not already there
         if (!currentPinned.includes(moduleNameStr)) {
           updateData.pinned_modules = [...currentPinned, moduleNameStr];
+          console.log("Adding to pinned:", updateData.pinned_modules);
         } else {
           // Even if already pinned, ensure we're setting it (in case of data inconsistency)
           updateData.pinned_modules = currentPinned;
         }
       }
+
+      console.log("Upserting preferences:", updateData);
 
       const { error } = await supabase
         .from("user_preferences")
@@ -223,8 +228,9 @@ const Integrations = () => {
         description: `${moduleNameStr.charAt(0).toUpperCase() + moduleNameStr.slice(1).replace(/_/g, ' ')} has been ${newValue ? 'activated' : 'deactivated'}.`,
       });
       
-      // Trigger sidebar refresh with small delay to ensure DB update propagates
+      // Trigger sidebar refresh with delay to ensure DB update propagates
       setTimeout(() => {
+        console.log("Dispatching pinnedModulesChanged event");
         window.dispatchEvent(new Event("pinnedModulesChanged"));
       }, 100);
     } catch (error: any) {

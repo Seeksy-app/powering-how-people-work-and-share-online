@@ -224,10 +224,11 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
       
       // Listen for pinned modules changes from ModuleLauncher
       const handlePinnedModulesChange = () => {
-        // Add small delay to ensure DB update completes
+        // Add delay to ensure DB update completes
         setTimeout(() => {
+          console.log("Sidebar reloading after pinnedModulesChanged event");
           loadModulePreferences();
-        }, 200);
+        }, 500);
       };
       window.addEventListener('pinnedModulesChanged', handlePinnedModulesChange);
       
@@ -261,6 +262,8 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
       .eq("user_id", user.id)
       .maybeSingle();
     
+    console.log("Sidebar loaded preferences:", data);
+    
     if (data) {
       setModulePrefs({
         awards: data.module_awards_enabled || false,
@@ -286,6 +289,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
         ? data.pinned_modules 
         : [];
       
+      console.log("Pinned modules:", pinned);
       setPinnedModules(pinned as string[]);
     }
   };
@@ -877,6 +881,8 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
 
   const renderProjectManagementSection = () => {
     if (isAdvertiser || !modulePrefs.project_management || projectManagementItems.length === 0) return null;
+    const isPinned = pinnedModules.includes("project_management");
+    
     return (
       <Collapsible
         key="project_management"
@@ -885,9 +891,28 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
       >
         <SidebarGroup className="py-0">
           <CollapsibleTrigger asChild>
-            <SidebarGroupLabel className="text-base font-semibold cursor-pointer flex items-center justify-between mb-0 py-1.5">
+            <SidebarGroupLabel className="text-base font-semibold cursor-pointer flex items-center justify-between mb-0 py-1.5 relative group">
               <span>Project Management</span>
-              {!collapsed && <ChevronDown className={`h-3 w-3 transition-transform ${openSections.project_management ? '' : '-rotate-90'}`} />}
+              <div className="flex items-center gap-1">
+                {!collapsed && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      togglePin("project_management");
+                    }}
+                    className="p-1 opacity-100 hover:bg-accent rounded transition-colors"
+                    aria-label={isPinned ? "Unpin Project Management" : "Pin Project Management"}
+                  >
+                    <Pin
+                      className={`h-3.5 w-3.5 ${
+                        isPinned ? "fill-primary text-primary" : "text-muted-foreground"
+                      }`}
+                    />
+                  </button>
+                )}
+                {!collapsed && <ChevronDown className={`h-3 w-3 transition-transform ${openSections.project_management ? '' : '-rotate-90'}`} />}
+              </div>
             </SidebarGroupLabel>
           </CollapsibleTrigger>
           <CollapsibleContent>
