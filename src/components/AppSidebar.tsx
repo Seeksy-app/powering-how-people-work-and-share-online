@@ -89,8 +89,7 @@ const DEFAULT_SECTIONS: NavigationSection[] = [
   { id: "civic", label: "Civic", order: 9 },
   { id: "influencer", label: "Influencer", order: 10 },
   { id: "agency", label: "Agency", order: 11 },
-  { id: "rss_podcast", label: "RSS Podcast Hosting", order: 12 },
-  { id: "blog", label: "Blog", order: 13 },
+  { id: "blog", label: "Blog", order: 12 },
 ];
 
 export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
@@ -169,14 +168,9 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
       sections.push({ id: "agency", label: "Agency", order: 11 });
     }
     
-    // Ensure RSS Podcast exists (migration for users with old nav data)
-    if (!sections.some((s: NavigationSection) => s.id === "rss_podcast")) {
-      sections.push({ id: "rss_podcast", label: "RSS Podcast Hosting", order: 12 });
-    }
-    
     // Ensure Blog exists (migration for users with old nav data)
     if (!sections.some((s: NavigationSection) => s.id === "blog")) {
-      sections.push({ id: "blog", label: "Blog", order: 13 });
+      sections.push({ id: "blog", label: "Blog", order: 12 });
     }
     
     return sections;
@@ -196,7 +190,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     civic: true,
     influencer: true,
     agency: true,
-    rss_podcast: true,
     blog: true,
   });
 
@@ -347,6 +340,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
         { title: "Dashboard", url: dashboardUrl, icon: LayoutDashboard },
         ...(isAdmin ? [{ title: "Admin", url: "/admin", icon: Shield }] : []),
         ...(pinnedModules.includes("my_page") ? [{ title: "My Page", url: `/${username || 'profile'}`, icon: UserIcon }] : []),
+        { title: "Profile Settings", url: "/settings", icon: Settings },
       ];
 
   const seeksiesItems = [
@@ -356,16 +350,10 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     ...(pinnedModules.includes("polls") && modulePrefs.polls ? [{ title: "Polls", url: "/polls", icon: BarChart3 }] : []),
     ...(pinnedModules.includes("awards") && modulePrefs.awards ? [{ title: "Awards", url: "/awards", icon: Trophy }] : []),
     ...(pinnedModules.includes("qr_codes") && modulePrefs.qr_codes ? [{ title: "QR Codes", url: "/qr-codes", icon: QrCode }] : []),
-    ...(pinnedModules.includes("podcasts") ? [{ title: "Podcasts", url: "/podcasts", icon: Mic }] : []),
+    ...(pinnedModules.includes("podcasts") && modulePrefs.rss_podcast ? [{ title: "Podcasts", url: "/podcasts", icon: Mic }] : []),
     // Media is shown as its own section with Studio, Media Library, Create Clips
     ...(pinnedModules.includes("civic") && modulePrefs.civic ? [{ title: "Civic Tools", url: "/civic-blog", icon: Building2 }] : []),
     ...(pinnedModules.includes("team_chat") && modulePrefs.team_chat ? [{ title: "Team Chat", url: "/team-chat", icon: MessageSquare }] : []),
-  ];
-
-  const rssPodcastItems = [
-    ...(pinnedModules.includes("podcasts") && modulePrefs.rss_podcast ? [
-      { title: "Manage RSS Feeds", url: "/podcasts", icon: Mic },
-    ] : []),
   ];
 
   const blogItems = [
@@ -389,6 +377,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     ...(modulePrefs.marketing ? [{ title: "Marketing", url: "/marketing", icon: Target }] : []),
     ...(modulePrefs.sms ? [{ title: "SMS", url: "/sms", icon: Smartphone }] : []),
     ...(modulePrefs.team_chat ? [{ title: "Team Chat", url: "/team-chat", icon: MessageSquare }] : []),
+    ...(pinnedModules.includes("lead_pixel") && modulePrefs.lead_pixel ? [{ title: "Lead Pixel", url: "/leads-dashboard", icon: Target }] : []),
   ];
 
   const mediaItems = [
@@ -415,9 +404,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
       { title: "Proposals", url: "/proposals", icon: FileCheck },
       { title: "Invoices", url: "/invoices", icon: FileText },
     ] : []),
-    ...(pinnedModules.includes("lead_pixel") && modulePrefs.lead_pixel ? [
-      { title: "Lead Pixel", url: "/leads-dashboard", icon: Target },
-    ] : []),
   ];
 
   const civicItems = [
@@ -437,7 +423,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
   ];
 
   const allSettingsItems = [
-    { title: "Profile Settings", url: "/settings", icon: Settings },
     { title: "Team", url: "/team", icon: Contact },
     { title: "Seekies", url: "/integrations", icon: Puzzle },
     { title: "Help Center", url: "/help-center", icon: BookOpen },
@@ -1209,59 +1194,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     );
   };
 
-  const renderRssPodcastSection = () => {
-    // Hide for advertisers or if module is deactivated
-    if (isAdvertiser || !modulePrefs.rss_podcast || rssPodcastItems.length === 0) return null;
-    return (
-      <Collapsible
-        key="rss_podcast"
-        open={openSections.rss_podcast}
-        onOpenChange={(open) => setOpenSections({ ...openSections, rss_podcast: open })}
-      >
-        <SidebarGroup className="py-0">
-          <CollapsibleTrigger asChild>
-            <SidebarGroupLabel className="text-base font-semibold cursor-pointer flex items-center justify-between mb-0 py-1.5">
-              <span>RSS Podcast Hosting</span>
-              {!collapsed && <ChevronDown className={`h-3 w-3 transition-transform ${openSections.rss_podcast ? '' : '-rotate-90'}`} />}
-            </SidebarGroupLabel>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <SidebarGroupContent>
-              <SidebarMenu className="space-y-0">
-                {rssPodcastItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SidebarMenuButton asChild>
-                            <NavLink
-                              to={item.url}
-                              end
-                              className="hover:bg-accent hover:text-accent-foreground text-sm py-0.5 h-8 pl-4"
-                              activeClassName="bg-accent text-accent-foreground font-medium"
-                            >
-                              <item.icon className="h-4 w-4" />
-                              {!collapsed && <span>{item.title}</span>}
-                            </NavLink>
-                          </SidebarMenuButton>
-                        </TooltipTrigger>
-                        {collapsed && (
-                          <TooltipContent side="right">
-                            <p>{item.title}</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </TooltipProvider>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </CollapsibleContent>
-        </SidebarGroup>
-      </Collapsible>
-    );
-  };
-
   const renderBlogSection = () => {
     // Hide for advertisers or if module is deactivated
     if (isAdvertiser || !modulePrefs.blog || blogItems.length === 0) return null;
@@ -1376,7 +1308,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     civic: renderCivicSection,
     influencer: renderInfluencerSection,
     agency: renderAgencySection,
-    rss_podcast: renderRssPodcastSection,
     blog: renderBlogSection,
   };
 

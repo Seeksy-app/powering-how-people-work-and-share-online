@@ -468,11 +468,36 @@ const Settings = () => {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => {
-                      setFormData({ ...formData, phone: e.target.value });
-                      debouncedSave();
+                      let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+                      
+                      // Format as (XXX) XXX-XXXX
+                      if (value.length > 0) {
+                        if (value.length <= 3) {
+                          value = `(${value}`;
+                        } else if (value.length <= 6) {
+                          value = `(${value.slice(0, 3)}) ${value.slice(3)}`;
+                        } else {
+                          value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}-${value.slice(6, 10)}`;
+                        }
+                      }
+                      
+                      setFormData({ ...formData, phone: value });
+                      
+                      // Auto-save when complete (10 digits)
+                      const digitsOnly = value.replace(/\D/g, '');
+                      if (digitsOnly.length === 10) {
+                        // Save immediately
+                        if (saveTimeoutRef.current) {
+                          clearTimeout(saveTimeoutRef.current);
+                        }
+                        handleSave(false);
+                      } else {
+                        debouncedSave();
+                      }
                     }}
                     className="pl-10"
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="(555) 000-0000"
+                    maxLength={14}
                   />
                 </div>
               </div>
