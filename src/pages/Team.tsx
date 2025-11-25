@@ -82,88 +82,93 @@ export default function Team() {
   };
 
   const loadTeamMembers = async (userId: string) => {
-    // Get the current user's team, create one if it doesn't exist
-    let { data: team } = await supabase
-      .from("teams")
-      .select("id")
-      .eq("owner_id", userId)
-      .maybeSingle();
-
-    if (!team) {
-      // Create team for this user
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, username")
-        .eq("id", userId)
-        .single();
-
-      const teamName = `${profile?.full_name || profile?.username || 'User'}'s Team`;
-      
-      const { data: newTeam, error: createError } = await supabase
+    try {
+      // Get the current user's team, create one if it doesn't exist
+      let { data: team } = await supabase
         .from("teams")
-        .insert({
-          owner_id: userId,
-          name: teamName,
-        })
-        .select()
-        .single();
+        .select("id")
+        .eq("owner_id", userId)
+        .maybeSingle();
 
-      if (createError) throw createError;
+      if (!team) {
+        // Create team for this user
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, username")
+          .eq("id", userId)
+          .single();
 
-      // Add owner as team member
-      await supabase
+        const teamName = `${profile?.full_name || profile?.username || 'User'}'s Team`;
+        
+        const { data: newTeam, error: createError } = await supabase
+          .from("teams")
+          .insert({
+            owner_id: userId,
+            name: teamName,
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        // Add owner as team member
+        await supabase
+          .from("team_members")
+          .insert({
+            team_id: newTeam.id,
+            user_id: userId,
+            role: 'owner',
+          });
+
+        team = newTeam;
+      }
+
+      // Get team members from team_members table
+      const { data: members, error } = await supabase
         .from("team_members")
-        .insert({
-          team_id: newTeam.id,
-          user_id: userId,
-          role: 'owner',
-        });
+        .select(`
+          id,
+          user_id,
+          role,
+          joined_at
+        `)
+        .eq("team_id", team.id);
 
-      team = newTeam;
-    }
+      if (error) throw error;
 
-    // Get team members from team_members table
-    const { data: members, error } = await supabase
-      .from("team_members")
-      .select(`
-        id,
-        user_id,
-        role,
-        joined_at
-      `)
-      .eq("team_id", team.id);
+      // Get profile info for each member
+      if (!members || members.length === 0) {
+        setTeamMembers([]);
+        return;
+      }
 
-    if (error) throw error;
-
-    // Get profile info for each member
-    if (!members || members.length === 0) {
-      setTeamMembers([]);
-      return;
-    }
-
-    const memberIds = members.map(m => m.user_id);
-    
-    // Get profiles
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, account_full_name, full_name, username, avatar_url")
-      .in("id", memberIds);
-    
-    const membersWithDetails: TeamMember[] = members.map(member => {
-      const profile = profiles?.find(p => p.id === member.user_id);
+      const memberIds = members.map(m => m.user_id);
       
-      return {
-        id: member.id,
-        user_id: member.user_id,
-        role: member.role,
-        email: "", // Will be populated if needed
-        full_name: profile?.account_full_name || profile?.full_name || profile?.username || null,
-        avatar_url: profile?.avatar_url || null,
-        created_at: member.joined_at,
-      };
-    });
+      // Get profiles
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, account_full_name, full_name, username, avatar_url")
+        .in("id", memberIds);
+      
+      const membersWithDetails: TeamMember[] = members.map(member => {
+        const profile = profiles?.find(p => p.id === member.user_id);
+        
+        return {
+          id: member.id,
+          user_id: member.user_id,
+          role: member.role,
+          email: "", // Will be populated if needed
+          full_name: profile?.account_full_name || profile?.full_name || profile?.username || null,
+          avatar_url: profile?.avatar_url || null,
+          created_at: member.joined_at,
+        };
+      });
 
-    setTeamMembers(membersWithDetails);
+      setTeamMembers(membersWithDetails);
+    } catch (error) {
+      console.error("Error loading team members:", error);
+      throw error;
+    }
   };
 
   const loadInvitations = async (userId: string) => {

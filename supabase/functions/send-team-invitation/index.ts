@@ -8,9 +8,8 @@ const corsHeaders = {
 };
 
 interface InviteRequest {
-  invitee_email: string;
-  name?: string;
   email: string;
+  name: string;
   role: string;
   team_id: string | null;
 }
@@ -106,8 +105,10 @@ serve(async (req) => {
     }
 
     const { email, name, role, team_id }: InviteRequest = await req.json();
-    const invitee_email = email || (await req.json()).invitee_email;
-    const invitee_name = name;
+    
+    if (!email || !name) {
+      throw new Error("Email and name are required");
+    }
 
     // Get or create team_id
     let actualTeamId = team_id;
@@ -127,7 +128,7 @@ serve(async (req) => {
     const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
     if (listError) throw listError;
 
-    const invitedUser = users?.find((u: any) => u.email === invitee_email);
+    const invitedUser = users?.find((u: any) => u.email === email);
 
     if (invitedUser) {
       // User exists, add to team_members table
@@ -181,8 +182,8 @@ serve(async (req) => {
           .insert({
             inviter_id: user.id,
             team_id: actualTeamId,
-            invitee_email: invitee_email,
-            invitee_name: invitee_name,
+            invitee_email: email,
+            invitee_name: name,
             role: role,
             status: "pending",
           });
@@ -193,7 +194,7 @@ serve(async (req) => {
 
         await resend.emails.send({
           from: Deno.env.get("SENDER_EMAIL_HELLO") || "Seeksy <hello@seeksy.io>",
-          to: [invitee_email],
+          to: [email],
           subject: "🎉 Welcome to the Seeksy Team!",
           html: emailHTML,
         });
@@ -205,7 +206,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: "Invitation email sent to " + invitee_email,
+          message: "Invitation email sent to " + email,
           user_exists: false 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
