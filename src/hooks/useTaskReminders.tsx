@@ -74,10 +74,13 @@ export const useTaskReminders = () => {
             });
           }
 
+          // Create task list for toast
+          const taskList = tasks.map((task) => `• ${task.title}`).join("\n");
+
           // Also show toast
           toast({
             title: "Task Reminder",
-            description: `You have ${tasks.length} outstanding task${tasks.length > 1 ? 's' : ''}`,
+            description: taskList,
           });
         }
       } catch (error) {
