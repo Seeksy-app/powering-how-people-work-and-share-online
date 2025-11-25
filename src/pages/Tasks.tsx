@@ -20,6 +20,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CategoryManager } from "@/components/tasks/CategoryManager";
 import { CategorySelect } from "@/components/tasks/CategorySelect";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTaskReminders } from "@/hooks/useTaskReminders";
 
 interface Task {
   id: string;
@@ -235,6 +236,9 @@ export default function Tasks() {
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
   const [categories, setCategories] = useState<{ id: string; name: string; color: string }[]>([]);
   const { toast } = useToast();
+
+  // Enable Chrome notifications for task reminders
+  useTaskReminders();
 
   // Save view mode preference when it changes
   useEffect(() => {
