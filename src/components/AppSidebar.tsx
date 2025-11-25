@@ -674,15 +674,13 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
         <SidebarGroup className="py-0">
           <CollapsibleTrigger asChild>
             <SidebarGroupLabel className="text-base font-semibold cursor-pointer flex items-center justify-between mb-0 py-1.5 group">
-              <div className="flex items-center gap-2">
-                <span>Seekies</span>
-                {!collapsed && (
+              <span>Seekies</span>
+              {!collapsed && (
+                <div className="flex items-center gap-1">
                   <button
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      // Toggle pin for seekies section - this would control visibility of entire section
-                      const isSeekiesPinned = pinnedModules.includes("seekies_section");
                       togglePin("seekies_section");
                     }}
                     className="p-0.5 opacity-100 hover:bg-accent rounded transition-colors"
@@ -694,9 +692,9 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
                       }`}
                     />
                   </button>
-                )}
-              </div>
-              {!collapsed && <ChevronDown className={`h-3 w-3 transition-transform ${openSections.seekies ? '' : '-rotate-90'}`} />}
+                  <ChevronDown className={`h-3 w-3 transition-transform ${openSections.seekies ? '' : '-rotate-90'}`} />
+                </div>
+              )}
             </SidebarGroupLabel>
           </CollapsibleTrigger>
           <CollapsibleContent>
