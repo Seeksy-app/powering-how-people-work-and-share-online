@@ -253,7 +253,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     
     const { data } = await supabase
       .from("user_preferences")
-      .select("module_awards_enabled, module_media_enabled, module_civic_enabled, module_influencer_enabled, module_agency_enabled, module_team_chat_enabled, module_monetization_enabled, module_project_management_enabled, module_rss_podcast_posting_enabled, module_blog_enabled, module_events_enabled, module_signup_sheets_enabled, module_polls_enabled, module_qr_codes_enabled, module_marketing_enabled, module_sms_enabled, pinned_modules")
+      .select("module_awards_enabled, module_media_enabled, module_civic_enabled, module_influencer_enabled, module_agency_enabled, module_team_chat_enabled, module_monetization_enabled, module_project_management_enabled, module_rss_podcast_posting_enabled, module_blog_enabled, module_events_enabled, module_signup_sheets_enabled, module_polls_enabled, module_qr_codes_enabled, module_marketing_enabled, module_sms_enabled, meetings_enabled, pinned_modules")
       .eq("user_id", user.id)
       .maybeSingle();
     
@@ -277,10 +277,22 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
         sms: (data as any).module_sms_enabled || false,
       });
       
-      // Parse pinned_modules safely
-      const pinned = Array.isArray(data.pinned_modules) 
+      // Parse pinned_modules safely and ensure meetings is included if enabled
+      let pinned = Array.isArray(data.pinned_modules) 
         ? data.pinned_modules 
         : ["meetings"];
+      
+      // If meetings is enabled but not pinned, add it automatically
+      const meetingsEnabled = (data as any).meetings_enabled !== false;
+      if (meetingsEnabled && !pinned.includes("meetings")) {
+        pinned = [...pinned, "meetings"];
+        // Update database to persist this
+        await supabase
+          .from("user_preferences")
+          .update({ pinned_modules: pinned })
+          .eq("user_id", user.id);
+      }
+      
       setPinnedModules(pinned as string[]);
     }
   };

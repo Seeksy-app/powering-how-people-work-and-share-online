@@ -6281,6 +6281,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          meetings_enabled: boolean | null
           module_advertiser_enabled: boolean | null
           module_agency_enabled: boolean | null
           module_awards_enabled: boolean | null
@@ -6313,6 +6314,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          meetings_enabled?: boolean | null
           module_advertiser_enabled?: boolean | null
           module_agency_enabled?: boolean | null
           module_awards_enabled?: boolean | null
@@ -6345,6 +6347,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          meetings_enabled?: boolean | null
           module_advertiser_enabled?: boolean | null
           module_agency_enabled?: boolean | null
           module_awards_enabled?: boolean | null
