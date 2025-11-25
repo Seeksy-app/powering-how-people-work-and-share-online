@@ -17,25 +17,15 @@ export function ThemeToggle() {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get user ID and load their theme preference
-    const loadThemePreference = async () => {
+    // Just get user ID, don't load theme (useAutoTheme handles that)
+    const getUserId = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      setUserId(user.id);
-
-      const { data: prefs } = await supabase
-        .from("user_preferences")
-        .select("theme_preference")
-        .eq("user_id", user.id)
-        .single();
-
-      if (prefs?.theme_preference && prefs.theme_preference !== theme) {
-        setTheme(prefs.theme_preference);
+      if (user) {
+        setUserId(user.id);
       }
     };
 
-    loadThemePreference();
+    getUserId();
   }, []);
 
   const handleThemeChange = async (newTheme: string) => {
@@ -59,11 +49,6 @@ export function ThemeToggle() {
         title: "Error saving theme",
         description: error.message,
         variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Theme updated",
-        description: `Theme changed to ${newTheme}`,
       });
     }
   };
