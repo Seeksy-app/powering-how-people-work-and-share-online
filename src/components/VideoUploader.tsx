@@ -47,6 +47,36 @@ export default function VideoUploader({
     return `${formatBytes(bytesPerSecond)}/s`;
   };
 
+  const extractDuration = (file: File): Promise<number | null> => {
+    return new Promise((resolve) => {
+      const isVideo = file.type.startsWith('video/');
+      const isAudio = file.type.startsWith('audio/');
+      
+      if (!isVideo && !isAudio) {
+        resolve(null);
+        return;
+      }
+
+      const element = isVideo 
+        ? document.createElement('video')
+        : document.createElement('audio');
+      
+      element.preload = 'metadata';
+      
+      element.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(element.src);
+        resolve(element.duration);
+      };
+      
+      element.onerror = () => {
+        window.URL.revokeObjectURL(element.src);
+        resolve(null);
+      };
+      
+      element.src = URL.createObjectURL(file);
+    });
+  };
+
   const validateFile = (file: File): boolean => {
     const isVideo = file.type.startsWith('video/');
     const isAudio = file.type.startsWith('audio/');
@@ -217,6 +247,9 @@ export default function VideoUploader({
       .from('episode-files')
       .getPublicUrl(fileName);
 
+    // Extract duration
+    const duration = await extractDuration(file);
+
     // Create media file record
     const { error: dbError } = await supabase
       .from('media_files')
@@ -226,6 +259,7 @@ export default function VideoUploader({
         file_url: publicUrl,
         file_type: file.type.startsWith('video') ? 'video' : 'audio',
         file_size_bytes: file.size,
+        duration_seconds: duration,
         source: 'upload',
       });
 
@@ -315,6 +349,9 @@ export default function VideoUploader({
 
             console.log('Creating media_files record with publicUrl:', publicUrl);
 
+            // Extract duration
+            const duration = await extractDuration(file);
+
             const { error: dbError } = await supabase
               .from('media_files')
               .insert({
@@ -323,6 +360,7 @@ export default function VideoUploader({
                 file_url: publicUrl,
                 file_type: file.type.startsWith('video') ? 'video' : 'audio',
                 file_size_bytes: file.size,
+                duration_seconds: duration,
                 source: 'upload',
               });
 
