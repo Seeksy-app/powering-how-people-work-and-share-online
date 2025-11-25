@@ -3524,6 +3524,54 @@ export type Database = {
         }
         Relationships: []
       }
+      investor_portal_emails: {
+        Row: {
+          access_code: string
+          clicked_at: string | null
+          created_at: string | null
+          forecast_type: string | null
+          id: string
+          opened_at: string | null
+          recipient_email: string
+          recipient_name: string | null
+          resend_email_id: string | null
+          sent_at: string | null
+          sent_by_user_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_code: string
+          clicked_at?: string | null
+          created_at?: string | null
+          forecast_type?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email: string
+          recipient_name?: string | null
+          resend_email_id?: string | null
+          sent_at?: string | null
+          sent_by_user_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_code?: string
+          clicked_at?: string | null
+          created_at?: string | null
+          forecast_type?: string | null
+          id?: string
+          opened_at?: string | null
+          recipient_email?: string
+          recipient_name?: string | null
+          resend_email_id?: string | null
+          sent_at?: string | null
+          sent_by_user_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       investor_shares: {
         Row: {
           access_code: string
@@ -6279,6 +6327,7 @@ export type Database = {
       }
       user_preferences: {
         Row: {
+          contacts_enabled: boolean | null
           created_at: string | null
           id: string
           meetings_enabled: boolean | null
@@ -6312,6 +6361,7 @@ export type Database = {
           user_type: string | null
         }
         Insert: {
+          contacts_enabled?: boolean | null
           created_at?: string | null
           id?: string
           meetings_enabled?: boolean | null
@@ -6345,6 +6395,7 @@ export type Database = {
           user_type?: string | null
         }
         Update: {
+          contacts_enabled?: boolean | null
           created_at?: string | null
           id?: string
           meetings_enabled?: boolean | null
