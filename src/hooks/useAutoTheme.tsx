@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTheme } from "next-themes";
 import { useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,36 @@ export function useAutoTheme() {
   const previousTheme = useRef<string | null>(null);
   const wasInStudio = useRef(false);
   const hasSetStudioTheme = useRef(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
+  // Load user's theme preference on mount ONCE
+  useEffect(() => {
+    if (hasInitialized || isStudio) return;
+    
+    const loadUserTheme = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setHasInitialized(true);
+        return;
+      }
+
+      const { data: prefs } = await supabase
+        .from("user_preferences")
+        .select("theme_preference")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (prefs?.theme_preference) {
+        setTheme(prefs.theme_preference);
+      }
+      
+      setHasInitialized(true);
+    };
+
+    loadUserTheme();
+  }, [hasInitialized, theme, setTheme, isStudio]);
+
+  // Handle Studio theme switching
   useEffect(() => {
     // Set dark mode on Studio entry (but allow manual changes)
     if (isStudio) {
@@ -42,18 +71,15 @@ export function useAutoTheme() {
           .from("user_preferences")
           .select("theme_preference")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
 
         // Restore saved preference or use system theme
-        const savedTheme = prefs?.theme_preference || previousTheme.current || 'system';
+        const savedTheme = prefs?.theme_preference || previousTheme.current || 'light';
         setTheme(savedTheme);
       };
       
       restoreTheme();
       return;
     }
-
-    // Auto mode now follows system preferences (OS-level light/dark mode)
-    // "system" theme in next-themes automatically follows OS preference
   }, [theme, resolvedTheme, setTheme, isStudio, location.pathname]);
 }
