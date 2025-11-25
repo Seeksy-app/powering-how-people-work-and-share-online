@@ -1,4 +1,4 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -140,7 +140,6 @@ Deno.serve(async (req) => {
     console.log('Parsed analysis:', analysis);
 
     // Store analysis results in media_processing_jobs
-    const { createClient } = await import('jsr:@supabase/supabase-js@2');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
