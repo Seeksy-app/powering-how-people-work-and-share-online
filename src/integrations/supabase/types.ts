@@ -2976,6 +2976,63 @@ export type Database = {
         }
         Relationships: []
       }
+      episode_blockchain_certificates: {
+        Row: {
+          blockchain_network: string | null
+          blockchain_transaction_id: string | null
+          certificate_hash: string
+          certificate_status: string | null
+          certificate_url: string | null
+          certified_at: string | null
+          created_at: string | null
+          episode_id: string
+          id: string
+          metadata: Json | null
+          podcast_id: string
+        }
+        Insert: {
+          blockchain_network?: string | null
+          blockchain_transaction_id?: string | null
+          certificate_hash: string
+          certificate_status?: string | null
+          certificate_url?: string | null
+          certified_at?: string | null
+          created_at?: string | null
+          episode_id: string
+          id?: string
+          metadata?: Json | null
+          podcast_id: string
+        }
+        Update: {
+          blockchain_network?: string | null
+          blockchain_transaction_id?: string | null
+          certificate_hash?: string
+          certificate_status?: string | null
+          certificate_url?: string | null
+          certified_at?: string | null
+          created_at?: string | null
+          episode_id?: string
+          id?: string
+          metadata?: Json | null
+          podcast_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "episode_blockchain_certificates_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "episode_blockchain_certificates_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       episodes: {
         Row: {
           audio_url: string
@@ -4650,6 +4707,47 @@ export type Database = {
             foreignKeyName: "podcast_directories_podcast_id_fkey"
             columns: ["podcast_id"]
             isOneToOne: false
+            referencedRelation: "podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      podcast_rss_auto_updates: {
+        Row: {
+          auto_update_enabled: boolean | null
+          created_at: string | null
+          directories: Json | null
+          id: string
+          last_update_at: string | null
+          podcast_id: string
+          update_frequency: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_update_enabled?: boolean | null
+          created_at?: string | null
+          directories?: Json | null
+          id?: string
+          last_update_at?: string | null
+          podcast_id: string
+          update_frequency?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_update_enabled?: boolean | null
+          created_at?: string | null
+          directories?: Json | null
+          id?: string
+          last_update_at?: string | null
+          podcast_id?: string
+          update_frequency?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "podcast_rss_auto_updates_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: true
             referencedRelation: "podcasts"
             referencedColumns: ["id"]
           },

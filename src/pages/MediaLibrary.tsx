@@ -85,6 +85,7 @@ import VideoUploader from "@/components/VideoUploader";
 import { AdInsertionDialog } from "@/components/media/AdInsertionDialog";
 import { useVideoProcessing } from "@/hooks/useVideoProcessing";
 import { VideoMarkerPanel } from "@/components/media/VideoMarkerPanel";
+import { VideoEditingControls } from "@/components/media/VideoEditingControls";
 
 interface Recording {
   id: string;
