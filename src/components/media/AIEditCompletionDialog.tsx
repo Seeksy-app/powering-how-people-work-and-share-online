@@ -31,7 +31,7 @@ export const AIEditCompletionDialog = ({
         <div className="space-y-6 py-6">
           {/* Success Message */}
           <div className="text-center space-y-3">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-2">
               <Sparkles className="h-8 w-8 text-green-500" />
             </div>
             <p className="text-lg">
@@ -48,18 +48,20 @@ export const AIEditCompletionDialog = ({
               <ArrowRight className="h-4 w-4 text-primary" />
               What happens next?
             </h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex gap-2">
-                <Badge variant="default" className="text-xs">Option 1</Badge>
-                <p className="flex-1 text-muted-foreground">
-                  <span className="font-medium text-foreground">Save Edits:</span> Keep all AI changes and continue with manual edits if needed
-                </p>
+            <div className="space-y-3 text-sm">
+              <div className="flex gap-3 items-start">
+                <Badge className="text-xs shrink-0">Option 1</Badge>
+                <div>
+                  <p className="font-medium text-foreground mb-1">Save Edits</p>
+                  <p className="text-muted-foreground">Keep all AI changes and continue with manual edits if needed</p>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Badge variant="outline" className="text-xs">Option 2</Badge>
-                <p className="flex-1 text-muted-foreground">
-                  <span className="font-medium text-foreground">Keep Original:</span> Discard all AI changes and start fresh
-                </p>
+              <div className="flex gap-3 items-start">
+                <Badge variant="outline" className="text-xs shrink-0">Option 2</Badge>
+                <div>
+                  <p className="font-medium text-foreground mb-1">Keep Original</p>
+                  <p className="text-muted-foreground">Discard all AI changes and start fresh</p>
+                </div>
               </div>
             </div>
           </div>
