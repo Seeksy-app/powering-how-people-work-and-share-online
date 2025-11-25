@@ -92,6 +92,7 @@ import AdvertiserCampaignDetail from "./pages/AdvertiserCampaignDetail";
 import Studio from "./pages/Studio";
 import StudioTemplates from "./pages/StudioTemplates";
 import MediaLibrary from "./pages/MediaLibrary";
+import PostProductionStudio from "./pages/PostProductionStudio";
 import CreateClips from "./pages/CreateClips";
 import SystemStatus from "./pages/SystemStatus";
 import Pricing from "./pages/Pricing";
@@ -321,6 +322,7 @@ const AppContent = () => {
           <Route path="/studio" element={<StudioTemplates />} />
           <Route path="/studio/session/:id" element={<Studio />} />
           <Route path="/media-library" element={<MediaLibrary />} />
+          <Route path="/post-production-studio" element={<PostProductionStudio />} />
           <Route path="/create-clips" element={<CreateClips />} />
           <Route path="/system-status" element={<SystemStatus />} />
         <Route path="/awards" element={<Awards />} />
