@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,6 +45,7 @@ interface MediaFile {
 }
 
 export default function InfluenceHubMedia() {
+  const navigate = useNavigate();
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [aiEditsDialogOpen, setAiEditsDialogOpen] = useState(false);
@@ -259,14 +261,10 @@ export default function InfluenceHubMedia() {
                           size="sm"
                           variant="ghost"
                           className="h-7 px-2 gap-1 text-primary hover:text-primary hover:bg-primary/10"
-                          onClick={() => handleProcessWithAI(file)}
-                          disabled={isProcessing === file.id}
+                          onClick={() => navigate(`/post-production-studio?id=${file.id}`)}
+                          title="Open in Post Production Studio"
                         >
-                          {isProcessing === file.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Sparkles className="h-3 w-3" />
-                          )}
+                          <Sparkles className="h-3 w-3" />
                           <span className="text-xs font-medium">AI</span>
                         </Button>
                       )}
