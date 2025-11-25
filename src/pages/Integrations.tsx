@@ -804,14 +804,14 @@ const Integrations = () => {
                 />
               )}
 
-              {matchesSearch('Marketing', 'Send email campaigns, create newsletters, and track engagement metrics with integrated CRM.') && (
+              {matchesSearch('Email', 'Send email campaigns, create newsletters, and track engagement metrics. View delivery status and monitor email performance.') && (
                 <IntegrationCard
                   id="marketing"
                   icon={Mail}
                   iconGradient="from-purple-500 to-indigo-600"
-                  title="Marketing"
-                  description="Send email campaigns, create newsletters, and track engagement metrics with integrated CRM."
-                  tooltip="Enable to access email marketing and campaign tools"
+                  title="Email"
+                  description="Send email campaigns, create newsletters, and track engagement metrics. View delivery status and monitor email performance."
+                  tooltip="Enable to access email campaigns and tracking tools"
                   isActive={modules.marketing}
                   isAdmin={isAdmin}
                   onToggle={() => toggleModule('marketing')}
