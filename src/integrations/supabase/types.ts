@@ -4636,6 +4636,75 @@ export type Database = {
         }
         Relationships: []
       }
+      pixel_leads: {
+        Row: {
+          city: string | null
+          company: string | null
+          country: string | null
+          created_at: string | null
+          creator_id: string
+          email: string | null
+          enrichment_data: Json | null
+          enrichment_status: string | null
+          first_seen_at: string | null
+          id: string
+          last_seen_at: string | null
+          name: string | null
+          page_url: string
+          page_views: number | null
+          phone: string | null
+          referrer: string | null
+          session_duration: number | null
+          user_agent: string | null
+          visitor_id: string | null
+          visitor_ip_hash: string
+        }
+        Insert: {
+          city?: string | null
+          company?: string | null
+          country?: string | null
+          created_at?: string | null
+          creator_id: string
+          email?: string | null
+          enrichment_data?: Json | null
+          enrichment_status?: string | null
+          first_seen_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          name?: string | null
+          page_url: string
+          page_views?: number | null
+          phone?: string | null
+          referrer?: string | null
+          session_duration?: number | null
+          user_agent?: string | null
+          visitor_id?: string | null
+          visitor_ip_hash: string
+        }
+        Update: {
+          city?: string | null
+          company?: string | null
+          country?: string | null
+          created_at?: string | null
+          creator_id?: string
+          email?: string | null
+          enrichment_data?: Json | null
+          enrichment_status?: string | null
+          first_seen_at?: string | null
+          id?: string
+          last_seen_at?: string | null
+          name?: string | null
+          page_url?: string
+          page_views?: number | null
+          phone?: string | null
+          referrer?: string | null
+          session_duration?: number | null
+          user_agent?: string | null
+          visitor_id?: string | null
+          visitor_ip_hash?: string
+        }
+        Relationships: []
+      }
       podcast_ad_settings: {
         Row: {
           ad_mode: string | null
