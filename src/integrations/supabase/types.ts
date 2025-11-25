@@ -2976,6 +2976,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_template_folders: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       episode_blockchain_certificates: {
         Row: {
           blockchain_network: string | null
@@ -5440,6 +5467,50 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      saved_email_templates: {
+        Row: {
+          created_at: string | null
+          customization_data: Json | null
+          customized_html: string
+          folder_id: string | null
+          id: string
+          name: string
+          template_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          customization_data?: Json | null
+          customized_html: string
+          folder_id?: string | null
+          id?: string
+          name: string
+          template_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          customization_data?: Json | null
+          customized_html?: string
+          folder_id?: string | null
+          id?: string
+          name?: string
+          template_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_email_templates_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "email_template_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_proformas: {
         Row: {

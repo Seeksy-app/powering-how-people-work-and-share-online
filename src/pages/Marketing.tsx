@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -35,6 +35,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { EmailTemplateCustomizer } from "@/components/EmailTemplateCustomizer";
+import { EmailTemplateFullScreenEditor } from "@/components/EmailTemplateFullScreenEditor";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Folder as FolderIcon, Trash2, Edit2 } from "lucide-react";
 
 type TemplateCategory = 'all' | 'daily' | 'welcome' | 'promotional' | 'transactional' | 'newsletter' | 'event' | 'ecommerce' | 'reengagement';
 
@@ -54,6 +58,49 @@ const Marketing = () => {
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory>('all');
   const [selectedTemplate, setSelectedTemplate] = useState<EmailTemplate | null>(null);
   const [customizerOpen, setCustomizerOpen] = useState(false);
+  const [fullScreenEditorOpen, setFullScreenEditorOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'templates' | 'saved'>('templates');
+  const queryClient = useQueryClient();
+
+  const { data: user } = useQuery({
+    queryKey: ["user"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
+
+  const { data: savedTemplates } = useQuery({
+    queryKey: ["saved-email-templates", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("saved_email_templates")
+        .select("*, email_template_folders(name, color)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const { data: folders } = useQuery({
+    queryKey: ["email-template-folders", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("email_template_folders")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false});
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
 
   const categories = [
     { id: 'all', label: 'All Templates', icon: Sparkles, count: 32 },
@@ -756,6 +803,16 @@ const Marketing = () => {
     return matchesCategory && matchesSearch;
   });
 
+  const handleUseTemplate = (template: EmailTemplate) => {
+    setSelectedTemplate(template);
+    setFullScreenEditorOpen(true);
+  };
+
+  const handlePreview = (template: EmailTemplate) => {
+    setSelectedTemplate(template);
+    setCustomizerOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -784,13 +841,123 @@ const Marketing = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="templates" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="templates">Templates</TabsTrigger>
-            <TabsTrigger value="campaigns">My Campaigns</TabsTrigger>
-            <TabsTrigger value="sequences">Sequences</TabsTrigger>
+        <Tabs defaultValue="templates" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="templates">
+              All Templates
+            </TabsTrigger>
+            <TabsTrigger value="saved">
+              <FolderIcon className="h-4 w-4 mr-2" />
+              My Templates ({savedTemplates?.length || 0})
+            </TabsTrigger>
+            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+            <TabsTrigger value="sequences">Automation</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="saved" className="space-y-6">
+            {folders && folders.length > 0 && (
+              <div className="space-y-4">
+                {folders.map((folder) => {
+                  const folderTemplates = savedTemplates?.filter(t => t.folder_id === folder.id) || [];
+                  
+                  return (
+                    <Card key={folder.id}>
+                      <CardContent className="pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <FolderIcon className="h-5 w-5" style={{ color: folder.color }} />
+                            <h3 className="font-semibold text-lg">{folder.name}</h3>
+                            <Badge variant="secondary">{folderTemplates.length}</Badge>
+                          </div>
+                          <Button variant="ghost" size="sm">
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {folderTemplates.map((savedTemplate) => (
+                            <Card key={savedTemplate.id} className="overflow-hidden">
+                              <div className="aspect-video bg-muted relative overflow-hidden">
+                                <div 
+                                  className="scale-[0.3] origin-top-left w-[333%] h-[333%]"
+                                  dangerouslySetInnerHTML={{ __html: savedTemplate.customized_html }}
+                                />
+                              </div>
+                              <div className="p-3">
+                                <h4 className="font-medium mb-1">{savedTemplate.name}</h4>
+                                <div className="flex gap-2 mt-2">
+                                  <Button size="sm" variant="outline" className="flex-1">
+                                    <Edit2 className="h-3 w-3 mr-1" />
+                                    Edit
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="flex-1">
+                                    <Send className="h-3 w-3 mr-1" />
+                                    Send
+                                  </Button>
+                                </div>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Templates without folder */}
+            {savedTemplates && savedTemplates.filter(t => !t.folder_id).length > 0 && (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <FolderIcon className="h-5 w-5 text-muted-foreground" />
+                    <h3 className="font-semibold text-lg">Uncategorized</h3>
+                    <Badge variant="secondary">
+                      {savedTemplates.filter(t => !t.folder_id).length}
+                    </Badge>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {savedTemplates.filter(t => !t.folder_id).map((savedTemplate) => (
+                      <Card key={savedTemplate.id} className="overflow-hidden">
+                        <div className="aspect-video bg-muted relative overflow-hidden">
+                          <div 
+                            className="scale-[0.3] origin-top-left w-[333%] h-[333%]"
+                            dangerouslySetInnerHTML={{ __html: savedTemplate.customized_html }}
+                          />
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-medium mb-1">{savedTemplate.name}</h4>
+                          <div className="flex gap-2 mt-2">
+                            <Button size="sm" variant="outline" className="flex-1">
+                              <Edit2 className="h-3 w-3 mr-1" />
+                              Edit
+                            </Button>
+                            <Button size="sm" variant="outline" className="flex-1">
+                              <Send className="h-3 w-3 mr-1" />
+                              Send
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {(!savedTemplates || savedTemplates.length === 0) && (
+              <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                <Mail className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-xl font-semibold mb-2">No saved templates yet</h3>
+                <p className="text-muted-foreground mb-6">
+                  Customize and save templates to access them here
+                </p>
+              </div>
+            )}
+          </TabsContent>
 
           <TabsContent value="templates" className="space-y-6">
             {/* Search and Filter */}
@@ -882,17 +1049,14 @@ const Marketing = () => {
                         <Button 
                           size="sm" 
                           className="flex-1"
-                          onClick={() => {
-                            setSelectedTemplate(template);
-                            setCustomizerOpen(true);
-                          }}
+                          onClick={() => handleUseTemplate(template)}
                         >
                           Use Template
                         </Button>
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => setSelectedTemplate(template)}
+                          onClick={() => handlePreview(template)}
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -986,6 +1150,14 @@ const Marketing = () => {
         onOpenChange={setCustomizerOpen}
         template={selectedTemplate}
       />
+      
+      {selectedTemplate && (
+        <EmailTemplateFullScreenEditor
+          open={fullScreenEditorOpen}
+          onOpenChange={setFullScreenEditorOpen}
+          template={selectedTemplate}
+        />
+      )}
     </div>
   );
 };
