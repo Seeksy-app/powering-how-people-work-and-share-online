@@ -636,20 +636,6 @@ const Integrations = () => {
                 />
               )}
 
-              {matchesSearch('AI Assistant', 'Get help from your AI assistant. Ask questions, get insights, and automate tasks across your workspace.') && (
-                <IntegrationCard
-                  id="ai_assistant"
-                  icon={Sparkles}
-                  iconGradient="from-purple-500 to-pink-600"
-                  title="AI Assistant"
-                  description="Get help from your AI assistant. Ask questions, get insights, and automate tasks across your workspace."
-                  tooltip="Enable AI-powered assistance across your workspace"
-                  isActive={modules.ai_assistant}
-                  isAdmin={isAdmin}
-                  onToggle={() => toggleModule('ai_assistant')}
-                  onEdit={() => handleEditMetadata('ai_assistant')}
-                />
-              )}
 
               {matchesSearch('Meetings', 'Schedule and manage meetings with booking links, calendar integrations, and automated reminders.') && (
                 <IntegrationCard

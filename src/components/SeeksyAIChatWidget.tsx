@@ -19,6 +19,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/seeksy-assis
 export const SeeksyAIChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [showQuickActions, setShowQuickActions] = useState(false);
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
     content: "Hi! I'm Seeksy AI. How can I help you today?"
@@ -29,6 +30,18 @@ export const SeeksyAIChatWidget = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
+
+  // Check if first visit and auto-open
+  useEffect(() => {
+    const hasSeenChat = localStorage.getItem('seeksy_chat_seen');
+    if (!hasSeenChat) {
+      setTimeout(() => {
+        setIsOpen(true);
+        setShowQuickActions(true);
+        localStorage.setItem('seeksy_chat_seen', 'true');
+      }, 1000);
+    }
+  }, []);
 
   const { data: user } = useQuery({
     queryKey: ["user"],
@@ -219,14 +232,27 @@ export const SeeksyAIChatWidget = () => {
     }
   };
 
+  const handleQuickAction = async (prompt: string) => {
+    setShowQuickActions(false);
+    setInput(prompt);
+    await streamChat(prompt);
+  };
+
+  const quickActions = [
+    { label: "Create a Meeting", prompt: "Help me create a meeting" },
+    { label: "Add a Podcast", prompt: "I want to add a new podcast" },
+    { label: "Set Up My Page", prompt: "Help me set up my creator page" },
+    { label: "Create an Event", prompt: "I want to create an event" },
+  ];
+
   if (!isOpen) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90 z-50"
+        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 z-50"
         size="icon"
       >
-        <MessageCircle className="h-6 w-6" />
+        <Sparkles className="h-7 w-7 text-white" />
       </Button>
     );
   }
@@ -237,9 +263,11 @@ export const SeeksyAIChatWidget = () => {
       isMinimized ? "h-14 w-80" : "h-[600px] w-[400px]"
     )}>
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-primary text-primary-foreground rounded-t-lg">
+      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-t-lg">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5" />
+          <div className="p-1.5 bg-white/20 rounded-lg">
+            <Sparkles className="h-5 w-5" />
+          </div>
           <h3 className="font-semibold">Seeksy AI</h3>
         </div>
         <div className="flex items-center gap-1">
@@ -247,7 +275,7 @@ export const SeeksyAIChatWidget = () => {
             size="icon"
             variant="ghost"
             onClick={() => setIsMinimized(!isMinimized)}
-            className="h-8 w-8 hover:bg-primary-foreground/20"
+            className="h-8 w-8 hover:bg-white/20 text-white"
           >
             <Minimize2 className="h-4 w-4" />
           </Button>
@@ -255,7 +283,7 @@ export const SeeksyAIChatWidget = () => {
             size="icon"
             variant="ghost"
             onClick={() => setIsOpen(false)}
-            className="h-8 w-8 hover:bg-primary-foreground/20"
+            className="h-8 w-8 hover:bg-white/20 text-white"
           >
             <X className="h-4 w-4" />
           </Button>
@@ -267,6 +295,25 @@ export const SeeksyAIChatWidget = () => {
         <>
           <ScrollArea ref={scrollRef} className="flex-1 p-4">
             <div className="space-y-4">
+              {showQuickActions && (
+                <div className="mb-4 p-3 bg-muted/50 rounded-lg space-y-3">
+                  <p className="text-sm text-muted-foreground font-medium">Quick actions to get started:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {quickActions.map((action) => (
+                      <Button
+                        key={action.label}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleQuickAction(action.prompt)}
+                        className="justify-start text-xs h-auto py-2"
+                        disabled={isLoading}
+                      >
+                        {action.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
               {messages.map((message, index) => (
                 <div
                   key={index}
@@ -276,8 +323,8 @@ export const SeeksyAIChatWidget = () => {
                   )}
                 >
                   {message.role === "assistant" && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Sparkles className="h-4 w-4 text-primary" />
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                      <Sparkles className="h-4 w-4 text-white" />
                     </div>
                   )}
                   <div
@@ -296,11 +343,11 @@ export const SeeksyAIChatWidget = () => {
               ))}
               {isLoading && (
                 <div className="flex gap-3 text-sm items-start">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Sparkles className="h-4 w-4 text-primary" />
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 text-white" />
                   </div>
                   <div className="rounded-2xl px-4 py-2 bg-muted">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <Loader2 className="h-4 w-4 animate-spin text-purple-500" />
                   </div>
                 </div>
               )}
