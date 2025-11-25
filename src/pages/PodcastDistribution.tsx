@@ -4,6 +4,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import { DirectoriesTab } from "@/components/podcast/DirectoriesTab";
 import { RSSMigrationTab } from "@/components/podcast/RSSMigrationTab";
+import { RSSAutoUpdateTab } from "@/components/podcast/RSSAutoUpdateTab";
+import { BlockchainCertificationTab } from "@/components/podcast/BlockchainCertificationTab";
 import { AutoPublishTab } from "@/components/podcast/AutoPublishTab";
 
 export default function PodcastDistribution() {
@@ -27,9 +29,11 @@ export default function PodcastDistribution() {
         </div>
 
         <Tabs defaultValue="directories" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
             <TabsTrigger value="directories">Directories</TabsTrigger>
+            <TabsTrigger value="auto-update">Auto-Update</TabsTrigger>
             <TabsTrigger value="rss">RSS Migration</TabsTrigger>
+            <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
             <TabsTrigger value="autopublish">Auto-Publish</TabsTrigger>
           </TabsList>
 
@@ -37,8 +41,16 @@ export default function PodcastDistribution() {
             <DirectoriesTab userId={user.id} />
           </TabsContent>
 
+          <TabsContent value="auto-update">
+            <RSSAutoUpdateTab userId={user.id} />
+          </TabsContent>
+
           <TabsContent value="rss">
             <RSSMigrationTab userId={user.id} />
+          </TabsContent>
+
+          <TabsContent value="blockchain">
+            <BlockchainCertificationTab userId={user.id} />
           </TabsContent>
 
           <TabsContent value="autopublish">
