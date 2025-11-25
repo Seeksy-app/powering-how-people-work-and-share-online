@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { AICameraProcessingDialog } from "@/components/media/AICameraProcessingDialog";
 import { 
   ArrowLeft, 
   Play, 
@@ -22,7 +23,8 @@ import {
   Download,
   Undo,
   Redo,
-  X
+  X,
+  Camera
 } from "lucide-react";
 
 interface Marker {
@@ -45,6 +47,7 @@ export default function PostProductionStudio() {
   const [markers, setMarkers] = useState<Marker[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<Marker | null>(null);
   const [activeTab, setActiveTab] = useState("tools");
+  const [cameraProcessingOpen, setCameraProcessingOpen] = useState(false);
 
   // Fetch media file
   const { data: mediaFile, isLoading } = useQuery({
@@ -116,6 +119,32 @@ export default function PostProductionStudio() {
       setSelectedMarker(null);
     }
     toast.success("Marker removed");
+  };
+
+  const handleAICameraFocus = () => {
+    if (!mediaFile) {
+      toast.error("No media file loaded");
+      return;
+    }
+    setCameraProcessingOpen(true);
+  };
+
+  const handleCameraProcessingComplete = (edits: any) => {
+    // Add camera focus markers to timeline
+    if (edits?.edits) {
+      const cameraMarkers = edits.edits.map((edit: any) => ({
+        id: `camera-${Date.now()}-${Math.random()}`,
+        type: 'camera_focus' as const,
+        timestamp: edit.timestamp,
+        duration: 5,
+        data: {
+          shotType: edit.type,
+          description: edit.description
+        }
+      }));
+      setMarkers([...markers, ...cameraMarkers]);
+      toast.success(`Added ${cameraMarkers.length} camera angles to your timeline`);
+    }
   };
 
   const processAIEdit = async (editType: string) => {
@@ -301,9 +330,9 @@ export default function PostProductionStudio() {
                   <Button
                     variant="outline"
                     className="w-full justify-start"
-                    onClick={() => processAIEdit('smart_focus')}
+                    onClick={handleAICameraFocus}
                   >
-                    <Sparkles className="h-4 w-4 mr-2" />
+                    <Camera className="h-4 w-4 mr-2" />
                     AI Camera Focus
                   </Button>
                   <Button
@@ -405,6 +434,14 @@ export default function PostProductionStudio() {
           </Tabs>
         </div>
       </div>
+
+      {/* AI Camera Processing Dialog */}
+      <AICameraProcessingDialog
+        open={cameraProcessingOpen}
+        onOpenChange={setCameraProcessingOpen}
+        videoUrl={mediaFile?.file_url || ''}
+        onComplete={handleCameraProcessingComplete}
+      />
     </div>
   );
 }
