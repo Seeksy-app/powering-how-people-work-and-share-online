@@ -340,8 +340,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
       ];
 
   const seeksiesItems = [
-    // Meetings is always shown since it's a core default app
-    { title: "Meetings", url: "/meetings", icon: Calendar },
+    ...(pinnedModules.includes("meetings") ? [{ title: "Meetings", url: "/meetings", icon: Calendar }] : []),
     ...(pinnedModules.includes("events") && modulePrefs.events ? [{ title: "Events", url: "/events", icon: CalendarDays }] : []),
     ...(pinnedModules.includes("signup_sheets") && modulePrefs.signup_sheets ? [{ title: "Sign-up Sheets", url: "/signup-sheets", icon: ClipboardList }] : []),
     ...(pinnedModules.includes("polls") && modulePrefs.polls ? [{ title: "Polls", url: "/polls", icon: BarChart3 }] : []),
