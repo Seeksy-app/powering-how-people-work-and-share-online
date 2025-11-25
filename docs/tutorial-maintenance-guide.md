@@ -61,6 +61,21 @@ This guide ensures that tutorials and documentation stay synchronized with actua
 
 ## Recent Updates Log
 
+### 2025-11-25 - AI Edits Tab and Completion Dialog Cleanup
+
+**Changes made:**
+- **AI Edits Tab**: Added new "AI Edits" menu item in studio sidebar showing detailed list of all AI-generated edits
+- **Organized by Type**: AI edits grouped into Camera Focus, Smart Trim, and Ad Placement sections
+- **Timestamp Display**: Each edit shows timestamp in min:sec format with description
+- **Click to Preview**: Users can click any AI edit to jump to that timestamp in the video
+- **Completion Dialog Cleanup**: Improved spacing and layout for better readability
+- **Both Options Available**: Users can choose to "Save Edits" or "Keep Original" after AI processing
+
+**Files updated:**
+- ✅ Updated `AIEditCompletionDialog.tsx` - Cleaned up layout and spacing
+- ✅ Updated `PostProductionStudio.tsx` - Added AI Edits tab with categorized list
+- ✅ Version bumped to 1.3
+
 ### 2025-11-25 - Full AI Enhancement UX with Completion Dialog
 
 **Changes made:**
@@ -136,7 +151,7 @@ When creating new tutorial images:
 - **Minor version (1.X)**: New features or significant improvements
 - **Patch (1.1.X)**: Bug fixes, small copy updates, minor tweaks
 
-Current version: **1.2**
+Current version: **1.3**
 
 ---
 

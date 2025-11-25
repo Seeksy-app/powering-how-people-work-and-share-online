@@ -570,8 +570,9 @@ export default function PostProductionStudio() {
         {/* Right Sidebar */}
         <div className="w-96 border-l bg-card overflow-y-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="tools">Tools</TabsTrigger>
+              <TabsTrigger value="ai-edits">AI Edits</TabsTrigger>
               <TabsTrigger value="markers">Markers</TabsTrigger>
             </TabsList>
 
@@ -706,6 +707,117 @@ export default function PostProductionStudio() {
                   </div>
                 </div>
               </TooltipProvider>
+            </TabsContent>
+
+            <TabsContent value="ai-edits" className="flex-1 p-4">
+              {markers.filter(m => m.type === 'camera_focus' || m.type === 'cut' || m.type === 'ad').length === 0 ? (
+                <div className="text-center py-12">
+                  <Sparkles className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                  <h3 className="text-lg font-semibold mb-2">No AI Edits Yet</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    Run "Full AI Enhancement" or use individual AI tools to see edits here
+                  </p>
+                  <Button onClick={handleFullAIEnhancement} disabled={fullAIProcessing}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Start AI Enhancement
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                      AI-Generated Edits
+                    </h3>
+                    <Badge variant="secondary">
+                      {markers.filter(m => m.type === 'camera_focus' || m.type === 'cut' || m.type === 'ad').length} edits
+                    </Badge>
+                  </div>
+
+                  {/* Camera Focus Edits */}
+                  {markers.filter(m => m.type === 'camera_focus').length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                        <Camera className="h-3 w-3" />
+                        AI Camera Focus ({markers.filter(m => m.type === 'camera_focus').length})
+                      </h4>
+                      <div className="space-y-2">
+                        {markers.filter(m => m.type === 'camera_focus').map((marker) => (
+                          <Card key={marker.id} className="p-3 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => seekTo(marker.timestamp)}>
+                            <div className="flex items-start gap-3">
+                              <Badge className="text-xs shrink-0 mt-0.5">
+                                {formatTime(marker.timestamp)}
+                              </Badge>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium capitalize">
+                                  {marker.data?.shotType?.replace('_', ' ') || 'Camera Angle'}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {marker.data?.description || 'AI-generated camera movement'}
+                                </p>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Smart Trim Edits */}
+                  {markers.filter(m => m.type === 'cut').length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                        <Scissors className="h-3 w-3" />
+                        Smart Trim ({markers.filter(m => m.type === 'cut').length})
+                      </h4>
+                      <div className="space-y-2">
+                        {markers.filter(m => m.type === 'cut').map((marker) => (
+                          <Card key={marker.id} className="p-3 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => seekTo(marker.timestamp)}>
+                            <div className="flex items-start gap-3">
+                              <Badge className="text-xs shrink-0 mt-0.5">
+                                {formatTime(marker.timestamp)}
+                              </Badge>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">Trim Point</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {marker.data?.reason || 'AI-detected cut point'}
+                                </p>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* AI Ad Placements */}
+                  {markers.filter(m => m.type === 'ad').length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                        <Film className="h-3 w-3" />
+                        AI Ad Placement ({markers.filter(m => m.type === 'ad').length})
+                      </h4>
+                      <div className="space-y-2">
+                        {markers.filter(m => m.type === 'ad').map((marker) => (
+                          <Card key={marker.id} className="p-3 hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => seekTo(marker.timestamp)}>
+                            <div className="flex items-start gap-3">
+                              <Badge className="text-xs shrink-0 mt-0.5">
+                                {formatTime(marker.timestamp)}
+                              </Badge>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">Ad Break ({marker.duration}s)</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {marker.data?.reason || 'Natural content break'}
+                                </p>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="markers" className="flex-1 p-4">

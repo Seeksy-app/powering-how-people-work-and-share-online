@@ -223,6 +223,46 @@ The studio interface consists of four main areas:
 
 ---
 
+## Reviewing AI Edits
+
+### AI Edits Tab
+
+**What it shows:** A dedicated view that displays all AI-generated edits in an organized, categorized list with timestamps.
+
+**How to access:**
+1. Click the **AI Edits** tab in the sidebar (between Tools and Markers)
+2. View all AI edits grouped by type:
+   - **AI Camera Focus** - All camera angles and shot changes
+   - **Smart Trim** - All AI-detected trim points
+   - **AI Ad Placement** - All ad break locations
+
+**What you see for each edit:**
+- **Timestamp** - Exact time in minutes:seconds (e.g., "0:45", "1:23")
+- **Edit Type** - What kind of edit was applied (close-up, zoom, trim, etc.)
+- **Description** - Written explanation of what the AI did and why
+- **Duration** - How long the edit lasts (for ads and camera angles)
+
+**How to use:**
+1. Review the complete list of AI changes after processing
+2. Click any edit card to jump to that timestamp in the video
+3. Preview the edit by watching from that point
+4. Return to AI Edits tab to review next edit
+
+**Best for:**
+- Understanding exactly what the AI changed
+- Quality control and verification
+- Learning AI editing patterns
+- Deciding which edits to keep or modify
+
+**Pro Tips:**
+- Review AI Edits tab immediately after running Full AI Enhancement
+- Use this view to spot any edits that don't fit your vision
+- Click through each edit to ensure timing is correct
+- Great reference when explaining edits to team members
+- Compare AI suggestions with your creative vision
+
+---
+
 ## Timeline and Playback
 
 ### Timeline Navigation
@@ -378,4 +418,4 @@ If you need additional assistance:
 ---
 
 **Last Updated:** 2025-11-25
-**Version:** 1.2
+**Version:** 1.3

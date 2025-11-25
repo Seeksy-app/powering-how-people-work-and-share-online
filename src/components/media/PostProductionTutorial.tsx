@@ -34,11 +34,12 @@ const tutorialSteps: TutorialStep[] = [
   },
   {
     title: "AI-Powered Editing Tools",
-    description: "Let AI do the heavy lifting with intelligent camera focusing, ad placement, and smart trimming. Watch real-time picture-in-picture previews showing exactly what the AI is doing.",
+    description: "Let AI do the heavy lifting with intelligent camera focusing, ad placement, and smart trimming. Watch real-time picture-in-picture previews showing exactly what the AI is doing. After processing, review all changes in the AI Edits tab.",
     image: aiTools,
     tips: [
       "AI Camera Focus creates multicam-style edits with punch-ins and zooms",
       "Real-time PiP preview shows AI edits as they're applied",
+      "Click the AI Edits tab to see a detailed list of all changes with timestamps",
       "AI Ad Insertion finds natural breaks for ad placement",
       "Smart Trim removes filler words and awkward pauses automatically"
     ]
