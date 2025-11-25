@@ -146,6 +146,7 @@ import ProposalDetail from "./pages/ProposalDetail";
 import Invoices from "./pages/Invoices";
 import CreateInvoice from "./pages/CreateInvoice";
 import InvestorPortal from "./pages/InvestorPortal";
+import LeadsDashboard from "./pages/LeadsDashboard";
 import ProjectManagement from "./pages/ProjectManagement";
 import CreateLead from "./pages/CreateLead";
 import SignDocument from "./pages/SignDocument";
@@ -348,6 +349,7 @@ const AppContent = () => {
             <Route path="/admin-chat" element={<AdminInternalChat />} />
             <Route path="/support-chat" element={<SupportChat />} />
             <Route path="/cfo-dashboard" element={<CFODashboard />} />
+            <Route path="/leads-dashboard" element={<LeadsDashboard />} />
             <Route path="/cfo-calculators" element={<CFOCalculators />} />
             <Route path="/pro-forma" element={<ProForma />} />
             <Route path="/tech-stack" element={<TechStack />} />
