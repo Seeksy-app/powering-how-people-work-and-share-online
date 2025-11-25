@@ -98,6 +98,13 @@ export default function VideoUploader({
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-').replace(/--+/g, '-');
     const fileName = `${session.user.id}/${timestamp}-${sanitizedName}`;
 
+    console.log('Upload config:', {
+      fileName,
+      fileSize: file.size,
+      fileType: file.type,
+      bucket: 'episode-files'
+    });
+
     // Simulate progress updates since Supabase SDK doesn't provide native progress
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
@@ -111,7 +118,8 @@ export default function VideoUploader({
     }, 500);
 
     // Upload to Supabase Storage
-    const { error: uploadError } = await supabase.storage
+    console.log('Starting storage upload...');
+    const { data: uploadData, error: uploadError } = await supabase.storage
       .from('episode-files')
       .upload(fileName, file, {
         cacheControl: '3600',
@@ -120,7 +128,12 @@ export default function VideoUploader({
 
     clearInterval(progressInterval);
 
-    if (uploadError) throw uploadError;
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError);
+      throw new Error(`Upload failed: ${uploadError.message}`);
+    }
+
+    console.log('Upload successful:', uploadData);
 
     console.log('File uploaded to storage, creating database record...');
     setUploadProgress(95);
@@ -262,9 +275,13 @@ export default function VideoUploader({
       console.error("Upload error:", error);
       setUploadStatus('error');
       setIsUploading(false);
+      
+      const errorMsg = error instanceof Error ? error.message : "Failed to upload file";
+      console.error("Error details:", errorMsg);
+      
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload file",
+        description: errorMsg,
         variant: "destructive",
       });
     }
