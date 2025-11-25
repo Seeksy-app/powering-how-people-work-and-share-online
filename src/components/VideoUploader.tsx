@@ -197,12 +197,13 @@ export default function VideoUploader({
   };
 
   const uploadSmallFile = async (file: File, session: any) => {
+    console.log('📤 uploadSmallFile started');
     const timestamp = Date.now();
     // Sanitize filename: remove special chars, replace spaces with hyphens
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-').replace(/--+/g, '-');
     const fileName = `${session.user.id}/${timestamp}-${sanitizedName}`;
 
-    console.log('Upload config:', {
+    console.log('📝 Upload config:', {
       fileName,
       fileSize: file.size,
       fileType: file.type,
@@ -267,11 +268,12 @@ export default function VideoUploader({
   };
 
   const uploadLargeFile = async (file: File, session: any) => {
+    console.log('📦 uploadLargeFile started');
     // Sanitize filename: remove special chars, replace spaces with hyphens
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '-').replace(/--+/g, '-');
     const objectName = `${session.user.id}/${Date.now()}-${sanitizedName}`;
     
-    console.log('Starting large file resumable upload:', {
+    console.log('🔄 Starting large file resumable upload:', {
       fileName: file.name,
       sanitizedName,
       fileSize: formatBytes(file.size),
@@ -416,8 +418,14 @@ export default function VideoUploader({
   };
 
   const uploadFile = async (file: File) => {
-    if (!validateFile(file)) return;
+    console.log('🎬 uploadFile called with:', { name: file.name, size: file.size, type: file.type });
+    
+    if (!validateFile(file)) {
+      console.error('❌ File validation failed');
+      return;
+    }
 
+    console.log('✅ File validation passed');
     setCurrentFile(file);
     setIsUploading(true);
     setUploadProgress(0);
@@ -437,18 +445,23 @@ export default function VideoUploader({
     }, 30 * 60 * 1000); // 30 minutes
 
     try {
+      console.log('🔐 Getting auth session...');
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
+      if (!session) {
+        console.error('❌ No session found');
+        throw new Error('Not authenticated');
+      }
+      console.log('✅ Session valid, user ID:', session.user.id);
 
       const fileSizeMB = file.size / (1024 * 1024);
-      console.log(`Starting upload: ${file.name} (${formatBytes(file.size)})`);
+      console.log(`📊 File stats: ${file.name} (${formatBytes(file.size)} = ${fileSizeMB.toFixed(2)} MB)`);
 
       // Use resumable uploads for files larger than 50MB for better reliability
       if (fileSizeMB > 50) {
-        console.log('Using resumable upload for large file...');
+        console.log('🔄 Using resumable upload for large file...');
         await uploadLargeFile(file, session);
       } else {
-        console.log('Using standard upload for small file...');
+        console.log('⚡ Using standard upload for small file...');
         await uploadSmallFile(file, session);
       }
 
@@ -471,7 +484,12 @@ export default function VideoUploader({
 
     } catch (error) {
       clearTimeout(uploadTimeout);
-      console.error("Upload error:", error);
+      console.error("❌ UPLOAD ERROR CAUGHT:", error);
+      console.error("Error name:", error instanceof Error ? error.name : typeof error);
+      console.error("Error message:", error instanceof Error ? error.message : String(error));
+      console.error("Error stack:", error instanceof Error ? error.stack : 'No stack');
+      console.error("Full error object:", JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      
       setUploadStatus('error');
       setIsUploading(false);
       
@@ -481,7 +499,8 @@ export default function VideoUploader({
                        errorMsg.includes('storage') || errorMsg.includes('quota') ? 'storage_error' :
                        errorMsg.includes('Database') ? 'database_error' : 'unknown_error';
       
-      console.error("Error details:", errorMsg);
+      console.error("Classified error type:", errorType);
+      console.error("Error message for user:", errorMsg);
       
       // Send failure alert to admins
       try {
