@@ -22,7 +22,7 @@ serve(async (req) => {
 
     const clientId = Deno.env.get('ZOOM_CLIENT_ID');
     const clientSecret = Deno.env.get('ZOOM_CLIENT_SECRET');
-    const redirectUri = `https://seeksy.io/functions/v1/zoom-callback`;
+    const redirectUri = `${Deno.env.get('SUPABASE_URL')}/functions/v1/zoom-callback`;
 
     // Exchange code for tokens
     const credentials = btoa(`${clientId}:${clientSecret}`);
