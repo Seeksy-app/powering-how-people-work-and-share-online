@@ -278,6 +278,18 @@ const BookMeetingSlot = () => {
         console.error("Error sending confirmation email:", emailError);
       }
 
+      // Send SMS confirmation if phone provided
+      if (attendeePhone && meetingId) {
+        try {
+          await supabase.functions.invoke("send-meeting-confirmation-sms", {
+            body: { meetingId },
+          });
+          console.log("SMS confirmation sent successfully");
+        } catch (smsError) {
+          console.error("Error sending SMS confirmation:", smsError);
+        }
+      }
+
       // Create calendar event for the meeting owner
       try {
         await supabase.functions.invoke("google-calendar-create-event", {
