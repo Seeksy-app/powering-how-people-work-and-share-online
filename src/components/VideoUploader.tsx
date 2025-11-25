@@ -107,25 +107,15 @@ export default function VideoUploader({
 
       console.log(`Starting R2 upload: ${file.name} (${formatBytes(file.size)})`);
 
-      // Step 1: Get presigned URL from backend
-      console.log('Requesting presigned URL...');
-      const presignedResponse = await supabase.functions.invoke('r2-presigned-url', {
-        body: {
-          fileName: file.name,
-          fileType: file.type,
-          userId: session.user.id,
-          fileSize: file.size,
-        },
-      });
+      // Create FormData for multipart upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', session.user.id);
+      formData.append('fileName', file.name);
 
-      if (presignedResponse.error) {
-        throw new Error(`Failed to get presigned URL: ${presignedResponse.error.message}`);
-      }
-
-      const { presignedUrl, fileUrl } = presignedResponse.data;
-      console.log('Presigned URL received, starting direct upload to R2...');
-
-      // Step 2: Upload directly to R2 using presigned URL
+      console.log('Uploading via r2-upload function...');
+      
+      // Upload using XMLHttpRequest to track progress
       const xhr = new XMLHttpRequest();
       
       const uploadPromise = new Promise((resolve, reject) => {
@@ -141,29 +131,17 @@ export default function VideoUploader({
           }
         });
 
-        xhr.addEventListener('load', async () => {
+        xhr.addEventListener('load', () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            console.log('R2 upload complete, confirming in database...');
-            
-            // Step 3: Confirm upload in database
             try {
-              const confirmResponse = await supabase.functions.invoke('r2-confirm-upload', {
-                body: {
-                  fileName: file.name,
-                  fileUrl: fileUrl,
-                  fileType: file.type,
-                  fileSize: file.size,
-                  userId: session.user.id,
-                },
-              });
-
-              if (confirmResponse.error) {
-                reject(new Error(`Failed to confirm upload: ${confirmResponse.error.message}`));
+              const response = JSON.parse(xhr.responseText);
+              if (response.success) {
+                resolve(response);
               } else {
-                resolve(confirmResponse.data);
+                reject(new Error(response.error || 'Upload failed'));
               }
             } catch (e) {
-              reject(e);
+              reject(new Error('Invalid response from server'));
             }
           } else {
             reject(new Error(`Upload failed with status ${xhr.status}`));
@@ -173,9 +151,14 @@ export default function VideoUploader({
         xhr.addEventListener('error', () => reject(new Error('Network error during upload')));
         xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
 
-        xhr.open('PUT', presignedUrl);
-        xhr.setRequestHeader('Content-Type', file.type);
-        xhr.send(file);
+        // Get the function URL
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const functionUrl = `${supabaseUrl}/functions/v1/r2-upload`;
+        
+        xhr.open('POST', functionUrl);
+        xhr.setRequestHeader('Authorization', `Bearer ${session.access_token}`);
+        xhr.setRequestHeader('apikey', import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+        xhr.send(formData);
       });
 
       await uploadPromise;
