@@ -340,10 +340,11 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
   // Dashboard items (always visible at top)
   const dashboardUrl = isAdvertiser ? "/advertiser/dashboard" : "/dashboard";
   
-  // Main items (without Dashboard)
+  // Main items (including Dashboard)
   const mainItems = isAdvertiser 
     ? []
     : [
+        { title: "Dashboard", url: dashboardUrl, icon: LayoutDashboard },
         ...(isAdmin ? [{ title: "Admin", url: "/admin", icon: Shield }] : []),
         ...(pinnedModules.includes("my_page") ? [{ title: "My Page", url: `/${username || 'profile'}`, icon: UserIcon }] : []),
       ];
@@ -1435,36 +1436,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
         </SidebarHeader>
 
       <SidebarContent className="pb-6 overflow-hidden">
-        {/* Dashboard - Always visible and sticky at top */}
-        <div className="sticky top-0 bg-sidebar z-50 border-b border-border/50 shadow-sm">
-          <SidebarMenu className="px-2 py-2">
-            <SidebarMenuItem>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={dashboardUrl} 
-                        end
-                        className="hover:bg-accent hover:text-accent-foreground text-sm py-0.5"
-                        activeClassName="bg-accent font-semibold"
-                      >
-                        <LayoutDashboard className="h-4 w-4 text-black" />
-                        {!collapsed && <span className="text-black">Dashboard</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </TooltipTrigger>
-                  {collapsed && (
-                    <TooltipContent side="right">
-                      <p>Dashboard</p>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </div>
-
         {/* Scrollable navigation sections */}
         <div className="overflow-y-auto">
           {/* Other navigation sections (excluding settings) */}
