@@ -249,7 +249,7 @@ export default function VideoUploader({
     return new Promise((resolve, reject) => {
       const upload = new tus.Upload(file, {
         endpoint: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/upload/resumable`,
-        retryDelays: [0, 1000, 3000, 5000, 10000, 20000, 30000], // More retry attempts with longer delays
+        retryDelays: [0, 1000, 3000, 5000, 10000, 20000, 30000, 60000, 120000], // Aggressive retry with up to 2min delays
         headers: {
           authorization: `Bearer ${session.access_token}`,
           'x-upsert': 'false',
@@ -262,13 +262,16 @@ export default function VideoUploader({
           contentType: file.type,
           cacheControl: '3600',
         },
-        chunkSize: 10 * 1024 * 1024, // 10MB chunks for better performance with large files
+        chunkSize: 50 * 1024 * 1024, // 50MB chunks for maximum upload speed with large files
+        parallelUploads: 1, // Sequential uploads for better reliability
+        storeFingerprintForResuming: true, // Enable resume capability
         onError: (error) => {
           const errorDetails: any = {
             error,
             message: error.message,
             fileName: file.name,
-            fileSize: file.size
+            fileSize: file.size,
+            uploadUrl: upload.url || 'none'
           };
           
           // Add TUS-specific error details if available
@@ -276,11 +279,20 @@ export default function VideoUploader({
             errorDetails.originalRequest = (error as any).originalRequest;
           }
           if ('originalResponse' in error) {
-            errorDetails.originalResponse = (error as any).originalResponse;
+            const response = (error as any).originalResponse;
+            errorDetails.originalResponse = {
+              status: response?.getStatus(),
+              body: response?.getBody()
+            };
           }
           
           console.error('TUS upload error details:', errorDetails);
-          reject(error);
+          console.log('Upload will retry automatically if possible...');
+          
+          // Don't reject immediately on network errors - let retries handle it
+          if (!error.message.includes('retry')) {
+            reject(new Error(`Network error during upload. Please check your connection and try again.`));
+          }
         },
         onProgress: (bytesUploaded, bytesTotal) => {
           const percentage = (bytesUploaded / bytesTotal) * 90; // Reserve 10% for DB work
@@ -362,8 +374,8 @@ export default function VideoUploader({
       const fileSizeMB = file.size / (1024 * 1024);
       console.log(`Starting upload: ${file.name} (${formatBytes(file.size)})`);
 
-      // Use resumable uploads for files larger than 100MB
-      if (fileSizeMB > 100) {
+      // Use resumable uploads for files larger than 50MB for better reliability
+      if (fileSizeMB > 50) {
         console.log('Using resumable upload for large file...');
         await uploadLargeFile(file, session);
       } else {
