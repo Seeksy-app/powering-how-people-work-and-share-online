@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 export function useAutoTheme() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const location = useLocation();
-  const isStudio = location.pathname === '/studio'; // Only the actual studio page, not /studio-templates
+  const isStudio = location.pathname === '/studio'; // Only /studio forces dark, not /studio-templates or any other page
   const previousTheme = useRef<string | null>(null);
   const wasInStudio = useRef(false);
   const hasSetStudioTheme = useRef(false);
