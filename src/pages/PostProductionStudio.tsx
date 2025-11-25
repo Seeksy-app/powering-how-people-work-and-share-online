@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -57,6 +57,10 @@ export default function PostProductionStudio() {
   const [activeTab, setActiveTab] = useState("tools");
   const [cameraProcessingOpen, setCameraProcessingOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [fullAIProcessing, setFullAIProcessing] = useState(false);
+  
+  const queryClient = useQueryClient();
 
   // Fetch media file
   const { data: mediaFile, isLoading } = useQuery({
@@ -73,6 +77,34 @@ export default function PostProductionStudio() {
     },
     enabled: !!mediaId,
   });
+
+  // Fetch existing edits
+  const { data: existingEdits } = useQuery({
+    queryKey: ["video-edits", mediaId],
+    queryFn: async () => {
+      if (!mediaId) return null;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from("video_post_production_edits")
+        .select("*")
+        .eq("media_file_id", mediaId)
+        .eq("user_id", user.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    enabled: !!mediaId,
+  });
+
+  // Load existing markers
+  useEffect(() => {
+    if (existingEdits?.markers) {
+      setMarkers(existingEdits.markers as unknown as Marker[]);
+    }
+  }, [existingEdits]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -185,6 +217,144 @@ export default function PostProductionStudio() {
     }
   };
 
+  const saveEdits = async () => {
+    if (!mediaFile) return;
+    
+    setIsSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Check if edit exists
+      const { data: existing } = await supabase
+        .from("video_post_production_edits")
+        .select("id")
+        .eq("media_file_id", mediaFile.id)
+        .eq("user_id", user.id)
+        .single();
+
+      if (existing) {
+        // Update existing
+        const { error } = await supabase
+          .from("video_post_production_edits")
+          .update({ markers: markers as any })
+          .eq("id", existing.id);
+        
+        if (error) throw error;
+      } else {
+        // Insert new
+        const { error } = await supabase
+          .from("video_post_production_edits")
+          .insert({
+            media_file_id: mediaFile.id,
+            user_id: user.id,
+            markers: markers as any,
+          });
+        
+        if (error) throw error;
+      }
+
+      toast.success("Edits saved successfully");
+      queryClient.invalidateQueries({ queryKey: ["video-edits", mediaId] });
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Failed to save edits");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleFullAIEnhancement = async () => {
+    if (!mediaFile) return;
+    
+    setFullAIProcessing(true);
+    toast.loading("AI is analyzing your video and applying all enhancements...", { id: "full-ai" });
+
+    try {
+      // Step 1: AI Camera Focus
+      const { data: cameraData, error: cameraError } = await supabase.functions.invoke("analyze-video-content", {
+        body: {
+          mediaFileId: mediaFile.id,
+          videoUrl: mediaFile.file_url,
+          analysisType: "camera_focus",
+        },
+      });
+
+      if (cameraError) throw cameraError;
+
+      const newMarkers: Marker[] = [];
+
+      // Add camera focus markers
+      if (cameraData?.edits) {
+        const cameraMarkers = cameraData.edits.map((edit: any) => ({
+          id: `camera-${Date.now()}-${Math.random()}`,
+          type: 'camera_focus' as const,
+          timestamp: edit.timestamp,
+          duration: 5,
+          data: {
+            shotType: edit.type,
+            description: edit.description
+          }
+        }));
+        newMarkers.push(...cameraMarkers);
+      }
+
+      // Step 2: Smart Trim
+      const { data: trimData, error: trimError } = await supabase.functions.invoke("analyze-video-content", {
+        body: {
+          mediaFileId: mediaFile.id,
+          videoUrl: mediaFile.file_url,
+          analysisType: "trim",
+        },
+      });
+
+      if (trimError) throw trimError;
+
+      // Add trim markers
+      if (trimData?.cuts) {
+        const trimMarkers = trimData.cuts.map((cut: any) => ({
+          id: `trim-${Date.now()}-${Math.random()}`,
+          type: 'cut' as const,
+          timestamp: cut.timestamp,
+          duration: cut.duration,
+          data: { reason: cut.reason }
+        }));
+        newMarkers.push(...trimMarkers);
+      }
+
+      // Step 3: AI Ad Placement
+      const { data: adData, error: adError } = await supabase.functions.invoke("analyze-video-content", {
+        body: {
+          mediaFileId: mediaFile.id,
+          videoUrl: mediaFile.file_url,
+          analysisType: "ad_placement",
+        },
+      });
+
+      if (adError) throw adError;
+
+      // Add ad markers
+      if (adData?.adBreaks) {
+        const adMarkers = adData.adBreaks.map((adBreak: any) => ({
+          id: `ad-${Date.now()}-${Math.random()}`,
+          type: 'ad' as const,
+          timestamp: adBreak.timestamp,
+          duration: 30,
+          data: { reason: adBreak.reason }
+        }));
+        newMarkers.push(...adMarkers);
+      }
+
+      setMarkers([...markers, ...newMarkers]);
+      toast.success(`AI enhancement complete! Added ${newMarkers.length} edits to your timeline`, { id: "full-ai" });
+    } catch (error) {
+      console.error("Full AI enhancement error:", error);
+      toast.error("AI enhancement failed. Please try individual tools.", { id: "full-ai" });
+    } finally {
+      setFullAIProcessing(false);
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -245,9 +415,14 @@ export default function PostProductionStudio() {
             <Redo className="h-4 w-4 mr-2" />
             Redo
           </Button>
-          <Button variant="default" size="sm">
+          <Button 
+            variant="default" 
+            size="sm"
+            onClick={saveEdits}
+            disabled={isSaving}
+          >
             <Save className="h-4 w-4 mr-2" />
-            Save
+            {isSaving ? "Saving..." : "Save"}
           </Button>
           <Button variant="default" size="sm">
             <Download className="h-4 w-4 mr-2" />
@@ -327,10 +502,30 @@ export default function PostProductionStudio() {
 
             <TabsContent value="tools" className="flex-1 p-4 space-y-4">
               <TooltipProvider delayDuration={300}>
+                {/* Full AI Enhancement - Prominent Button */}
+                <div className="mb-6">
+                  <Button
+                    size="lg"
+                    className="w-full h-auto py-4 px-6 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold shadow-lg"
+                    onClick={handleFullAIEnhancement}
+                    disabled={fullAIProcessing}
+                  >
+                    <Sparkles className="h-5 w-5 mr-3 animate-pulse" />
+                    <div className="flex flex-col items-start text-left">
+                      <span className="text-base">
+                        {fullAIProcessing ? "AI Processing..." : "Full AI Enhancement"}
+                      </span>
+                      <span className="text-xs opacity-90 font-normal">
+                        AI does everything automatically
+                      </span>
+                    </div>
+                  </Button>
+                </div>
+
                 <div>
                   <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                     <Sparkles className="h-4 w-4" />
-                    AI Tools
+                    Individual AI Tools
                   </h3>
                   <div className="space-y-2">
                     <Tooltip>
