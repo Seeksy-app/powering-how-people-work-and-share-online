@@ -26,6 +26,7 @@ export const CreateTicketDialog = ({ open, onOpenChange, onSuccess, userId }: Cr
     client_id: "",
     assigned_to: "",
   });
+  const [notifyViaSms, setNotifyViaSms] = useState(false);
 
   const { data: clients } = useQuery({
     queryKey: ["contacts", userId],
@@ -75,8 +76,8 @@ export const CreateTicketDialog = ({ open, onOpenChange, onSuccess, userId }: Cr
 
       if (error) throw error;
 
-      // Send SMS notification if ticket is assigned
-      if (formData.assigned_to && ticketData?.id) {
+      // Send SMS notification if assigned, ticket created, and SMS enabled
+      if (formData.assigned_to && ticketData?.id && notifyViaSms) {
         try {
           await supabase.functions.invoke("send-ticket-assignment-sms", {
             body: { ticketId: ticketData.id },
@@ -180,6 +181,20 @@ export const CreateTicketDialog = ({ open, onOpenChange, onSuccess, userId }: Cr
                 ))}
               </SelectContent>
             </Select>
+            {formData.assigned_to && (
+              <div className="flex items-start space-x-2 mt-2">
+                <input
+                  type="checkbox"
+                  id="notify-sms"
+                  checked={notifyViaSms}
+                  onChange={(e) => setNotifyViaSms(e.target.checked)}
+                  className="mt-1"
+                />
+                <label htmlFor="notify-sms" className="text-sm text-muted-foreground">
+                  Send SMS notification to assignee
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">

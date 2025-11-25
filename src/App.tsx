@@ -16,6 +16,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import EmailHistory from "./pages/EmailHistory";
+import NotificationPreferences from "./pages/NotificationPreferences";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import EventDetail from "./pages/EventDetail";
@@ -322,6 +323,7 @@ const AppContent = () => {
           <Route path="/podcast-ads" element={<PodcastAds />} />
           <Route path="/podcast-revenue" element={<PodcastRevenue />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/notification-preferences" element={<NotificationPreferences />} />
               <Route path="/subscription" element={<SubscriptionSettings />} />
               <Route path="/qr-codes" element={<QRCodes />} />
           <Route path="/studio" element={<StudioTemplates />} />

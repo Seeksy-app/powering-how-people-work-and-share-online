@@ -45,6 +45,7 @@ const EventDetail = () => {
   const [attendeeName, setAttendeeName] = useState("");
   const [attendeeEmail, setAttendeeEmail] = useState("");
   const [attendeePhone, setAttendeePhone] = useState("");
+  const [smsConsent, setSmsConsent] = useState(false);
 
   const isOwner = user?.id === event?.user_id;
 
@@ -111,6 +112,19 @@ const EventDetail = () => {
     setRegistering(true);
 
     try {
+      // Store SMS consent if phone provided and consent given
+      if (attendeePhone && smsConsent) {
+        const { data: { user } } = await supabase.auth.getUser();
+        await supabase.from('sms_consent_records').insert({
+          user_id: user?.id,
+          phone_number: attendeePhone,
+          consent_given: true,
+          consent_text: 'I agree to receive SMS notifications about my event registration and updates. Message and data rates may apply.',
+          ip_address: null,
+          user_agent: navigator.userAgent,
+        });
+      }
+
       const { data: registration, error } = await supabase
         .from("event_registrations")
         .insert([
@@ -144,8 +158,8 @@ const EventDetail = () => {
         console.error("Error sending confirmation email:", emailError);
       }
 
-      // Send SMS confirmation if phone provided
-      if (attendeePhone && registration?.id) {
+      // Send SMS confirmation if phone provided and consent given
+      if (attendeePhone && smsConsent && registration?.id) {
         try {
           await supabase.functions.invoke("send-event-confirmation-sms", {
             body: { registrationId: registration.id },
@@ -282,6 +296,20 @@ const EventDetail = () => {
                       onChange={(e) => setAttendeePhone(e.target.value)}
                       placeholder="+1 (555) 123-4567"
                     />
+                    {attendeePhone && (
+                      <div className="flex items-start space-x-2 mt-2">
+                        <input
+                          type="checkbox"
+                          id="sms-consent"
+                          checked={smsConsent}
+                          onChange={(e) => setSmsConsent(e.target.checked)}
+                          className="mt-1"
+                        />
+                        <label htmlFor="sms-consent" className="text-sm text-muted-foreground">
+                          I agree to receive SMS notifications about my registration. Message and data rates may apply.
+                        </label>
+                      </div>
+                    )}
                   </div>
                   
                   <Button type="submit" className="w-full" disabled={registering}>
