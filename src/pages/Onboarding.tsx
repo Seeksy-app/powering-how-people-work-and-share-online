@@ -84,7 +84,7 @@ export default function Onboarding() {
       // Determine if My Page should be enabled based on user type
       const myPageEnabledForType = selectedType !== 'business';
 
-      // Save onboarding preferences
+      // Save onboarding preferences and pin My Page for non-business users
       await supabase
         .from('user_preferences')
         .upsert({
@@ -92,6 +92,7 @@ export default function Onboarding() {
           onboarding_completed: true,
           user_type: selectedType,
           my_page_enabled: myPageEnabledForType,
+          pinned_modules: myPageEnabledForType ? ['my_page', 'meetings'] : ['meetings'],
         }, {
           onConflict: 'user_id'
         });
