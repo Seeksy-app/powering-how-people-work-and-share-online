@@ -42,20 +42,23 @@ export const AdminViewToggle = ({ adminViewMode, onToggle }: AdminViewToggleProp
   }, [adminViewMode]);
 
   const handleToggleChange = (enabled: boolean) => {
+    // Update localStorage FIRST to ensure it's set before navigation
+    localStorage.setItem('adminViewMode', String(enabled));
+    
+    // Update parent state
     onToggle(enabled);
     
-    // Navigate based on the new mode
-    if (enabled) {
-      // Switched to Admin View - go to admin dashboard
-      if (location.pathname !== '/admin') {
+    // Small delay to ensure localStorage is written and state is updated
+    setTimeout(() => {
+      // Always navigate to the appropriate landing page when toggling
+      if (enabled) {
+        // Switched to Admin View - always go to admin dashboard
         navigate('/admin');
-      }
-    } else {
-      // Switched to Personal View - go to creator dashboard
-      if (location.pathname !== '/dashboard') {
+      } else {
+        // Switched to Personal View - always go to creator dashboard  
         navigate('/dashboard');
       }
-    }
+    }, 100);
   };
 
   const displayName = adminViewMode && profile?.use_separate_admin_profile && profile?.admin_full_name
