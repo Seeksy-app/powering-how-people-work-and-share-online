@@ -155,24 +155,24 @@ export function BusinessModelTab() {
           </p>
           
           <div className="grid md:grid-cols-3 gap-4 pt-4">
-            <div className="p-5 bg-gradient-to-br from-purple-500/5 to-purple-600/5 rounded-lg border border-purple-200/20 flex flex-col h-full min-h-[160px]">
-              <Users className="h-8 w-8 text-purple-600 mb-3" />
-              <h4 className="font-semibold text-lg mb-2">Who We Serve</h4>
-              <p className="text-sm text-muted-foreground flex-1">
+            <div className="p-4 bg-gradient-to-br from-purple-500/5 to-purple-600/5 rounded-lg border border-purple-200/20 flex flex-col h-full">
+              <Users className="h-7 w-7 text-purple-600 mb-2" />
+              <h4 className="font-semibold text-base mb-1.5">Who We Serve</h4>
+              <p className="text-xs text-muted-foreground flex-1">
                 Podcasters, content creators, event hosts, educators, and small businesses building engaged communities
               </p>
             </div>
-            <div className="p-5 bg-gradient-to-br from-pink-500/5 to-pink-600/5 rounded-lg border border-pink-200/20 flex flex-col h-full min-h-[160px]">
-              <Target className="h-8 w-8 text-pink-600 mb-3" />
-              <h4 className="font-semibold text-lg mb-2">What We Solve</h4>
-              <p className="text-sm text-muted-foreground flex-1">
+            <div className="p-4 bg-gradient-to-br from-pink-500/5 to-pink-600/5 rounded-lg border border-pink-200/20 flex flex-col h-full">
+              <Target className="h-7 w-7 text-pink-600 mb-2" />
+              <h4 className="font-semibold text-base mb-1.5">What We Solve</h4>
+              <p className="text-xs text-muted-foreground flex-1">
                 Fragmented tools, limited engagement options, and difficulty monetizing beyond ads and sponsorships
               </p>
             </div>
-            <div className="p-5 bg-gradient-to-br from-blue-500/5 to-blue-600/5 rounded-lg border border-blue-200/20 flex flex-col h-full min-h-[160px]">
-              <Award className="h-8 w-8 text-blue-600 mb-3" />
-              <h4 className="font-semibold text-lg mb-2">Our Edge</h4>
-              <p className="text-sm text-muted-foreground flex-1">
+            <div className="p-4 bg-gradient-to-br from-blue-500/5 to-blue-600/5 rounded-lg border border-blue-200/20 flex flex-col h-full">
+              <Award className="h-7 w-7 text-blue-600 mb-2" />
+              <h4 className="font-semibold text-base mb-1.5">Our Edge</h4>
+              <p className="text-xs text-muted-foreground flex-1">
                 Unified platform combining content, engagement, and monetization with AI-powered tools and seamless workflows
               </p>
             </div>
@@ -254,40 +254,47 @@ export function BusinessModelTab() {
           {/* Chart: Creator Economy Growth */}
           <div>
             <h4 className="font-semibold mb-4">Creator Economy Market Size (Billions)</h4>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <AreaChart data={creatorEconomyGrowth}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(280, 85%, 55%)" stopOpacity={0.6}/>
-                    <stop offset="95%" stopColor="hsl(280, 85%, 55%)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(262, 83%, 58%)" stopOpacity={0.05}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                 <XAxis 
                   dataKey="year" 
                   stroke="hsl(var(--muted-foreground))" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 13, fill: 'hsl(var(--foreground))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 13, fill: 'hsl(var(--foreground))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                  label={{ value: 'Billions ($)', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '2px solid hsl(262, 83%, 58%)',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 24px rgba(139, 92, 246, 0.3)',
+                    padding: '12px'
                   }}
+                  labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="value" 
-                  stroke="hsl(280, 85%, 55%)" 
-                  strokeWidth={3}
+                  stroke="hsl(262, 83%, 58%)" 
+                  strokeWidth={4}
                   fillOpacity={1} 
                   fill="url(#colorValue)" 
-                  animationDuration={1500}
+                  animationDuration={2000}
+                  dot={{ fill: 'hsl(262, 83%, 58%)', r: 5, strokeWidth: 3, stroke: 'hsl(var(--background))' }}
+                  activeDot={{ r: 8, fill: 'hsl(262, 83%, 58%)' }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -296,34 +303,45 @@ export function BusinessModelTab() {
           {/* Chart: Podcast Revenue Growth */}
           <div>
             <h4 className="font-semibold mb-4">Podcast Industry Revenue Projection (Billions)</h4>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <LineChart data={podcastRevenueGrowth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <defs>
+                  <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="hsl(326, 78%, 55%)" />
+                    <stop offset="100%" stopColor="hsl(346, 87%, 62%)" />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                 <XAxis 
                   dataKey="year" 
                   stroke="hsl(var(--muted-foreground))" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 13, fill: 'hsl(var(--foreground))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 13, fill: 'hsl(var(--foreground))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                  label={{ value: 'Billions ($)', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '2px solid hsl(326, 78%, 55%)',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 24px rgba(244, 63, 94, 0.3)',
+                    padding: '12px'
                   }}
+                  labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="value" 
-                  stroke="hsl(340, 75%, 55%)" 
-                  strokeWidth={3}
-                  dot={{ fill: 'hsl(340, 75%, 55%)', r: 6, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
-                  activeDot={{ r: 8 }}
-                  animationDuration={1500}
+                  stroke="url(#lineGradient)" 
+                  strokeWidth={4}
+                  dot={{ fill: 'hsl(326, 78%, 55%)', r: 7, strokeWidth: 3, stroke: 'hsl(var(--background))' }}
+                  activeDot={{ r: 10, fill: 'hsl(346, 87%, 62%)', strokeWidth: 3, stroke: 'hsl(var(--background))' }}
+                  animationDuration={2000}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -332,40 +350,47 @@ export function BusinessModelTab() {
           {/* Chart: Podcast Listener Growth */}
           <div>
             <h4 className="font-semibold mb-4">Global Podcast Listener Growth (Millions)</h4>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <AreaChart data={podcastListenerGrowth}>
                 <defs>
                   <linearGradient id="colorListeners" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(200, 80%, 50%)" stopOpacity={0.6}/>
-                    <stop offset="95%" stopColor="hsl(200, 80%, 50%)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.05}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                 <XAxis 
                   dataKey="year" 
                   stroke="hsl(var(--muted-foreground))" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 13, fill: 'hsl(var(--foreground))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 13, fill: 'hsl(var(--foreground))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                  label={{ value: 'Millions', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '2px solid hsl(199, 89%, 48%)',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 24px rgba(14, 165, 233, 0.3)',
+                    padding: '12px'
                   }}
+                  labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="listeners" 
-                  stroke="hsl(200, 80%, 50%)" 
-                  strokeWidth={3}
+                  stroke="hsl(199, 89%, 48%)" 
+                  strokeWidth={4}
                   fillOpacity={1} 
                   fill="url(#colorListeners)" 
-                  animationDuration={1500}
+                  animationDuration={2000}
+                  dot={{ fill: 'hsl(199, 89%, 48%)', r: 5, strokeWidth: 3, stroke: 'hsl(var(--background))' }}
+                  activeDot={{ r: 8, fill: 'hsl(199, 89%, 48%)' }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -377,30 +402,35 @@ export function BusinessModelTab() {
           {/* Chart: Engagement Tools Demand */}
           <div>
             <h4 className="font-semibold mb-4">Growth in Engagement Tools Demand (YoY %)</h4>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <BarChart data={engagementToolsDemand}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.2} />
                 <XAxis 
                   dataKey="category" 
                   stroke="hsl(var(--muted-foreground))" 
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }}
                   angle={-15}
                   textAnchor="end"
                   height={80}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))" 
-                  tick={{ fontSize: 12 }}
+                  tick={{ fontSize: 13, fill: 'hsl(var(--foreground))' }}
+                  tickLine={{ stroke: 'hsl(var(--border))' }}
+                  label={{ value: 'Growth %', angle: -90, position: 'insideLeft', style: { fontSize: 12 } }}
                 />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '2px solid hsl(var(--primary))',
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 24px rgba(139, 92, 246, 0.3)',
+                    padding: '12px'
                   }}
+                  labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
                 />
-                <Bar dataKey="growth" radius={[8, 8, 0, 0]} animationDuration={1500}>
+                <Bar dataKey="growth" radius={[10, 10, 0, 0]} animationDuration={2000}>
                   {engagementToolsDemand.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
