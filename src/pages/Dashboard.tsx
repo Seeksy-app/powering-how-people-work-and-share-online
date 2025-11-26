@@ -10,6 +10,8 @@ import { Calendar, Users, Clock, Mail, TrendingUp, MousePointerClick, BarChart3,
 import { ProfileCompletionCard } from "@/components/ProfileCompletionCard";
 import { useToast } from "@/hooks/use-toast";
 import { useMyPageEnabled } from "@/hooks/useMyPageEnabled";
+import { SpinWheelDialog } from "@/components/credits/SpinWheelDialog";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -144,6 +146,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { data: myPageEnabled } = useMyPageEnabled();
+  const queryClient = useQueryClient();
+  const [showWelcomeSpin, setShowWelcomeSpin] = useState(false);
 
   const handleWidgetsSave = (newWidgets: WidgetConfig[]) => {
     setWidgets(newWidgets);
@@ -165,6 +169,19 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
+    // Mark that user has visited dashboard (for AI chatbot trigger)
+    localStorage.setItem('visited_dashboard', 'true');
+    
+    // Check if we should show welcome spin
+    const shouldShowWelcomeSpin = localStorage.getItem('show_welcome_spin');
+    if (shouldShowWelcomeSpin === 'true') {
+      // Small delay to let dashboard load
+      setTimeout(() => {
+        setShowWelcomeSpin(true);
+        localStorage.removeItem('show_welcome_spin');
+      }, 800);
+    }
+    
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         navigate("/auth");
@@ -735,6 +752,17 @@ const Dashboard = () => {
           </div>
         )}
       </main>
+
+      {/* Welcome Spin Wheel Dialog */}
+      <SpinWheelDialog
+        open={showWelcomeSpin}
+        onOpenChange={setShowWelcomeSpin}
+        onSpinComplete={() => {
+          queryClient.invalidateQueries({ queryKey: ["user-credits"] });
+          setShowWelcomeSpin(false);
+        }}
+        isWelcomeSpin={true}
+      />
     </div>
   );
 };

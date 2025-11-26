@@ -127,28 +127,77 @@ export function SpinWheelDialog({ open, onOpenChange, onSpinComplete, isWelcomeS
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-6 py-8">
-          {/* Animated wheel representation */}
-          <div
-            className={`relative w-48 h-48 rounded-full border-8 border-primary bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center transition-all duration-500 ${
-              isSpinning ? "animate-spin" : ""
-            } ${result ? "scale-110 shadow-2xl shadow-primary/50" : ""}`}
-            style={{
-              animationDuration: isSpinning ? "0.5s" : undefined,
-            }}
-          >
-            <div className={`text-4xl font-bold text-primary transition-all duration-300 ${
-              result ? "scale-150" : ""
-            }`}>
-              {result ? result.creditsWon : "?"}
+          {/* Wheel of Fortune style wheel */}
+          <div className="relative w-64 h-64">
+            {/* Pointer at top */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 z-20">
+              <div className="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[20px] border-t-red-500 drop-shadow-lg" />
             </div>
             
-            {/* Sparkle effects when result shows */}
+            {/* Spinning wheel */}
+            <div
+              className={`relative w-full h-full rounded-full border-8 border-yellow-500 shadow-2xl overflow-hidden transition-all duration-500 ${
+                result ? "scale-105" : ""
+              }`}
+              style={{
+                transform: isSpinning ? `rotate(${Math.random() * 360 + 1440}deg)` : 'rotate(0deg)',
+                transition: isSpinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'transform 0.5s',
+              }}
+            >
+              {/* Wheel segments */}
+              {[
+                { credits: 5, color: 'from-red-500 to-red-600', label: '5' },
+                { credits: 8, color: 'from-blue-500 to-blue-600', label: '8' },
+                { credits: 10, color: 'from-green-500 to-green-600', label: '10' },
+                { credits: 12, color: 'from-purple-500 to-purple-600', label: '12' },
+                { credits: 15, color: 'from-orange-500 to-orange-600', label: '15' },
+                { credits: 18, color: 'from-pink-500 to-pink-600', label: '18' },
+                { credits: 20, color: 'from-yellow-500 to-yellow-600', label: '20' },
+                { credits: 25, color: 'from-cyan-500 to-cyan-600', label: '25' },
+              ].map((segment, index) => {
+                const rotation = (360 / 8) * index;
+                return (
+                  <div
+                    key={index}
+                    className={`absolute w-full h-full bg-gradient-to-br ${segment.color}`}
+                    style={{
+                      clipPath: 'polygon(50% 50%, 100% 0%, 100% 100%)',
+                      transform: `rotate(${rotation}deg)`,
+                      transformOrigin: '0% 50%',
+                    }}
+                  >
+                    <div
+                      className="absolute text-white font-bold text-xl"
+                      style={{
+                        top: '30%',
+                        left: '60%',
+                        transform: `rotate(${22.5}deg)`,
+                      }}
+                    >
+                      {segment.label}
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {/* Center circle */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-white border-4 border-yellow-500 flex items-center justify-center shadow-lg z-10">
+                <Sparkles className="h-8 w-8 text-yellow-500" />
+              </div>
+            </div>
+            
+            {/* Result overlay */}
             {result && (
-              <>
-                <Sparkles className="absolute top-4 left-4 h-6 w-6 text-yellow-500 animate-pulse" />
-                <Sparkles className="absolute bottom-4 right-4 h-6 w-6 text-pink-500 animate-pulse" style={{ animationDelay: '0.2s' }} />
-                <Sparkles className="absolute top-4 right-4 h-6 w-6 text-purple-500 animate-pulse" style={{ animationDelay: '0.4s' }} />
-              </>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full backdrop-blur-sm z-30 animate-fade-in">
+                <div className="text-center">
+                  <div className="text-6xl font-bold text-white drop-shadow-lg mb-2">
+                    {result.creditsWon}
+                  </div>
+                  <div className="text-xl text-yellow-300 font-semibold">
+                    CREDITS!
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 

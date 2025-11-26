@@ -31,10 +31,12 @@ export const SeeksyAIChatWidget = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const queryClient = useQueryClient();
 
-  // Check if first visit and auto-open
+  // Check if user has reached dashboard before showing chat
   useEffect(() => {
     const hasSeenChat = localStorage.getItem('seeksy_chat_seen');
-    if (!hasSeenChat) {
+    const hasVisitedDashboard = localStorage.getItem('visited_dashboard');
+    
+    if (!hasSeenChat && hasVisitedDashboard) {
       setTimeout(() => {
         setIsOpen(true);
         setShowQuickActions(true);
