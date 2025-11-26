@@ -80,19 +80,19 @@ const podcastRevenueGrowth = [
 ];
 
 const engagementToolsDemand = [
-  { category: "Live Sessions", growth: 145, color: "hsl(var(--chart-1))" },
-  { category: "Meetings", growth: 132, color: "hsl(var(--chart-2))" },
-  { category: "Events", growth: 128, color: "hsl(var(--chart-3))" },
-  { category: "Workshops", growth: 118, color: "hsl(var(--chart-4))" },
-  { category: "Scheduling", growth: 115, color: "hsl(var(--chart-5))" },
+  { category: "Live Sessions", growth: 145, color: "hsl(280, 85%, 55%)" },
+  { category: "Meetings", growth: 132, color: "hsl(340, 75%, 55%)" },
+  { category: "Events", growth: 128, color: "hsl(200, 80%, 50%)" },
+  { category: "Workshops", growth: 118, color: "hsl(150, 70%, 45%)" },
+  { category: "Scheduling", growth: 115, color: "hsl(45, 90%, 55%)" },
 ];
 
 const revenueStreams = [
-  { name: "Subscriptions", value: 45, color: "hsl(var(--chart-1))" },
-  { name: "Ad Revenue Share", value: 25, color: "hsl(var(--chart-2))" },
-  { name: "Event Tickets", value: 15, color: "hsl(var(--chart-3))" },
-  { name: "Premium Tools", value: 10, color: "hsl(var(--chart-4))" },
-  { name: "Analytics", value: 5, color: "hsl(var(--chart-5))" },
+  { name: "Subscriptions", value: 45, color: "hsl(280, 85%, 55%)" },
+  { name: "Ad Revenue Share", value: 25, color: "hsl(340, 75%, 55%)" },
+  { name: "Event Tickets", value: 15, color: "hsl(200, 80%, 50%)" },
+  { name: "Premium Tools", value: 10, color: "hsl(150, 70%, 45%)" },
+  { name: "Analytics", value: 5, color: "hsl(45, 90%, 55%)" },
 ];
 
 const valueChain = [
@@ -155,24 +155,24 @@ export function BusinessModelTab() {
           </p>
           
           <div className="grid md:grid-cols-3 gap-4 pt-4">
-            <div className="p-5 bg-gradient-to-br from-purple-500/5 to-purple-600/5 rounded-lg border border-purple-200/20">
+            <div className="p-5 bg-gradient-to-br from-purple-500/5 to-purple-600/5 rounded-lg border border-purple-200/20 flex flex-col h-full min-h-[160px]">
               <Users className="h-8 w-8 text-purple-600 mb-3" />
-              <h4 className="font-semibold text-lg mb-1">Who We Serve</h4>
-              <p className="text-sm text-muted-foreground">
+              <h4 className="font-semibold text-lg mb-2">Who We Serve</h4>
+              <p className="text-sm text-muted-foreground flex-1">
                 Podcasters, content creators, event hosts, educators, and small businesses building engaged communities
               </p>
             </div>
-            <div className="p-5 bg-gradient-to-br from-pink-500/5 to-pink-600/5 rounded-lg border border-pink-200/20">
+            <div className="p-5 bg-gradient-to-br from-pink-500/5 to-pink-600/5 rounded-lg border border-pink-200/20 flex flex-col h-full min-h-[160px]">
               <Target className="h-8 w-8 text-pink-600 mb-3" />
-              <h4 className="font-semibold text-lg mb-1">What We Solve</h4>
-              <p className="text-sm text-muted-foreground">
+              <h4 className="font-semibold text-lg mb-2">What We Solve</h4>
+              <p className="text-sm text-muted-foreground flex-1">
                 Fragmented tools, limited engagement options, and difficulty monetizing beyond ads and sponsorships
               </p>
             </div>
-            <div className="p-5 bg-gradient-to-br from-blue-500/5 to-blue-600/5 rounded-lg border border-blue-200/20">
+            <div className="p-5 bg-gradient-to-br from-blue-500/5 to-blue-600/5 rounded-lg border border-blue-200/20 flex flex-col h-full min-h-[160px]">
               <Award className="h-8 w-8 text-blue-600 mb-3" />
-              <h4 className="font-semibold text-lg mb-1">Our Edge</h4>
-              <p className="text-sm text-muted-foreground">
+              <h4 className="font-semibold text-lg mb-2">Our Edge</h4>
+              <p className="text-sm text-muted-foreground flex-1">
                 Unified platform combining content, engagement, and monetization with AI-powered tools and seamless workflows
               </p>
             </div>
@@ -258,27 +258,36 @@ export function BusinessModelTab() {
               <AreaChart data={creatorEconomyGrowth}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(280, 85%, 55%)" stopOpacity={0.6}/>
+                    <stop offset="95%" stopColor="hsl(280, 85%, 55%)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis 
+                  dataKey="year" 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="value" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2}
+                  stroke="hsl(280, 85%, 55%)" 
+                  strokeWidth={3}
                   fillOpacity={1} 
                   fill="url(#colorValue)" 
+                  animationDuration={1500}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -289,22 +298,32 @@ export function BusinessModelTab() {
             <h4 className="font-semibold mb-4">Podcast Industry Revenue Projection (Billions)</h4>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={podcastRevenueGrowth}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis 
+                  dataKey="year" 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="value" 
-                  stroke="hsl(var(--chart-2))" 
+                  stroke="hsl(340, 75%, 55%)" 
                   strokeWidth={3}
-                  dot={{ fill: 'hsl(var(--chart-2))', r: 5 }}
+                  dot={{ fill: 'hsl(340, 75%, 55%)', r: 6, strokeWidth: 2, stroke: 'hsl(var(--background))' }}
+                  activeDot={{ r: 8 }}
+                  animationDuration={1500}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -317,27 +336,36 @@ export function BusinessModelTab() {
               <AreaChart data={podcastListenerGrowth}>
                 <defs>
                   <linearGradient id="colorListeners" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(200, 80%, 50%)" stopOpacity={0.6}/>
+                    <stop offset="95%" stopColor="hsl(200, 80%, 50%)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis 
+                  dataKey="year" 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="listeners" 
-                  stroke="hsl(var(--chart-3))" 
-                  strokeWidth={2}
+                  stroke="hsl(200, 80%, 50%)" 
+                  strokeWidth={3}
                   fillOpacity={1} 
                   fill="url(#colorListeners)" 
+                  animationDuration={1500}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -351,17 +379,28 @@ export function BusinessModelTab() {
             <h4 className="font-semibold mb-4">Growth in Engagement Tools Demand (YoY %)</h4>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={engagementToolsDemand}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="category" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis 
+                  dataKey="category" 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 11 }}
+                  angle={-15}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
                 />
-                <Bar dataKey="growth" radius={[8, 8, 0, 0]}>
+                <Bar dataKey="growth" radius={[8, 8, 0, 0]} animationDuration={1500}>
                   {engagementToolsDemand.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -370,31 +409,109 @@ export function BusinessModelTab() {
             </ResponsiveContainer>
           </div>
 
-          {/* Platform Expansion Timeline */}
-          <div>
-            <h4 className="font-semibold mb-4">New Platforms Entering Podcasting Market</h4>
-            <div className="space-y-3">
-              {platformExpansion.map((platform, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${
-                      platform.status === "New (25 podcasts)" ? "bg-green-500 animate-pulse" : 
-                      platform.status === "Emerging" ? "bg-blue-500" : 
-                      platform.status === "Growing" ? "bg-yellow-500" : "bg-gray-400"
-                    }`} />
-                    <div>
-                      <p className="font-medium">{platform.platform}</p>
-                      <p className="text-xs text-muted-foreground">{platform.status}</p>
-                    </div>
+          {/* Platform Timeline & Market Inflection Points */}
+          <div className="space-y-6">
+            <div>
+              <h4 className="font-semibold mb-3">Podcast Platform Evolution & Market Entry</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full bg-gray-400" />
+                    <p className="font-medium text-sm">Apple Podcasts</p>
                   </div>
-                  <span className="text-sm font-mono text-muted-foreground">{platform.year}</span>
+                  <p className="text-xs text-muted-foreground">Launch: 2005 • Podcast Entry: 2005</p>
                 </div>
-              ))}
+                <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full bg-gray-400" />
+                    <p className="font-medium text-sm">Spotify</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Launch: 2008 • Podcast Entry: 2019</p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                    <p className="font-medium text-sm">YouTube Podcasts</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Launch: 2005 • Podcast Entry: 2022</p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                    <p className="font-medium text-sm">Amazon Music</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Launch: 2007 • Podcast Entry: 2020</p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <p className="font-medium text-sm">TikTok + iHeart</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Launch: 2016 • Podcast Entry: Nov 2025</p>
+                </div>
+                <div className="p-3 bg-muted/30 rounded-lg border border-border">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    <p className="font-medium text-sm">Threads Audio</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Launch: 2023 • Podcast Entry: 2024</p>
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              TikTok + iHeartMedia partnership (Nov 2025) launching 25 creator podcasts and national radio station. 
-              Threads Audio and other platforms rapidly expanding into podcasting space.
-            </p>
+
+            {/* Inflection Points */}
+            <div className="space-y-4">
+              <h4 className="font-semibold">Market Inflection Points & Seeksy's Strategic Entry</h4>
+              
+              <div className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg border-2 border-purple-200/30">
+                <div className="flex items-start gap-3">
+                  <Sparkles className="h-6 w-6 text-purple-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h5 className="font-semibold text-base mb-2 flex items-center gap-2">
+                      AI Inflection Point (2023-2025)
+                    </h5>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                      Generative AI transformed content creation economics. AI video editing, automated post-production, 
+                      and intelligent tools reduced production costs by 70%+ while improving quality. This democratized 
+                      professional-grade content creation for millions of creators.
+                    </p>
+                    <p className="text-sm font-semibold">
+                      <strong>Seeksy's Market Capture:</strong> We integrate AI-powered editing, clip generation, transcription, 
+                      and content optimization directly into our platform—eliminating the need for expensive external tools. 
+                      Creators get professional results without technical expertise or additional software subscriptions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-lg border-2 border-blue-200/30">
+                <div className="flex items-start gap-3">
+                  <Zap className="h-6 w-6 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h5 className="font-semibold text-base mb-2 flex items-center gap-2">
+                      Streaming & Advertising Inflection Point (2024-2026)
+                    </h5>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                      Major platforms (YouTube, Spotify, TikTok, Threads) accelerated podcast and live streaming integration. 
+                      Podcast advertising reached $5.2B+ with programmatic ad insertion becoming standard. Creators demand unified 
+                      tools for streaming, monetization, and ad revenue optimization across channels.
+                    </p>
+                    <p className="text-sm font-semibold">
+                      <strong>Seeksy's Market Capture:</strong> We provide native multi-platform streaming, automated ad insertion 
+                      with revenue tracking, real-time analytics, and integrated payment processing. Creators broadcast to YouTube, 
+                      Spotify, and social platforms simultaneously while Seeksy handles ad placement, revenue splits, and payout 
+                      management—capturing both subscription revenue and ad-share fees as the market expands.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground italic mt-3">
+                By positioning at the intersection of AI automation and streaming/advertising expansion, Seeksy captures value 
+                from both inflection points: reducing creator costs through AI while increasing revenue through multi-platform 
+                streaming and ad monetization infrastructure.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -571,6 +688,7 @@ export function BusinessModelTab() {
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
+                  animationDuration={1500}
                 >
                   {revenueStreams.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -580,7 +698,8 @@ export function BusinessModelTab() {
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
                 />
               </PieChart>
@@ -627,19 +746,30 @@ export function BusinessModelTab() {
             <h4 className="font-semibold mb-4">Seeksy vs Traditional Platforms: Value Delivered</h4>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={valueChain}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="stage" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis 
+                  dataKey="stage" 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 11 }}
+                  angle={-15}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
                 />
                 <Legend />
-                <Bar dataKey="seeksy" fill="hsl(var(--chart-1))" name="Seeksy" radius={[8, 8, 0, 0]} />
-                <Bar dataKey="traditional" fill="hsl(var(--muted))" name="Traditional Platforms" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="seeksy" fill="hsl(280, 85%, 55%)" name="Seeksy" radius={[8, 8, 0, 0]} animationDuration={1500} />
+                <Bar dataKey="traditional" fill="hsl(var(--muted))" name="Traditional Platforms" radius={[8, 8, 0, 0]} animationDuration={1500} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -651,40 +781,52 @@ export function BusinessModelTab() {
               <AreaChart data={monetizationFlow}>
                 <defs>
                   <linearGradient id="colorCreator" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(150, 70%, 45%)" stopOpacity={0.7}/>
+                    <stop offset="95%" stopColor="hsl(150, 70%, 45%)" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorPlatform" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(200, 80%, 50%)" stopOpacity={0.7}/>
+                    <stop offset="95%" stopColor="hsl(200, 80%, 50%)" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))" 
+                  tick={{ fontSize: 12 }}
+                />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
                 />
                 <Legend />
                 <Area 
                   type="monotone" 
                   dataKey="creator" 
-                  stroke="hsl(var(--chart-1))" 
+                  stroke="hsl(150, 70%, 45%)" 
+                  strokeWidth={3}
                   fillOpacity={1} 
                   fill="url(#colorCreator)"
                   name="Creator Earnings ($)"
+                  animationDuration={1500}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="platform" 
-                  stroke="hsl(var(--chart-2))" 
+                  stroke="hsl(200, 80%, 50%)" 
+                  strokeWidth={3}
                   fillOpacity={1} 
                   fill="url(#colorPlatform)"
                   name="Platform Revenue ($)"
+                  animationDuration={1500}
                 />
               </AreaChart>
             </ResponsiveContainer>
