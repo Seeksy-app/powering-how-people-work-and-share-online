@@ -80,7 +80,7 @@ interface SpreadsheetAssumptions {
 
 export const InteractiveSpreadsheet = ({ isReadOnly = false }: { isReadOnly?: boolean }) => {
   const [showAssumptions, setShowAssumptions] = useState(false);
-  const [selectedScenario, setSelectedScenario] = useState<'baseline' | 'conservative' | 'growth' | 'aggressive'>('baseline');
+  const [selectedScenario, setSelectedScenario] = useState<'baseline' | 'conservative' | 'growth' | 'aggressive'>('conservative');
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [proformaType] = useState<'ai' | 'custom'>('custom'); // InteractiveSpreadsheet uses custom proforma
   const [assumptions, setAssumptions] = useState<SpreadsheetAssumptions>({
@@ -1751,10 +1751,17 @@ export const InteractiveSpreadsheet = ({ isReadOnly = false }: { isReadOnly?: bo
                   {/* Scenario Selection */}
                   <div className="mt-4 p-3 bg-background rounded-lg border">
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-sm font-semibold">Projection Scenarios</p>
+                      <p className="text-sm font-semibold">
+                        Projection Scenarios 
+                        {selectedScenario !== 'baseline' && (
+                          <span className="text-muted-foreground font-normal">
+                            {' '}({selectedScenario.charAt(0).toUpperCase() + selectedScenario.slice(1)})
+                          </span>
+                        )}
+                      </p>
                       {selectedScenario !== 'baseline' && (
                         <Button 
-                          variant="default" 
+                          variant="ghost" 
                           size="sm" 
                           onClick={() => {
                             setSelectedScenario('baseline');
@@ -1831,7 +1838,7 @@ export const InteractiveSpreadsheet = ({ isReadOnly = false }: { isReadOnly?: bo
                   </div>
 
                   <div className="mt-8 p-4 bg-muted rounded-lg">
-                    <p className="font-semibold mb-4">3-Year Summary ({selectedScenario === 'baseline' ? 'AI Baseline' : selectedScenario.charAt(0).toUpperCase() + selectedScenario.slice(1)}):</p>
+                    <p className="font-semibold mb-2">3-Year Summary (AI {selectedScenario === 'baseline' ? 'Baseline' : selectedScenario.charAt(0).toUpperCase() + selectedScenario.slice(1)}):</p>
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       <div>
                         <p className="text-muted-foreground">Year 1 Revenue</p>
