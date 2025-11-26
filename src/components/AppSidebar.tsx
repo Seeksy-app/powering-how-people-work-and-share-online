@@ -513,7 +513,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     { title: "Meetings", url: "/meetings", icon: Calendar },
     { title: "Sign-ups", url: "/signup-sheets", icon: ClipboardList },
     { title: "Events", url: "/events", icon: CalendarDays },
-    { title: "Studio", url: "/studio", icon: Video },
   ];
 
   const adminFinancials = [
