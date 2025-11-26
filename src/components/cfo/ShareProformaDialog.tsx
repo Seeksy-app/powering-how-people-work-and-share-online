@@ -212,46 +212,48 @@ export const ShareProformaDialog = ({ open, onOpenChange, proformaType }: ShareP
               </TabsContent>
 
               <TabsContent value="advanced" className="space-y-4 mt-4">
-                <div className="space-y-4 p-4 bg-muted rounded-lg">
-                  <div className="space-y-3">
-                    <div className="space-y-0.5">
-                      <Label className="text-sm font-medium flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4" />
-                        Overall Adjustment (All Scenarios)
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        Apply +/- % adjustment to Conservative, Growth, and Aggressive projections
-                      </p>
-                    </div>
+                {!useRealTimeData && (
+                  <div className="space-y-4 p-4 bg-muted rounded-lg">
                     <div className="space-y-3">
-                      <div className="flex gap-2">
-                        <Select value={adjustmentType} onValueChange={(v: any) => setAdjustmentType(v)}>
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="increase">+</SelectItem>
-                            <SelectItem value="decrease">−</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="1"
-                          value={adjustmentPercent}
-                          onChange={(e) => setAdjustmentPercent(parseFloat(e.target.value) || 0)}
-                          placeholder="0"
-                          className="flex-1"
-                        />
-                        <span className="flex items-center text-sm text-muted-foreground font-medium">%</span>
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-medium flex items-center gap-2">
+                          <TrendingUp className="h-4 w-4" />
+                          Overall Adjustment (All Scenarios)
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Apply +/- % adjustment to Conservative, Growth, and Aggressive projections
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground italic">
-                        Example: -10% reduces all estimates by 10% across all scenarios. Your system data remains unchanged.
-                      </p>
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Select value={adjustmentType} onValueChange={(v: any) => setAdjustmentType(v)}>
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="increase">+</SelectItem>
+                              <SelectItem value="decrease">−</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="1"
+                            value={adjustmentPercent}
+                            onChange={(e) => setAdjustmentPercent(parseFloat(e.target.value) || 0)}
+                            placeholder="0"
+                            className="flex-1"
+                          />
+                          <span className="flex items-center text-sm text-muted-foreground font-medium">%</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground italic">
+                          Example: -10% reduces all estimates by 10% across all scenarios. Your system data remains unchanged.
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
