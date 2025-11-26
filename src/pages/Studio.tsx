@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Radio, X, Sparkles } from "lucide-react";
+import { Radio, X, Sparkles, Play, Square } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { StudioLobby } from "@/components/studio/StudioLobby";
 import { StudioTopBar } from "@/components/studio/StudioTopBar";
@@ -47,8 +48,47 @@ function StudioContent() {
   const [showBrandingMenu, setShowBrandingMenu] = useState(false);
   const [markers, setMarkers] = useState<RecordingMarker[]>([]);
   const [isMeetingLive, setIsMeetingLive] = useState(false);
+  const [showAINotesDialog, setShowAINotesDialog] = useState(false);
+  const [dontShowAINotesAgain, setDontShowAINotesAgain] = useState(false);
   const [showScriptDialog, setShowScriptDialog] = useState(false);
   const [showHostNotesPanel, setShowHostNotesPanel] = useState(false);
+  
+  // Assume user in studio is the host (guests would have different entry point)
+  const isHost = true;
+
+  // Check if user has dismissed AI Notes dialog before
+  useEffect(() => {
+    const dismissed = localStorage.getItem('hideAINotesDialog');
+    if (dismissed === 'true') {
+      setDontShowAINotesAgain(true);
+    }
+  }, []);
+
+  // Show AI Notes dialog when meeting starts (host only)
+  useEffect(() => {
+    if (isMeetingLive && !dontShowAINotesAgain && isHost) {
+      setShowAINotesDialog(true);
+    }
+  }, [isMeetingLive, dontShowAINotesAgain, isHost]);
+
+  const handleEnableAINotes = () => {
+    setShowAINotes(true);
+    setShowAINotesDialog(false);
+  };
+
+  const handleDismissAINotesDialog = () => {
+    setShowAINotesDialog(false);
+  };
+
+  const handleDontShowAgainChange = (checked: boolean) => {
+    if (checked) {
+      localStorage.setItem('hideAINotesDialog', 'true');
+      setDontShowAINotesAgain(true);
+    } else {
+      localStorage.removeItem('hideAINotesDialog');
+      setDontShowAINotesAgain(false);
+    }
+  };
   const [hostNotes] = useState(`Topics to Cover:
 • Introduction - Welcome viewers and introduce today's topic
 • Guest background - Ask about their journey and experience
@@ -771,6 +811,20 @@ Closing Notes:
           
           <div className="h-6 w-px bg-border" />
           
+          <div className="flex items-center gap-2">
+            <Switch
+              id="ai-notes"
+              checked={showAINotes}
+              onCheckedChange={setShowAINotes}
+            />
+            <Label htmlFor="ai-notes" className="text-sm cursor-pointer flex items-center gap-1">
+              <Sparkles className="h-4 w-4" />
+              AI Notes
+            </Label>
+          </div>
+          
+          <div className="h-6 w-px bg-border" />
+          
           <ThemeToggle />
           
           <div className="h-6 w-px bg-border" />
@@ -779,21 +833,60 @@ Closing Notes:
             <Button
               onClick={() => setIsMeetingLive(false)}
               size="sm"
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold gap-2"
             >
+              <Square className="h-4 w-4" />
               STOP MEETING
             </Button>
           ) : (
             <Button
               onClick={() => setIsMeetingLive(true)}
               size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white font-semibold"
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold gap-2"
             >
+              <Play className="h-4 w-4" />
               START MEETING
             </Button>
           )}
         </div>
       </div>
+      
+      {/* AI Notes Dialog */}
+      <Dialog open={showAINotesDialog} onOpenChange={setShowAINotesDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Turn on AI Notes?
+            </DialogTitle>
+            <DialogDescription>
+              AI Notes will automatically capture key points, decisions, and action items from your meeting in real-time.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-3">
+            <div className="flex items-center gap-2 mr-auto">
+              <Checkbox
+                id="dont-show"
+                checked={dontShowAINotesAgain}
+                onCheckedChange={handleDontShowAgainChange}
+              />
+              <label
+                htmlFor="dont-show"
+                className="text-sm text-muted-foreground cursor-pointer"
+              >
+                Don't show this again
+              </label>
+            </div>
+            <Button variant="outline" onClick={handleDismissAINotesDialog}>
+              Not Now
+            </Button>
+            <Button onClick={handleEnableAINotes} className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Enable AI Notes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
       <div className="flex flex-1 overflow-visible border-2 border-border">
         <ResizablePanelGroup direction="horizontal">
@@ -857,6 +950,7 @@ Closing Notes:
                 onToggleChannelsExpanded={() => setChannelsExpanded(!channelsExpanded)}
                 profileImageUrl={profileImageUrl}
                 sessionId={sessionId}
+                meetingId={sessionId}
                 showAINotes={showAINotes}
               />
           </ResizablePanel>
