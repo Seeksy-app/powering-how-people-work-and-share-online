@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Link2, Check } from "lucide-react";
+import { Plus, Link2, Check, UserCircle } from "lucide-react";
 import { useState } from "react";
 import { CreateTicketDialog } from "./CreateTicketDialog";
 import { TicketDetailDialog } from "./TicketDetailDialog";
@@ -17,9 +17,11 @@ export const TicketsTab = ({ userId }: TicketsTabProps) => {
   const { toast } = useToast();
   const [createOpen, setCreateOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
+  const [supportLinkCopied, setSupportLinkCopied] = useState(false);
+  const [leadLinkCopied, setLeadLinkCopied] = useState(false);
 
   const publicTicketUrl = `${window.location.origin}/submit-ticket`;
+  const personalLeadUrl = `${window.location.origin}/lead-form/${userId}`;
 
   const { data: tickets, refetch } = useQuery({
     queryKey: ["tickets", userId],
@@ -38,15 +40,33 @@ export const TicketsTab = ({ userId }: TicketsTabProps) => {
     },
   });
 
-  const handleCopyLink = async () => {
+  const handleCopySupportLink = async () => {
     try {
       await navigator.clipboard.writeText(publicTicketUrl);
-      setLinkCopied(true);
+      setSupportLinkCopied(true);
       toast({
         title: "Link Copied!",
-        description: "Public ticket submission form link copied to clipboard.",
+        description: "Customer Support form link copied to clipboard.",
       });
-      setTimeout(() => setLinkCopied(false), 2000);
+      setTimeout(() => setSupportLinkCopied(false), 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCopyLeadLink = async () => {
+    try {
+      await navigator.clipboard.writeText(personalLeadUrl);
+      setLeadLinkCopied(true);
+      toast({
+        title: "Link Copied!",
+        description: "Your personal Lead Form link copied to clipboard.",
+      });
+      setTimeout(() => setLeadLinkCopied(false), 2000);
     } catch (error) {
       toast({
         title: "Error",
@@ -80,8 +100,21 @@ export const TicketsTab = ({ userId }: TicketsTabProps) => {
       <div className="flex justify-between items-center gap-4">
         <h2 className="text-2xl font-semibold">Support Tickets</h2>
         <div className="flex gap-2">
-          <Button onClick={handleCopyLink} variant="secondary" size="lg">
-            {linkCopied ? (
+          <Button onClick={handleCopyLeadLink} variant="secondary">
+            {leadLinkCopied ? (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Copied!
+              </>
+            ) : (
+              <>
+                <UserCircle className="w-4 h-4 mr-2" />
+                My Lead Form
+              </>
+            )}
+          </Button>
+          <Button onClick={handleCopySupportLink} variant="outline">
+            {supportLinkCopied ? (
               <>
                 <Check className="w-4 h-4 mr-2" />
                 Copied!
@@ -89,7 +122,7 @@ export const TicketsTab = ({ userId }: TicketsTabProps) => {
             ) : (
               <>
                 <Link2 className="w-4 h-4 mr-2" />
-                Share Client Form
+                Support Form
               </>
             )}
           </Button>

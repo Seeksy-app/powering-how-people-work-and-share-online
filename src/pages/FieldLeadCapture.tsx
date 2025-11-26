@@ -1,0 +1,375 @@
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { MapPin, Camera, X, Loader2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+export default function FieldLeadCapture() {
+  const { userId } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    notes: "",
+    address: "",
+  });
+  
+  const [createTicket, setCreateTicket] = useState(true);
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const getLocation = () => {
+    setGettingLocation(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation({ lat: latitude, lng: longitude });
+          
+          // Reverse geocode to get address
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+            );
+            const data = await response.json();
+            setFormData(prev => ({ ...prev, address: data.display_name }));
+          } catch (error) {
+            console.error("Error getting address:", error);
+          }
+          
+          setGettingLocation(false);
+          toast({
+            title: "Location captured",
+            description: "GPS coordinates recorded",
+          });
+        },
+        (error) => {
+          setGettingLocation(false);
+          toast({
+            title: "Location error",
+            description: "Could not get location. Please enter address manually.",
+            variant: "destructive",
+          });
+        }
+      );
+    }
+  };
+
+  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    
+    if (photos.length + files.length > 5) {
+      toast({
+        title: "Too many photos",
+        description: "Maximum 5 photos allowed",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    files.forEach(file => {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: `${file.name} exceeds 5MB limit`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+      setPhotos(prev => [...prev, file]);
+    });
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
+    setPhotoPreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadPhotos = async (): Promise<string[]> => {
+    const uploadedUrls: string[] = [];
+    
+    for (const photo of photos) {
+      const fileExt = photo.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `lead-photos/${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('lead-photos')
+        .upload(filePath, photo);
+
+      if (uploadError) {
+        console.error("Photo upload error:", uploadError);
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('lead-photos')
+        .getPublicUrl(filePath);
+
+      uploadedUrls.push(publicUrl);
+    }
+
+    return uploadedUrls;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      // Upload photos
+      const photoUrls = await uploadPhotos();
+
+      // Create or update contact
+      const contactData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone || null,
+        company: formData.company || null,
+        notes: [
+          formData.notes,
+          formData.address ? `Address: ${formData.address}` : "",
+          location ? `GPS: ${location.lat}, ${location.lng}` : "",
+          photoUrls.length > 0 ? `Photos: ${photoUrls.join(', ')}` : ""
+        ].filter(Boolean).join('\n'),
+        lead_status: 'new',
+        lead_source: 'field_capture',
+        user_id: userId,
+      };
+
+      const { data: existingContact } = await supabase
+        .from('contacts')
+        .select('id')
+        .eq('email', formData.email)
+        .eq('user_id', userId)
+        .single();
+
+      let contactId: string;
+
+      if (existingContact) {
+        const { data: updatedContact } = await supabase
+          .from('contacts')
+          .update(contactData)
+          .eq('id', existingContact.id)
+          .select('id')
+          .single();
+        contactId = updatedContact!.id;
+      } else {
+        const { data: newContact } = await supabase
+          .from('contacts')
+          .insert(contactData)
+          .select('id')
+          .single();
+        contactId = newContact!.id;
+      }
+
+      // Create ticket if requested
+      if (createTicket) {
+        await supabase.from('client_tickets').insert({
+          title: `Field Lead: ${formData.name}`,
+          description: formData.notes,
+          client_contact_id: contactId,
+          user_id: userId,
+          assigned_to: userId,
+          status: 'open',
+          priority: 'medium',
+          source: 'field_capture',
+        });
+      }
+
+      toast({
+        title: "Lead captured successfully",
+        description: "Contact and ticket created",
+      });
+
+      // Reset form
+      setFormData({ name: "", email: "", phone: "", company: "", notes: "", address: "" });
+      setPhotos([]);
+      setPhotoPreviews([]);
+      setLocation(null);
+      setCreateTicket(true);
+
+    } catch (error) {
+      console.error("Error submitting lead:", error);
+      toast({
+        title: "Error",
+        description: "Failed to capture lead. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-2xl mx-auto">
+        <Card>
+          <CardHeader>
+            <CardTitle>Field Lead Capture</CardTitle>
+            <CardDescription>Capture client information and photos on-site</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Location Capture */}
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  onClick={getLocation}
+                  disabled={gettingLocation}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {gettingLocation ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Getting location...
+                    </>
+                  ) : (
+                    <>
+                      <MapPin className="mr-2 h-4 w-4" />
+                      Capture GPS Location
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Address */}
+              <div className="space-y-2">
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Auto-filled from GPS or enter manually"
+                />
+              </div>
+
+              {/* Photo Capture */}
+              <div className="space-y-2">
+                <Label>Photos (Max 5, 5MB each)</Label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {photoPreviews.map((preview, index) => (
+                    <div key={index} className="relative">
+                      <img src={preview} alt={`Preview ${index + 1}`} className="w-20 h-20 object-cover rounded" />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="destructive"
+                        className="absolute -top-2 -right-2 h-6 w-6"
+                        onClick={() => removePhoto(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  multiple
+                  onChange={handlePhotoCapture}
+                  disabled={photos.length >= 5}
+                />
+              </div>
+
+              {/* Contact Info */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Name *</Label>
+                <Input
+                  id="name"
+                  required
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company">Company</Label>
+                <Input
+                  id="company"
+                  value={formData.company}
+                  onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={4}
+                  placeholder="Project details, requirements, etc."
+                />
+              </div>
+
+              {/* Create Ticket */}
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="createTicket"
+                  checked={createTicket}
+                  onCheckedChange={(checked) => setCreateTicket(checked as boolean)}
+                />
+                <Label htmlFor="createTicket">Create ticket for this lead</Label>
+              </div>
+
+              <Button type="submit" disabled={submitting} className="w-full">
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Capture Lead"
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
