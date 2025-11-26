@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, Camera, X, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
 
 export default function FieldLeadCapture() {
   const { userId } = useParams();
@@ -31,6 +33,37 @@ export default function FieldLeadCapture() {
   const [gettingLocation, setGettingLocation] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [assignedTo, setAssignedTo] = useState<string>("");
+
+  // Fetch current user and team members
+  const { data: currentUser } = useQuery({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("id", user.id)
+        .single();
+      
+      return profile;
+    },
+  });
+
+  const { data: teamMembers } = useQuery({
+    queryKey: ["team-members", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("user_id, profiles(id, full_name)")
+        .in("role", ["admin", "super_admin", "member", "staff"]);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const getLocation = () => {
     setGettingLocation(true);
@@ -190,7 +223,7 @@ export default function FieldLeadCapture() {
           description: formData.notes,
           client_contact_id: contactId,
           user_id: userId,
-          assigned_to: userId,
+          assigned_to: assignedTo || userId,
           status: 'open',
           priority: 'medium',
           source: 'field_capture',
@@ -226,7 +259,7 @@ export default function FieldLeadCapture() {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Field Lead Capture</CardTitle>
+            <CardTitle>Lead Form</CardTitle>
             <CardDescription>Capture client information and photos on-site</CardDescription>
           </CardHeader>
           <CardContent>
@@ -268,6 +301,7 @@ export default function FieldLeadCapture() {
               {/* Photo Capture */}
               <div className="space-y-2">
                 <Label>Photos (Max 5, 5MB each)</Label>
+                <p className="text-sm text-muted-foreground mb-2">Take a photo or access photos from your phone</p>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {photoPreviews.map((preview, index) => (
                     <div key={index} className="relative">
@@ -347,13 +381,41 @@ export default function FieldLeadCapture() {
               </div>
 
               {/* Create Ticket */}
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="createTicket"
-                  checked={createTicket}
-                  onCheckedChange={(checked) => setCreateTicket(checked as boolean)}
-                />
-                <Label htmlFor="createTicket">Create ticket for this lead</Label>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="createTicket"
+                    checked={createTicket}
+                    onCheckedChange={(checked) => setCreateTicket(checked as boolean)}
+                  />
+                  <Label htmlFor="createTicket">Create ticket for this lead</Label>
+                </div>
+
+                {createTicket && (
+                  <div className="space-y-2">
+                    <Label htmlFor="assignTo">Assign to Team Member</Label>
+                    <Select value={assignedTo} onValueChange={setAssignedTo}>
+                      <SelectTrigger id="assignTo">
+                        <SelectValue placeholder="Select team member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {currentUser && (
+                          <SelectItem value={currentUser.id}>
+                            {currentUser.full_name} (You)
+                          </SelectItem>
+                        )}
+                        {teamMembers?.map((member: any) => {
+                          if (member.user_id === currentUser?.id) return null;
+                          return (
+                            <SelectItem key={member.user_id} value={member.user_id}>
+                              {member.profiles?.full_name || "Unknown"}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
 
               <Button type="submit" disabled={submitting} className="w-full">
