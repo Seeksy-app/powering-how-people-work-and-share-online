@@ -99,9 +99,13 @@ export default function Credits() {
   return (
     <div className="container mx-auto p-6 space-y-8">
       {/* Header Section */}
-      <div className="text-center space-y-2">
+      <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold">Your Credits</h1>
         <p className="text-muted-foreground">Purchase credits to unlock all Seeksy features</p>
+        <Button size="lg" onClick={() => document.getElementById('packages')?.scrollIntoView({ behavior: 'smooth' })}>
+          <Coins className="mr-2 h-5 w-5" />
+          Add Credits
+        </Button>
       </div>
 
       {/* Current Balance Card */}
@@ -147,7 +151,7 @@ export default function Credits() {
       </Card>
 
       {/* Credit Packages */}
-      <div>
+      <div id="packages">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="h-5 w-5" />
           <h2 className="text-2xl font-bold">Purchase Credits</h2>

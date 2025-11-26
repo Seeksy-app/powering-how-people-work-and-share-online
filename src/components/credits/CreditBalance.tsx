@@ -14,7 +14,7 @@ export function CreditBalance() {
 
       const { data, error } = await supabase
         .from("user_credits")
-        .select("balance, credit_goal")
+        .select("balance, credit_goal, total_spent")
         .eq("user_id", user.id)
         .single();
 
@@ -51,7 +51,10 @@ export function CreditBalance() {
               {userCredits.balance} credits remaining
             </p>
             <p className="text-xs text-muted-foreground">
-              Click to see credit costs
+              {userCredits.total_spent || 0} credits used
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Click to buy more credits
             </p>
           </div>
         </TooltipContent>
