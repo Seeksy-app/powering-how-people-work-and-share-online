@@ -3,10 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Coins, Sparkles, TrendingUp } from "lucide-react";
+import { Coins, Sparkles, TrendingUp, Info } from "lucide-react";
 import { toast } from "sonner";
 import { SpinWheelDialog } from "@/components/credits/SpinWheelDialog";
 import { useWelcomeSpin } from "@/hooks/useWelcomeSpin";
+import { Link } from "react-router-dom";
 
 export default function Credits() {
   const queryClient = useQueryClient();
@@ -189,13 +190,26 @@ export default function Credits() {
       {/* How Credits Work */}
       <Card>
         <CardHeader>
-          <CardTitle>How Credits Work</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>How Credits Work</CardTitle>
+            <Link to="/credit-info">
+              <Button variant="outline" size="sm">
+                <Info className="h-4 w-4 mr-2" />
+                View Full Breakdown
+              </Button>
+            </Link>
+          </div>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>✨ Each activity costs <strong className="text-foreground">1 credit</strong></p>
           <p>🎯 Activities include: creating meetings, uploading videos, using AI Studio, creating studios, and more</p>
           <p>🎰 Spend 20 credits and get a chance to <strong className="text-foreground">spin the wheel</strong> for free bonus credits!</p>
           <p>🎁 New users start with <strong className="text-foreground">5 free credits</strong></p>
+          <p className="pt-2">
+            <Link to="/credit-info" className="text-primary hover:underline font-medium">
+              See complete list of credit costs →
+            </Link>
+          </p>
         </CardContent>
       </Card>
 

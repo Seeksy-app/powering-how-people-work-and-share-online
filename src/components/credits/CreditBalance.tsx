@@ -33,24 +33,27 @@ export function CreditBalance() {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Link to="/credits">
+          <Link to="/credit-info">
             <Button
               variant={isLowBalance ? "destructive" : "outline"}
               size="sm"
               className="gap-2"
             >
               <Coins className="h-4 w-4" />
-              <span className="font-semibold">{userCredits.balance} / {goal}</span>
+              <span className="font-semibold">{userCredits.balance}</span>
               {isLowBalance && <span className="text-xs">Low!</span>}
             </Button>
           </Link>
         </TooltipTrigger>
         <TooltipContent>
-          <p className="text-sm">
-            <strong>{userCredits.balance}</strong> credits remaining
-            <br />
-            <span className="text-muted-foreground">Out of {goal} credits</span>
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold">
+              {userCredits.balance} credits remaining
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Click to see credit costs
+            </p>
+          </div>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

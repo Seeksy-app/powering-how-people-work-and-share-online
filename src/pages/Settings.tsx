@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, User as UserIcon, Phone, Lock, Bell, FileText, Puzzle, Shield, Palette, Check, Eye, MessageSquare, Settings as SettingsIcon } from "lucide-react";
+import { Loader2, Mail, User as UserIcon, Phone, Lock, Bell, FileText, Puzzle, Shield, Palette, Check, Eye, MessageSquare, Settings as SettingsIcon, Info } from "lucide-react";
 import { NotificationPreferencesDialog } from "@/components/NotificationPreferencesDialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -695,6 +695,22 @@ const Settings = () => {
                 </div>
                 <Button onClick={() => navigate("/subscription")}>
                   Manage Subscription
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
+
+          {/* Credits & Usage */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Credits & Usage</CardTitle>
+                  <CardDescription>View credit costs and manage your usage</CardDescription>
+                </div>
+                <Button onClick={() => navigate("/credit-info")} variant="outline">
+                  <Info className="h-4 w-4 mr-2" />
+                  View Credit Costs
                 </Button>
               </div>
             </CardHeader>

@@ -99,6 +99,7 @@ import CreateAudioAdCampaign from "./pages/CreateAudioAdCampaign";
 import AdvertiserCampaignDashboard from "./pages/AdvertiserCampaignDashboard";
 import AdvertiserCampaignDetail from "./pages/AdvertiserCampaignDetail";
 import Studio from "./pages/Studio";
+import CreditInfo from "./pages/CreditInfo";
 import StudioTemplates from "./pages/StudioTemplates";
 import MediaLibrary from "./pages/MediaLibrary";
 import PostProductionStudio from "./pages/PostProductionStudio";
@@ -367,6 +368,7 @@ const AppContent = () => {
               <Route path="/settings" element={<Settings />} />
               <Route path="/notification-preferences" element={<NotificationPreferences />} />
               <Route path="/subscription" element={<SubscriptionSettings />} />
+              <Route path="/credit-info" element={<CreditInfo />} />
               <Route path="/qr-codes" element={<QRCodes />} />
           <Route path="/studio" element={<StudioTemplates />} />
           <Route path="/studio/session/:id" element={<Studio />} />
