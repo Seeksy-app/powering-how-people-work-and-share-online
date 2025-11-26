@@ -13,6 +13,63 @@ const creatorEconomyGrowth = [
   { year: "2027", value: 350, label: "$350B" },
 ];
 
+const podcastListenerGrowth = [
+  { year: "2021", listeners: 424, label: "424M" },
+  { year: "2022", listeners: 464, label: "464M" },
+  { year: "2023", listeners: 505, label: "505M" },
+  { year: "2024", listeners: 548, label: "548M" },
+  { year: "2025", listeners: 600, label: "600M" },
+  { year: "2026", listeners: 660, label: "660M" },
+  { year: "2027", listeners: 726, label: "726M" },
+];
+
+const platformExpansion = [
+  { platform: "Apple Podcasts", year: "2005", status: "Established" },
+  { platform: "Spotify", year: "2019", status: "Established" },
+  { platform: "YouTube Podcasts", year: "2022", status: "Growing" },
+  { platform: "Amazon Music", year: "2020", status: "Growing" },
+  { platform: "iHeart + TikTok", year: "2025", status: "New (25 podcasts)" },
+  { platform: "Threads Audio", year: "2024", status: "Emerging" },
+];
+
+const competitorPricing = [
+  { 
+    name: "Seeksy", 
+    basic: 19, 
+    pro: 49, 
+    enterprise: 199,
+    features: "All-in-one: Podcasting, Meetings, Events, AI Tools, Analytics"
+  },
+  { 
+    name: "Riverside", 
+    basic: 19, 
+    pro: 29, 
+    enterprise: 249,
+    features: "Remote recording & video editing (limited engagement tools)"
+  },
+  { 
+    name: "Restream", 
+    basic: 20, 
+    pro: 41, 
+    enterprise: 99,
+    features: "Multistreaming (no podcast hosting or meetings)"
+  },
+  { 
+    name: "StreamYard", 
+    basic: 25, 
+    pro: 49, 
+    enterprise: 149,
+    features: "Live streaming (limited post-production & analytics)"
+  },
+  { 
+    name: "Descript", 
+    basic: 24, 
+    pro: 40, 
+    enterprise: 50,
+    features: "Video editing (no live streaming or event hosting)"
+  },
+];
+
 const podcastRevenueGrowth = [
   { year: "2021", value: 1.3, label: "$1.3B" },
   { year: "2022", value: 1.8, label: "$1.8B" },
@@ -145,8 +202,22 @@ export function BusinessModelTab() {
               <li className="flex items-start gap-2">
                 <TrendingUp className="h-4 w-4 text-purple-600 mt-1 flex-shrink-0" />
                 <span>
-                  <strong>Podcasting Boom:</strong> Podcast industry revenue projected to exceed $5.2B by 2026, 
+                  <strong>Massive Podcast Audience:</strong> 584.1 million podcast listeners worldwide in 2024, 
+                  projected to reach 600 million by end of 2025 (Backlinko, DemandSage). Over 4.57 million active podcasts indexed globally.
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <TrendingUp className="h-4 w-4 text-purple-600 mt-1 flex-shrink-0" />
+                <span>
+                  <strong>Podcasting Revenue Boom:</strong> Podcast industry revenue projected to exceed $5.2B by 2026, 
                   with 160M+ listeners in the U.S. alone (IAB, Edison Research)
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <TrendingUp className="h-4 w-4 text-purple-600 mt-1 flex-shrink-0" />
+                <span>
+                  <strong>New Platforms Entering:</strong> TikTok partnered with iHeartMedia in Nov 2025 to launch TikTok Podcast Network 
+                  with up to 25 new creator podcasts, plus national radio station. Threads Audio and other platforms expanding into podcasting space.
                 </span>
               </li>
               <li className="flex items-start gap-2">
@@ -239,6 +310,42 @@ export function BusinessModelTab() {
             </ResponsiveContainer>
           </div>
 
+          {/* Chart: Podcast Listener Growth */}
+          <div>
+            <h4 className="font-semibold mb-4">Global Podcast Listener Growth (Millions)</h4>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={podcastListenerGrowth}>
+                <defs>
+                  <linearGradient id="colorListeners" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="year" stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="listeners" 
+                  stroke="hsl(var(--chart-3))" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#colorListeners)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+            <p className="text-xs text-muted-foreground mt-2">
+              584.1M listeners in 2024, projected 600M by end of 2025 • 4.57M active podcasts globally
+            </p>
+          </div>
+
           {/* Chart: Engagement Tools Demand */}
           <div>
             <h4 className="font-semibold mb-4">Growth in Engagement Tools Demand (YoY %)</h4>
@@ -261,6 +368,33 @@ export function BusinessModelTab() {
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
+          </div>
+
+          {/* Platform Expansion Timeline */}
+          <div>
+            <h4 className="font-semibold mb-4">New Platforms Entering Podcasting Market</h4>
+            <div className="space-y-3">
+              {platformExpansion.map((platform, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${
+                      platform.status === "New (25 podcasts)" ? "bg-green-500 animate-pulse" : 
+                      platform.status === "Emerging" ? "bg-blue-500" : 
+                      platform.status === "Growing" ? "bg-yellow-500" : "bg-gray-400"
+                    }`} />
+                    <div>
+                      <p className="font-medium">{platform.platform}</p>
+                      <p className="text-xs text-muted-foreground">{platform.status}</p>
+                    </div>
+                  </div>
+                  <span className="text-sm font-mono text-muted-foreground">{platform.year}</span>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              TikTok + iHeartMedia partnership (Nov 2025) launching 25 creator podcasts and national radio station. 
+              Threads Audio and other platforms rapidly expanding into podcasting space.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -583,6 +717,91 @@ export function BusinessModelTab() {
             As the creator economy continues to shift toward private communities, live interactions, and direct 
             monetization, Seeksy is uniquely positioned to become the go-to platform for creators who want to own 
             their audience relationships and maximize their earning potential.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Competitive Pricing Comparison */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center gap-2">
+            <Target className="h-6 w-6 text-blue-600" />
+            Seeksy vs Competitors: Pricing & Value
+          </CardTitle>
+          <CardDescription>
+            How Seeksy compares to leading video and podcasting platforms
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b-2 border-border">
+                  <th className="text-left p-3 font-semibold">Platform</th>
+                  <th className="text-center p-3 font-semibold">Basic</th>
+                  <th className="text-center p-3 font-semibold">Pro</th>
+                  <th className="text-center p-3 font-semibold">Enterprise</th>
+                  <th className="text-left p-3 font-semibold">Core Features</th>
+                </tr>
+              </thead>
+              <tbody>
+                {competitorPricing.map((competitor, idx) => (
+                  <tr 
+                    key={idx} 
+                    className={`border-b border-border ${
+                      competitor.name === "Seeksy" ? "bg-primary/5 font-semibold" : ""
+                    }`}
+                  >
+                    <td className="p-3">
+                      {competitor.name}
+                      {competitor.name === "Seeksy" && (
+                        <span className="ml-2 text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded">
+                          YOU
+                        </span>
+                      )}
+                    </td>
+                    <td className="text-center p-3">${competitor.basic}/mo</td>
+                    <td className="text-center p-3">${competitor.pro}/mo</td>
+                    <td className="text-center p-3">${competitor.enterprise}/mo</td>
+                    <td className="p-3 text-sm text-muted-foreground">{competitor.features}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 pt-4">
+            <div className="p-4 bg-green-500/5 rounded-lg border border-green-200/20">
+              <h4 className="font-semibold text-base mb-2 flex items-center gap-2 text-green-600">
+                ✓ Seeksy Advantages
+              </h4>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>• All-in-one platform (podcasting + meetings + events)</li>
+                <li>• Competitive pricing across all tiers</li>
+                <li>• AI-powered post-production & editing</li>
+                <li>• Built-in booking & scheduling tools</li>
+                <li>• Unified analytics dashboard</li>
+                <li>• Direct monetization with multiple revenue streams</li>
+              </ul>
+            </div>
+            <div className="p-4 bg-orange-500/5 rounded-lg border border-orange-200/20">
+              <h4 className="font-semibold text-base mb-2 flex items-center gap-2 text-orange-600">
+                ⚠ Competitor Limitations
+              </h4>
+              <ul className="space-y-1 text-sm text-muted-foreground">
+                <li>• Riverside: Recording only, no live engagement tools</li>
+                <li>• Restream: Streaming focus, no podcast hosting</li>
+                <li>• StreamYard: Limited analytics & post-production</li>
+                <li>• Descript: Editing only, no live or event features</li>
+                <li>• All require 3rd party tools for full workflow</li>
+              </ul>
+            </div>
+          </div>
+
+          <p className="text-sm text-muted-foreground bg-muted/30 p-4 rounded-lg border border-border">
+            <strong>Value Proposition:</strong> Seeksy provides enterprise-grade features at competitive pricing 
+            while eliminating the need for 6-8 separate tools. Creators save $100-300/month in tool subscriptions 
+            while gaining unified analytics, AI editing, and direct monetization capabilities that competitors don't offer.
           </p>
         </CardContent>
       </Card>
