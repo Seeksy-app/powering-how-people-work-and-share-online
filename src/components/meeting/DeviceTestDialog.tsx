@@ -43,8 +43,34 @@ export function DeviceTestDialog({ open, onContinue }: DeviceTestDialogProps) {
 
   const loadDevices = async () => {
     try {
-      // Request permissions first
-      await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      let videoPermissionGranted = false;
+      let audioPermissionGranted = false;
+
+      // Request video permission first
+      try {
+        const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        videoStream.getTracks().forEach(track => track.stop()); // Stop immediately, we just need permission
+        videoPermissionGranted = true;
+      } catch (videoError) {
+        console.error('Video permission denied:', videoError);
+        toast.error("Camera access denied. Please allow camera access to continue.");
+      }
+
+      // Request audio permission separately
+      try {
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioStream.getTracks().forEach(track => track.stop()); // Stop immediately, we just need permission
+        audioPermissionGranted = true;
+      } catch (audioError) {
+        console.error('Audio permission denied:', audioError);
+        toast.error("Microphone access denied. Please allow microphone access to continue.");
+      }
+
+      // If both permissions were denied, show a combined error
+      if (!videoPermissionGranted && !audioPermissionGranted) {
+        toast.error("Both camera and microphone access denied. Please check your browser permissions.");
+        return;
+      }
       
       const devices = await navigator.mediaDevices.enumerateDevices();
       
@@ -57,10 +83,10 @@ export function DeviceTestDialog({ open, onContinue }: DeviceTestDialogProps) {
       setAudioOutputDevices(audioOutputs);
 
       // Set defaults
-      if (videoInputs.length > 0 && !selectedVideoDevice) {
+      if (videoInputs.length > 0 && !selectedVideoDevice && videoPermissionGranted) {
         setSelectedVideoDevice(videoInputs[0].deviceId);
       }
-      if (audioInputs.length > 0 && !selectedAudioInput) {
+      if (audioInputs.length > 0 && !selectedAudioInput && audioPermissionGranted) {
         setSelectedAudioInput(audioInputs[0].deviceId);
       }
       if (audioOutputs.length > 0 && !selectedAudioOutput) {
