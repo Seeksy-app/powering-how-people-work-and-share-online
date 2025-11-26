@@ -75,9 +75,9 @@ const handler = async (req: Request): Promise<Response> => {
     }
     const byteArray = new Uint8Array(byteNumbers);
     
-    const filename = `${appId}-avatar-${Date.now()}.png`;
+    const filename = `app-audio/${appId}-avatar-${Date.now()}.png`;
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('app-avatars')
+      .from('avatars')
       .upload(filename, byteArray, {
         contentType: 'image/png',
         upsert: true
@@ -90,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Get public URL
     const { data: { publicUrl } } = supabase.storage
-      .from('app-avatars')
+      .from('avatars')
       .getPublicUrl(filename);
 
     // Update database
