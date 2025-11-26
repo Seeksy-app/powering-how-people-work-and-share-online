@@ -916,7 +916,7 @@ const ProfileEdit = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-12 max-w-3xl">
+      <main className="container mx-auto px-4 py-12 max-w-7xl">
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -936,7 +936,10 @@ const ProfileEdit = () => {
           </div>
         </div>
 
-        <Card className="p-8 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Left Column - Edit Form */}
+          <div>
+            <Card className="p-8 space-y-6">
           <div className="space-y-2">
             <Label htmlFor="displayName" className="text-lg font-semibold">Display Name</Label>
             <Input
@@ -1010,6 +1013,7 @@ const ProfileEdit = () => {
               onImageUploaded={setAvatarUrl}
               currentImage={avatarUrl}
               bucket="avatars"
+              variant="avatar"
             />
           </div>
 
@@ -1050,8 +1054,8 @@ const ProfileEdit = () => {
                   <p className="text-sm text-muted-foreground">
                     Accent color for buttons, links, and highlights on your profile
                   </p>
-                  <div className="flex gap-2 items-center flex-wrap">
-                    <label className="relative w-12 h-12 rounded-full cursor-pointer hover:scale-110 transition-transform">
+                  <div className="flex gap-3 items-center">
+                    <label className="relative w-12 h-12 rounded-full cursor-pointer hover:scale-110 transition-transform shrink-0">
                       <div className="w-12 h-12 rounded-full" style={{ background: 'conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)' }}>
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-full backdrop-blur-[1px]">
                           <Plus className="h-6 w-6 text-white" />
@@ -1073,6 +1077,15 @@ const ProfileEdit = () => {
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       />
                     </label>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg border">
+                      <div 
+                        className="w-8 h-8 rounded-md border-2 border-border shrink-0" 
+                        style={{ backgroundColor: themeColor }}
+                      />
+                      <span className="text-sm font-mono">{themeColor}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 items-center flex-wrap">
                     {customThemeColors.map((color, index) => (
                       <button
                         key={`custom-theme-${index}`}
@@ -1737,6 +1750,80 @@ const ProfileEdit = () => {
             </Button>
           </div>
         </Card>
+      </div>
+
+      {/* Right Column - Phone Preview */}
+      <div className="lg:sticky lg:top-8 lg:self-start">
+        <div className="mx-auto" style={{ width: '375px', maxWidth: '100%' }}>
+          <div className="relative">
+            {/* Phone Frame */}
+            <div className="relative bg-black rounded-[3rem] p-3 shadow-2xl border-8 border-gray-800">
+              {/* Notch */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-7 bg-black rounded-b-3xl z-10" />
+              
+              {/* Screen */}
+              <div className="bg-white rounded-[2.5rem] overflow-hidden relative" style={{ height: '667px' }}>
+                {/* Live Preview Content */}
+                <div className="h-full overflow-y-auto" style={{ backgroundColor: pageBackgroundColor }}>
+                  {/* Hero Section */}
+                  <div className="py-8 px-6 text-center" style={{ backgroundColor: heroSectionColor }}>
+                    {avatarUrl && (
+                      <img
+                        src={avatarUrl}
+                        alt={displayName || fullName || username}
+                        className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4"
+                        style={{ borderColor: themeColor }}
+                      />
+                    )}
+                    <h1 className="text-2xl font-bold mb-2" style={{ color: pageBackgroundColor === '#FFFFFF' || pageBackgroundColor === '#ffffff' ? '#000000' : '#FFFFFF' }}>
+                      {displayName || fullName || username}
+                    </h1>
+                    {bio && (
+                      <p className="text-sm opacity-80" style={{ color: pageBackgroundColor === '#FFFFFF' || pageBackgroundColor === '#ffffff' ? '#000000' : '#FFFFFF' }}>
+                        {bio}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Categories */}
+                  {categories.length > 0 && (
+                    <div className="px-6 py-4">
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {categories.slice(0, 3).map((category) => (
+                          <span
+                            key={category}
+                            className="text-xs px-3 py-1 rounded-full"
+                            style={{
+                              backgroundColor: themeColor,
+                              color: '#FFFFFF',
+                            }}
+                          >
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Sample Links */}
+                  <div className="px-6 py-4 space-y-3">
+                    <div className="p-4 rounded-xl border-2" style={{ borderColor: themeColor, backgroundColor: 'rgba(255,255,255,0.9)' }}>
+                      <div className="font-semibold" style={{ color: themeColor }}>Sample Link</div>
+                      <div className="text-sm text-gray-600">Click to visit</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* All changes saved indicator */}
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-green-500 text-white text-xs rounded-full shadow-lg">
+              Live Preview
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
       </main>
 
       {/* Section Name Dialog */}
