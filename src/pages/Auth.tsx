@@ -8,7 +8,8 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { PasswordInput } from "@/components/auth/PasswordInput";
-import { PasswordValidation } from "@/components/auth/PasswordValidation";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
+import { validatePasswordStrength } from "@/lib/password-validation";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -55,11 +56,11 @@ const Auth = () => {
 
   const validatePassword = (pwd: string): boolean => {
     return (
-      pwd.length >= 8 &&
+      pwd.length >= 10 &&
       /[A-Z]/.test(pwd) &&
       /[a-z]/.test(pwd) &&
       /\d/.test(pwd) &&
-      /[!@#$%^&*(),.?":{}|<>]/.test(pwd)
+      /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pwd)
     );
   };
 
@@ -304,10 +305,7 @@ const Auth = () => {
             </div>
 
             {newPassword && (
-              <PasswordValidation 
-                password={newPassword}
-                confirmPassword={confirmNewPassword}
-              />
+              <PasswordStrengthIndicator password={newPassword} />
             )}
 
             <Button 
@@ -405,10 +403,7 @@ const Auth = () => {
                 </div>
 
                 {password && (
-                  <PasswordValidation 
-                    password={password}
-                    confirmPassword={confirmPassword}
-                  />
+                  <PasswordStrengthIndicator password={password} />
                 )}
               </>
             )}
