@@ -32,6 +32,7 @@ export default function EditMeeting() {
   const [sendingInvites, setSendingInvites] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<'added' | 'all'>('added');
+  const [showPostInviteDialog, setShowPostInviteDialog] = useState(false);
   
   // Form state
   const [title, setTitle] = useState("");
@@ -256,6 +257,7 @@ export default function EditMeeting() {
 
       toast.success(`Invites sent to ${recipients.length} attendee${recipients.length > 1 ? 's' : ''}`);
       setShowInviteDialog(false);
+      setShowPostInviteDialog(true);
     } catch (error) {
       console.error("Error sending invites:", error);
       toast.error("Failed to send invites");
@@ -534,6 +536,35 @@ export default function EditMeeting() {
                   Send Invites
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPostInviteDialog} onOpenChange={setShowPostInviteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invites Sent Successfully</DialogTitle>
+            <DialogDescription>
+              What would you like to do next?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowPostInviteDialog(false);
+              }}
+            >
+              Edit More
+            </Button>
+            <Button
+              onClick={() => {
+                setShowPostInviteDialog(false);
+                navigate("/meetings");
+              }}
+            >
+              Save and Quit
             </Button>
           </DialogFooter>
         </DialogContent>
