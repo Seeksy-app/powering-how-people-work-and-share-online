@@ -57,6 +57,7 @@ const Integrations = () => {
     marketing: false,
     sms: false,
     lead_pixel: false,
+    newsletter: false,
   });
   const [socialConnections, setSocialConnections] = useState<any[]>([]);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -155,6 +156,7 @@ const Integrations = () => {
           qr_codes: (prefs as any).module_qr_codes_enabled || false,
           marketing: (prefs as any).module_marketing_enabled || false,
           sms: (prefs as any).module_sms_enabled || false,
+          newsletter: (prefs as any).module_newsletter_enabled || false,
         });
       }
 
@@ -982,6 +984,21 @@ const Integrations = () => {
                   isAdmin={isAdmin}
                   onToggle={() => toggleModule('lead_pixel')}
                   onEdit={() => handleEditMetadata('lead_pixel')}
+                />
+              )}
+
+              {matchesSearch('Newsletter', 'Build and grow your email list. Send newsletters to subscribers from your My Page and influencer profiles.') && (
+                <IntegrationCard
+                  id="newsletter"
+                  icon={Mail}
+                  iconGradient="from-indigo-500 to-blue-600"
+                  title={getMetadata('newsletter')?.title || 'Newsletter'}
+                  description={getMetadata('newsletter')?.description || 'Build and grow your email list. Send newsletters to subscribers from your My Page and influencer profiles.'}
+                  tooltip={getMetadata('newsletter')?.tooltip_text || 'Enable newsletter subscription forms on your profile pages'}
+                  isActive={modules.newsletter}
+                  isAdmin={isAdmin}
+                  onToggle={() => toggleModule('newsletter')}
+                  onEdit={() => handleEditMetadata('newsletter')}
                 />
               )}
             </div>

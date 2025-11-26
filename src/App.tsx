@@ -17,6 +17,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import CommunicationHistory from "./pages/CommunicationHistory";
 import Newsletter from "./pages/Newsletter";
+import Unsubscribe from "./pages/Unsubscribe";
 import NotificationPreferences from "./pages/NotificationPreferences";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
@@ -270,6 +271,7 @@ const AppContent = () => {
               <Route path="/email-history" element={<CommunicationHistory />} />
           <Route path="/communication-history" element={<CommunicationHistory />} />
           <Route path="/newsletter" element={<Newsletter />} />
+          <Route path="/unsubscribe" element={<Unsubscribe />} />
               <Route path="/marketing" element={<Marketing />} />
               <Route path="/create-event" element={<CreateEvent />} />
               <Route path="/event/:id" element={<EventDetail />} />
