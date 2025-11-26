@@ -192,27 +192,28 @@ export function TicketDetailDialog({ ticketId, open, onOpenChange, onUpdate }: T
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-background text-foreground">
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        ) : !ticket ? (
-          <div className="flex items-center justify-center py-8">
-            <p className="text-muted-foreground">Ticket not found</p>
-          </div>
-        ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                {ticket.ticket_number} - {ticket.title}
-              </DialogTitle>
-              <DialogDescription>
-                Client: {ticket.contacts?.name} {ticket.contacts?.company && `(${ticket.contacts.company})`}
-              </DialogDescription>
-            </DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden bg-card border">
+        <div className="overflow-y-auto max-h-[calc(90vh-4rem)] px-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : !ticket ? (
+            <div className="flex items-center justify-center py-8">
+              <p className="text-muted-foreground">Ticket not found</p>
+            </div>
+          ) : (
+            <>
+              <DialogHeader className="sticky top-0 bg-card pb-4 z-10">
+                <DialogTitle className="flex items-center gap-2">
+                  {ticket.ticket_number} - {ticket.title}
+                </DialogTitle>
+                <DialogDescription>
+                  Client: {ticket.contacts?.name} {ticket.contacts?.company && `(${ticket.contacts.company})`}
+                </DialogDescription>
+              </DialogHeader>
 
-            <div className="space-y-6 py-4">
+              <div className="space-y-6 py-4">
               {/* Status and Priority Row */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -383,9 +384,10 @@ export function TicketDetailDialog({ ticketId, open, onOpenChange, onUpdate }: T
                   )}
                 </Button>
               </div>
-            </div>
-          </>
-        )}
+              </div>
+            </>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

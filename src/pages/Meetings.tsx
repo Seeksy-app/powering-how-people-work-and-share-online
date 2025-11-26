@@ -26,11 +26,31 @@ const Meetings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const { data, error } = await supabase
-        .from("meetings")
-        .select("*")
+      // Check if user is admin and in personal view mode
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
         .eq("user_id", user.id)
-        .order("start_time", { ascending: true });
+        .single();
+      
+      const isAdmin = roles?.role === "admin" || roles?.role === "super_admin";
+      const adminViewMode = localStorage.getItem('adminViewMode') === 'true';
+
+      // Build query
+      let query = supabase
+        .from("meetings")
+        .select("*");
+      
+      // If admin in Personal View, only show personal meetings
+      // (meetings without admin-created studio_templates)
+      if (isAdmin && !adminViewMode) {
+        // For now, filter by user_id - in future, add created_in_admin_mode field
+        query = query.eq("user_id", user.id);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data, error } = await query.order("start_time", { ascending: true });
 
       if (error) throw error;
       
