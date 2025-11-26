@@ -120,34 +120,34 @@ const COLORS = {
   muted: "hsl(var(--muted))",
 };
 
-export function BusinessModelTab() {
+export function BusinessModelTab({ theme = "light" }: { theme?: "dark" | "light" }) {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <Card className="bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-purple-200/20">
+      <Card className={`${theme === 'dark' ? 'bg-gradient-to-br from-blue-600/20 to-cyan-500/20 border-blue-700' : 'bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-purple-200/20'}`}>
         <CardHeader>
-          <CardTitle className="text-3xl flex items-center gap-3">
-            <Sparkles className="h-8 w-8 text-purple-600" />
+          <CardTitle className={`text-3xl flex items-center gap-3 ${theme === 'dark' ? 'text-blue-100' : ''}`}>
+            <Sparkles className={`h-8 w-8 ${theme === 'dark' ? 'text-cyan-400' : 'text-purple-600'}`} />
             Seeksy Business Model
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className={`text-base ${theme === 'dark' ? 'text-blue-300/70' : ''}`}>
             A comprehensive overview of how Seeksy creates value in the rapidly growing creator economy
           </CardDescription>
         </CardHeader>
       </Card>
 
       {/* Overview Section */}
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-blue-950/40 border-blue-800' : ''}>
         <CardHeader>
-          <CardTitle className="text-2xl">Overview</CardTitle>
+          <CardTitle className={`text-2xl ${theme === 'dark' ? 'text-blue-100' : ''}`}>Overview</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-base leading-relaxed">
+          <p className={`text-base leading-relaxed ${theme === 'dark' ? 'text-blue-200/90' : ''}`}>
             Seeksy is an all-in-one platform designed to empower podcasters, creators, and event hosts 
             with the tools they need to grow, engage, and monetize their audiences. We combine content 
             creation, live interaction, and business tools into a single, integrated ecosystem.
           </p>
-          <p className="text-base leading-relaxed">
+          <p className={`text-base leading-relaxed ${theme === 'dark' ? 'text-blue-200/90' : ''}`}>
             Unlike traditional platforms that focus solely on content distribution, Seeksy enables 
             <strong> direct audience engagement</strong> through meetings, live events, interactive sessions, 
             and booking tools—giving creators new ways to connect with their communities and generate revenue 
@@ -155,24 +155,24 @@ export function BusinessModelTab() {
           </p>
           
           <div className="grid md:grid-cols-3 gap-4 pt-4">
-            <div className="p-4 bg-gradient-to-br from-purple-500/5 to-purple-600/5 rounded-lg border border-purple-200/20 flex flex-col h-full">
-              <Users className="h-7 w-7 text-purple-600 mb-2" />
-              <h4 className="font-semibold text-base mb-1.5">Who We Serve</h4>
-              <p className="text-xs text-muted-foreground flex-1">
+            <div className={`p-4 rounded-lg border flex flex-col h-full ${theme === 'dark' ? 'bg-gradient-to-br from-purple-600/30 to-pink-600/30 border-purple-500/30' : 'bg-gradient-to-br from-purple-500/5 to-purple-600/5 border-purple-200/20'}`}>
+              <Users className={`h-7 w-7 mb-2 ${theme === 'dark' ? 'text-purple-300' : 'text-purple-600'}`} />
+              <h4 className={`font-semibold text-base mb-1.5 ${theme === 'dark' ? 'text-purple-100' : ''}`}>Who We Serve</h4>
+              <p className={`text-xs flex-1 ${theme === 'dark' ? 'text-purple-200/80' : 'text-muted-foreground'}`}>
                 Podcasters, content creators, event hosts, educators, and small businesses building engaged communities
               </p>
             </div>
-            <div className="p-4 bg-gradient-to-br from-pink-500/5 to-pink-600/5 rounded-lg border border-pink-200/20 flex flex-col h-full">
-              <Target className="h-7 w-7 text-pink-600 mb-2" />
-              <h4 className="font-semibold text-base mb-1.5">What We Solve</h4>
-              <p className="text-xs text-muted-foreground flex-1">
+            <div className={`p-4 rounded-lg border flex flex-col h-full ${theme === 'dark' ? 'bg-gradient-to-br from-rose-600/30 to-red-600/30 border-rose-500/30' : 'bg-gradient-to-br from-pink-500/5 to-pink-600/5 border-pink-200/20'}`}>
+              <Target className={`h-7 w-7 mb-2 ${theme === 'dark' ? 'text-rose-300' : 'text-pink-600'}`} />
+              <h4 className={`font-semibold text-base mb-1.5 ${theme === 'dark' ? 'text-rose-100' : ''}`}>What We Solve</h4>
+              <p className={`text-xs flex-1 ${theme === 'dark' ? 'text-rose-200/80' : 'text-muted-foreground'}`}>
                 Fragmented tools, limited engagement options, and difficulty monetizing beyond ads and sponsorships
               </p>
             </div>
-            <div className="p-4 bg-gradient-to-br from-blue-500/5 to-blue-600/5 rounded-lg border border-blue-200/20 flex flex-col h-full">
-              <Award className="h-7 w-7 text-blue-600 mb-2" />
-              <h4 className="font-semibold text-base mb-1.5">Our Edge</h4>
-              <p className="text-xs text-muted-foreground flex-1">
+            <div className={`p-4 rounded-lg border flex flex-col h-full ${theme === 'dark' ? 'bg-gradient-to-br from-cyan-600/30 to-blue-600/30 border-cyan-500/30' : 'bg-gradient-to-br from-blue-500/5 to-blue-600/5 border-blue-200/20'}`}>
+              <Award className={`h-7 w-7 mb-2 ${theme === 'dark' ? 'text-cyan-300' : 'text-blue-600'}`} />
+              <h4 className={`font-semibold text-base mb-1.5 ${theme === 'dark' ? 'text-cyan-100' : ''}`}>Our Edge</h4>
+              <p className={`text-xs flex-1 ${theme === 'dark' ? 'text-cyan-200/80' : 'text-muted-foreground'}`}>
                 Unified platform combining content, engagement, and monetization with AI-powered tools and seamless workflows
               </p>
             </div>
@@ -181,10 +181,10 @@ export function BusinessModelTab() {
       </Card>
 
       {/* Industry Trends */}
-      <Card>
+      <Card className={theme === 'dark' ? 'bg-blue-950/40 border-blue-800' : ''}>
         <CardHeader>
-          <CardTitle className="text-2xl">Industry Trends & Opportunity</CardTitle>
-          <CardDescription>
+          <CardTitle className={`text-2xl ${theme === 'dark' ? 'text-blue-100' : ''}`}>Industry Trends & Opportunity</CardTitle>
+          <CardDescription className={theme === 'dark' ? 'text-blue-300/70' : ''}>
             Why now? The creator economy and podcast industry are experiencing explosive growth
           </CardDescription>
         </CardHeader>
@@ -868,24 +868,24 @@ export function BusinessModelTab() {
       </Card>
 
       {/* Summary */}
-      <Card className="bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-purple-200/20">
+      <Card className={`${theme === 'dark' ? 'bg-gradient-to-br from-blue-600/20 to-cyan-500/20 border-blue-700' : 'bg-gradient-to-br from-purple-500/10 to-pink-600/10 border-purple-200/20'}`}>
         <CardHeader>
-          <CardTitle className="text-2xl">Summary: The Opportunity</CardTitle>
+          <CardTitle className={`text-2xl ${theme === 'dark' ? 'text-blue-100' : ''}`}>Summary: The Opportunity</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-base leading-relaxed">
+          <p className={`text-base leading-relaxed ${theme === 'dark' ? 'text-blue-200/90' : ''}`}>
             Seeksy is positioned at the intersection of three massive, high-growth markets: the creator economy 
             ($350B+ by 2027), podcasting ($5.2B+ by 2026), and live engagement tools (145% YoY growth). We solve 
             critical pain points for creators who are frustrated by platform fragmentation, limited monetization 
             options, and lack of direct audience engagement capabilities.
           </p>
-          <p className="text-base leading-relaxed">
+          <p className={`text-base leading-relaxed ${theme === 'dark' ? 'text-blue-200/90' : ''}`}>
             Our business model is <strong>diversified, scalable, and aligned with creator success</strong>. We earn 
             from subscriptions, ad-share, event fees, bookings, and premium tools—creating multiple revenue streams 
             that grow as our creators grow. Unlike ad-only platforms, Seeksy enables creators to build sustainable, 
             predictable income through direct relationships with their audiences.
           </p>
-          <p className="text-base leading-relaxed font-semibold">
+          <p className={`text-base leading-relaxed font-semibold ${theme === 'dark' ? 'text-blue-100' : ''}`}>
             As the creator economy continues to shift toward private communities, live interactions, and direct 
             monetization, Seeksy is uniquely positioned to become the go-to platform for creators who want to own 
             their audience relationships and maximize their earning potential.
