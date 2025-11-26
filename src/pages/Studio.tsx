@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Radio, X, Calendar } from "lucide-react";
+import { Radio, X, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { StudioLobby } from "@/components/studio/StudioLobby";
 import { StudioTopBar } from "@/components/studio/StudioTopBar";
 import { StudioLeftSidebar } from "@/components/studio/StudioLeftSidebar";
@@ -133,6 +134,7 @@ Closing Notes:
   });
   const [channelsExpanded, setChannelsExpanded] = useState(true);
   const [videoLayout, setVideoLayout] = useState<VideoLayout>("speaker");
+  const [showAINotes, setShowAINotes] = useState(true);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -768,43 +770,25 @@ Closing Notes:
           
           <div className="h-6 w-px bg-border" />
           
+          <div className="flex items-center gap-2">
+            <Switch
+              id="ai-notes"
+              checked={showAINotes}
+              onCheckedChange={setShowAINotes}
+            />
+            <Label htmlFor="ai-notes" className="text-sm cursor-pointer flex items-center gap-1">
+              <Sparkles className="h-4 w-4" />
+              AI Notes
+            </Label>
+          </div>
+          
           <ThemeToggle />
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/create-meeting')}
-          >
-            <Calendar className="h-4 w-4 mr-2" />
-            Schedule
-          </Button>
-          
-          {isLiveOnProfile ? (
-            <Button
-              onClick={toggleLiveOnProfile}
-              size="sm"
-              variant="destructive"
-              className="font-semibold"
-            >
-              <Radio className="h-4 w-4 mr-2" />
-              End Stream
-            </Button>
-          ) : (
-            <Button
-              onClick={toggleLiveOnProfile}
-              size="sm"
-              className="bg-red-600 hover:bg-red-700 text-white font-semibold"
-            >
-              <Radio className="h-4 w-4 mr-2" />
-              Start
-            </Button>
-          )}
         </div>
       </div>
       
       <div className="flex flex-1 overflow-visible border-2 border-border">
         <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={90} minSize={85}>
+          <ResizablePanel defaultSize={40} minSize={15}>
             {myPageStreamStatus.isLive && myPageStreamStatus.videoUrl ? (
               <div className="relative h-full w-full bg-muted">
                 <video
@@ -847,7 +831,7 @@ Closing Notes:
 
           <ResizableHandle />
 
-          <ResizablePanel defaultSize={10} minSize={8} maxSize={15} className="relative">
+          <ResizablePanel defaultSize={60} minSize={30} maxSize={85} className="relative">
             <StudioRightSidebar
               currentViewerCount={currentViewerCount}
               onAdSelect={(ad, type) => {
@@ -864,6 +848,7 @@ Closing Notes:
                 onToggleChannelsExpanded={() => setChannelsExpanded(!channelsExpanded)}
                 profileImageUrl={profileImageUrl}
                 sessionId={sessionId}
+                showAINotes={showAINotes}
               />
           </ResizablePanel>
         </ResizablePanelGroup>
