@@ -290,7 +290,7 @@ export default function PublicTicketSubmission() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
       <Card className="max-w-2xl w-full">
         <CardHeader>
-          <CardTitle className="text-3xl">Submit a Support Ticket</CardTitle>
+          <CardTitle className="text-3xl">Submit a Lead Form</CardTitle>
           <CardDescription>
             Fill out the form below and our team will get back to you shortly.
           </CardDescription>
@@ -496,7 +496,7 @@ export default function PublicTicketSubmission() {
               )}
             </div>
 
-            {/* Ticket Creation and Assignment */}
+            {/* Lead Form Creation and Assignment */}
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -505,7 +505,7 @@ export default function PublicTicketSubmission() {
                   onCheckedChange={(checked) => setCreateTicket(checked as boolean)}
                 />
                 <Label htmlFor="create-ticket" className="cursor-pointer">
-                  Create support ticket from this submission
+                  Create lead form from this submission
                 </Label>
               </div>
 
@@ -513,12 +513,12 @@ export default function PublicTicketSubmission() {
                 <div className="space-y-2">
                   <Label htmlFor="assign-to">Assign to Team Member (Optional)</Label>
                   <Select value={assignedTo} onValueChange={setAssignedTo}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-background">
                       <SelectValue placeholder="Select team member" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
                       {teamMembers?.map((member: any) => (
-                        <SelectItem key={member.user_id} value={member.user_id}>
+                        <SelectItem key={member.user_id} value={member.user_id} className="cursor-pointer hover:bg-accent">
                           {member.profiles?.account_full_name || member.profiles?.full_name || "Team Member"}
                         </SelectItem>
                       ))}
@@ -528,20 +528,20 @@ export default function PublicTicketSubmission() {
               )}
             </div>
 
-            <Button
-              type="submit"
-              disabled={submitting || uploadingPhoto}
-              className="w-full bg-[hsl(207,100%,50%)] hover:bg-[hsl(207,100%,45%)]"
-              size="lg"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Ticket"
-              )}
+              <Button
+                type="submit"
+                disabled={submitting || uploadingPhoto}
+                className="w-full bg-[hsl(207,100%,50%)] hover:bg-[hsl(207,100%,45%)]"
+                size="lg"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Lead Form"
+                )}
             </Button>
           </form>
         </CardContent>

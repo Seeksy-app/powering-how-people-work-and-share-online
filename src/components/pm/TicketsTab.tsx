@@ -46,7 +46,7 @@ export const TicketsTab = ({ userId }: TicketsTabProps) => {
       setSupportLinkCopied(true);
       toast({
         title: "Link Copied!",
-        description: "Customer Support form link copied to clipboard.",
+        description: "Public Lead Form link copied to clipboard.",
       });
       setTimeout(() => setSupportLinkCopied(false), 2000);
     } catch (error) {
@@ -98,7 +98,7 @@ export const TicketsTab = ({ userId }: TicketsTabProps) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center gap-4">
-        <h2 className="text-2xl font-semibold">Support Tickets</h2>
+        <h2 className="text-2xl font-semibold">Lead Forms & Tickets</h2>
         <div className="flex gap-2">
           <Button onClick={handleCopyLeadLink} variant="secondary">
             {leadLinkCopied ? (
@@ -122,7 +122,7 @@ export const TicketsTab = ({ userId }: TicketsTabProps) => {
             ) : (
               <>
                 <Link2 className="w-4 h-4 mr-2" />
-                Support Form
+                Public Lead Form
               </>
             )}
           </Button>
