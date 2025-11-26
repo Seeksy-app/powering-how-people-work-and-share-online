@@ -12,6 +12,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { useTaskReminders } from "@/hooks/useTaskReminders";
 import { useAutoTheme } from "@/hooks/useAutoTheme";
+import { useScrollRestoration } from "@/hooks/useScrollRestoration";
+import { RouteTransition } from "@/components/RouteTransition";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -187,6 +189,9 @@ const AppContent = () => {
   
   // Enable time-based auto theme (7am light, 7pm dark) and force dark mode in Studio
   useAutoTheme();
+  
+  // Restore scroll position on navigation
+  useScrollRestoration();
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -239,7 +244,7 @@ const AppContent = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full bg-background">
         {/* Hide Sidebar on Studio workspace (but show on Studio Hub) */}
         {user && location.pathname !== '/studio/session/:id' && !location.pathname.includes('/studio/session/') && <AppSidebar user={user} isAdmin={isAdmin} />}
         
@@ -247,8 +252,9 @@ const AppContent = () => {
           {/* Hide Header on all Studio pages */}
           {!location.pathname.startsWith('/studio') && <Header user={user} />}
           
-          <main className="flex-1">
-            <Routes>
+          <main className="flex-1 bg-background overflow-hidden">
+            <RouteTransition>
+              <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/onboarding" element={<Onboarding />} />
@@ -424,6 +430,7 @@ const AppContent = () => {
               <Route path="/:username" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </RouteTransition>
           </main>
         </div>
         {user && !location.pathname.includes('/meeting-studio/') && !location.pathname.includes('/studio/') && <SeeksyAIChatWidget />}
