@@ -63,8 +63,8 @@ export default function ClientTickets() {
     queryFn: async () => {
       if (!user) return [];
       
-      // For admin view, only show tickets from support forms, internal sources, or AI chat
-      // Exclude regular user tickets created through PM module
+      // Admin view shows tickets submitted through support forms and AI chat
+      // These are client-submitted tickets, NOT tickets created by users in PM module
       const { data, error } = await supabase
         .from("client_tickets")
         .select(`
@@ -76,8 +76,7 @@ export default function ClientTickets() {
             company
           )
         `)
-        .eq("user_id", user.id)
-        .in("source", ["support_form", "internal", "ai_chat"])
+        .in("source", ["support_form", "ai_chat"])
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
