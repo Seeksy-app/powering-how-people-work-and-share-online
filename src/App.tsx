@@ -163,6 +163,7 @@ import InvestorPortal from "./pages/InvestorPortal";
 import LeadsDashboard from "./pages/LeadsDashboard";
 import ProjectManagement from "./pages/ProjectManagement";
 import CreateLead from "./pages/CreateLead";
+import LeadForm from "./pages/LeadForm";
 import SignDocument from "./pages/SignDocument";
 import PodcastDistribution from "./pages/PodcastDistribution";
 import PublicTicketSubmission from "./pages/PublicTicketSubmission";
@@ -256,6 +257,7 @@ const AppContent = () => {
             <Route path="/project-management" element={<ProjectManagement />} />
             <Route path="/client-tickets" element={<ClientTickets />} />
             <Route path="/create-lead" element={<CreateLead />} />
+            <Route path="/lead-form" element={<LeadForm />} />
             <Route path="/proposals" element={<Proposals />} />
             <Route path="/proposals/create" element={<CreateProposal />} />
             <Route path="/proposals/:id" element={<ProposalDetail />} />
