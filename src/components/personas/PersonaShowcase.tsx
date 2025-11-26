@@ -2,7 +2,6 @@ import { PersonaCard } from "./PersonaCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface Persona {
   id: string;
@@ -55,7 +54,6 @@ const PERSONAS: Omit<Persona, "videoUrl">[] = [
 
 export const PersonaShowcase = () => {
   const [personas, setPersonas] = useState<Persona[]>([]);
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
 
   useEffect(() => {
     loadPersonaVideos();
@@ -113,44 +111,24 @@ export const PersonaShowcase = () => {
   };
 
   return (
-    <>
-      <div className="w-full py-20 px-4 bg-gradient-to-b from-background to-muted/20">
-        <div className="container mx-auto max-w-7xl">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Meet Your AI Assistants
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Interactive AI personas designed to guide you through Seeksy's
-              powerful features
-            </p>
-          </div>
+    <div className="w-full py-20 px-4 bg-gradient-to-b from-background to-muted/20">
+      <div className="container mx-auto max-w-7xl">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            Meet Your AI Assistants
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Interactive AI personas designed to guide you through Seeksy's
+            powerful features
+          </p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {personas.map((persona) => (
-              <PersonaCard
-                key={persona.id}
-                {...persona}
-                onLearnMore={() => setSelectedVideo(persona.videoUrl)}
-              />
-            ))}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {personas.map((persona) => (
+            <PersonaCard key={persona.id} {...persona} />
+          ))}
         </div>
       </div>
-
-      {/* Full video dialog */}
-      <Dialog open={!!selectedVideo} onOpenChange={() => setSelectedVideo(null)}>
-        <DialogContent className="max-w-4xl">
-          {selectedVideo && (
-            <video
-              className="w-full rounded-lg"
-              src={selectedVideo}
-              controls
-              autoPlay
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+    </div>
   );
 };
