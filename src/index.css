@@ -6,6 +6,23 @@
 All colors MUST be HSL.
 */
 
+/* Prevent flash of unstyled content during navigation */
+html {
+  background-color: hsl(var(--background));
+}
+
+body {
+  min-height: 100vh;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  transition: none;
+}
+
+/* Prevent layout shift during page transitions */
+#root {
+  min-height: 100vh;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -115,6 +132,27 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+  }
+
+  /* Prevent content flash during navigation */
+  main {
+    position: relative;
+    isolation: isolate;
+  }
+
+  /* Smooth page transitions */
+  .page-container {
+    animation: fadeIn 0.15s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 }
 
