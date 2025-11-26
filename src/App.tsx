@@ -167,6 +167,7 @@ import LeadForm from "./pages/LeadForm";
 import SignDocument from "./pages/SignDocument";
 import PodcastDistribution from "./pages/PodcastDistribution";
 import PublicTicketSubmission from "./pages/PublicTicketSubmission";
+import FieldLeadCapture from "./pages/FieldLeadCapture";
 import PublicTaskSubmission from "./pages/PublicTaskSubmission";
 import HelpCenter from "./pages/HelpCenter";
 import Comparison from "./pages/Comparison";
@@ -401,6 +402,7 @@ const AppContent = () => {
             <Route path="/civic/blog/create" element={<CreateCivicArticle />} />
           <Route path="/civic/contact" element={<PublicConstituentRequestForm />} />
           <Route path="/submit-ticket" element={<PublicTicketSubmission />} />
+          <Route path="/lead-form/:userId" element={<FieldLeadCapture />} />
           <Route path="/submit-task" element={<PublicTaskSubmission />} />
           <Route path="/help/zoom-integration" element={<ZoomIntegration />} />
           <Route path="/docs/zoom-integration" element={<ZoomIntegration />} />
