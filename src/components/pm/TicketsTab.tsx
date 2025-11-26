@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, MessageSquare, Link2, Check } from "lucide-react";
+import { Plus, Link2, Check } from "lucide-react";
 import { useState } from "react";
 import { CreateTicketDialog } from "./CreateTicketDialog";
 import { TicketDetailDialog } from "./TicketDetailDialog";
@@ -25,11 +25,10 @@ export const TicketsTab = ({ userId }: TicketsTabProps) => {
     queryKey: ["tickets", userId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("tickets")
+        .from("client_tickets")
         .select(`
           *,
-          contact:contacts(name, company, email),
-          comments:ticket_comments(count)
+          contacts(name, company, email)
         `)
         .or(`user_id.eq.${userId},assigned_to.eq.${userId}`)
         .order("created_at", { ascending: false });
@@ -118,16 +117,12 @@ export const TicketsTab = ({ userId }: TicketsTabProps) => {
                   </div>
                   <p className="text-sm text-muted-foreground">{ticket.title}</p>
                 </div>
-                <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                  <MessageSquare className="w-4 h-4" />
-                  <span>{ticket.comments?.[0]?.count || 0}</span>
-                </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex justify-between items-center text-sm text-muted-foreground">
                 <span>
-                  {ticket.contact?.company || ticket.contact?.name || "No contact"}
+                  {ticket.contacts?.company || ticket.contacts?.name || "No contact"}
                 </span>
                 <span>{new Date(ticket.created_at).toLocaleDateString()}</span>
               </div>
