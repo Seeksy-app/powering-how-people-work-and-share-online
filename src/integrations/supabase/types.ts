@@ -4995,6 +4995,7 @@ export type Database = {
           subscribed_at: string
           unsubscribed_at: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -5007,6 +5008,7 @@ export type Database = {
           subscribed_at?: string
           unsubscribed_at?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -5019,6 +5021,7 @@ export type Database = {
           subscribed_at?: string
           unsubscribed_at?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -5658,6 +5661,9 @@ export type Database = {
           my_page_video_id: string | null
           my_page_video_loop: boolean | null
           my_page_video_type: string | null
+          newsletter_description: string | null
+          newsletter_enabled: boolean | null
+          newsletter_heading: string | null
           page_background_color: string | null
           qr_code_color: string | null
           show_blog_on_profile: boolean | null
@@ -5710,6 +5716,9 @@ export type Database = {
           my_page_video_id?: string | null
           my_page_video_loop?: boolean | null
           my_page_video_type?: string | null
+          newsletter_description?: string | null
+          newsletter_enabled?: boolean | null
+          newsletter_heading?: string | null
           page_background_color?: string | null
           qr_code_color?: string | null
           show_blog_on_profile?: boolean | null
@@ -5762,6 +5771,9 @@ export type Database = {
           my_page_video_id?: string | null
           my_page_video_loop?: boolean | null
           my_page_video_type?: string | null
+          newsletter_description?: string | null
+          newsletter_enabled?: boolean | null
+          newsletter_heading?: string | null
           page_background_color?: string | null
           qr_code_color?: string | null
           show_blog_on_profile?: boolean | null

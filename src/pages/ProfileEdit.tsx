@@ -164,6 +164,9 @@ const ProfileEdit = () => {
   const [blogName, setBlogName] = useState("");
   const [tippingEnabled, setTippingEnabled] = useState(true);
   const [tippingButtonText, setTippingButtonText] = useState("Send a Tip");
+  const [newsletterEnabled, setNewsletterEnabled] = useState(false);
+  const [newsletterHeading, setNewsletterHeading] = useState("Stay Updated");
+  const [newsletterDescription, setNewsletterDescription] = useState("Subscribe to get the latest updates delivered to your inbox.");
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [customLinks, setCustomLinks] = useState<CustomLink[]>([]);
   const [sectionMetadata, setSectionMetadata] = useState<Map<string, SectionMetadata>>(new Map());
@@ -198,6 +201,9 @@ const ProfileEdit = () => {
     blogName: "",
     tippingEnabled: true,
     tippingButtonText: "Send a Tip",
+    newsletterEnabled: false,
+    newsletterHeading: "Stay Updated",
+    newsletterDescription: "Subscribe to get the latest updates delivered to your inbox.",
     socialLinks: [] as SocialLink[],
     customLinks: [] as CustomLink[],
     sectionMetadata: new Map<string, SectionMetadata>(),
@@ -278,6 +284,9 @@ const ProfileEdit = () => {
         blogName: profile.blog_name || profile.username || "",
         tippingEnabled: (profile as any).tipping_enabled !== false,
         tippingButtonText: (profile as any).tipping_button_text || "Send a Tip",
+        newsletterEnabled: (profile as any).newsletter_enabled === true,
+        newsletterHeading: (profile as any).newsletter_heading || "Stay Updated",
+        newsletterDescription: (profile as any).newsletter_description || "Subscribe to get the latest updates delivered to your inbox.",
       };
 
       setUsername(loadedValues.username);
@@ -296,6 +305,9 @@ const ProfileEdit = () => {
       setBlogName(loadedValues.blogName);
       setTippingEnabled(loadedValues.tippingEnabled);
       setTippingButtonText(loadedValues.tippingButtonText);
+      setNewsletterEnabled(loadedValues.newsletterEnabled);
+      setNewsletterHeading(loadedValues.newsletterHeading);
+      setNewsletterDescription(loadedValues.newsletterDescription);
       
       // Load custom colors from database
       const customTheme = (profile as any).custom_theme_colors || [];
@@ -734,6 +746,9 @@ const ProfileEdit = () => {
           blog_name: blogName,
           tipping_enabled: tippingEnabled,
           tipping_button_text: tippingButtonText,
+          newsletter_enabled: newsletterEnabled,
+          newsletter_heading: newsletterHeading,
+          newsletter_description: newsletterDescription,
           custom_theme_colors: customThemeColors,
           custom_bg_colors: customBgColors,
           custom_hero_colors: customHeroColors,
@@ -854,6 +869,9 @@ const ProfileEdit = () => {
         blogName,
         tippingEnabled,
         tippingButtonText,
+        newsletterEnabled,
+        newsletterHeading,
+        newsletterDescription,
         socialLinks,
         customLinks,
         sectionMetadata,
@@ -1312,6 +1330,81 @@ const ProfileEdit = () => {
                     <p className="text-xs text-muted-foreground">
                       Choose how the button will appear to your viewers
                     </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Newsletter Settings Section */}
+          <div className="space-y-4 pt-6 border-t">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const newState = !collapsedSections.has('newsletter');
+                  setCollapsedSections(prev => {
+                    const newSet = new Set(prev);
+                    if (newState) {
+                      newSet.add('newsletter');
+                    } else {
+                      newSet.delete('newsletter');
+                    }
+                    return newSet;
+                  });
+                }}
+                className="flex items-center gap-2 hover:opacity-70 transition-opacity"
+              >
+                <ChevronDown 
+                  className={`h-5 w-5 transition-transform duration-200 ${
+                    collapsedSections.has('newsletter') ? '-rotate-90' : ''
+                  }`}
+                />
+                <h3 className="text-lg font-semibold">Newsletter Subscription</h3>
+              </button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Let visitors subscribe to your newsletter from your profile page
+            </p>
+            
+            {!collapsedSections.has('newsletter') && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <div>
+                    <p className="font-medium">Show Newsletter Signup</p>
+                    <p className="text-sm text-muted-foreground">
+                      Display newsletter subscription form on your public profile
+                    </p>
+                  </div>
+                  <Switch
+                    checked={newsletterEnabled}
+                    onCheckedChange={setNewsletterEnabled}
+                  />
+                </div>
+
+                {newsletterEnabled && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="newsletter-heading">Heading</Label>
+                      <Input
+                        id="newsletter-heading"
+                        value={newsletterHeading}
+                        onChange={(e) => setNewsletterHeading(e.target.value)}
+                        placeholder="Stay Updated"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newsletter-description">Description</Label>
+                      <Textarea
+                        id="newsletter-description"
+                        value={newsletterDescription}
+                        onChange={(e) => setNewsletterDescription(e.target.value)}
+                        placeholder="Subscribe to get the latest updates delivered to your inbox."
+                        rows={3}
+                      />
+                    </div>
                   </div>
                 )}
               </div>

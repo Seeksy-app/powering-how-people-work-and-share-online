@@ -15,6 +15,7 @@ import heroVirtualStudio from "@/assets/hero-virtual-studio.jpg";
 import { PodcastPlayer } from "@/components/PodcastPlayer";
 import ShareProfileButton from "@/components/ShareProfileButton";
 import { TipButton } from "@/components/TipButton";
+import { NewsletterSubscribeWidget } from "@/components/NewsletterSubscribeWidget";
 import {
   SiX,
   SiLinkedin,
@@ -50,6 +51,9 @@ interface Profile {
   my_page_cta_button_text: string | null;
   my_page_cta_phone_number: string | null;
   my_page_cta_text_keyword: string | null;
+  newsletter_enabled: boolean | null;
+  newsletter_heading: string | null;
+  newsletter_description: string | null;
 }
 
 interface Event {
@@ -1730,6 +1734,17 @@ const Profile = () => {
           </TabsContent>
         </Tabs>
         </div>
+        
+        {/* Newsletter Subscription Section */}
+        {profile?.newsletter_enabled && !isOwnProfile && (
+          <div className="mt-12 px-4 max-w-md mx-auto">
+            <NewsletterSubscribeWidget 
+              userId={profile.id}
+              heading={profile.newsletter_heading || "Stay Updated"}
+              description={profile.newsletter_description || "Subscribe to get the latest updates delivered to your inbox."}
+            />
+          </div>
+        )}
         
         {/* Footer Section */}
         <footer className="mt-12 pt-8 border-t border-border text-center space-y-6 px-4">
