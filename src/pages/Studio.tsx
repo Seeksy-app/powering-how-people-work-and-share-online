@@ -841,7 +841,22 @@ Closing Notes:
       
       <div className="flex flex-1 overflow-visible border-2 border-border">
         <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={70} minSize={40}>
+          {/* Left Sidebar - Scenes */}
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+            <StudioLeftSidebar
+              scenes={scenes}
+              onSceneChange={handleSceneChange}
+              activeSceneId={activeSceneId}
+              onAddScene={() => {}} 
+              cameraEnabled={cameraEnabled}
+              profileImageUrl={profileImageUrl}
+            />
+          </ResizablePanel>
+
+          <ResizableHandle />
+
+          {/* Main Video Area */}
+          <ResizablePanel defaultSize={50} minSize={30}>
             {myPageStreamStatus.isLive && myPageStreamStatus.videoUrl ? (
               <div className="relative h-full w-full bg-muted">
                 <video
@@ -884,7 +899,8 @@ Closing Notes:
 
           <ResizableHandle />
 
-          <ResizablePanel defaultSize={30} minSize={15} maxSize={60} className="relative">
+          {/* Right Sidebar - Markers, Streaming Channels */}
+          <ResizablePanel defaultSize={30} minSize={15} maxSize={40} className="relative">
             <StudioRightSidebar
               currentViewerCount={currentViewerCount}
               onAdSelect={(ad, type) => {
