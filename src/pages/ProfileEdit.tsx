@@ -67,19 +67,24 @@ export default function ProfileEdit() {
   ];
 
   const colorSwatches = [
-    "#000000", "#1a3a2e", "#2d5f5d", "#4c6c74", "#6b8e8f", "#6ee7b7", "#9ca3af",
-    "#9ca3af", "#a7f3d0", "#b8f7df", "#c7f0db", "#d1f4e0", "#facc15", "#fef3c7",
-    "#fef9e7", "#d8b4fe", "#e5e7eb", "#f3f4f6", "#e0e7ff", "#c7d2fe", "#ffffff"
+    // Grays & blacks
+    "#000000", "#374151", "#6b7280", "#9ca3af", "#d1d5db", "#e5e7eb", "#ffffff",
+    // Reds & pinks
+    "#ef4444", "#f87171", "#ec4899", "#c084fc", "#a855f7", "#8b5cf6", "#6366f1",
+    // Blues
+    "#14b8a6", "#22d3ee", "#38bdf8", "#60a5fa", "#3b82f6", "#1e40af", "#1e3a8a",
+    // Greens & yellows
+    "#10b981", "#84cc16", "#a3e635", "#facc15", "#fbbf24", "#fb923c", "#f97316"
   ];
 
   const navItems = [
-    { id: "profile", icon: User, label: "Profile", color: "bg-blue-500" },
-    { id: "design", icon: Palette, label: "Design", color: "bg-gradient-to-br from-pink-500 to-purple-500" },
-    { id: "links", icon: Link2, label: "Links", color: "bg-green-500" },
-    { id: "qrcode", icon: QrCode, label: "QR Code", color: "bg-indigo-500" },
-    { id: "media", icon: Image, label: "Media", color: "bg-yellow-500" },
-    { id: "streaming", icon: Video, label: "Streaming", color: "bg-red-500" },
-    { id: "advanced", icon: Settings, label: "Advanced", color: "bg-gray-600" },
+    { id: "profile", icon: User, label: "Profile", color: "bg-gradient-to-br from-blue-500 to-cyan-500" },
+    { id: "design", icon: Palette, label: "Design", color: "bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500" },
+    { id: "links", icon: Link2, label: "Links", color: "bg-gradient-to-br from-emerald-500 to-teal-500" },
+    { id: "qrcode", icon: QrCode, label: "QR Code", color: "bg-gradient-to-br from-violet-500 to-purple-600" },
+    { id: "media", icon: Image, label: "Media", color: "bg-gradient-to-br from-amber-500 to-orange-500" },
+    { id: "streaming", icon: Video, label: "Streaming", color: "bg-gradient-to-br from-red-500 to-pink-500" },
+    { id: "advanced", icon: Settings, label: "Advanced", color: "bg-gradient-to-br from-slate-600 to-gray-700" },
   ];
 
   const handleSave = async () => {
@@ -510,23 +515,55 @@ export default function ProfileEdit() {
                       </div>
                     </div>
                     
-                    <div>
-                      <Label htmlFor="adSelect" className="text-sm font-medium">Select Ad (Optional)</Label>
-                      <Select value={selectedAd} onValueChange={setSelectedAd}>
-                        <SelectTrigger className="mt-1.5">
-                          <SelectValue placeholder="No ad" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover z-50">
-                          <SelectItem value="none">No ad</SelectItem>
-                          <SelectItem value="pre_roll">Pre-roll Ad</SelectItem>
-                          <SelectItem value="mid_roll">Mid-roll Ad</SelectItem>
-                          <SelectItem value="post_roll">Post-roll Ad</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <p className="text-xs text-muted-foreground mt-1">Choose where to insert ads in your stream</p>
+                    <div className="border-t pt-4">
+                      <h4 className="text-sm font-semibold mb-3">Ad Insertion</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-xs font-medium">Pre-Roll Ad</Label>
+                          <Select value={selectedAd} onValueChange={setSelectedAd}>
+                            <SelectTrigger className="mt-1.5">
+                              <SelectValue placeholder="Select pre-roll ad" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="ad1">Quick Ad Campaign #1</SelectItem>
+                              <SelectItem value="ad2">Quick Ad Campaign #2</SelectItem>
+                              <SelectItem value="ad3">Platform Ad Network</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs font-medium">Mid-Roll Ad</Label>
+                          <Select>
+                            <SelectTrigger className="mt-1.5">
+                              <SelectValue placeholder="Select mid-roll ad" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="ad1">Quick Ad Campaign #1</SelectItem>
+                              <SelectItem value="ad2">Quick Ad Campaign #2</SelectItem>
+                              <SelectItem value="ad3">Platform Ad Network</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs font-medium">Post-Roll Ad</Label>
+                          <Select>
+                            <SelectTrigger className="mt-1.5">
+                              <SelectValue placeholder="Select post-roll ad" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              <SelectItem value="none">None</SelectItem>
+                              <SelectItem value="ad1">Quick Ad Campaign #1</SelectItem>
+                              <SelectItem value="ad2">Quick Ad Campaign #2</SelectItem>
+                              <SelectItem value="ad3">Platform Ad Network</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="space-y-3 pt-2">
+                    <div className="space-y-3 pt-4 border-t">
                       <div className="flex items-center justify-between p-4 border rounded-lg">
                         <div>
                           <p className="font-medium">Enable Tipping</p>
@@ -541,6 +578,16 @@ export default function ProfileEdit() {
                         </div>
                         <Switch checked={true} />
                       </div>
+                    </div>
+                    
+                    <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                      <h4 className="text-sm font-semibold mb-2">💡 Go Live from Your Phone</h4>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        You can go live directly from your phone camera to your Seeksy stream! Viewers will see your Subscribe and Tipping buttons.
+                      </p>
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => navigate("/studio")}>
+                        Open Studio to Go Live
+                      </Button>
                     </div>
                   </div>
                 </div>
