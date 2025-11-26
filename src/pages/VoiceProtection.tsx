@@ -186,7 +186,7 @@ export default function VoiceProtection() {
                           Instant Voice Clone
                         </Label>
                         <p className="text-sm text-muted-foreground">
-                          Clone your voice with only 10 seconds of audio.
+                          Clone your voice with only two minutes of audio.
                         </p>
                         <div className="flex items-center gap-2 text-sm">
                           <Clock className="h-4 w-4 text-muted-foreground" />
@@ -209,14 +209,11 @@ export default function VoiceProtection() {
                           <Info className="h-4 w-4 text-muted-foreground" />
                         </Label>
                         <p className="text-sm text-muted-foreground">
-                          Create the most realistic digital replica of your voice. Requires at least 30 minutes of clean audio.
+                          Create the most realistic digital replica of your voice. Requires at least 30 minutes of 30 clean audio.
                         </p>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">5 minutes</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">1 slot available</span>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">30 minutes</span>
                         </div>
                       </div>
                     </div>
