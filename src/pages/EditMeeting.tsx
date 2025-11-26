@@ -9,16 +9,29 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Send } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ContactSelector } from "@/components/meetings/ContactSelector";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+interface Contact {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+}
 
 export default function EditMeeting() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingInvites, setSendingInvites] = useState(false);
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [inviteTarget, setInviteTarget] = useState<'added' | 'all'>('added');
   
   // Form state
   const [title, setTitle] = useState("");
@@ -33,11 +46,22 @@ export default function EditMeeting() {
   const [attendeePhone, setAttendeePhone] = useState("");
   const [meetingTypes, setMeetingTypes] = useState<any[]>([]);
   const [selectedMeetingTypeId, setSelectedMeetingTypeId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+  const [selectedContacts, setSelectedContacts] = useState<Contact[]>([]);
+  const [originalAttendeeEmail, setOriginalAttendeeEmail] = useState<string>("");
 
   useEffect(() => {
     loadMeeting();
     loadMeetingTypes();
+    loadUser();
   }, [id]);
+
+  const loadUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setUserId(user.id);
+    }
+  };
 
   const loadMeetingTypes = async () => {
     try {
@@ -89,6 +113,7 @@ export default function EditMeeting() {
       setAttendeeName(data.attendee_name);
       setAttendeeEmail(data.attendee_email);
       setAttendeePhone(data.attendee_phone || "");
+      setOriginalAttendeeEmail(data.attendee_email);
       setSelectedMeetingTypeId(data.meeting_type_id || "");
       
       setLoading(false);
@@ -119,6 +144,7 @@ export default function EditMeeting() {
       const endTime = new Date(startTime);
       endTime.setMinutes(endTime.getMinutes() + parseInt(duration));
 
+      // Update the existing meeting (primary attendee)
       const { error } = await supabase
         .from("meetings")
         .update({
@@ -137,6 +163,34 @@ export default function EditMeeting() {
 
       if (error) throw error;
 
+      // Create new meetings for any additional contacts that were added
+      if (selectedContacts.length > 0) {
+        const additionalMeetings = selectedContacts
+          .filter(contact => contact.email !== originalAttendeeEmail) // Don't duplicate original attendee
+          .map(contact => ({
+            user_id: userId,
+            meeting_type_id: selectedMeetingTypeId || null,
+            title,
+            description,
+            start_time: startTime.toISOString(),
+            end_time: endTime.toISOString(),
+            location_type: locationType,
+            location_details: locationDetails,
+            attendee_name: contact.name,
+            attendee_email: contact.email,
+            attendee_phone: contact.phone || null,
+            status: "scheduled" as const,
+          }));
+
+        if (additionalMeetings.length > 0) {
+          const { error: insertError } = await supabase
+            .from("meetings")
+            .insert(additionalMeetings);
+
+          if (insertError) throw insertError;
+        }
+      }
+
       toast.success("Meeting updated successfully");
       navigate("/meetings");
     } catch (error) {
@@ -144,6 +198,47 @@ export default function EditMeeting() {
       toast.error("Failed to update meeting");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendInvites = async (target: 'added' | 'all') => {
+    setSendingInvites(true);
+    try {
+      const recipients = target === 'all' 
+        ? [...selectedContacts, { id: 'original', name: attendeeName, email: attendeeEmail, phone: attendeePhone }]
+        : selectedContacts.filter(c => c.email !== originalAttendeeEmail);
+
+      const [hours, minutes] = time.split(':');
+      const startTime = new Date(date!);
+      startTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      const endTime = new Date(startTime);
+      endTime.setMinutes(endTime.getMinutes() + parseInt(duration));
+
+      for (const recipient of recipients) {
+        await supabase.functions.invoke("send-meeting-confirmation-email", {
+          body: {
+            attendeeEmail: recipient.email,
+            attendeeName: recipient.name,
+            meetingTitle: title,
+            startTime: startTime.toISOString(),
+            endTime: endTime.toISOString(),
+            locationType: locationType,
+            locationDetails: locationDetails,
+            description: description,
+            userId: userId,
+            meetingId: id,
+          },
+        });
+      }
+
+      toast.success(`Invites sent to ${recipients.length} attendee${recipients.length > 1 ? 's' : ''}`);
+      setShowInviteDialog(false);
+    } catch (error) {
+      console.error("Error sending invites:", error);
+      toast.error("Failed to send invites");
+    } finally {
+      setSendingInvites(false);
     }
   };
 
@@ -160,7 +255,7 @@ export default function EditMeeting() {
       <Card>
         <CardHeader>
           <CardTitle>Edit Meeting</CardTitle>
-          <CardDescription>Update meeting details</CardDescription>
+          <CardDescription>Update meeting details and manage attendees</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -283,7 +378,7 @@ export default function EditMeeting() {
             </div>
 
             <div className="space-y-4">
-              <h3 className="font-semibold">Attendee Information</h3>
+              <h3 className="font-semibold">Primary Attendee</h3>
               
               <div className="space-y-2">
                 <Label htmlFor="attendeeName">Name *</Label>
@@ -317,6 +412,17 @@ export default function EditMeeting() {
               </div>
             </div>
 
+            {userId && (
+              <div className="space-y-4">
+                <h3 className="font-semibold">Additional Attendees</h3>
+                <ContactSelector
+                  userId={userId}
+                  selectedContacts={selectedContacts}
+                  onSelectContacts={setSelectedContacts}
+                />
+              </div>
+            )}
+
             <div className="flex gap-3">
               <Button 
                 type="button" 
@@ -340,10 +446,70 @@ export default function EditMeeting() {
                   "Save Changes"
                 )}
               </Button>
+              <Button
+                type="button"
+                onClick={() => setShowInviteDialog(true)}
+                variant="secondary"
+                disabled={selectedContacts.length === 0}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                Send Invites
+              </Button>
             </div>
           </form>
         </CardContent>
       </Card>
+
+      <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Meeting Invites</DialogTitle>
+            <DialogDescription>
+              Choose which attendees should receive meeting invitations
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="invite-added"
+                checked={inviteTarget === 'added'}
+                onCheckedChange={(checked) => checked && setInviteTarget('added')}
+              />
+              <Label htmlFor="invite-added" className="cursor-pointer">
+                Send invite to added attendees only ({selectedContacts.filter(c => c.email !== originalAttendeeEmail).length})
+              </Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="invite-all"
+                checked={inviteTarget === 'all'}
+                onCheckedChange={(checked) => checked && setInviteTarget('all')}
+              />
+              <Label htmlFor="invite-all" className="cursor-pointer">
+                Send to all attendees ({selectedContacts.length + 1})
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => handleSendInvites(inviteTarget)} disabled={sendingInvites}>
+              {sendingInvites ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="mr-2 h-4 w-4" />
+                  Send Invites
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
