@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -19,9 +20,20 @@ interface PersonaModalProps {
   } | null;
 }
 
+const personaQuotes = [
+  "With Seeksy, I can reach millions across every platform...",
+  "Creating content has never been this seamless and powerful.",
+  "From podcasts to live streams, everything I need is in one place.",
+  "I love how Seeksy helps me monetize while I focus on creating.",
+];
+
 export const PersonaModal = ({ open, onClose, persona }: PersonaModalProps) => {
+  const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [currentQuote, setCurrentQuote] = useState(0);
+  const [displayedText, setDisplayedText] = useState("");
+  const [isTyping, setIsTyping] = useState(true);
 
   useEffect(() => {
     if (open && videoRef.current) {
@@ -31,6 +43,37 @@ export const PersonaModal = ({ open, onClose, persona }: PersonaModalProps) => {
       videoRef.current.currentTime = 0;
     }
   }, [open]);
+
+  // Typewriter effect for quotes
+  useEffect(() => {
+    if (!open) {
+      setDisplayedText("");
+      setCurrentQuote(0);
+      return;
+    }
+
+    const quote = personaQuotes[currentQuote];
+    let charIndex = 0;
+    setIsTyping(true);
+
+    const typingInterval = setInterval(() => {
+      if (charIndex < quote.length) {
+        setDisplayedText(quote.substring(0, charIndex + 1));
+        charIndex++;
+      } else {
+        setIsTyping(false);
+        clearInterval(typingInterval);
+        
+        // Wait 3 seconds then move to next quote
+        setTimeout(() => {
+          setCurrentQuote((prev) => (prev + 1) % personaQuotes.length);
+          setDisplayedText("");
+        }, 3000);
+      }
+    }, 50);
+
+    return () => clearInterval(typingInterval);
+  }, [open, currentQuote]);
 
   if (!persona) return null;
 
@@ -94,6 +137,14 @@ export const PersonaModal = ({ open, onClose, persona }: PersonaModalProps) => {
                 </p>
               </div>
 
+              {/* Animated Quote Display */}
+              <div className="min-h-[60px] flex items-center">
+                <p className="text-lg text-primary font-medium italic">
+                  "{displayedText}
+                  {isTyping && <span className="animate-pulse">|</span>}"
+                </p>
+              </div>
+
               {/* Tags */}
               {persona.tags && persona.tags.length > 0 && (
                 <div className="pt-4">
@@ -104,7 +155,8 @@ export const PersonaModal = ({ open, onClose, persona }: PersonaModalProps) => {
                     {persona.tags.map((tag, index) => (
                       <div
                         key={index}
-                        className="px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-medium flex items-center gap-2"
+                        className="px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-medium flex items-center gap-2 transition-all duration-300 hover:scale-110 hover:-translate-y-1 hover:shadow-lg cursor-pointer animate-in fade-in-50 slide-in-from-bottom-3 hover-dance"
+                        style={{ animationDelay: `${index * 100}ms` }}
                       >
                         <span>{tag.icon}</span>
                         <span>{tag.label}</span>
@@ -118,9 +170,13 @@ export const PersonaModal = ({ open, onClose, persona }: PersonaModalProps) => {
               <div className="pt-6">
                 <Button
                   size="lg"
-                  className="w-full text-lg py-6"
+                  onClick={() => {
+                    onClose();
+                    navigate("/auth");
+                  }}
+                  className="w-full text-lg py-6 transition-all duration-300 hover:scale-105 hover:-translate-y-1 hover:shadow-xl active:scale-95 hover-dance"
                 >
-                  Work with {persona.name.split(" ")[0]}
+                  Create your account
                 </Button>
               </div>
             </div>
