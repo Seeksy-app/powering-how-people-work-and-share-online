@@ -206,7 +206,7 @@ export function TicketDetailDialog({ ticketId, open, onOpenChange, onUpdate }: T
             <>
               <DialogHeader className="sticky top-0 bg-card pb-4 z-10">
                 <DialogTitle className="flex items-center gap-2">
-                  {ticket.ticket_number} - {ticket.title}
+                  {ticket.title}
                 </DialogTitle>
                 <DialogDescription>
                   Client: {ticket.contacts?.name} {ticket.contacts?.company && `(${ticket.contacts.company})`}

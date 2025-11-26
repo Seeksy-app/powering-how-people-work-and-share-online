@@ -39,12 +39,21 @@ serve(async (req) => {
       );
     }
 
-    const startTime = new Date(meeting.start_time).toLocaleString('en-US', {
-      dateStyle: 'full',
-      timeStyle: 'short'
+    const startDate = new Date(meeting.start_time);
+    
+    // Format meeting time in EST (since meeting is at 8:45 AM EST)
+    const formattedStartEST = startDate.toLocaleString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'America/New_York',
+      timeZoneName: 'short'
     });
 
-    const message = `✅ Meeting Confirmed!\n\n${meeting.title}\n${startTime}\n${meeting.location_type === 'in_person' ? meeting.location_details : 'Virtual meeting'}\n\n📧 Check your email for calendar invite.\n\n📱 Reply YES, NO, or MAYBE to confirm your attendance.\n\n💡 Create your free Seeksy account: https://seeksy.io/auth?mode=signup`;
+    const message = `✅ Meeting Confirmed!\n\n${meeting.title}\n${formattedStartEST}\n${meeting.location_type === 'in_person' ? meeting.location_details : 'Virtual meeting'}\n\n📧 Check your email for calendar invite.\n\n📱 Reply YES, NO, or MAYBE to confirm your attendance.\n\n💡 Create your free Seeksy account: https://seeksy.io/auth?mode=signup`;
 
 
     // Send SMS via Twilio
