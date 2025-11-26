@@ -445,18 +445,18 @@ export default function FieldLeadCapture() {
                       <SelectTrigger id="assignTo" className="bg-background">
                         <SelectValue placeholder="Select team member" />
                       </SelectTrigger>
-                      <SelectContent className="bg-popover border border-border z-50">
-                        {currentUser && (
-                          <SelectItem value={currentUser.id} className="cursor-pointer">
-                            {currentUser.full_name} (You)
-                          </SelectItem>
-                        )}
-                        {teamMembers?.filter((member: any) => member.id !== currentUser?.id).map((member: any) => (
-                          <SelectItem key={member.id} value={member.id} className="cursor-pointer">
-                            {member.full_name || "Unknown"}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                    <SelectContent className="bg-popover border border-border shadow-lg z-[100]">
+                      {currentUser && (
+                        <SelectItem value={currentUser.id} className="cursor-pointer hover:bg-accent">
+                          {currentUser.full_name} (You)
+                        </SelectItem>
+                      )}
+                      {teamMembers?.filter((member: any) => member.id !== currentUser?.id).map((member: any) => (
+                        <SelectItem key={member.id} value={member.id} className="cursor-pointer hover:bg-accent">
+                          {member.full_name || "Unknown"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                     </Select>
                   </div>
                 )}
