@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, Users, Sparkles, MessageSquare } from "lucide-react";
 import AIMeetingNotesPanel from "./AIMeetingNotesPanel";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StudioRightSidebarProps {
   currentViewerCount: number;
@@ -75,10 +76,30 @@ export function StudioRightSidebar({
     }
   };
 
-  // Mock participants for demo
+  // Fetch user profile for host name
+  const [hostName, setHostName] = useState('Host');
+  
+  useEffect(() => {
+    const fetchHostProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.full_name) {
+          setHostName(profile.full_name);
+        }
+      }
+    };
+    fetchHostProfile();
+  }, []);
+
   const participants = [
-    { id: '1', name: 'ANDY GUO (Host, me)', avatar: profileImageUrl, isHost: true },
-    { id: '2', name: 'IAHR Secretariat', avatar: '', isHost: false },
+    { id: '1', name: `${hostName} (Host, me)`, avatar: profileImageUrl, isHost: true },
+    { id: '2', name: 'Seeksy AI Note Taker', avatar: '', isHost: false },
   ];
 
   return (
