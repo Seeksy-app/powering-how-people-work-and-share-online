@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, User as UserIcon, Phone, Lock, Bell, FileText, Puzzle, Shield, Palette, Check, Eye, MessageSquare, Settings as SettingsIcon, Info, Save } from "lucide-react";
+import { Loader2, Mail, User as UserIcon, Phone, Lock, Bell, FileText, Puzzle, Shield, Palette, Check, Eye, MessageSquare, Settings as SettingsIcon, Info, Save, X, Upload } from "lucide-react";
 import { NotificationPreferencesDialog } from "@/components/NotificationPreferencesDialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -436,82 +436,160 @@ const Settings = () => {
         </AlertDialog>
 
         <div className="space-y-6">
-          {/* My Page Preview Link */}
-          {profileData.username && profileData.my_page_visited && (
-            <Card className="bg-primary/5 border-primary/20">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="font-medium">Your My Page is ready!</p>
-                    <p className="text-sm text-muted-foreground">
-                      View your public profile at /{profileData.username}
-                    </p>
-                  </div>
-                  <Button asChild>
-                    <a href={`/${profileData.username}`} target="_blank" rel="noopener noreferrer">
-                      <Eye className="mr-2 h-4 w-4" />
-                      View My Page
-                    </a>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Account Information */}
+          {/* Account Information with Profile Photo */}
           <Card>
             <CardHeader>
-              <CardTitle>Account Information</CardTitle>
-              <CardDescription>Update your personal details</CardDescription>
+              <div className="flex items-start justify-between gap-6">
+                <div className="flex-1">
+                  <CardTitle>Account Information</CardTitle>
+                  <CardDescription>Update your personal details</CardDescription>
+                  {profileData.username && profileData.my_page_visited && (
+                    <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>Your public profile:</span>
+                      <Button variant="link" className="h-auto p-0 text-sm" asChild>
+                        <a href={`/${profileData.username}`} target="_blank" rel="noopener noreferrer">
+                          /{profileData.username}
+                          <Eye className="ml-1 h-3 w-3" />
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+                <div id="avatar" className="flex-shrink-0">
+                  <div className="space-y-3">
+                    <Label className="text-sm">Profile Photo</Label>
+                    {profileData.avatar_url ? (
+                      <div className="relative">
+                        <img
+                          src={profileData.avatar_url}
+                          alt="Profile"
+                          className="w-32 h-32 object-cover rounded-lg border-2 border-border"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-7 w-7 rounded-full"
+                          onClick={async () => {
+                            setProfileData(prev => ({ ...prev, avatar_url: null }));
+                            if (user) {
+                              try {
+                                let usernameToUse = profileData.username;
+                                if (!usernameToUse && user.email) {
+                                  usernameToUse = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+                                }
+                                
+                                const { error } = await supabase
+                                  .from("profiles")
+                                  .upsert({ 
+                                    id: user.id,
+                                    username: usernameToUse,
+                                    account_avatar_url: null 
+                                  } as any, {
+                                    onConflict: 'id'
+                                  });
+                                
+                                if (error) throw error;
+                                
+                                setJustSaved(true);
+                                setTimeout(() => setJustSaved(false), 2500);
+                                
+                                toast({
+                                  title: "Photo removed",
+                                  description: "Profile photo has been removed.",
+                                });
+                              } catch (error: any) {
+                                toast({
+                                  title: "Error removing photo",
+                                  description: error.message,
+                                  variant: "destructive",
+                                });
+                              }
+                            }
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="w-32 h-32 rounded-lg bg-muted flex items-center justify-center border-2 border-dashed border-border">
+                        <Upload className="h-10 w-10 text-muted-foreground" />
+                      </div>
+                    )}
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        if (!e.target.files || !e.target.files[0]) return;
+                        const file = e.target.files[0];
+                        
+                        try {
+                          const fileExt = file.name.split('.').pop();
+                          const fileName = `${Math.random()}.${fileExt}`;
+                          const { data: { user: authUser } } = await supabase.auth.getUser();
+                          if (!authUser) throw new Error("You must be logged in");
+                          
+                          const filePath = `${authUser.id}/${fileName}`;
+                          const { error: uploadError } = await supabase.storage
+                            .from('avatars')
+                            .upload(filePath, file);
+                          
+                          if (uploadError) throw uploadError;
+                          
+                          const { data } = supabase.storage
+                            .from('avatars')
+                            .getPublicUrl(filePath);
+                          
+                          setProfileData(prev => ({ ...prev, avatar_url: data.publicUrl }));
+                          
+                          let usernameToUse = profileData.username;
+                          if (!usernameToUse && authUser.email) {
+                            usernameToUse = authUser.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+                          }
+                          
+                          const { error } = await supabase
+                            .from("profiles")
+                            .upsert({ 
+                              id: authUser.id,
+                              username: usernameToUse,
+                              account_avatar_url: data.publicUrl 
+                            } as any, {
+                              onConflict: 'id'
+                            });
+                          
+                          if (error) throw error;
+                          
+                          setJustSaved(true);
+                          setTimeout(() => setJustSaved(false), 2500);
+                          
+                          toast({
+                            title: "Profile photo updated! 📸",
+                            description: "Your new photo looks great!",
+                          });
+                        } catch (error: any) {
+                          toast({
+                            title: "Upload failed",
+                            description: error.message,
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      className="hidden"
+                      id="avatar-upload-inline"
+                    />
+                    <label htmlFor="avatar-upload-inline">
+                      <Button type="button" variant="outline" size="sm" className="w-full" asChild>
+                        <span className="cursor-pointer">
+                          <Upload className="mr-2 h-4 w-4" />
+                          {profileData.avatar_url ? 'Change' : 'Upload'}
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                </div>
+              </div>
             </CardHeader>
              <CardContent className="space-y-4">
-              <div id="avatar">
-                <ImageUpload
-                  variant="avatar"
-                  label="Profile Photo"
-                  currentImage={profileData.avatar_url || ""}
-                  onImageUploaded={async (url) => {
-                  setProfileData(prev => ({ ...prev, avatar_url: url }));
-                  // Save immediately after image upload
-                  if (user) {
-                    try {
-                      // Get current username or generate one
-                      let usernameToUse = profileData.username;
-                      if (!usernameToUse && user.email) {
-                        usernameToUse = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
-                      }
-                      
-                      const { error } = await supabase
-                        .from("profiles")
-                        .upsert({ 
-                          id: user.id,
-                          username: usernameToUse,
-                          account_avatar_url: url 
-                        } as any, {
-                          onConflict: 'id'
-                        });
-                      
-                      if (error) throw error;
-                      
-                      setJustSaved(true);
-                      setTimeout(() => setJustSaved(false), 2500);
-                      
-                      toast({
-                        title: "Profile photo updated! 📸",
-                        description: "Your new photo looks great!",
-                      });
-                    } catch (error: any) {
-                      toast({
-                        title: "Error saving photo",
-                        description: error.message,
-                        variant: "destructive",
-                      });
-                    }
-                  }
-                }}
-                bucket="avatars"
-              />
-              </div>
               <div className="space-y-2">
                 <Label htmlFor="full_name">Full Name</Label>
                 <div className="relative">

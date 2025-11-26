@@ -1014,7 +1014,7 @@ const Profile = () => {
               </div>
 
               <h1 className="text-3xl font-bold mb-2 text-black drop-shadow-lg">
-                {profile.username}
+                {profile.display_name || profile.full_name || profile.username}
               </h1>
               
               {/* Social Links - Mobile */}
@@ -1062,7 +1062,7 @@ const Profile = () => {
               </div>
 
               <h1 className="text-4xl font-bold mb-4 text-black">
-                {profile.username}
+                {profile.display_name || profile.full_name || profile.username}
               </h1>
               
               {/* Social Links - Desktop */}
