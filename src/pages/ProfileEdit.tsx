@@ -157,6 +157,8 @@ const ProfileEdit = () => {
   const [qrCodeColor, setQrCodeColor] = useState("#000000");
   const [includeLogoInQR, setIncludeLogoInQR] = useState(false);
   const [qrCodeShape, setQrCodeShape] = useState<'square' | 'round'>('square');
+  const [imageStyle, setImageStyle] = useState<'circular' | 'rounded-square' | 'portrait'>('circular');
+  const [titleFont, setTitleFont] = useState<'serif' | 'sans' | 'script'>('serif');
   const [heroSectionColor, setHeroSectionColor] = useState("#1a1a1a");
   const [customThemeColors, setCustomThemeColors] = useState<string[]>([]);
   const [customBgColors, setCustomBgColors] = useState<string[]>([]);
@@ -952,6 +954,36 @@ const ProfileEdit = () => {
             <p className="text-sm text-muted-foreground">
               This is the name shown at the top of your My Page (e.g., "Johnny Rocket" instead of "Johnny-Rocket")
             </p>
+            
+            <div className="mt-3">
+              <Label className="text-xs">Title Font Style</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={titleFont === 'serif' ? 'default' : 'outline'}
+                  onClick={() => setTitleFont('serif')}
+                >
+                  Serif
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={titleFont === 'sans' ? 'default' : 'outline'}
+                  onClick={() => setTitleFont('sans')}
+                >
+                  Sans
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={titleFont === 'script' ? 'default' : 'outline'}
+                  onClick={() => setTitleFont('script')}
+                >
+                  Script
+                </Button>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -1016,6 +1048,36 @@ const ProfileEdit = () => {
               bucket="avatars"
               variant="avatar"
             />
+            
+            <div className="mt-3">
+              <Label className="text-xs">Image Display Style</Label>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={imageStyle === 'circular' ? 'default' : 'outline'}
+                  onClick={() => setImageStyle('circular')}
+                >
+                  Circular
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={imageStyle === 'rounded-square' ? 'default' : 'outline'}
+                  onClick={() => setImageStyle('rounded-square')}
+                >
+                  Rounded
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={imageStyle === 'portrait' ? 'default' : 'outline'}
+                  onClick={() => setImageStyle('portrait')}
+                >
+                  Portrait
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Page Design Section */}
@@ -1798,11 +1860,26 @@ const ProfileEdit = () => {
                       <img
                         src={avatarUrl}
                         alt={displayName || fullName || username}
-                        className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4"
+                        className={`mx-auto mb-4 object-cover border-4 ${
+                          imageStyle === 'circular' 
+                            ? 'w-24 h-24 rounded-full' 
+                            : imageStyle === 'rounded-square'
+                            ? 'w-32 h-32 rounded-3xl'
+                            : 'w-full h-64 rounded-2xl'
+                        }`}
                         style={{ borderColor: themeColor }}
                       />
                     )}
-                    <h1 className="text-2xl font-bold mb-2" style={{ color: pageBackgroundColor === '#FFFFFF' || pageBackgroundColor === '#ffffff' ? '#000000' : '#FFFFFF' }}>
+                    <h1 
+                      className={`text-2xl font-bold mb-2 ${
+                        titleFont === 'serif' 
+                          ? 'font-serif' 
+                          : titleFont === 'script'
+                          ? 'font-script'
+                          : 'font-sans'
+                      }`}
+                      style={{ color: pageBackgroundColor === '#FFFFFF' || pageBackgroundColor === '#ffffff' ? '#000000' : '#FFFFFF' }}
+                    >
                       {displayName || fullName || username}
                     </h1>
                     {bio && (
