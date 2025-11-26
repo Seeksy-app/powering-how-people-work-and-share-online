@@ -160,14 +160,33 @@ const CreateMeeting = () => {
       return;
     }
 
+    // Combine date and time - ensure we preserve timezone
+    const [hours, minutes] = time.split(':');
+    const startTime = new Date(date);
+    startTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    
+    // Check if meeting is in the past
+    const now = new Date();
+    if (startTime < now) {
+      toast({
+        title: "Invalid time",
+        description: "Cannot schedule a meeting in the past. Please select a future date and time.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Log for debugging
+    console.log("Creating meeting:", {
+      localTime: startTime.toString(),
+      utcTime: startTime.toISOString(),
+      nowLocal: now.toString(),
+      nowUTC: now.toISOString(),
+    });
+
     setLoading(true);
 
     try {
-      // Combine date and time
-      const [hours, minutes] = time.split(':');
-      const startTime = new Date(date);
-      startTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      
       const endTime = new Date(startTime);
       endTime.setMinutes(endTime.getMinutes() + parseInt(duration));
 
@@ -243,6 +262,26 @@ const CreateMeeting = () => {
             });
           } catch (consentError) {
             console.error("Error storing SMS consent:", consentError);
+          }
+        }
+
+        // Send email confirmation to attendee
+        if (attendee.email && meetingData?.id) {
+          try {
+            await supabase.functions.invoke("send-meeting-confirmation-email", {
+              body: {
+                attendeeEmail: attendee.email,
+                attendeeName: attendee.name,
+                meetingTitle: title,
+                startTime: startTime.toISOString(),
+                duration: parseInt(duration),
+                location: finalLocationDetails || locationType,
+                userId: user?.id,
+                meetingId: meetingData.id,
+              },
+            });
+          } catch (emailError) {
+            console.error("Error sending email:", emailError);
           }
         }
 
