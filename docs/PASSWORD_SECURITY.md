@@ -11,16 +11,17 @@ Comprehensive password security system implemented following Supabase best pract
 - Signup: Enabled
 - Anonymous users: Disabled
 
-**Recommended Additional Settings (Configure in Supabase Dashboard):**
-- Minimum password length: **10 characters** (stronger than default 8)
-- Required character types: **All** (digits, lowercase, uppercase, symbols)
-- Leaked password protection: **Enable** (Pro Plan+, uses HaveIBeenPwned.org API)
+**Backend Settings Configured:**
+- ✅ Minimum password length: **10 characters**
+- ✅ Required character types: **All** (digits, lowercase, uppercase, symbols)
+- ✅ Auto-confirm email: **Enabled** (for development)
 
-**How to Configure:**
+**IMPORTANT: Enable Password HIBP Check (Pro Plan Feature)**
+Since you're on Supabase Pro, enable this critical security feature:
 1. Go to: Cloud → Auth → Providers → Email → Password Requirements
-2. Set minimum length to 10
-3. Enable all character requirements
-4. Enable leaked password protection
+2. Toggle ON: **Password HIBP Check**
+3. This rejects passwords found in the HaveIBeenPwned.org breach database
+4. Protects against credential stuffing attacks
 
 ### 2. Client-Side Password Validation
 
