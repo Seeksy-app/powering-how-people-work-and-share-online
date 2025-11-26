@@ -1879,7 +1879,7 @@ export const InteractiveSpreadsheet = ({ isReadOnly = false }: { isReadOnly?: bo
 
                   <div className="space-y-3 mt-6">
                     <p className="font-semibold text-xs">Download Reports:</p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <Button variant="outline" size="sm" className="w-full" onClick={handleExportAIPDF}>
                         <Download className="mr-2 h-4 w-4" />
                         PDF Report
@@ -1887,6 +1887,10 @@ export const InteractiveSpreadsheet = ({ isReadOnly = false }: { isReadOnly?: bo
                       <Button variant="outline" size="sm" className="w-full" onClick={handleExportAIExcel}>
                         <FileSpreadsheet className="mr-2 h-4 w-4" />
                         Excel (.xlsx)
+                      </Button>
+                      <Button variant="default" size="sm" className="w-full" onClick={handleExportAIExcel}>
+                        <FileSpreadsheet className="mr-2 h-4 w-4" />
+                        View Spreadsheet
                       </Button>
                     </div>
                     {!isReadOnly && (

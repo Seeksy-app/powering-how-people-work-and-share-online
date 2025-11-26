@@ -297,15 +297,6 @@ export default function InvestorPortal() {
                 </div>
               </CardContent>
             </Card>
-            
-            {shareConfig.allowDownload && (
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Spreadsheet
-                </Button>
-              </div>
-            )}
             <div className="grid lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
                 <InteractiveSpreadsheet isReadOnly={true} />
