@@ -7,8 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Lock, FileSpreadsheet, TrendingUp, Settings, ShieldCheck, Download } from "lucide-react";
-import { ForecastTab } from "@/components/cfo/ForecastTab";
+import { Lock, FileSpreadsheet, Settings, ShieldCheck, Download } from "lucide-react";
 import { InteractiveSpreadsheet } from "@/components/cfo/InteractiveSpreadsheet";
 import { CFOAIChat } from "@/components/cfo/CFOAIChat";
 import {
@@ -259,15 +258,11 @@ export default function InvestorPortal() {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="forecast" className="space-y-8">
-          <TabsList className="grid w-full max-w-md grid-cols-3 h-12 bg-muted/30 border border-border">
-            <TabsTrigger value="forecast" className="text-base font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <TrendingUp className="h-5 w-5 mr-2" />
-              3-Year Forecast
-            </TabsTrigger>
-            <TabsTrigger value="models" className="text-base font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+        <Tabs defaultValue="proforma" className="space-y-8">
+          <TabsList className="grid w-full max-w-md grid-cols-2 h-12 bg-muted/30 border border-border">
+            <TabsTrigger value="proforma" className="text-base font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <FileSpreadsheet className="h-5 w-5 mr-2" />
-              Financial Models
+              3-Year Pro Forma
             </TabsTrigger>
             <TabsTrigger value="assumptions" className="text-base font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Settings className="h-5 w-5 mr-2" />
@@ -275,28 +270,24 @@ export default function InvestorPortal() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="forecast" className="space-y-6">
+          <TabsContent value="proforma" className="space-y-6">
+            <Card className="bg-gradient-to-br from-purple-500/5 to-pink-600/5 border-purple-200/20">
+              <CardContent className="py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 animate-pulse" />
+                    <span className="text-sm font-medium">Powered by</span>
+                    <span className="text-sm font-semibold bg-gradient-to-br from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      Google Gemini 2.5 Flash
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">AI-Generated Financial Model</span>
+                </div>
+              </CardContent>
+            </Card>
+            
             {shareConfig.allowDownload && (
-              <div className="flex justify-end mb-4">
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Forecast
-                </Button>
-              </div>
-            )}
-            <div className="grid lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <ForecastTab isReadOnly={true} />
-              </div>
-              <div className="self-start">
-                <CFOAIChat />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="models" className="space-y-6">
-            {shareConfig.allowDownload && (
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-end">
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
                   Download Spreadsheet
