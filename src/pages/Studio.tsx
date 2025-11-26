@@ -46,6 +46,7 @@ function StudioContent() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showBrandingMenu, setShowBrandingMenu] = useState(false);
   const [markers, setMarkers] = useState<RecordingMarker[]>([]);
+  const [isMeetingLive, setIsMeetingLive] = useState(false);
   const [showScriptDialog, setShowScriptDialog] = useState(false);
   const [showHostNotesPanel, setShowHostNotesPanel] = useState(false);
   const [hostNotes] = useState(`Topics to Cover:
@@ -762,6 +763,26 @@ Closing Notes:
             </div>
         
         <div className="flex items-center gap-4">
+          {isMeetingLive ? (
+            <Button
+              onClick={() => setIsMeetingLive(false)}
+              size="sm"
+              className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+            >
+              STOP MEETING
+            </Button>
+          ) : (
+            <Button
+              onClick={() => setIsMeetingLive(true)}
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white font-semibold"
+            >
+              START MEETING
+            </Button>
+          )}
+          
+          <div className="h-6 w-px bg-border" />
+          
           <VideoLayoutSelector
             currentLayout={videoLayout}
             onLayoutChange={setVideoLayout}

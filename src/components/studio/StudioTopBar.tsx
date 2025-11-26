@@ -14,6 +14,8 @@ interface StudioTopBarProps {
   videoLayout: VideoLayout;
   onVideoLayoutChange: (layout: VideoLayout) => void;
   participantCount: number;
+  isMeetingLive: boolean;
+  onToggleMeetingLive: () => void;
 }
 
 export function StudioTopBar({
@@ -25,6 +27,8 @@ export function StudioTopBar({
   videoLayout,
   onVideoLayoutChange,
   participantCount,
+  isMeetingLive,
+  onToggleMeetingLive,
 }: StudioTopBarProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
@@ -70,6 +74,26 @@ export function StudioTopBar({
       </div>
 
       <div className="flex items-center gap-4">
+        {isMeetingLive ? (
+          <Button
+            onClick={onToggleMeetingLive}
+            size="sm"
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+          >
+            STOP MEETING
+          </Button>
+        ) : (
+          <Button
+            onClick={onToggleMeetingLive}
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold"
+          >
+            START MEETING
+          </Button>
+        )}
+        
+        <div className="h-6 w-px bg-border" />
+        
         <VideoLayoutSelector
           currentLayout={videoLayout}
           onLayoutChange={onVideoLayoutChange}
@@ -79,32 +103,6 @@ export function StudioTopBar({
         <div className="h-6 w-px bg-border" />
         
         <ThemeToggle />
-        
-        <Button variant="outline" size="sm">
-          <Calendar className="h-4 w-4 mr-2" />
-          Schedule
-        </Button>
-
-        {isLiveOnProfile ? (
-          <Button
-            onClick={onGoLive}
-            size="sm"
-            variant="destructive"
-            className="font-semibold"
-          >
-            <Radio className="h-4 w-4 mr-2" />
-            End Live
-          </Button>
-        ) : (
-          <Button
-            onClick={onGoLive}
-            size="sm"
-            className="bg-brand-blue hover:bg-brand-blue/90 font-semibold"
-          >
-            <Radio className="h-4 w-4 mr-2" />
-            Go live
-          </Button>
-        )}
       </div>
     </div>
   );
