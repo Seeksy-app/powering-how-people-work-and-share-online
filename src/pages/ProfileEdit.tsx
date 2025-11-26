@@ -39,6 +39,7 @@ interface Profile {
   id: string;
   username: string;
   full_name: string;
+  display_name?: string;
   bio: string;
   avatar_url: string;
   theme_color: string;
@@ -147,6 +148,7 @@ const ProfileEdit = () => {
   
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
@@ -187,6 +189,7 @@ const ProfileEdit = () => {
   const [originalValues, setOriginalValues] = useState({
     username: "",
     fullName: "",
+    displayName: "",
     bio: "",
     avatarUrl: "",
     categories: [] as string[],
@@ -270,6 +273,7 @@ const ProfileEdit = () => {
       const loadedValues = {
         username: profile.username || "",
         fullName: profile.full_name || "",
+        displayName: (profile as any).display_name || "",
         bio: profile.bio || "",
         avatarUrl: profile.avatar_url || "",
         categories: (profile as any).categories || [],
@@ -291,6 +295,7 @@ const ProfileEdit = () => {
 
       setUsername(loadedValues.username);
       setFullName(loadedValues.fullName);
+      setDisplayName(loadedValues.displayName);
       setBio(loadedValues.bio);
       setAvatarUrl(loadedValues.avatarUrl);
       setCategories(loadedValues.categories);
@@ -732,6 +737,7 @@ const ProfileEdit = () => {
         .update({
           username,
           full_name: fullName,
+          display_name: displayName,
           bio,
           avatar_url: avatarUrl,
           categories,
@@ -855,6 +861,7 @@ const ProfileEdit = () => {
       setOriginalValues({
         username,
         fullName,
+        displayName,
         bio,
         avatarUrl,
         categories,
@@ -931,7 +938,20 @@ const ProfileEdit = () => {
 
         <Card className="p-8 space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="username" className="text-lg font-semibold">Display Name *</Label>
+            <Label htmlFor="displayName" className="text-lg font-semibold">Display Name</Label>
+            <Input
+              id="displayName"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="How your name appears on your profile"
+            />
+            <p className="text-sm text-muted-foreground">
+              This is the name shown at the top of your My Page (e.g., "Johnny Rocket" instead of "Johnny-Rocket")
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="username" className="text-lg font-semibold">Username *</Label>
             <Input
               id="username"
               value={username}
