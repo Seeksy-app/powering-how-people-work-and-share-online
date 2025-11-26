@@ -98,23 +98,21 @@ export function StudioRightSidebar({
             <MessageSquare className="h-4 w-4 mr-2" />
             Chat
           </Button>
-          {meetingId && (
-            <Button
-              variant={activeTab === 'ai' ? 'default' : 'ghost'}
-              size="lg"
-              onClick={() => {
-                setActiveTab('ai');
-                setAiNotesVisible(true);
-              }}
-              className="flex-1 rounded-none border-b-2"
-              style={{
-                borderBottomColor: activeTab === 'ai' ? 'hsl(var(--primary))' : 'transparent'
-              }}
-            >
-              <Sparkles className="h-4 w-4 mr-2" />
-              AI Notes
-            </Button>
-          )}
+          <Button
+            variant={activeTab === 'ai' ? 'default' : 'ghost'}
+            size="lg"
+            onClick={() => {
+              setActiveTab('ai');
+              setAiNotesVisible(true);
+            }}
+            className="flex-1 rounded-none border-b-2"
+            style={{
+              borderBottomColor: activeTab === 'ai' ? 'hsl(var(--primary))' : 'transparent'
+            }}
+          >
+            <Sparkles className="h-4 w-4 mr-2" />
+            AI Notes
+          </Button>
         </div>
       </div>
 
