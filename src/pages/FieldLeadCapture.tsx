@@ -300,10 +300,6 @@ export default function FieldLeadCapture() {
               {/* Photo Capture */}
               <div className="space-y-2">
                 <Label>Photos (Max 5, 5MB each)</Label>
-                <p className="text-sm text-muted-foreground mb-2">
-                  <Camera className="inline h-4 w-4 mr-1" />
-                  Take a photo or select from your library
-                </p>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {photoPreviews.map((preview, index) => (
                     <div key={index} className="relative">
@@ -320,15 +316,29 @@ export default function FieldLeadCapture() {
                     </div>
                   ))}
                 </div>
-                <label className="block">
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handlePhotoCapture}
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handlePhotoCapture}
+                  disabled={photos.length >= 5}
+                  id="photo-input"
+                  className="hidden"
+                  capture="environment"
+                />
+                <label htmlFor="photo-input">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
                     disabled={photos.length >= 5}
-                    className="cursor-pointer"
-                  />
+                    asChild
+                  >
+                    <span className="cursor-pointer">
+                      <Camera className="mr-2 h-4 w-4" />
+                      {photos.length === 0 ? "Add Photos" : `Add More Photos (${photos.length}/5)`}
+                    </span>
+                  </Button>
                 </label>
               </div>
 
