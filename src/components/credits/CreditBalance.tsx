@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Coins } from "lucide-react";
+import { Coins, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function CreditBalance() {
   const { data: userCredits } = useQuery({
@@ -29,16 +30,29 @@ export function CreditBalance() {
   const goal = userCredits.credit_goal || 100;
 
   return (
-    <Link to="/credits">
-      <Button
-        variant={isLowBalance ? "destructive" : "outline"}
-        size="sm"
-        className="gap-2"
-      >
-        <Coins className="h-4 w-4" />
-        <span className="font-semibold">{userCredits.balance} / {goal}</span>
-        {isLowBalance && <span className="text-xs">Low!</span>}
-      </Button>
-    </Link>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link to="/credits">
+            <Button
+              variant={isLowBalance ? "destructive" : "outline"}
+              size="sm"
+              className="gap-2"
+            >
+              <Coins className="h-4 w-4" />
+              <span className="font-semibold">{userCredits.balance} / {goal}</span>
+              {isLowBalance && <span className="text-xs">Low!</span>}
+            </Button>
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-sm">
+            <strong>{userCredits.balance}</strong> credits available
+            <br />
+            <span className="text-muted-foreground">Goal: {goal} credits</span>
+          </p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

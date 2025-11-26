@@ -96,6 +96,9 @@ export default function Onboarding() {
           onConflict: 'user_id'
         });
       
+      // Set flag to show welcome spin on dashboard
+      localStorage.setItem('show_welcome_spin', 'true');
+      
       toast.success("Welcome to Seeksy! 🎉");
       navigate("/dashboard");
     } catch (error) {
