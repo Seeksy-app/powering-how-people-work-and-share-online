@@ -68,77 +68,29 @@ const Podcasts = () => {
           </div>
         </div>
 
-        {/* RSS Feed Management */}
-        {user && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Rss className="w-5 h-5" />
-                RSS Feed URL
-              </CardTitle>
-              <CardDescription>
-                Your unique RSS feed URL for podcast directories and platforms
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="rss-url">Your RSS Feed URL</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="rss-url"
-                    value={`https://seeksy.io/rss/${user.id}`}
-                    readOnly
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyToClipboard(`https://seeksy.io/rss/${user.id}`, "RSS URL")}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => window.open(`https://seeksy.io/rss/${user.id}`, '_blank')}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Use this URL to submit your podcast to Apple Podcasts, Spotify, Google Podcasts, and other directories
-                </p>
+        {/* Podcast Analytics Overview - Coming Soon */}
+        <Card className="mb-8 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mic className="w-5 h-5 text-primary" />
+              Podcast Analytics
+            </CardTitle>
+            <CardDescription>
+              Track downloads, listeners, and engagement across all your podcasts
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                <Rss className="w-8 h-8 text-primary" />
               </div>
-
-              <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-                <h4 className="text-sm font-semibold">Quick Directory Links:</h4>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open('https://podcastsconnect.apple.com/', '_blank')}
-                  >
-                    Apple Podcasts
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open('https://podcasters.spotify.com/', '_blank')}
-                  >
-                    Spotify
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open('https://podcastsmanager.google.com/', '_blank')}
-                  >
-                    Google Podcasts
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              <h3 className="text-lg font-semibold mb-2">Analytics Coming Soon</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                We're building comprehensive analytics to help you understand your audience and grow your podcast. Track downloads, listener demographics, episode performance, and more.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Podcasts Grid */}
         {isLoading ? (
