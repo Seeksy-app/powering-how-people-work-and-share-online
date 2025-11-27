@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -6,10 +6,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { IntroOutroLibrary } from "./IntroOutroLibrary";
 import { VideoAdsPanel } from "./VideoAdsPanel";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Palette, MessageSquare, Music, QrCode, StickyNote, 
   Image, Video, FileText, X, Upload, Sparkles, Play,
-  DollarSign, FileAudio
+  DollarSign, FileAudio, Loader2
 } from "lucide-react";
 
 interface StudioRightSidebarProps {
@@ -315,15 +316,35 @@ function ChatPanel({ broadcastId }: { broadcastId: string }) {
 }
 
 function MusicPanel() {
-  const aiTracks = [
-    { name: "Chill", icon: "👑" },
-    { name: "Downtempo", icon: "▶" },
-    { name: "Chill Hop", icon: "▶" },
-    { name: "Hip hop", icon: "👑" },
-    { name: "Lo-Fi", icon: "▶" },
-    { name: "Lounge", icon: "👑" },
-    { name: "R&B", icon: "👑" }
-  ];
+  const [isLoading, setIsLoading] = useState(false);
+  const [tracks, setTracks] = useState([
+    { name: "Chill", icon: "👑", genre: "Chill" },
+    { name: "Downtempo", icon: "▶", genre: "Downtempo" },
+    { name: "Chill Hop", icon: "▶", genre: "Chill Hop" },
+    { name: "Hip hop", icon: "👑", genre: "Hip hop" },
+    { name: "Lo-Fi", icon: "▶", genre: "Lo-Fi" },
+    { name: "Lounge", icon: "👑", genre: "Lounge" },
+    { name: "R&B", icon: "👑", genre: "R&B" }
+  ]);
+
+  useEffect(() => {
+    loadMusicTracks();
+  }, []);
+
+  const loadMusicTracks = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('elevenlabs-get-music');
+      
+      if (!error && data?.music && Array.isArray(data.music) && data.music.length > 0) {
+        setTracks(data.music);
+      }
+    } catch (error) {
+      console.error('Error loading music tracks:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -346,18 +367,24 @@ function MusicPanel() {
 
         <div>
           <span className="text-sm font-medium mb-3 block">AI Generated</span>
-          <div className="space-y-2">
-            {aiTracks.map((track, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 p-3 bg-muted rounded hover:bg-accent cursor-pointer transition-colors"
-              >
-                <span className="text-lg">{track.icon}</span>
-                <span className="text-sm font-medium flex-1">{track.name}</span>
-                <Play className="h-4 w-4 text-muted-foreground" />
-              </div>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {tracks.map((track, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-3 bg-muted rounded hover:bg-accent cursor-pointer transition-colors"
+                >
+                  <span className="text-lg">{track.icon}</span>
+                  <span className="text-sm font-medium flex-1">{track.name}</span>
+                  <Play className="h-4 w-4 text-muted-foreground" />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
