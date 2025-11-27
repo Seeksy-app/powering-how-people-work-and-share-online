@@ -98,6 +98,8 @@ import CreateSponsorship from "./pages/CreateSponsorship";
 import AdminConversationalDemo from "./pages/AdminConversationalDemo";
 import AdvertiserPricing from "./pages/AdvertiserPricing";
 import VoiceProtection from "./pages/VoiceProtection";
+import VoiceCredentials from "./pages/VoiceCredentialsSimple";
+import VoiceCredentialsAdmin from "./pages/admin/VoiceCredentialsAdmin";
 import CreateAudioAdCampaign from "./pages/CreateAudioAdCampaign";
 import AdvertiserCampaignDashboard from "./pages/AdvertiserCampaignDashboard";
 import AdvertiserCampaignDetail from "./pages/AdvertiserCampaignDetail";
@@ -392,6 +394,8 @@ const AppContent = () => {
           <Route path="/podcast-ads" element={<PodcastAds />} />
           <Route path="/podcast-revenue" element={<PodcastRevenue />} />
           <Route path="/voice-protection" element={<VoiceProtection />} />
+          <Route path="/voice-credentials" element={<VoiceCredentials />} />
+          <Route path="/admin/voice-credentials" element={<VoiceCredentialsAdmin />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/notification-preferences" element={<NotificationPreferences />} />
               <Route path="/subscription" element={<SubscriptionSettings />} />
