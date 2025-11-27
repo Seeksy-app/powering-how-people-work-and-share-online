@@ -269,9 +269,7 @@ export const PersonaVideoCard = ({
           <motion.div
             className="absolute pointer-events-none z-10 px-6 py-3 bg-white rounded-full shadow-lg text-gray-900 font-medium whitespace-nowrap"
             style={{
-              left: pillPosition.x,
-              top: pillPosition.y,
-              transform: 'translate(0, 0)',
+              transform: `translate(${pillPosition.x}px, ${pillPosition.y}px)`,
             }}
             initial={{ opacity: 0 }}
             animate={{ 
