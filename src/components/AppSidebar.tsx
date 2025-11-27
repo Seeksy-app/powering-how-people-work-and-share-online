@@ -589,6 +589,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
     { title: "Persona Management", url: "/admin/personas", icon: Sparkles },
     { title: "Voice Tag & Certification", url: "/admin/voice-tag-certification", icon: Shield },
     { title: "Voice Cloning", url: "/voice-protection", icon: Shield },
+    { title: "Voice Credentials", url: "/admin/voice-credentials", icon: Shield },
     { title: "Screenshot Generator", url: "/admin/screenshot-generator", icon: Camera },
   ];
 

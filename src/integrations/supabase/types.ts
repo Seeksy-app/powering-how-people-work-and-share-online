@@ -9110,6 +9110,237 @@ export type Database = {
           },
         ]
       }
+      voice_admin_notifications: {
+        Row: {
+          created_at: string | null
+          creator_id: string
+          id: string
+          is_read: boolean | null
+          message: string
+          metadata: Json | null
+          notification_type: string
+          read_at: string | null
+          related_id: string | null
+          severity: string | null
+          title: string
+          voice_profile_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_id: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          metadata?: Json | null
+          notification_type: string
+          read_at?: string | null
+          related_id?: string | null
+          severity?: string | null
+          title: string
+          voice_profile_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_id?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          metadata?: Json | null
+          notification_type?: string
+          read_at?: string | null
+          related_id?: string | null
+          severity?: string | null
+          title?: string
+          voice_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_admin_notifications_voice_profile_id_fkey"
+            columns: ["voice_profile_id"]
+            isOneToOne: false
+            referencedRelation: "creator_voice_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_licensing_proposals: {
+        Row: {
+          advertiser_company: string | null
+          advertiser_email: string
+          advertiser_id: string | null
+          advertiser_name: string
+          campaign_details: string | null
+          counter_offer_message: string | null
+          counter_offer_price: number | null
+          created_at: string | null
+          creator_id: string
+          expires_at: string | null
+          id: string
+          proposed_price: number
+          responded_at: string | null
+          status: string | null
+          updated_at: string | null
+          usage_description: string
+          voice_profile_id: string | null
+        }
+        Insert: {
+          advertiser_company?: string | null
+          advertiser_email: string
+          advertiser_id?: string | null
+          advertiser_name: string
+          campaign_details?: string | null
+          counter_offer_message?: string | null
+          counter_offer_price?: number | null
+          created_at?: string | null
+          creator_id: string
+          expires_at?: string | null
+          id?: string
+          proposed_price: number
+          responded_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          usage_description: string
+          voice_profile_id?: string | null
+        }
+        Update: {
+          advertiser_company?: string | null
+          advertiser_email?: string
+          advertiser_id?: string | null
+          advertiser_name?: string
+          campaign_details?: string | null
+          counter_offer_message?: string | null
+          counter_offer_price?: number | null
+          created_at?: string | null
+          creator_id?: string
+          expires_at?: string | null
+          id?: string
+          proposed_price?: number
+          responded_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          usage_description?: string
+          voice_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_licensing_proposals_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voice_licensing_proposals_voice_profile_id_fkey"
+            columns: ["voice_profile_id"]
+            isOneToOne: false
+            referencedRelation: "creator_voice_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_listen_analytics: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string | null
+          creator_id: string
+          id: string
+          listened_at: string | null
+          listener_ip_hash: string | null
+          platform: string | null
+          user_agent: string | null
+          voice_profile_id: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          creator_id: string
+          id?: string
+          listened_at?: string | null
+          listener_ip_hash?: string | null
+          platform?: string | null
+          user_agent?: string | null
+          voice_profile_id?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          creator_id?: string
+          id?: string
+          listened_at?: string | null
+          listener_ip_hash?: string | null
+          platform?: string | null
+          user_agent?: string | null
+          voice_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_listen_analytics_voice_profile_id_fkey"
+            columns: ["voice_profile_id"]
+            isOneToOne: false
+            referencedRelation: "creator_voice_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_social_detections: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          creator_id: string
+          detected_at: string | null
+          id: string
+          is_authorized: boolean | null
+          metadata: Json | null
+          platform: string
+          post_id: string | null
+          post_url: string | null
+          updated_at: string | null
+          verification_status: string | null
+          voice_profile_id: string | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          creator_id: string
+          detected_at?: string | null
+          id?: string
+          is_authorized?: boolean | null
+          metadata?: Json | null
+          platform: string
+          post_id?: string | null
+          post_url?: string | null
+          updated_at?: string | null
+          verification_status?: string | null
+          voice_profile_id?: string | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          creator_id?: string
+          detected_at?: string | null
+          id?: string
+          is_authorized?: boolean | null
+          metadata?: Json | null
+          platform?: string
+          post_id?: string | null
+          post_url?: string | null
+          updated_at?: string | null
+          verification_status?: string | null
+          voice_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_social_detections_voice_profile_id_fkey"
+            columns: ["voice_profile_id"]
+            isOneToOne: false
+            referencedRelation: "creator_voice_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zoom_connections: {
         Row: {
           access_token: string
