@@ -24,15 +24,14 @@ export const PersonaGrid = () => {
   const animationFrameRef = useRef<number>();
   const isFirstHoverRef = useRef(true);
 
-  // When hovering starts, initialize smooth position to cursor position
+  // Initialize smooth position only on very first hover, not when switching between cards
   useEffect(() => {
     if (hoveredPersona && isFirstHoverRef.current) {
       setSmoothPosition(cursorPosition);
       isFirstHoverRef.current = false;
     }
-    if (!hoveredPersona) {
-      isFirstHoverRef.current = true;
-    }
+    // Don't reset isFirstHoverRef when hoveredPersona becomes null
+    // This prevents position reset when moving between cards
   }, [hoveredPersona, cursorPosition]);
 
   // Smooth interpolation using requestAnimationFrame
@@ -107,6 +106,10 @@ export const PersonaGrid = () => {
       <div 
         className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         onMouseMove={handleMouseMove}
+        onMouseLeave={() => {
+          setHoveredPersona(null);
+          isFirstHoverRef.current = true;
+        }}
       >
         {personas.map((persona) => (
           <PersonaVideoCard
