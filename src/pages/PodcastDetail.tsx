@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Plus, Edit, Trash2, Clock, CheckCircle, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { VoiceCertifiedBadge } from "@/components/VoiceCertifiedBadge";
+import { EmailVerificationWizard } from "@/components/podcast/EmailVerificationWizard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -416,7 +417,21 @@ const PodcastDetail = () => {
           </TabsContent>
 
           <TabsContent value="directories" className="mt-0 p-6">
-            <p className="text-muted-foreground">Directories tab content coming soon...</p>
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Directory Submission</h2>
+                <p className="text-muted-foreground">
+                  Add your email to verify podcast ownership with directories like Spotify and Apple Podcasts
+                </p>
+              </div>
+              
+              <EmailVerificationWizard
+                podcastId={podcast.id}
+                currentEmail={podcast.verification_email}
+                currentExpiration={podcast.verification_email_expires_at}
+                currentPermanent={podcast.verification_email_permanent}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="monetization" className="mt-0 p-6">
