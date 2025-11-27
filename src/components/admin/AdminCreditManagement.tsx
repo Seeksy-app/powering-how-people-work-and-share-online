@@ -26,6 +26,8 @@ export function AdminCreditManagement() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAISearching, setIsAISearching] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: users } = useQuery({
@@ -33,12 +35,57 @@ export function AdminCreditManagement() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name")
-        .order("full_name");
+        .select("id, account_full_name, username")
+        .order("account_full_name");
 
       if (error) throw error;
       return data;
     },
+  });
+
+  const handleAISearch = async () => {
+    if (!searchQuery.trim()) {
+      toast.error("Please enter a search query");
+      return;
+    }
+
+    setIsAISearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-admin-search", {
+        body: { query: searchQuery, searchType: "profiles" },
+      });
+
+      if (error) throw error;
+
+      if (data.results?.length > 0) {
+        const firstResult = data.results[0];
+        setSelectedUserId(firstResult.id);
+        toast.success(`Found: ${firstResult.name}`, {
+          description: firstResult.matchReason,
+        });
+      } else {
+        toast.info("No matches found", {
+          description: "Try a different search term",
+        });
+      }
+    } catch (error: any) {
+      console.error("AI search error:", error);
+      toast.error("Search failed", {
+        description: error.message,
+      });
+    } finally {
+      setIsAISearching(false);
+    }
+  };
+
+  const filteredUsers = users?.filter(user => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      user.account_full_name?.toLowerCase().includes(query) ||
+      user.username?.toLowerCase().includes(query) ||
+      user.id.toLowerCase().includes(query)
+    );
   });
 
   const { data: userCredits } = useQuery({
@@ -125,15 +172,39 @@ export function AdminCreditManagement() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="user-select">Select User</Label>
+          <Label htmlFor="ai-search">AI Search</Label>
+          <div className="flex gap-2">
+            <Input
+              id="ai-search"
+              placeholder="Try: 'Johnny Rocket', 'user with 0 credits'..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleAISearch();
+                }
+              }}
+            />
+            <Button 
+              onClick={handleAISearch}
+              disabled={isAISearching || !searchQuery.trim()}
+              size="sm"
+            >
+              {isAISearching ? "Searching..." : "Search"}
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="user-select">Or Select User</Label>
           <Select value={selectedUserId} onValueChange={setSelectedUserId}>
             <SelectTrigger id="user-select">
               <SelectValue placeholder="Choose a user" />
             </SelectTrigger>
             <SelectContent>
-              {users?.map((user) => (
+              {filteredUsers?.map((user) => (
                 <SelectItem key={user.id} value={user.id}>
-                  {user.full_name || user.id}
+                  {user.account_full_name || user.username || user.id}
                 </SelectItem>
               ))}
             </SelectContent>
