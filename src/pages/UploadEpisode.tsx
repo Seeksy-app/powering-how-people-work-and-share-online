@@ -55,25 +55,43 @@ const UploadEpisode = () => {
 
   const uploadEpisode = useMutation({
     mutationFn: async () => {
-      if (!user || !audioFile) throw new Error("Missing required data");
+      console.log("🚀 Starting episode upload...");
+      
+      if (!user || !audioFile) {
+        console.error("❌ Missing user or audio file");
+        throw new Error("Missing required data");
+      }
+      
+      console.log("✅ User and audio file present", { userId: user.id, fileName: audioFile.name });
       
       // Upload audio file
       const fileExt = audioFile.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
+      console.log("📤 Uploading audio to episode-files bucket:", fileName);
       const { error: uploadError } = await supabase.storage
         .from("episode-files")
         .upload(fileName, audioFile);
       
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("❌ Audio upload failed:", uploadError);
+        throw uploadError;
+      }
+      
+      console.log("✅ Audio uploaded successfully");
       
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from("episode-files")
         .getPublicUrl(fileName);
       
+      console.log("🔗 Audio public URL:", publicUrl);
+      
       // Upload photos if any
       const photoUrls: string[] = [];
+      if (photos.length > 0) {
+        console.log(`📤 Uploading ${photos.length} photos...`);
+      }
       for (const photo of photos) {
         const photoExt = photo.name.split('.').pop();
         const photoFileName = `${user.id}/${Date.now()}-${Math.random()}.${photoExt}`;
@@ -87,6 +105,9 @@ const UploadEpisode = () => {
             .from("podcast-covers")
             .getPublicUrl(photoFileName);
           photoUrls.push(photoUrl);
+          console.log("✅ Photo uploaded:", photoUrl);
+        } else {
+          console.warn("⚠️ Photo upload failed:", photoUploadError);
         }
       }
       
@@ -96,28 +117,37 @@ const UploadEpisode = () => {
         ? scheduledDate 
         : new Date().toISOString();
       
+      const episodeData = {
+        podcast_id: id,
+        title,
+        description,
+        audio_url: publicUrl,
+        episode_artwork_url: episodeArtwork || null,
+        episode_number: episodeNumber ? parseInt(episodeNumber) : null,
+        season_number: seasonNumber ? parseInt(seasonNumber) : null,
+        episode_type: episodeType,
+        is_explicit: isExplicit,
+        file_size_bytes: audioFile.size,
+        is_published: isPublished,
+        publish_date: publishDate,
+        photos: photoUrls,
+      };
+      
+      console.log("💾 Creating episode record:", episodeData);
+      
       // Create episode record
       const { data, error } = await supabase
         .from("episodes")
-        .insert({
-          podcast_id: id,
-          title,
-          description,
-          audio_url: publicUrl,
-          episode_artwork_url: episodeArtwork || null,
-          episode_number: episodeNumber ? parseInt(episodeNumber) : null,
-          season_number: seasonNumber ? parseInt(seasonNumber) : null,
-          episode_type: episodeType,
-          is_explicit: isExplicit,
-          file_size_bytes: audioFile.size,
-          is_published: isPublished,
-          publish_date: publishDate,
-          photos: photoUrls,
-        })
+        .insert(episodeData)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Episode insert failed:", error);
+        throw error;
+      }
+      
+      console.log("✅ Episode created successfully:", data);
       
       // Track storage usage (convert bytes to MB)
       const fileSizeMB = Math.ceil(audioFile.size / (1024 * 1024));
@@ -127,8 +157,9 @@ const UploadEpisode = () => {
           _feature_type: 'podcast_storage_mb',
           _increment: fileSizeMB
         });
+        console.log("✅ Storage usage tracked");
       } catch (usageError) {
-        console.error("Failed to track storage usage:", usageError);
+        console.error("⚠️ Failed to track storage usage:", usageError);
       }
       
       return data;
