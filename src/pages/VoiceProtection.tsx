@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Shield, Mic, DollarSign, Check, Clock, Zap, Star, Info, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import ScriptEditor from "@/components/voice/ScriptEditor";
 
 type CloneType = 'instant' | 'professional';
 
@@ -31,6 +32,7 @@ export default function VoiceProtection() {
   const [timeRemaining, setTimeRemaining] = useState(120); // 2 minutes for instant, 1800 for professional
   const [countdownInterval, setCountdownInterval] = useState<NodeJS.Timeout | null>(null);
   const [autoStopTimeout, setAutoStopTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [script, setScript] = useState("");
 
   // Fetch user's voice profiles
   const { data: voiceProfiles } = useQuery({
@@ -433,6 +435,13 @@ export default function VoiceProtection() {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
+
+            {/* Script Editor */}
+            <ScriptEditor 
+              script={script}
+              onScriptChange={setScript}
+              cloneType={cloneType}
+            />
 
             <div className="space-y-4">
               {/* Recording Guidance */}

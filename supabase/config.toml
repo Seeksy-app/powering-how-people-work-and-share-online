@@ -100,5 +100,8 @@ cron = "0 9 * * *"
 [functions.generate-screenshot]
 verify_jwt = true
 
+[functions.generate-voice-script]
+verify_jwt = true
+
 [functions.generate-voice-fingerprint]
 verify_jwt = true
