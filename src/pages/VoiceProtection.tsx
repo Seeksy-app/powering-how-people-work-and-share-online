@@ -390,17 +390,65 @@ export default function VoiceProtection() {
 
       return profileData;
     },
-    onSuccess: () => {
+    onSuccess: async (profileData) => {
       confetti({
         particleCount: 150,
         spread: 100,
         origin: { y: 0.6 }
       });
-      toast({
-        title: "Success! 🎉",
-        description: "Voice profile created successfully!",
-      });
+      
+      // Trigger blockchain minting asynchronously
+      if (profileData?.voiceProfile) {
+        console.log('⛓️ Initiating blockchain certification...');
+        
+        try {
+          const { data: mintData, error: mintError } = await supabase.functions.invoke(
+            'mint-voice-nft',
+            {
+              body: {
+                voiceProfileId: profileData.voiceProfile.id,
+                voiceFingerprint: profileData.voiceFingerprint || profileData.voiceProfile.id,
+                metadata: {
+                  voiceName,
+                  description,
+                  voiceType: cloneType,
+                  usageTerms,
+                  recordingDate: new Date().toISOString(),
+                },
+              },
+            }
+          );
+
+          if (mintError) {
+            console.error('❌ Blockchain minting failed:', mintError);
+            toast({
+              title: "Voice Profile Created",
+              description: "Voice created successfully, but blockchain certification is pending.",
+              variant: "default",
+            });
+          } else {
+            console.log('✅ Voice NFT minted:', mintData);
+            toast({
+              title: "Success! 🎉 Blockchain Certified",
+              description: `Voice profile created and certified on Polygon blockchain!`,
+            });
+          }
+        } catch (error) {
+          console.error('❌ Blockchain minting error:', error);
+          toast({
+            title: "Voice Profile Created",
+            description: "Voice created successfully. Blockchain certification in progress.",
+          });
+        }
+      } else {
+        toast({
+          title: "Success! 🎉",
+          description: "Voice profile created successfully!",
+        });
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['voiceProfiles'] });
+      queryClient.invalidateQueries({ queryKey: ['voice-blockchain-certificates'] });
       setVoiceName("");
       setDescription("");
       setPricePerAd("");
