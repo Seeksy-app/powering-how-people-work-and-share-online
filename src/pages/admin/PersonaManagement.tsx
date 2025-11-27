@@ -81,6 +81,17 @@ export default function PersonaManagement() {
     },
   });
 
+  // Helper function to extract URL from iframe embed code
+  const extractUrlFromIframe = (input: string): string => {
+    // If input looks like an iframe, extract the src URL
+    const iframeMatch = input.match(/src=["']([^"']+)["']/);
+    if (iframeMatch) {
+      return iframeMatch[1];
+    }
+    // Otherwise return as-is
+    return input;
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -175,14 +186,22 @@ export default function PersonaManagement() {
             </div>
 
             <div>
-              <Label htmlFor="video_url">Video URL (HeyGen iframe or direct .mp4)</Label>
+              <Label htmlFor="video_url">Video URL or Embed Code</Label>
               <Input
                 id="video_url"
-                placeholder="https://app.heygen.com/embedded-player/... or https://resource.heygen.ai/video/...mp4"
+                placeholder="Paste iframe embed code or direct URL"
                 value={formData.video_url}
-                onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                onChange={(e) => 
+                  setFormData({ 
+                    ...formData, 
+                    video_url: extractUrlFromIframe(e.target.value) 
+                  })
+                }
                 required
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Paste the entire iframe embed code from HeyGen, or just the URL
+              </p>
             </div>
 
             <div>
