@@ -37,34 +37,39 @@ export default function VoiceCredentials() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [profiles, analytics, props, detections] = await Promise.all([
-        supabase
-          .from("creator_voice_profiles")
-          .select("*")
-          .eq("creator_id", user.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("voice_listen_analytics")
-          .select("*")
-          .eq("creator_id", user.id)
-          .order("listened_at", { ascending: false })
-          .limit(100),
-        supabase
-          .from("voice_licensing_proposals")
-          .select("*")
-          .eq("creator_id", user.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("voice_social_detections")
-          .select("*")
-          .eq("creator_id", user.id)
-          .order("detected_at", { ascending: false }),
-      ]);
+      // Fetch voice profiles
+      (supabase as any)
+        .from("creator_voice_profiles")
+        .select("*")
+        .eq("creator_id", user.id)
+        .order("created_at", { ascending: false })
+        .then(({ data }: any) => setVoiceProfiles(data || []));
 
-      setVoiceProfiles(profiles.data || []);
-      setListenAnalytics(analytics.data || []);
-      setProposals(props.data || []);
-      setSocialDetections(detections.data || []);
+      // Fetch listen analytics
+      (supabase as any)
+        .from("voice_listen_analytics")
+        .select("*")
+        .eq("creator_id", user.id)
+        .order("listened_at", { ascending: false })
+        .limit(100)
+        .then(({ data }: any) => setListenAnalytics(data || []));
+
+      // Fetch proposals
+      (supabase as any)
+        .from("voice_licensing_proposals")
+        .select("*")
+        .eq("creator_id", user.id)
+        .order("created_at", { ascending: false })
+        .then(({ data }: any) => setProposals(data || []));
+
+      // Fetch social detections
+      (supabase as any)
+        .from("voice_social_detections")
+        .select("*")
+        .eq("creator_id", user.id)
+        .order("detected_at", { ascending: false })
+        .then(({ data }: any) => setSocialDetections(data || []));
+
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");
