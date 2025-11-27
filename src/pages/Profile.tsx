@@ -1254,21 +1254,21 @@ const Profile = () => {
             )}
           </Card>
         ) : (
-          <Card className="mb-6 overflow-hidden border border-muted">
+          <Card className="mb-6 overflow-hidden border border-border/50">
             <div className="aspect-video bg-muted relative">
               <img 
                 src={heroVirtualStudio} 
                 alt="Virtual studio" 
-                className="w-full h-full object-cover opacity-50 grayscale"
+                className="w-full h-full object-cover opacity-70"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/70 to-transparent" />
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center space-y-2">
-                  <Badge variant="secondary" className="text-muted-foreground">
-                    <Radio className="h-3 w-3 mr-1" />
+                <div className="text-center space-y-3">
+                  <Badge className="bg-amber-500/90 hover:bg-amber-500 text-white border-0 px-4 py-1.5 text-sm font-semibold">
+                    <Radio className="h-3.5 w-3.5 mr-1.5" />
                     Not Live
                   </Badge>
-                  <p className="text-sm text-muted-foreground px-4">
+                  <p className="text-sm text-foreground/90 px-4 font-medium">
                     Check back later for live streams
                   </p>
                 </div>
