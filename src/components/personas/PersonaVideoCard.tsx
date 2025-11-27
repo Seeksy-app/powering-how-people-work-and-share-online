@@ -65,13 +65,17 @@ export const PersonaVideoCard = ({
               <video
                 ref={videoRef}
                 src={videoUrl}
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover [&::-webkit-media-controls]:hidden [&::-webkit-media-controls-enclosure]:hidden"
                 loop
                 muted
                 playsInline
                 autoPlay
                 preload="auto"
+                controls={false}
+                disablePictureInPicture
+                controlsList="nodownload noplaybackrate"
                 style={{ objectFit: 'cover' }}
+                onContextMenu={(e) => e.preventDefault()}
               />
             )
           ) : (
