@@ -59,14 +59,23 @@ export const PersonaCard = ({
         <div className="relative w-full h-full">
           {/* Video background */}
           {videoUrl ? (
-            <video
-              ref={videoRef}
-              className="absolute inset-0 w-full h-full object-cover"
-              src={videoUrl}
-              muted
-              loop
-              playsInline
-            />
+            videoUrl.includes('heygen.com/embedded-player') || videoUrl.includes('iframe') ? (
+              <iframe
+                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                src={videoUrl}
+                allow="encrypted-media; fullscreen;"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                ref={videoRef}
+                className="absolute inset-0 w-full h-full object-cover"
+                src={videoUrl}
+                muted
+                loop
+                playsInline
+              />
+            )
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-accent/20" />
           )}
