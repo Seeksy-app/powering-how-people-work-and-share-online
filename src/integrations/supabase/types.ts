@@ -9163,6 +9163,65 @@ export type Database = {
           },
         ]
       }
+      voice_blockchain_certificates: {
+        Row: {
+          blockchain_network: string
+          certification_status: string
+          contract_address: string
+          created_at: string | null
+          creator_id: string
+          gas_sponsored: boolean | null
+          id: string
+          metadata_uri: string
+          nft_metadata: Json | null
+          token_id: string
+          transaction_hash: string
+          updated_at: string | null
+          voice_fingerprint_hash: string
+          voice_profile_id: string
+        }
+        Insert: {
+          blockchain_network?: string
+          certification_status?: string
+          contract_address: string
+          created_at?: string | null
+          creator_id: string
+          gas_sponsored?: boolean | null
+          id?: string
+          metadata_uri: string
+          nft_metadata?: Json | null
+          token_id: string
+          transaction_hash: string
+          updated_at?: string | null
+          voice_fingerprint_hash: string
+          voice_profile_id: string
+        }
+        Update: {
+          blockchain_network?: string
+          certification_status?: string
+          contract_address?: string
+          created_at?: string | null
+          creator_id?: string
+          gas_sponsored?: boolean | null
+          id?: string
+          metadata_uri?: string
+          nft_metadata?: Json | null
+          token_id?: string
+          transaction_hash?: string
+          updated_at?: string | null
+          voice_fingerprint_hash?: string
+          voice_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_blockchain_certificates_voice_profile_id_fkey"
+            columns: ["voice_profile_id"]
+            isOneToOne: false
+            referencedRelation: "creator_voice_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_licensing_proposals: {
         Row: {
           advertiser_company: string | null

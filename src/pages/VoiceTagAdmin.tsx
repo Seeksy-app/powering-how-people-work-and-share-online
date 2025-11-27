@@ -54,13 +54,13 @@ export default function VoiceTagAdmin() {
     },
   });
 
-  // Fetch blockchain certificates
+  // Fetch blockchain certificates for voice profiles
   const { data: certificates, isLoading: isLoadingCertificates } = useQuery({
-    queryKey: ['blockchain-certificates'],
+    queryKey: ['voice-blockchain-certificates'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('episode_blockchain_certificates')
-        .select('*, episodes(title)')
+        .from('voice_blockchain_certificates')
+        .select('*, creator_voice_profiles(voice_name)')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -189,10 +189,10 @@ export default function VoiceTagAdmin() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-6 w-6 text-primary" />
-                Blockchain Certificates
+                Voice NFT Certificates
               </CardTitle>
               <CardDescription>
-                Episode certifications with on-chain verification
+                Blockchain-certified voice ownership on Polygon network
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -211,7 +211,7 @@ export default function VoiceTagAdmin() {
                           </div>
                           <div className="flex-1 space-y-2">
                             <CardTitle className="text-sm line-clamp-2">
-                              {cert.episodes?.title || 'Episode'}
+                              {cert.creator_voice_profiles?.voice_name || 'Voice Profile'}
                             </CardTitle>
                             <VoiceCertifiedBadge size="sm" />
                           </div>
@@ -221,29 +221,34 @@ export default function VoiceTagAdmin() {
                         <div className="p-2 rounded-md bg-muted/50 space-y-1.5">
                           <div className="flex items-center gap-2 text-xs">
                             <Shield className="h-3 w-3 text-primary" />
-                            <span className="font-medium">Certificate Hash</span>
+                            <span className="font-medium">Token ID</span>
                           </div>
                           <div className="text-xs text-muted-foreground font-mono break-all">
-                            {cert.certificate_hash.substring(0, 32)}...
+                            {cert.token_id}
                           </div>
                         </div>
 
-                        {cert.voice_fingerprint_id && (
-                          <div className="p-2 rounded-md bg-muted/50 space-y-1.5">
-                            <div className="flex items-center gap-2 text-xs">
-                              <Fingerprint className="h-3 w-3 text-primary" />
-                              <span className="font-medium">Voice Fingerprint</span>
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              Verified ✓
-                            </div>
+                        <div className="p-2 rounded-md bg-muted/50 space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs">
+                            <Fingerprint className="h-3 w-3 text-primary" />
+                            <span className="font-medium">Voice Fingerprint</span>
                           </div>
-                        )}
+                          <div className="text-xs text-muted-foreground font-mono break-all">
+                            {cert.voice_fingerprint_hash.substring(0, 32)}...
+                          </div>
+                        </div>
 
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4" />
                           <span>
                             {new Date(cert.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm pt-2 border-t">
+                          <span className="text-muted-foreground">Status:</span>
+                          <span className="font-semibold text-primary capitalize">
+                            {cert.certification_status}
                           </span>
                         </div>
                       </CardContent>
@@ -256,7 +261,7 @@ export default function VoiceTagAdmin() {
                     <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-xl font-semibold mb-2">No blockchain certificates yet</h3>
                     <p className="text-muted-foreground mb-6">
-                      Click "Create Certification" to certify your first episode on blockchain
+                      Voice NFTs will appear here automatically when voice profiles are created
                     </p>
                   </CardContent>
                 </Card>
