@@ -56,15 +56,14 @@ export const PageBuilderProvider: React.FC<{ children: React.ReactNode; userId: 
         } else {
           // Initialize default layout with all elements hidden except essentials
           const defaultElements: LayoutElement[] = [
-            { id: 'profile-image', element_type: 'profile-image', position_order: 0, is_visible: true },
-            { id: 'streaming', element_type: 'streaming', position_order: 1, is_visible: true },
-            { id: 'menu-items', element_type: 'menu-items', position_order: 2, is_visible: true },
-            { id: 'events', element_type: 'events', position_order: 3, is_visible: false },
-            { id: 'meetings', element_type: 'meetings', position_order: 4, is_visible: false },
-            { id: 'signup-sheets', element_type: 'signup-sheets', position_order: 5, is_visible: false },
-            { id: 'polls', element_type: 'polls', position_order: 6, is_visible: false },
+            { id: 'streaming', element_type: 'streaming', position_order: 0, is_visible: true },
+            { id: 'events', element_type: 'events', position_order: 1, is_visible: false },
+            { id: 'meetings', element_type: 'meetings', position_order: 2, is_visible: false },
+            { id: 'signup-sheets', element_type: 'signup-sheets', position_order: 3, is_visible: false },
+            { id: 'polls', element_type: 'polls', position_order: 4, is_visible: false },
+            { id: 'podcasts', element_type: 'podcasts', position_order: 5, is_visible: false },
+            { id: 'custom-sections', element_type: 'custom-sections', position_order: 6, is_visible: false },
             { id: 'qr-code', element_type: 'qr-code', position_order: 7, is_visible: false },
-            { id: 'links', element_type: 'links', position_order: 8, is_visible: false },
           ];
           setLayoutElements(defaultElements);
         }
