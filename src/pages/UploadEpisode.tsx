@@ -62,14 +62,14 @@ const UploadEpisode = () => {
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
-        .from("podcast-audio")
+        .from("episode-files")
         .upload(fileName, audioFile);
       
       if (uploadError) throw uploadError;
       
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from("podcast-audio")
+        .from("episode-files")
         .getPublicUrl(fileName);
       
       // Upload photos if any
@@ -79,12 +79,12 @@ const UploadEpisode = () => {
         const photoFileName = `${user.id}/${Date.now()}-${Math.random()}.${photoExt}`;
         
         const { error: photoUploadError } = await supabase.storage
-          .from("podcast-photos")
+          .from("podcast-covers")
           .upload(photoFileName, photo);
         
         if (!photoUploadError) {
           const { data: { publicUrl: photoUrl } } = supabase.storage
-            .from("podcast-photos")
+            .from("podcast-covers")
             .getPublicUrl(photoFileName);
           photoUrls.push(photoUrl);
         }
@@ -138,8 +138,9 @@ const UploadEpisode = () => {
       navigate(`/podcasts/${id}`);
     },
     onError: (error) => {
-      console.error(error);
-      toast.error("Failed to save episode");
+      console.error("Episode save error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error(`Failed to save episode: ${errorMessage}`);
     },
   });
 
