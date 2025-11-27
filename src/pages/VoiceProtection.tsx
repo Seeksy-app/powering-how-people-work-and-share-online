@@ -111,12 +111,6 @@ export default function VoiceProtection() {
         // Clear timers
         if (countdownInterval) clearInterval(countdownInterval);
         if (autoStopTimeout) clearTimeout(autoStopTimeout);
-        // Celebrate completion
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 }
-        });
       };
 
       setMediaRecorder(recorder);
@@ -189,6 +183,12 @@ export default function VoiceProtection() {
         clearTimeout(autoStopTimeout);
         setAutoStopTimeout(null);
       }
+      // Celebrate recording completion
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
     }
   };
 
@@ -494,19 +494,9 @@ export default function VoiceProtection() {
               />
             </div>
 
-            {/* Script Editor with Timer */}
+            {/* Script Editor */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Recording Script</Label>
-                {isRecording && (
-                  <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-primary">
-                      {formatTime(timeRemaining)}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <Label>Recording Script</Label>
               <ScriptEditor 
                 script={script}
                 onScriptChange={setScript}
@@ -515,58 +505,65 @@ export default function VoiceProtection() {
             </div>
 
             <div className="space-y-4">
+              {/* Timer Display - Large and Yellow */}
+              {isRecording && (
+                <div className="flex items-center justify-center p-6 bg-yellow-500/10 rounded-lg border-2 border-yellow-500">
+                  <Clock className="h-8 w-8 text-yellow-500 mr-3" />
+                  <span className="text-4xl font-bold text-yellow-500">
+                    {formatTime(timeRemaining)}
+                  </span>
+                </div>
+              )}
+
               {/* Recording Controls */}
-              {!audioBlob && (
-                <>
-                  <Button
-                    onClick={handleStartRecordingClick}
-                    disabled={isRecording}
-                    className="w-full"
-                  >
-                    <Mic className="mr-2 h-4 w-4" />
-                    {cloneType === 'instant' ? 'Start Recording (2 minutes)' : 'Start Recording (30 minutes)'}
-                  </Button>
+              {!audioBlob && !isRecording && (
+                <Button
+                  onClick={handleStartRecordingClick}
+                  className="w-full"
+                >
+                  <Mic className="mr-2 h-4 w-4" />
+                  {cloneType === 'instant' ? 'Start Recording (2 minutes)' : 'Start Recording (30 minutes)'}
+                </Button>
+              )}
 
-                  {isRecording && (
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-sm font-medium text-primary mb-2">
-                          {isPaused ? "Recording Paused" : "Recording in Progress..."}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {cloneType === 'professional' 
-                            ? "Read aloud from a book. Use pause if you need a break."
-                            : "Speak naturally and clearly."
-                          }
-                        </p>
-                      </div>
+              {isRecording && (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-primary mb-2">
+                      {isPaused ? "Recording Paused" : "Recording in Progress..."}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {cloneType === 'professional' 
+                        ? "Read aloud from a book. Use pause if you need a break."
+                        : "Speak naturally and clearly."
+                      }
+                    </p>
+                  </div>
 
-                      <div className="grid grid-cols-3 gap-2">
-                        {isPaused ? (
-                          <Button onClick={resumeRecording} variant="default" className="w-full">
-                            Resume
-                          </Button>
-                        ) : (
-                          <Button onClick={pauseRecording} variant="secondary" className="w-full">
-                            Pause
-                          </Button>
-                        )}
-                        <Button onClick={stopRecording} variant="outline" className="w-full">
-                          Stop
-                        </Button>
-                        <Button 
-                          onClick={deleteRecording} 
-                          variant="destructive" 
-                          size="icon"
-                          className="w-full"
-                          title="Delete and start over"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
+                  <div className="grid grid-cols-3 gap-2">
+                    {isPaused ? (
+                      <Button onClick={resumeRecording} variant="default" className="w-full">
+                        Resume
+                      </Button>
+                    ) : (
+                      <Button onClick={pauseRecording} variant="secondary" className="w-full">
+                        Pause
+                      </Button>
+                    )}
+                    <Button onClick={stopRecording} variant="outline" className="w-full">
+                      Stop
+                    </Button>
+                    <Button 
+                      onClick={deleteRecording} 
+                      variant="destructive" 
+                      size="icon"
+                      className="w-full"
+                      title="Delete and start over"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               )}
 
               {/* Audio Preview */}
