@@ -90,27 +90,38 @@ export const PersonaModal = ({ open, onClose, persona }: PersonaModalProps) => {
         <div className="flex flex-col lg:flex-row h-full">
           {/* Video Section - Left */}
           <div className="relative lg:w-1/2 aspect-video lg:aspect-auto bg-black">
-            <video
-              ref={videoRef}
-              src={persona.videoUrl}
-              className="w-full h-full object-cover"
-              loop
-              playsInline
-              autoPlay
-              muted={isMuted}
-            />
+            {persona.videoUrl.includes('heygen.com/embedded-player') || persona.videoUrl.includes('iframe') ? (
+              <iframe
+                className="w-full h-full object-cover"
+                src={persona.videoUrl}
+                allow="encrypted-media; fullscreen;"
+                allowFullScreen
+              />
+            ) : (
+              <video
+                ref={videoRef}
+                src={persona.videoUrl}
+                className="w-full h-full object-cover"
+                loop
+                playsInline
+                autoPlay
+                muted={isMuted}
+              />
+            )}
             
-            {/* Mute Toggle */}
-            <button
-              onClick={() => setIsMuted(!isMuted)}
-              className="absolute top-4 left-4 p-3 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 transition-colors"
-            >
-              {isMuted ? (
-                <VolumeX className="w-5 h-5 text-white" />
-              ) : (
-                <Volume2 className="w-5 h-5 text-white" />
-              )}
-            </button>
+            {/* Mute Toggle - only show for regular videos */}
+            {!persona.videoUrl.includes('heygen.com/embedded-player') && (
+              <button
+                onClick={() => setIsMuted(!isMuted)}
+                className="absolute top-4 left-4 p-3 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 transition-colors"
+              >
+                {isMuted ? (
+                  <VolumeX className="w-5 h-5 text-white" />
+                ) : (
+                  <Volume2 className="w-5 h-5 text-white" />
+                )}
+              </button>
+            )}
           </div>
 
           {/* Info Section - Right */}
