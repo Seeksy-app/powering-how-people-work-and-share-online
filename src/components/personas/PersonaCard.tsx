@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 interface Tag {
@@ -25,7 +25,9 @@ export const PersonaCard = ({
   onSelect,
 }: PersonaCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const videoRef = useRef<HTMLVideoElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -42,15 +44,29 @@ export const PersonaCard = ({
     }
   };
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (cardRef.current) {
+      const rect = cardRef.current.getBoundingClientRect();
+      setMousePosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    }
+  };
+
   const handleClick = () => {
     onSelect?.();
   };
 
+  const isIframe = videoUrl && (videoUrl.includes('heygen.com') || videoUrl.includes('iframe'));
+
   return (
     <motion.div
+      ref={cardRef}
       className="relative w-full h-[500px] cursor-pointer group"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
       onClick={handleClick}
       whileHover={{ scale: 1.05, y: -10 }}
       transition={{ duration: 0.3 }}
@@ -59,7 +75,7 @@ export const PersonaCard = ({
         <div className="relative w-full h-full">
           {/* Video background */}
           {videoUrl ? (
-            videoUrl.includes('heygen.com/embedded-player') || videoUrl.includes('iframe') ? (
+            isIframe ? (
               <iframe
                 className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                 src={videoUrl}
@@ -112,6 +128,30 @@ export const PersonaCard = ({
               ))}
             </div>
           </div>
+
+          {/* Cursor-following tag */}
+          <AnimatePresence>
+            {isHovered && (
+              <motion.div
+                className="absolute z-50 pointer-events-none"
+                style={{
+                  left: mousePosition.x,
+                  top: mousePosition.y,
+                  transform: 'translate(-50%, -120%)',
+                }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="px-4 py-2 bg-white rounded-full shadow-lg">
+                  <p className="text-sm font-medium text-foreground whitespace-nowrap">
+                    More about {name}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Hover hint */}
           {!isHovered && (
