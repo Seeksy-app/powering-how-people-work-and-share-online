@@ -114,9 +114,9 @@ export const PersonaVideoCard = ({
   };
 
   const toggleMute = () => {
-    setIsMuted(!isMuted);
     if (modalVideoRef.current) {
-      modalVideoRef.current.muted = !isMuted;
+      modalVideoRef.current.muted = !modalVideoRef.current.muted;
+      setIsMuted(modalVideoRef.current.muted);
     }
   };
 
@@ -282,9 +282,9 @@ export const PersonaVideoCard = ({
                 <X className="w-6 h-6 text-gray-800" />
               </button>
 
-              <div className="grid md:grid-cols-2 gap-0 h-full">
+              <div className="grid md:grid-cols-2 gap-0">
                 {/* Left: Video */}
-                <div className="relative bg-gray-100 min-h-[400px] md:min-h-[600px]">
+                <div className="relative bg-gray-100 aspect-[3/4] md:aspect-auto md:min-h-[600px]">
                   {videoUrl && !isIframe && (
                     <>
                       <video
@@ -294,14 +294,16 @@ export const PersonaVideoCard = ({
                         autoPlay
                         loop
                         playsInline
-                        muted={isMuted}
+                        onLoadedMetadata={(e) => {
+                          e.currentTarget.muted = false;
+                        }}
                       />
                       {/* Mute/Unmute Button */}
                       <button
                         onClick={toggleMute}
                         className="absolute top-4 left-4 p-3 rounded-full bg-white/90 hover:bg-white transition-colors"
                       >
-                        {isMuted ? (
+                        {modalVideoRef.current?.muted ? (
                           <VolumeX className="w-5 h-5 text-gray-800" />
                         ) : (
                           <Volume2 className="w-5 h-5 text-gray-800" />
