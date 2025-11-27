@@ -175,10 +175,10 @@ export default function PersonaManagement() {
             </div>
 
             <div>
-              <Label htmlFor="video_url">Video URL (HeyGen/D-ID)</Label>
+              <Label htmlFor="video_url">Video URL (HeyGen iframe or direct .mp4)</Label>
               <Input
                 id="video_url"
-                type="url"
+                placeholder="https://app.heygen.com/embedded-player/... or https://resource.heygen.ai/video/...mp4"
                 value={formData.video_url}
                 onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
                 required
@@ -237,7 +237,16 @@ export default function PersonaManagement() {
               </div>
             </div>
             <p className="text-sm">{persona.tagline}</p>
-            <video src={persona.video_url} className="w-full rounded aspect-video" controls />
+            {persona.video_url.includes('heygen.com/embedded-player') ? (
+              <iframe
+                src={persona.video_url}
+                className="w-full rounded aspect-video"
+                allow="encrypted-media; fullscreen;"
+                allowFullScreen
+              />
+            ) : (
+              <video src={persona.video_url} className="w-full rounded aspect-video" controls />
+            )}
           </Card>
         ))}
       </div>
