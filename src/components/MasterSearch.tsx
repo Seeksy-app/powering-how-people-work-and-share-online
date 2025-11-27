@@ -29,6 +29,7 @@ export const MasterSearch = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [flatResults, setFlatResults] = useState<SearchResult[]>([]);
+  const [isAISearching, setIsAISearching] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -76,6 +77,39 @@ export const MasterSearch = () => {
         page.type.toLowerCase().includes(query)
       );
 
+      // Try AI search for better results
+      setIsAISearching(true);
+      try {
+        const { data: aiData, error: aiError } = await supabase.functions.invoke("ai-admin-search", {
+          body: { query: searchQuery, searchType: "all" },
+        });
+
+        if (!aiError && aiData?.results?.length > 0) {
+          // Convert AI results to SearchResult format
+          const aiResults: SearchResult[] = aiData.results.map((result: any) => ({
+            id: result.id,
+            title: result.name,
+            type: result.type === 'profile' ? 'Creator' : result.type === 'contact' ? 'Contact' : result.type === 'meeting' ? 'Meeting' : 'Ticket',
+            category: result.type === 'profile' ? 'Creators' : result.type === 'contact' ? 'Contacts' : result.type === 'meeting' ? 'Meetings' : 'Tickets',
+            url: result.type === 'profile' ? '/admin/creators' : result.type === 'contact' ? '/crm' : result.type === 'meeting' ? '/meetings' : '/project-management',
+            icon: result.type === 'profile' ? Users : result.type === 'contact' ? Users : result.type === 'meeting' ? Calendar : Ticket,
+            description: result.matchReason,
+          }));
+
+          const allResults = [...pageResults, ...aiResults];
+          const limitedResults = allResults.slice(0, 15);
+          setResults(limitedResults);
+          setFlatResults(limitedResults);
+          setSelectedIndex(0);
+          setIsAISearching(false);
+          return;
+        }
+      } catch (error) {
+        console.error("AI search error:", error);
+      }
+      setIsAISearching(false);
+
+      // Fallback to basic search
       // Search contacts
       const { data: contacts } = await supabase
         .from("contacts")
@@ -255,7 +289,7 @@ export const MasterSearch = () => {
         <Input
           ref={inputRef}
           type="text"
-          placeholder="Search anything... (contacts, meetings, events, pages)"
+          placeholder="Search anything... (contacts, meetings, events, pages) - AI powered"
           value={searchQuery}
           onChange={(e) => {
             setSearchQuery(e.target.value);

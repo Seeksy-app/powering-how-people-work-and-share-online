@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Users, Search, Mail, Shield, UserCog, Calendar, Award, Mic } from "lucide-react";
+import { Users, Search, Mail, Shield, UserCog, Calendar, Award, Mic, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 const AdminCreators = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [isAISearching, setIsAISearching] = useState(false);
+  const [aiResults, setAiResults] = useState<any[]>([]);
   const queryClient = useQueryClient();
 
   // Fetch all creator users (users who are not admins)
@@ -112,8 +115,46 @@ const AdminCreators = () => {
     },
   });
 
+  // AI-powered search
+  const handleAISearch = async () => {
+    if (!searchTerm.trim()) {
+      setAiResults([]);
+      return;
+    }
+
+    setIsAISearching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-admin-search", {
+        body: { query: searchTerm, searchType: "creators" },
+      });
+
+      if (error) throw error;
+
+      setAiResults(data.results || []);
+      
+      if (data.results?.length > 0) {
+        toast.success(`Found ${data.results.length} results using AI search`);
+      } else {
+        toast.info("No matches found");
+      }
+    } catch (error: any) {
+      console.error("AI search error:", error);
+      toast.error("AI search failed", {
+        description: error.message,
+      });
+    } finally {
+      setIsAISearching(false);
+    }
+  };
+
   // Search and filter creators
   const filteredCreators = creators?.filter((creator) => {
+    // If AI search has results, filter by AI results
+    if (aiResults.length > 0) {
+      return aiResults.some(result => result.id === creator.id);
+    }
+
+    // Otherwise use basic text search
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       creator.account_full_name?.toLowerCase().includes(searchLower) ||
@@ -231,17 +272,41 @@ const AdminCreators = () => {
         <CardContent className="space-y-4">
           <div className="flex gap-4">
             <div className="flex-1">
-              <Label htmlFor="search">Search Creators</Label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Search by name, username, or email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
+              <Label htmlFor="search">AI-Powered Search</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="search"
+                    placeholder="Try: 'Johnny Rocket', 'joined last week', 'users with 0 credits'..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      if (!e.target.value.trim()) {
+                        setAiResults([]);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAISearch();
+                      }
+                    }}
+                    className="pl-8"
+                  />
+                </div>
+                <Button 
+                  onClick={handleAISearch} 
+                  disabled={isAISearching || !searchTerm.trim()}
+                  className="shrink-0"
+                >
+                  {isAISearching ? "Searching..." : "AI Search"}
+                </Button>
               </div>
+              {aiResults.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Showing {aiResults.length} AI-matched results
+                </p>
+              )}
             </div>
             <div className="w-48">
               <Label htmlFor="role-filter">Filter by Role</Label>
@@ -282,25 +347,41 @@ const AdminCreators = () => {
               </TableHeader>
               <TableBody>
                 {filteredCreators && filteredCreators.length > 0 ? (
-                  filteredCreators.map((creator) => (
-                    <TableRow key={creator.id}>
-                      <TableCell className="font-medium">
-                        {creator.account_full_name || "No name"}
-                      </TableCell>
-                      <TableCell>{creator.username || "—"}</TableCell>
-                      <TableCell>—</TableCell>
-                      <TableCell>{getRoleBadges(creator.user_roles)}</TableCell>
-                      <TableCell>{getSubscriptionBadge(creator.subscriptions)}</TableCell>
-                      <TableCell>
-                        {creator.user_credits?.balance || 0} credits
-                      </TableCell>
-                      <TableCell>
-                        {creator.created_at
-                          ? new Date(creator.created_at).toLocaleDateString()
-                          : "—"}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredCreators.map((creator) => {
+                    const aiMatch = aiResults.find(r => r.id === creator.id);
+                    return (
+                      <TableRow 
+                        key={creator.id}
+                        className={aiMatch ? "bg-primary/5" : ""}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {aiMatch && (
+                              <Sparkles className="h-3 w-3 text-primary" />
+                            )}
+                            {creator.account_full_name || "No name"}
+                          </div>
+                          {aiMatch?.matchReason && (
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {aiMatch.matchReason}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell>{creator.username || "—"}</TableCell>
+                        <TableCell>—</TableCell>
+                        <TableCell>{getRoleBadges(creator.user_roles)}</TableCell>
+                        <TableCell>{getSubscriptionBadge(creator.subscriptions)}</TableCell>
+                        <TableCell>
+                          {creator.user_credits?.balance || 0} credits
+                        </TableCell>
+                        <TableCell>
+                          {creator.created_at
+                            ? new Date(creator.created_at).toLocaleDateString()
+                            : "—"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
