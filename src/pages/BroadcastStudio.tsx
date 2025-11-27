@@ -4,14 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BroadcastTimeline } from "@/components/studio-broadcast/BroadcastTimeline";
 import { MultiPlatformControls } from "@/components/studio-broadcast/MultiPlatformControls";
 import { AdIntegrationPanel } from "@/components/studio-broadcast/AdIntegrationPanel";
 import { AIToolsPanel } from "@/components/studio-broadcast/AIToolsPanel";
 import { StudioLeftSidebar } from "@/components/studio/StudioLeftSidebar";
-import { Video, Mic, MicOff, VideoOff, Monitor, UserPlus, Radio, ArrowLeft } from "lucide-react";
+import { Video, Mic, MicOff, VideoOff, Monitor, UserPlus, Radio, ArrowLeft, DollarSign, Scissors, Plus, Settings, Film, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function BroadcastStudio() {
@@ -42,10 +42,14 @@ export default function BroadcastStudio() {
   // Multi-Platform Settings
   const [audioOnlyMode, setAudioOnlyMode] = useState(false);
   const [platforms, setPlatforms] = useState({
-    myPage: true,
-    youtube: false,
-    spotify: false
+    myPage: { enabled: true, paired: true, title: 'My Page' },
+    youtube: { enabled: false, paired: false, title: 'YouTube' },
+    spotify: { enabled: false, paired: false, title: 'Spotify' }
   });
+  
+  // Host Read Script
+  const [showHostScript, setShowHostScript] = useState(false);
+  const [currentScript, setCurrentScript] = useState("");
 
   // AI Features
   const [aiFeatures, setAIFeatures] = useState({
@@ -276,9 +280,9 @@ export default function BroadcastStudio() {
           title: broadcastTitle || 'Untitled Broadcast',
           is_live: true,
           started_at: new Date().toISOString(),
-          broadcast_to_my_page: platforms.myPage,
-          broadcast_to_youtube: platforms.youtube,
-          broadcast_to_spotify: platforms.spotify,
+          broadcast_to_my_page: platforms.myPage.enabled,
+          broadcast_to_youtube: platforms.youtube.enabled,
+          broadcast_to_spotify: platforms.spotify.enabled,
           audio_only_mode: audioOnlyMode
         })
         .select()
@@ -550,27 +554,33 @@ export default function BroadcastStudio() {
       </div>
 
       <ResizablePanelGroup direction="horizontal" className="flex-1">
-        {/* Left Sidebar - Controls */}
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={25}>
-          <div className="h-full p-4 space-y-4 overflow-y-auto">
-            <MultiPlatformControls
-              isLive={isLive}
-              audioOnlyMode={audioOnlyMode}
-              platforms={platforms}
-              onPlatformToggle={(platform) => {
-                setPlatforms(prev => ({ ...prev, [platform]: !prev[platform] }));
-              }}
-              onAudioModeToggle={() => setAudioOnlyMode(!audioOnlyMode)}
-              onGoLive={handleGoLive}
-              onStopBroadcast={handleStopBroadcast}
-            />
+        {/* Left Sidebar - Scenes */}
+        <ResizablePanel defaultSize={18} minSize={15} maxSize={22}>
+          <div className="h-full p-4 space-y-3 overflow-y-auto bg-card/50">
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-2"
+              onClick={() => {}}
+            >
+              <Plus className="h-4 w-4" />
+              Add Scene
+            </Button>
+            
+            <div className="space-y-2">
+              <div className="text-xs font-semibold text-muted-foreground mb-2">Scenes</div>
+              {['Countdown', 'Greeting', 'Introduction', 'Q&A'].map((scene) => (
+                <Card key={scene} className="p-3 hover:bg-accent cursor-pointer transition-colors">
+                  <div className="text-sm font-medium">{scene}</div>
+                </Card>
+              ))}
+            </div>
           </div>
         </ResizablePanel>
 
         <ResizableHandle />
 
         {/* Main Content */}
-        <ResizablePanel defaultSize={50} minSize={40}>
+        <ResizablePanel defaultSize={52} minSize={40}>
           <div className="h-full flex flex-col">
             {/* Video Preview */}
             <div className="flex-1 bg-black relative">
@@ -581,34 +591,96 @@ export default function BroadcastStudio() {
                 muted
                 className="w-full h-full object-contain"
               />
+              
+              {/* Resolution Badge */}
+              <div className="absolute top-4 left-4">
+                <Badge variant="secondary" className="bg-black/60 backdrop-blur-sm">
+                  1080p
+                </Badge>
+              </div>
+
+              {/* Marker Buttons - Above Controls */}
+              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="bg-black/60 backdrop-blur-sm hover:bg-black/80 gap-2"
+                  onClick={() => handleAddMarker('broll', currentTime)}
+                  disabled={!isLive}
+                >
+                  <Film className="h-4 w-4" />
+                  <span className="text-xs">B-roll</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="bg-black/60 backdrop-blur-sm hover:bg-black/80 gap-2"
+                  onClick={() => handleAddMarker('clip', currentTime)}
+                  disabled={!isLive}
+                >
+                  <Scissors className="h-4 w-4" />
+                  <span className="text-xs">Clip</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="bg-black/60 backdrop-blur-sm hover:bg-black/80 gap-2"
+                  onClick={() => handleAddMarker('ad', currentTime)}
+                  disabled={!isLive}
+                >
+                  <DollarSign className="h-4 w-4" />
+                  <span className="text-xs">Ad</span>
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="bg-black/60 backdrop-blur-sm hover:bg-black/80 gap-2"
+                  onClick={() => {
+                    setCurrentScript("This is your host-read ad script. Read this to your audience during the live broadcast.");
+                    setShowHostScript(true);
+                  }}
+                  disabled={!isLive}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span className="text-xs">Script</span>
+                </Button>
+              </div>
 
               {/* Control Bar (Bottom) */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/80 backdrop-blur-sm rounded-lg p-2">
                 <Button
                   size="sm"
-                  variant={micEnabled ? "default" : "destructive"}
+                  variant={micEnabled ? "ghost" : "destructive"}
                   onClick={toggleMicrophone}
+                  className="hover:bg-white/10"
                 >
                   {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
                 </Button>
                 <Button
                   size="sm"
-                  variant={cameraEnabled ? "default" : "destructive"}
+                  variant={cameraEnabled ? "ghost" : "destructive"}
                   onClick={toggleCamera}
+                  className="hover:bg-white/10"
                 >
                   {cameraEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
                 </Button>
-                <Button size="sm" variant="outline" onClick={shareScreen}>
+                <Button size="sm" variant="ghost" onClick={shareScreen} className="hover:bg-white/10">
                   <Monitor className="h-4 w-4" />
                 </Button>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="ghost" className="hover:bg-white/10">
                   <UserPlus className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" className="hover:bg-white/10">
+                  <Plus className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" className="hover:bg-white/10">
+                  <Settings className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
             {/* Timeline */}
-            <div className="p-4 border-t border-border">
+            <div className="p-4 border-t border-border bg-card/50">
               <BroadcastTimeline
                 broadcastId={broadcastId || ''}
                 currentTime={currentTime}
@@ -626,9 +698,78 @@ export default function BroadcastStudio() {
 
         <ResizableHandle />
 
-        {/* Right Sidebar - Tools & Analytics */}
+        {/* Right Sidebar - Channels & Tools */}
         <ResizablePanel defaultSize={30} minSize={25} maxSize={35}>
-          <div className="h-full overflow-y-auto p-4 space-y-4">
+          <div className="h-full overflow-y-auto p-4 space-y-4 bg-card/50">
+            {/* Channels Panel */}
+            <Card>
+              <CardContent className="pt-6 space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold">Channels</h3>
+                  <Badge variant="secondary" className="text-xs">
+                    {Object.values(platforms).filter(p => p.enabled).length} of {Object.keys(platforms).length} active
+                  </Badge>
+                </div>
+
+                {Object.entries(platforms).map(([key, platform]) => (
+                  <div key={key} className="flex items-center justify-between p-3 rounded-lg border bg-card">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+                        <Radio className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">{platform.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {platform.paired ? '🟢 Connected' : '⚪ Not paired'}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!platform.paired && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setPlatforms(prev => ({
+                              ...prev,
+                              [key]: { ...prev[key], paired: true }
+                            }));
+                            toast({
+                              title: "Connected",
+                              description: `${platform.title} paired successfully`
+                            });
+                          }}
+                        >
+                          Pair
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant={platform.enabled ? "default" : "outline"}
+                        onClick={() => {
+                          if (!platform.paired) {
+                            toast({
+                              title: "Not Paired",
+                              description: `Please pair ${platform.title} first`,
+                              variant: "destructive"
+                            });
+                            return;
+                          }
+                          setPlatforms(prev => ({
+                            ...prev,
+                            [key]: { ...prev[key], enabled: !prev[key].enabled }
+                          }));
+                        }}
+                      >
+                        {platform.enabled ? 'ON' : 'OFF'}
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* AI Tools */}
             <AIToolsPanel
               broadcastId={broadcastId || ''}
               transcriptions={transcriptions}
@@ -638,7 +779,6 @@ export default function BroadcastStudio() {
                 setAIFeatures(prev => ({ ...prev, [feature]: !prev[feature] }));
               }}
               onAcceptClip={(clipId) => {
-                console.log('Accept clip:', clipId);
                 toast({
                   title: "Clip Created",
                   description: "Clip added to your media library",
@@ -648,17 +788,51 @@ export default function BroadcastStudio() {
               onSeekToTime={(timestamp) => setCurrentTime(timestamp)}
             />
 
+            {/* Ad Integration */}
             <AdIntegrationPanel
               broadcastId={broadcastId || ''}
               adSlots={adSlots}
               currentTime={currentTime}
-              onDisplayScript={(slotId) => console.log('Display script:', slotId)}
+              onDisplayScript={(slotId) => {
+                setCurrentScript("Host-read ad script for this slot");
+                setShowHostScript(true);
+              }}
               onCompleteRead={(slotId) => console.log('Complete read:', slotId)}
               onSeekToAd={(timestamp) => setCurrentTime(timestamp)}
             />
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      {/* Host Read Script Popup */}
+      {showHostScript && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowHostScript(false)}>
+          <Card className="w-full max-w-2xl m-4" onClick={(e) => e.stopPropagation()}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Host Read Script</h3>
+                <Button variant="ghost" size="sm" onClick={() => setShowHostScript(false)}>
+                  ×
+                </Button>
+              </div>
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm leading-relaxed">{currentScript}</p>
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowHostScript(false)}>
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  toast({ title: "Marked as Read", description: "Ad spot marked as completed" });
+                  setShowHostScript(false);
+                }}>
+                  Mark as Read
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }
