@@ -8,11 +8,11 @@ import { InteractiveCard } from "@/components/ui/interactive-card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Calendar, Settings, Clock, MapPin, Link2, Users, ChevronDown, Vote, Radio, FileText, Eye, Phone, MessageSquare } from "lucide-react";
+import { Calendar, Settings, Clock, MapPin, Link2, Users, ChevronDown, Vote, Radio, FileText, Eye } from "lucide-react";
 import ShareProfileButton from "@/components/ShareProfileButton";
-import { TipButton } from "@/components/TipButton";
-import { NewsletterSubscribeWidget } from "@/components/NewsletterSubscribeWidget";
 import { PodcastPlayer } from "@/components/PodcastPlayer";
+import { ProfileMenuBar } from "@/components/ProfileMenuBar";
+import { ProfileQRCode } from "@/components/ProfileQRCode";
 import {
   SiX,
   SiLinkedin,
@@ -38,24 +38,12 @@ interface Profile {
   avatar_url: string;
   theme_color: string;
   social_icons_color: boolean | null;
-  legal_on_profile: boolean | null;
-  show_blog_on_profile: boolean | null;
-  show_latest_blog_only: boolean | null;
   is_live_on_profile: boolean | null;
   live_stream_title: string | null;
   live_video_url: string | null;
   my_page_video_type: 'own' | 'ad' | null;
   my_page_video_id: string | null;
-  my_page_ad_id: string | null;
   my_page_video_loop: boolean | null;
-  tipping_enabled: boolean | null;
-  tipping_button_text: string | null;
-  my_page_cta_button_text: string | null;
-  my_page_cta_phone_number: string | null;
-  my_page_cta_text_keyword: string | null;
-  newsletter_enabled: boolean | null;
-  newsletter_heading: string | null;
-  newsletter_description: string | null;
   page_background_color?: string | null;
   hero_section_color?: string | null;
 }
@@ -130,17 +118,6 @@ interface Episode {
   podcast_id: string;
 }
 
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string | null;
-  featured_image_url: string | null;
-  published_at: string;
-  is_ai_generated?: boolean;
-  views_count?: number;
-}
-
 const ProfileContent = () => {
   const { username } = useParams();
   const navigate = useNavigate();
@@ -155,10 +132,10 @@ const ProfileContent = () => {
   const [sectionMetadata, setSectionMetadata] = useState<Map<string, SectionMetadata>>(new Map());
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const [currentLiveViewers, setCurrentLiveViewers] = useState(0);
+  const [activeMenuSection, setActiveMenuSection] = useState<string | undefined>();
   const viewerSessionRef = useRef<string | null>(null);
   const { videoUrl: myPageVideoUrl, trackImpression, shouldLoop } = useMyPageVideo(profile);
   
@@ -282,11 +259,6 @@ const ProfileContent = () => {
   useEffect(() => {
     if (profile) {
       document.title = `${profile.full_name} (@${profile.username}) - Seeksy`;
-      
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', profile.bio || `Connect with ${profile.full_name} on Seeksy`);
-      }
     }
 
     return () => {
@@ -321,7 +293,7 @@ const ProfileContent = () => {
       }
 
       // Load all profile data
-      const [eventsData, meetingTypesData, signupSheetsData, pollsData, linksData, customLinksData, sectionsData, podcastsData, blogPostsData] = await Promise.all([
+      const [eventsData, meetingTypesData, signupSheetsData, pollsData, linksData, customLinksData, sectionsData, podcastsData] = await Promise.all([
         supabase.from("events").select("*").eq("user_id", profileData.id).eq("is_published", true).eq("show_on_profile", true).gte("event_date", new Date().toISOString()).order("event_date", { ascending: true }),
         supabase.from("meeting_types").select("id, name, description, duration, location_type").eq("user_id", profileData.id).eq("is_active", true),
         supabase.from("signup_sheets").select("*").eq("user_id", profileData.id).eq("is_published", true).gte("end_date", new Date().toISOString()).order("start_date", { ascending: true}),
@@ -330,7 +302,6 @@ const ProfileContent = () => {
         supabase.from("custom_links").select("*").eq("profile_id", profileData.id).eq("is_active", true).order("display_order"),
         supabase.from("custom_link_sections").select("*").eq("profile_id", profileData.id),
         supabase.from("podcasts").select("id, title, description, cover_image_url").eq("user_id", profileData.id).eq("is_published", true).eq("show_on_profile", true),
-        supabase.from("blog_posts").select("id, title, slug, excerpt, featured_image_url, published_at, is_ai_generated, views_count").eq("user_id", profileData.id).eq("status", "published").order("published_at", { ascending: false }).limit(6),
       ]);
 
       setEvents(eventsData.data || []);
@@ -339,7 +310,6 @@ const ProfileContent = () => {
       setPolls(pollsData.data || []);
       setSocialLinks(linksData.data || []);
       setCustomLinks(customLinksData.data || []);
-      setBlogPosts(blogPostsData.data || []);
 
       if (sectionsData.data) {
         const metadataMap = new Map<string, SectionMetadata>();
@@ -420,14 +390,27 @@ const ProfileContent = () => {
     });
   };
 
-  // Get element visibility
-  const getElementVisibility = (elementType: string) => {
-    const element = layoutElements.find(el => el.element_type === elementType);
-    return element ? element.is_visible : false;
-  };
-  
   // Get sorted elements
   const sortedElements = [...layoutElements].sort((a, b) => a.position_order - b.position_order);
+  
+  // Calculate menu counts
+  const menuCounts = {
+    events: events.length,
+    meetings: meetingTypes.length,
+    signupSheets: signupSheets.length,
+    polls: polls.length,
+    podcasts: podcasts.length,
+    blogPosts: 0,
+    customLinks: customLinks.length,
+  };
+  
+  const handleMenuSectionClick = (sectionId: string) => {
+    setActiveMenuSection(sectionId);
+    const element = document.getElementById(`section-${sectionId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   if (loading || layoutLoading) {
     return (
@@ -454,7 +437,6 @@ const ProfileContent = () => {
       case 'streaming':
         return (
           <div className="mb-6">
-            {/* Live Stream or Video */}
             {profile?.is_live_on_profile ? (
               <Card className="overflow-hidden border-2 border-brand-red/50 shadow-lg">
                 <div className="bg-gradient-to-r from-brand-red/90 to-brand-navy/90 p-3 flex items-center justify-between">
@@ -486,12 +468,12 @@ const ProfileContent = () => {
                       <div className="w-full max-w-md aspect-video bg-gradient-to-br from-muted/20 to-muted/5 rounded-lg border-2 border-dashed border-muted/30 flex items-center justify-center opacity-60">
                         <Eye className="h-16 w-16 text-muted-foreground/50" />
                       </div>
-                      <p className="text-muted-foreground mt-4">Stream will appear here when live</p>
+                      <p className="text-muted-foreground mt-4">Check back later for live streams</p>
                     </div>
                   )}
                 </div>
               </Card>
-            ) : myPageVideoUrl && (
+            ) : myPageVideoUrl ? (
               <Card className="overflow-hidden">
                 <div className="aspect-video bg-black relative">
                   <video
@@ -505,21 +487,22 @@ const ProfileContent = () => {
                   />
                 </div>
               </Card>
-            )}
+            ) : null}
           </div>
         );
 
       case 'events':
         return events.length > 0 ? (
-          <div className="space-y-4 mb-8">
+          <div className="space-y-4 mb-8" id="section-events">
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="h-5 w-5" style={{ color: profile?.theme_color }} />
-              <h2 className="text-xl font-bold">Upcoming Events</h2>
+              <h2 className="text-xl font-bold text-foreground">Upcoming Events</h2>
             </div>
             {events.slice(0, 3).map((event) => (
               <InteractiveCard
                 key={event.id}
                 className="p-5"
+                hoverVariant="lift"
                 onInteract={() => {
                   trackLinkClick(`/event/${event.id}`, 'event');
                   navigate(`/event/${event.id}`);
@@ -534,14 +517,14 @@ const ProfileContent = () => {
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold mb-2">{event.title}</h3>
+                    <h3 className="text-lg font-semibold mb-2 text-foreground">{event.title}</h3>
                     <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                       {event.description}
                     </p>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <div className="flex flex-col gap-2 text-sm text-muted-foreground">
                       <span className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        {new Date(event.event_date).toLocaleDateString()}
+                        {new Date(event.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                       <span className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
@@ -557,23 +540,24 @@ const ProfileContent = () => {
 
       case 'meetings':
         return meetingTypes.length > 0 ? (
-          <div className="space-y-4 mb-8">
+          <div className="space-y-4 mb-8" id="section-meetings">
             <div className="flex items-center gap-2 mb-4">
               <Clock className="h-5 w-5" style={{ color: profile?.theme_color }} />
-              <h2 className="text-xl font-bold">Book a Meeting</h2>
+              <h2 className="text-xl font-bold text-foreground">Book a Meeting</h2>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
               {meetingTypes.map((meeting) => (
                 <InteractiveCard
                   key={meeting.id}
                   className="p-5"
+                  hoverVariant="lift"
                   onInteract={() => {
                     trackLinkClick(`/book/${username}/${meeting.id}`, 'meeting');
                     navigate(`/book/${username}/${meeting.id}`);
                   }}
                 >
-                  <h3 className="font-semibold mb-2">{meeting.name}</h3>
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                  <h3 className="font-semibold mb-2 text-foreground">{meeting.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
                     {meeting.description}
                   </p>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -589,25 +573,26 @@ const ProfileContent = () => {
 
       case 'signup-sheets':
         return signupSheets.length > 0 ? (
-          <div className="space-y-4 mb-8">
+          <div className="space-y-4 mb-8" id="section-signup-sheets">
             <div className="flex items-center gap-2 mb-4">
               <Users className="h-5 w-5" style={{ color: profile?.theme_color }} />
-              <h2 className="text-xl font-bold">Sign Up Opportunities</h2>
+              <h2 className="text-xl font-bold text-foreground">Sign Up Opportunities</h2>
             </div>
             {signupSheets.slice(0, 2).map((sheet) => (
               <InteractiveCard
                 key={sheet.id}
                 className="p-5"
+                hoverVariant="lift"
                 onInteract={() => {
                   trackLinkClick(`/signup-sheet/${sheet.id}`, 'signup');
                   navigate(`/signup-sheet/${sheet.id}`);
                 }}
               >
-                <h3 className="text-lg font-semibold mb-2">{sheet.title}</h3>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">{sheet.title}</h3>
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                   {sheet.description}
                 </p>
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex flex-col gap-2 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
                     {new Date(sheet.start_date).toLocaleDateString()} - {new Date(sheet.end_date).toLocaleDateString()}
@@ -626,22 +611,23 @@ const ProfileContent = () => {
 
       case 'polls':
         return polls.length > 0 ? (
-          <div className="space-y-4 mb-8">
+          <div className="space-y-4 mb-8" id="section-polls">
             <div className="flex items-center gap-2 mb-4">
               <Vote className="h-5 w-5" style={{ color: profile?.theme_color }} />
-              <h2 className="text-xl font-bold">Polls</h2>
+              <h2 className="text-xl font-bold text-foreground">Polls</h2>
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
               {polls.map((poll) => (
                 <InteractiveCard
                   key={poll.id}
                   className="p-5"
+                  hoverVariant="lift"
                   onInteract={() => {
                     trackLinkClick(`/poll/${poll.id}`, 'poll');
                     navigate(`/poll/${poll.id}`);
                   }}
                 >
-                  <h3 className="text-lg font-semibold mb-2">{poll.title}</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">{poll.title}</h3>
                   <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                     {poll.description}
                   </p>
@@ -656,6 +642,144 @@ const ProfileContent = () => {
             </div>
           </div>
         ) : null;
+
+      case 'podcasts':
+        return podcasts.length > 0 ? (
+          <div className="space-y-4 mb-8" id="section-podcasts">
+            <div className="flex items-center gap-2 mb-4">
+              <Radio className="h-5 w-5" style={{ color: profile?.theme_color }} />
+              <h2 className="text-xl font-bold text-foreground">Podcasts</h2>
+            </div>
+            {podcasts.map((podcast) => {
+              const podcastEpisodes = episodes.filter(ep => ep.podcast_id === podcast.id);
+              if (podcastEpisodes.length === 0) return null;
+              
+              return (
+                <Card key={podcast.id} className="p-5 bg-card">
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">{podcast.title}</h3>
+                  {podcast.description && (
+                    <p className="text-sm text-muted-foreground mb-3">{podcast.description}</p>
+                  )}
+                  <PodcastPlayer podcast={podcast} episodes={podcastEpisodes} creatorId={profile?.id || ''} />
+                </Card>
+              );
+            })}
+          </div>
+        ) : null;
+
+      case 'custom-sections':
+        const customSectionNames = Array.from(new Set(customLinks.map(link => link.section).filter(Boolean)));
+        
+        return customSectionNames.length > 0 ? (
+          <div className="space-y-4 mb-8" id="section-custom-sections">
+            {customSectionNames.map(sectionName => {
+              const sectionLinks = customLinks.filter(link => link.section === sectionName);
+              const isOpen = openSections.has(sectionName || "no-section");
+              
+              return (
+                <Collapsible
+                  key={sectionName}
+                  open={isOpen}
+                  onOpenChange={(open) => {
+                    setOpenSections(prev => {
+                      const newSet = new Set(prev);
+                      if (open) {
+                        newSet.add(sectionName || "no-section");
+                      } else {
+                        newSet.delete(sectionName || "no-section");
+                      }
+                      return newSet;
+                    });
+                  }}
+                  className="space-y-3"
+                >
+                  <CollapsibleTrigger className="w-full group">
+                    <Card 
+                      className="p-5 transition-all duration-300 hover:shadow-xl border-2 cursor-pointer bg-card"
+                      style={{ 
+                        borderColor: isOpen ? profile?.theme_color : 'transparent',
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 flex-1">
+                          {sectionMetadata.get(sectionName!)?.image_url ? (
+                            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm transition-transform duration-300 group-hover:scale-110">
+                              <img 
+                                src={sectionMetadata.get(sectionName!)?.image_url || ''} 
+                                alt={sectionName!}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div 
+                              className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm transition-transform duration-300 group-hover:scale-110"
+                              style={{ 
+                                background: `linear-gradient(135deg, ${profile?.theme_color}20, ${profile?.theme_color}10)`
+                              }}
+                            >
+                              <Link2 
+                                className="h-6 w-6"
+                                style={{ color: profile?.theme_color }}
+                              />
+                            </div>
+                          )}
+                          <div className="text-left">
+                            <h2 className="text-xl font-bold text-foreground">{sectionName}</h2>
+                            <p className="text-sm text-muted-foreground">{sectionLinks.length} items</p>
+                          </div>
+                        </div>
+                        <ChevronDown 
+                          className={`h-5 w-5 transition-transform duration-300 ${isOpen ? '' : '-rotate-90'}`}
+                          style={{ color: profile?.theme_color }}
+                        />
+                      </div>
+                    </Card>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-3 mt-4">
+                    <div className="space-y-3">
+                      {sectionLinks.map((link) => (
+                        <InteractiveCard
+                          key={link.id}
+                          className="p-5"
+                          hoverVariant="lift"
+                          onInteract={() => {
+                            trackLinkClick(link.url, 'custom_link');
+                            window.open(link.url, '_blank');
+                          }}
+                        >
+                          <div className="flex items-center gap-3">
+                            {link.image_url && (
+                              <img
+                                src={link.image_url}
+                                alt={link.title}
+                                className="w-16 h-16 object-cover rounded-lg flex-shrink-0 shadow-sm"
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold mb-1 break-words text-foreground">{link.title}</h3>
+                              {link.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2 break-words">
+                                  {link.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </InteractiveCard>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
+          </div>
+        ) : null;
+
+      case 'qr-code':
+        return (
+          <div className="flex justify-center mb-8">
+            <ProfileQRCode username={profile.username} />
+          </div>
+        );
 
       default:
         return null;
@@ -681,6 +805,7 @@ const ProfileContent = () => {
               <div className="relative w-full md:h-auto" style={{ backgroundColor: profile.hero_section_color || '#000000' }}>
                 {profile.avatar_url && (
                   <div className="relative md:flex md:justify-center md:py-12">
+                    {/* Mobile */}
                     <div className="relative md:hidden w-full h-[60vh]">
                       <img 
                         src={profile.avatar_url} 
@@ -695,6 +820,7 @@ const ProfileContent = () => {
                       />
                     </div>
                     
+                    {/* Desktop */}
                     <div className="hidden md:block relative md:max-w-md md:mx-auto">
                       <img 
                         src={profile.avatar_url} 
@@ -705,7 +831,7 @@ const ProfileContent = () => {
                   </div>
                 )}
                 
-                {/* Content Overlay - Mobile */}
+                {/* Profile Info - Mobile */}
                 <div className="md:hidden absolute bottom-0 left-0 right-0 p-6 text-center">
                   <div className="flex justify-end gap-2 mb-4 absolute top-4 right-4">
                     {isOwnProfile && (
@@ -748,7 +874,7 @@ const ProfileContent = () => {
                   )}
                 </div>
                 
-                {/* Content - Desktop */}
+                {/* Profile Info - Desktop */}
                 <div className="hidden md:block text-center px-8 pb-8">
                   <div className="flex justify-center gap-2 mb-6">
                     {isOwnProfile && (
@@ -762,7 +888,7 @@ const ProfileContent = () => {
                     <ShareProfileButton username={profile.username} />
                   </div>
 
-                  <h1 className="text-4xl font-bold mb-4 text-black">
+                  <h1 className="text-4xl font-bold mb-4 text-foreground">
                     {profile.display_name || profile.full_name || profile.username}
                   </h1>
                   
@@ -789,7 +915,7 @@ const ProfileContent = () => {
                   )}
 
                   {profile.bio && (
-                    <p className="text-lg max-w-2xl mx-auto leading-relaxed break-words text-black">
+                    <p className="text-lg max-w-2xl mx-auto leading-relaxed break-words text-foreground">
                       {profile.bio}
                     </p>
                   )}
@@ -798,7 +924,7 @@ const ProfileContent = () => {
             </div>
 
             {/* Draggable Content Sections */}
-            <div className="px-4 pb-20">
+            <div className="px-4 pb-32">
               <SortableContext items={sortedElements.map(el => el.id)} strategy={verticalListSortingStrategy}>
                 {sortedElements.map((element) => {
                   const content = renderElement(element.element_type);
@@ -817,6 +943,15 @@ const ProfileContent = () => {
                 })}
               </SortableContext>
             </div>
+            
+            {/* Menu Bar */}
+            {!isEditMode && (
+              <ProfileMenuBar 
+                counts={menuCounts}
+                activeSection={activeMenuSection}
+                onSectionClick={handleMenuSectionClick}
+              />
+            )}
           </main>
         </div>
       </DndContext>
