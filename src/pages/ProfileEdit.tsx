@@ -26,7 +26,9 @@ export default function ProfileEdit() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
   // Design
+  const [themeColor, setThemeColor] = useState("#3b82f6");
   const [backgroundColor, setBackgroundColor] = useState("#e5e7eb");
+  const [profileImageBgColor, setProfileImageBgColor] = useState("#ffffff");
   const [titleColor, setTitleColor] = useState("#1f2937");
   const [titleFont, setTitleFont] = useState("sans");
   
@@ -50,7 +52,8 @@ export default function ProfileEdit() {
   const [showAwards, setShowAwards] = useState(false);
   const [showQRCodes, setShowQRCodes] = useState(true);
   const [showNewsletter, setShowNewsletter] = useState(false);
-  const [customLinks, setCustomLinks] = useState<Array<{ title: string; url: string }>>([]);
+  const [customSections, setCustomSections] = useState<Array<{ id: string; title: string; links: Array<{ id: string; title: string; url: string; imageType: 'no_image' | 'icon' | 'featured' }> }>>([]);
+  const [activatedApps, setActivatedApps] = useState<string[]>(["meetings", "events", "qrcodes"]);
 
   // QR Code
   const [qrShape, setQrShape] = useState<"square" | "round">("square");
@@ -298,49 +301,51 @@ export default function ProfileEdit() {
                   <h2 className="text-lg font-semibold mb-4">Design</h2>
                   <div className="space-y-6">
                     <div>
-                      <Label className="text-sm font-medium">Background</Label>
-                      <div className="mt-3">
-                        <div className="flex gap-2 flex-wrap">
+                      <Label className="text-sm font-medium">Theme Color</Label>
+                      <p className="text-xs text-muted-foreground mb-3">Main accent color for buttons and links</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {colorSwatches.map((color) => (
                           <button
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 via-yellow-400 to-blue-400 border-2 border-border hover:scale-110 transition-transform flex items-center justify-center"
-                            onClick={() => {/* Color picker */}}
-                          >
-                            <Plus className="w-4 h-4 text-white" />
-                          </button>
-                          {colorSwatches.map((color) => (
-                            <button
-                              key={color}
-                              onClick={() => setBackgroundColor(color)}
-                              className={`w-10 h-10 rounded-full border-2 hover:scale-110 transition-transform ${
-                                backgroundColor === color ? "border-primary ring-2 ring-primary ring-offset-2" : "border-border"
-                              }`}
-                              style={{ backgroundColor: color }}
-                            />
-                          ))}
-                        </div>
+                            key={color}
+                            onClick={() => setThemeColor(color)}
+                            className={`w-10 h-10 rounded-full border-2 hover:scale-110 transition-transform ${
+                              themeColor === color ? "border-primary ring-2 ring-primary ring-offset-2" : "border-border"
+                            }`}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium">Background (Profile Image)</Label>
+                      <p className="text-xs text-muted-foreground mb-3">Color behind your profile image</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {colorSwatches.map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => setProfileImageBgColor(color)}
+                            className={`w-10 h-10 rounded-full border-2 hover:scale-110 transition-transform ${
+                              profileImageBgColor === color ? "border-primary ring-2 ring-primary ring-offset-2" : "border-border"
+                            }`}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
                       </div>
                     </div>
                     <div>
                       <Label className="text-sm font-medium">Title Color</Label>
-                      <div className="mt-3">
-                        <div className="flex gap-2 flex-wrap">
+                      <p className="text-xs text-muted-foreground mb-3">Color for your name and text</p>
+                      <div className="flex gap-2 flex-wrap">
+                        {colorSwatches.map((color) => (
                           <button
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-red-400 via-yellow-400 to-blue-400 border-2 border-border hover:scale-110 transition-transform flex items-center justify-center"
-                            onClick={() => {/* Color picker */}}
-                          >
-                            <Plus className="w-4 h-4 text-white" />
-                          </button>
-                          {colorSwatches.map((color) => (
-                            <button
-                              key={color}
-                              onClick={() => setTitleColor(color)}
-                              className={`w-10 h-10 rounded-full border-2 hover:scale-110 transition-transform ${
-                                titleColor === color ? "border-primary ring-2 ring-primary ring-offset-2" : "border-border"
-                              }`}
-                              style={{ backgroundColor: color }}
-                            />
-                          ))}
-                        </div>
+                            key={color}
+                            onClick={() => setTitleColor(color)}
+                            className={`w-10 h-10 rounded-full border-2 hover:scale-110 transition-transform ${
+                              titleColor === color ? "border-primary ring-2 ring-primary ring-offset-2" : "border-border"
+                            }`}
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
                       </div>
                     </div>
                     <div>
@@ -370,102 +375,172 @@ export default function ProfileEdit() {
                   <div className="space-y-4">
                     <div>
                       <Label className="text-sm font-medium mb-3 block">Seeksy Features</Label>
+                      <p className="text-xs text-muted-foreground mb-3">Only showing your activated apps</p>
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Meetings</p>
-                            <p className="text-xs text-muted-foreground">Show Meetings link</p>
+                        {activatedApps.includes("meetings") && (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">Meetings</p>
+                              <p className="text-xs text-muted-foreground">Show Meetings link</p>
+                            </div>
+                            <Switch checked={showMeetings} onCheckedChange={setShowMeetings} />
                           </div>
-                          <Switch checked={showMeetings} onCheckedChange={setShowMeetings} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Events</p>
-                            <p className="text-xs text-muted-foreground">Show Events link</p>
+                        )}
+                        {activatedApps.includes("events") && (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">Events</p>
+                              <p className="text-xs text-muted-foreground">Show Events link</p>
+                            </div>
+                            <Switch checked={showEvents} onCheckedChange={setShowEvents} />
                           </div>
-                          <Switch checked={showEvents} onCheckedChange={setShowEvents} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Sign-up Sheets</p>
-                            <p className="text-xs text-muted-foreground">Show Sign-up Sheets</p>
+                        )}
+                        {activatedApps.includes("signupsheets") && (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">Sign-up Sheets</p>
+                              <p className="text-xs text-muted-foreground">Show Sign-up Sheets</p>
+                            </div>
+                            <Switch checked={showSignupSheets} onCheckedChange={setShowSignupSheets} />
                           </div>
-                          <Switch checked={showSignupSheets} onCheckedChange={setShowSignupSheets} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Polls</p>
-                            <p className="text-xs text-muted-foreground">Show Polls link</p>
+                        )}
+                        {activatedApps.includes("polls") && (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">Polls</p>
+                              <p className="text-xs text-muted-foreground">Show Polls link</p>
+                            </div>
+                            <Switch checked={showPolls} onCheckedChange={setShowPolls} />
                           </div>
-                          <Switch checked={showPolls} onCheckedChange={setShowPolls} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Awards</p>
-                            <p className="text-xs text-muted-foreground">Show Awards link</p>
+                        )}
+                        {activatedApps.includes("awards") && (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">Awards</p>
+                              <p className="text-xs text-muted-foreground">Show Awards link</p>
+                            </div>
+                            <Switch checked={showAwards} onCheckedChange={setShowAwards} />
                           </div>
-                          <Switch checked={showAwards} onCheckedChange={setShowAwards} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">QR Codes</p>
-                            <p className="text-xs text-muted-foreground">Show QR Codes link</p>
+                        )}
+                        {activatedApps.includes("qrcodes") && (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">QR Codes</p>
+                              <p className="text-xs text-muted-foreground">Show QR Codes link</p>
+                            </div>
+                            <Switch checked={showQRCodes} onCheckedChange={setShowQRCodes} />
                           </div>
-                          <Switch checked={showQRCodes} onCheckedChange={setShowQRCodes} />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">Newsletter</p>
-                            <p className="text-xs text-muted-foreground">Newsletter signup</p>
+                        )}
+                        {activatedApps.includes("newsletter") && (
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-sm font-medium">Newsletter</p>
+                              <p className="text-xs text-muted-foreground">Newsletter signup</p>
+                            </div>
+                            <Switch checked={showNewsletter} onCheckedChange={setShowNewsletter} />
                           </div>
-                          <Switch checked={showNewsletter} onCheckedChange={setShowNewsletter} />
-                        </div>
+                        )}
                       </div>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="mt-3 w-full"
+                        onClick={() => navigate("/apps-settings")}
+                      >
+                        See more Seekies and Tools →
+                      </Button>
                     </div>
 
                     <div className="border-t pt-4">
-                      <Label className="text-sm font-medium mb-3 block">Custom Links</Label>
-                      <div className="space-y-2">
-                        {customLinks.map((link, i) => (
-                          <div key={i} className="flex gap-2">
-                            <Input
-                              placeholder="Title"
-                              value={link.title}
-                              onChange={(e) => {
-                                const n = [...customLinks];
-                                n[i].title = e.target.value;
-                                setCustomLinks(n);
-                              }}
-                              className="flex-1"
-                            />
-                            <Input
-                              placeholder="URL"
-                              value={link.url}
-                              onChange={(e) => {
-                                const n = [...customLinks];
-                                n[i].url = e.target.value;
-                                setCustomLinks(n);
-                              }}
-                              className="flex-1"
-                            />
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setCustomLinks(customLinks.filter((_, idx) => idx !== i))}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
+                      <div className="flex items-center justify-between mb-3">
+                        <Label className="text-sm font-medium">Custom Links</Label>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
-                          onClick={() => setCustomLinks([...customLinks, { title: "", url: "" }])}
-                          className="w-full"
+                          onClick={() => {
+                            const newId = Date.now().toString();
+                            setCustomSections([...customSections, { id: newId, title: "New Section", links: [] }]);
+                          }}
                         >
                           <Plus className="w-4 h-4 mr-2" />
-                          Add Custom Link
+                          Add Section
                         </Button>
+                      </div>
+                      <div className="space-y-4">
+                        {customSections.map((section, sIdx) => (
+                          <div key={section.id} className="border rounded-lg p-3 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Input
+                                placeholder="Section Title"
+                                value={section.title}
+                                onChange={(e) => {
+                                  const n = [...customSections];
+                                  n[sIdx].title = e.target.value;
+                                  setCustomSections(n);
+                                }}
+                                className="flex-1 font-medium"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setCustomSections(customSections.filter((_, idx) => idx !== sIdx))}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                            <div className="pl-4 space-y-2">
+                              {section.links.map((link, lIdx) => (
+                                <div key={link.id} className="flex gap-2">
+                                  <Input
+                                    placeholder="Link Title"
+                                    value={link.title}
+                                    onChange={(e) => {
+                                      const n = [...customSections];
+                                      n[sIdx].links[lIdx].title = e.target.value;
+                                      setCustomSections(n);
+                                    }}
+                                    className="flex-1"
+                                  />
+                                  <Input
+                                    placeholder="URL"
+                                    value={link.url}
+                                    onChange={(e) => {
+                                      const n = [...customSections];
+                                      n[sIdx].links[lIdx].url = e.target.value;
+                                      setCustomSections(n);
+                                    }}
+                                    className="flex-1"
+                                  />
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => {
+                                      const n = [...customSections];
+                                      n[sIdx].links = n[sIdx].links.filter((_, idx) => idx !== lIdx);
+                                      setCustomSections(n);
+                                    }}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const n = [...customSections];
+                                  const newLinkId = Date.now().toString();
+                                  n[sIdx].links.push({ id: newLinkId, title: "", url: "", imageType: 'no_image' });
+                                  setCustomSections(n);
+                                }}
+                                className="w-full"
+                              >
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add Link
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -781,10 +856,13 @@ export default function ProfileEdit() {
                           : imageStyle === "square"
                           ? "w-32 h-32 rounded-2xl"
                           : "w-40 h-56 rounded-2xl"
-                      } mb-4 shadow-lg overflow-hidden ${!profileImage ? "bg-gradient-to-br from-purple-500 to-blue-600" : ""}`}
+                      } mb-4 shadow-lg overflow-hidden p-2`}
+                      style={{ backgroundColor: profileImageBgColor }}
                     >
-                      {profileImage && (
-                        <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                      {profileImage ? (
+                        <img src={profileImage} alt="Profile" className="w-full h-full object-cover rounded-inherit" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-500 to-blue-600 rounded-inherit" />
                       )}
                     </div>
 
@@ -807,43 +885,56 @@ export default function ProfileEdit() {
                     <div className={`w-full space-y-2 mb-4 ${
                       previewDevice === "desktop" ? "max-w-2xl grid grid-cols-2 gap-2" : ""
                     }`}>
-                      {showMeetings && (
-                        <Button style={{ backgroundColor: "#facc15", color: "#000000" }} className="w-full font-semibold" size="sm">
+                      {showMeetings && activatedApps.includes("meetings") && (
+                        <Button style={{ backgroundColor: themeColor }} className="w-full font-semibold text-white" size="sm">
                           📅 Book a Meeting
                         </Button>
                       )}
-                      {showEvents && (
-                        <Button style={{ backgroundColor: "#fb923c", color: "#000000" }} className="w-full font-semibold" size="sm">
+                      {showEvents && activatedApps.includes("events") && (
+                        <Button style={{ backgroundColor: themeColor }} className="w-full font-semibold text-white" size="sm">
                           🎉 View Events
                         </Button>
                       )}
-                      {showSignupSheets && (
-                        <Button variant="secondary" className="w-full" size="sm">
+                      {showSignupSheets && activatedApps.includes("signupsheets") && (
+                        <Button style={{ backgroundColor: themeColor }} className="w-full font-semibold text-white" size="sm">
                           📋 Sign Up
                         </Button>
                       )}
-                      {showPolls && (
-                        <Button variant="secondary" className="w-full" size="sm">
+                      {showPolls && activatedApps.includes("polls") && (
+                        <Button style={{ backgroundColor: themeColor }} className="w-full font-semibold text-white" size="sm">
                           📊 Take a Poll
                         </Button>
                       )}
-                      {showAwards && (
-                        <Button variant="secondary" className="w-full" size="sm">
+                      {showAwards && activatedApps.includes("awards") && (
+                        <Button style={{ backgroundColor: themeColor }} className="w-full font-semibold text-white" size="sm">
                           🏆 Awards
                         </Button>
                       )}
-                      {showNewsletter && (
-                        <Button variant="secondary" className="w-full" size="sm">
+                      {showNewsletter && activatedApps.includes("newsletter") && (
+                        <Button style={{ backgroundColor: themeColor }} className="w-full font-semibold text-white" size="sm">
                           📧 Subscribe to Newsletter
                         </Button>
                       )}
                     </div>
 
-                    {/* Custom Links */}
-                    {customLinks.filter(l => l.title).map((link, i) => (
-                      <Button key={i} variant="outline" className="w-full mb-2" size="sm">
-                        {link.title}
-                      </Button>
+                    {/* Custom Link Sections */}
+                    {customSections.map((section) => (
+                      <div key={section.id} className="w-full mb-4">
+                        <h3 className="text-sm font-semibold mb-2" style={{ color: titleColor }}>{section.title}</h3>
+                        <div className="space-y-2">
+                          {section.links.filter(l => l.title).map((link) => (
+                            <Button
+                              key={link.id}
+                              variant="outline"
+                              className="w-full"
+                              size="sm"
+                              style={{ borderColor: themeColor, color: titleColor }}
+                            >
+                              {link.title}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
                     ))}
 
                     {/* QR Code */}
