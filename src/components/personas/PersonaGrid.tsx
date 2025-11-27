@@ -144,11 +144,11 @@ export const PersonaGrid = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: 0.12 }}
-              className="fixed z-[9999] pointer-events-none"
+              className="fixed pointer-events-none"
               style={{
-                left: 0,
-                top: 0,
-                transform: `translate3d(${smoothPosition.x + 12}px, ${smoothPosition.y + 12}px, 0)`,
+                left: `${smoothPosition.x + 12}px`,
+                top: `${smoothPosition.y + 12}px`,
+                zIndex: 9999,
                 willChange: 'transform',
               }}
             >
