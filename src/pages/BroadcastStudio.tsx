@@ -693,7 +693,7 @@ export default function BroadcastStudio() {
         <ResizablePanel defaultSize={77} minSize={55}>
           <div className="h-full flex flex-col">
           {/* Video Preview */}
-          <div className="h-[calc(100vh-280px)] bg-black relative">
+          <div className="h-[calc(100vh-220px)] bg-black relative">
               <video
                 ref={videoRef}
                 autoPlay

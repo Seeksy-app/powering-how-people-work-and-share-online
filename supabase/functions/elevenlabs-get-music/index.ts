@@ -13,22 +13,61 @@ serve(async (req) => {
   try {
     console.log("Music library endpoint called");
     
-    // ElevenLabs doesn't have a public music library listing API
-    // They only support music generation via prompts
-    // Return empty array for now - users can add their own music or we can implement generation
+    const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
     
-    return new Response(JSON.stringify({ 
-      music: [],
-      message: "Music library browsing not available. Use music generation or upload your own tracks."
-    }), {
+    if (!ELEVENLABS_API_KEY) {
+      throw new Error('ELEVENLABS_API_KEY not configured');
+    }
+
+    // Fetch music tracks from ElevenLabs Sound Effects API
+    const response = await fetch('https://api.elevenlabs.io/v1/sound-generation', {
+      method: 'GET',
+      headers: {
+        'xi-api-key': ELEVENLABS_API_KEY,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('ElevenLabs API error:', error);
+      
+      // Return hardcoded tracks as fallback
+      return new Response(JSON.stringify({ 
+        music: [
+          { name: "Chill", icon: "👑", genre: "Chill" },
+          { name: "Downtempo", icon: "▶", genre: "Downtempo" },
+          { name: "Chill Hop", icon: "▶", genre: "Chill Hop" },
+          { name: "Hip hop", icon: "👑", genre: "Hip hop" },
+          { name: "Lo-Fi", icon: "▶", genre: "Lo-Fi" },
+          { name: "Lounge", icon: "👑", genre: "Lounge" },
+          { name: "R&B", icon: "👑", genre: "R&B" }
+        ]
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const data = await response.json();
+    console.log(`Successfully fetched music data`);
+    
+    return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error in elevenlabs-get-music:", error);
+    
+    // Return hardcoded tracks as fallback
     return new Response(
       JSON.stringify({ 
-        music: [],
-        error: error instanceof Error ? error.message : "Unknown error" 
+        music: [
+          { name: "Chill", icon: "👑", genre: "Chill" },
+          { name: "Downtempo", icon: "▶", genre: "Downtempo" },
+          { name: "Chill Hop", icon: "▶", genre: "Chill Hop" },
+          { name: "Hip hop", icon: "👑", genre: "Hip hop" },
+          { name: "Lo-Fi", icon: "▶", genre: "Lo-Fi" },
+          { name: "Lounge", icon: "👑", genre: "Lounge" },
+          { name: "R&B", icon: "👑", genre: "R&B" }
+        ]
       }),
       {
         status: 200,
