@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { VideoOrientationBadge } from "@/components/media/VideoOrientationBadge";
+import { detectVideoOrientation, getVideoContainerClasses, VideoOrientation } from "@/utils/videoOrientation";
 import { 
   Tooltip,
   TooltipContent,
@@ -91,6 +93,7 @@ export default function PostProductionStudio() {
   const [pendingAIEdits, setPendingAIEdits] = useState<Marker[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const [videoOrientation, setVideoOrientation] = useState<VideoOrientation>('landscape');
   
   const queryClient = useQueryClient();
 
@@ -201,7 +204,12 @@ export default function PostProductionStudio() {
     if (!video) return;
 
     const updateTime = () => setCurrentTime(video.currentTime);
-    const updateDuration = () => setDuration(video.duration);
+    const updateDuration = () => {
+      setDuration(video.duration);
+      // Detect video orientation when metadata is loaded
+      const metadata = detectVideoOrientation(video);
+      setVideoOrientation(metadata.orientation);
+    };
 
     video.addEventListener("timeupdate", updateTime);
     video.addEventListener("loadedmetadata", updateDuration);
@@ -705,19 +713,26 @@ export default function PostProductionStudio() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           {/* Video Preview */}
-          <div className="flex-1 bg-black flex items-center justify-center relative">
-            <video
-              ref={videoRef}
-              src={mediaFile.file_url}
-              className="max-h-full max-w-full"
-              preload="metadata"
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-              onLoadedMetadata={(e) => {
-                const video = e.currentTarget;
-                setDuration(video.duration);
-              }}
-            />
+          <div className="flex-1 bg-black flex items-center justify-center relative p-4">
+            <div className={getVideoContainerClasses(videoOrientation)}>
+              <video
+                ref={videoRef}
+                src={mediaFile.file_url}
+                className="w-full h-full object-contain"
+                preload="metadata"
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onLoadedMetadata={(e) => {
+                  const video = e.currentTarget;
+                  setDuration(video.duration);
+                }}
+              />
+            </div>
+            
+            {/* Orientation Badge */}
+            <div className="absolute top-4 right-4">
+              <VideoOrientationBadge orientation={videoOrientation} />
+            </div>
           </div>
 
           {/* Timeline Controls */}

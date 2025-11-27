@@ -89,6 +89,8 @@ import { VideoEditingControls } from "@/components/media/VideoEditingControls";
 import { BRollManager } from "@/components/media/BRollManager";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ClipsGallery } from "@/components/media/ClipsGallery";
+import { VideoOrientationBadge } from "@/components/media/VideoOrientationBadge";
+import { loadVideoMetadata, VideoOrientation } from "@/utils/videoOrientation";
 
 interface Recording {
   id: string;
@@ -102,6 +104,7 @@ interface Recording {
   created_at: string;
   source: string;
   edit_transcript?: any;
+  orientation?: VideoOrientation;
 }
 
 interface MediaFile {
@@ -117,6 +120,7 @@ interface MediaFile {
   edit_transcript?: any;
   source: string;
   markers?: any[];
+  orientation?: VideoOrientation;
 }
 
 interface Marker {
@@ -1016,40 +1020,62 @@ export default function MediaLibrary() {
                                onCheckedChange={() => toggleFileSelection(file.id)}
                              />
                            </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-32 h-20 bg-black rounded overflow-hidden flex-shrink-0">
-                              {file.file_type === 'video' ? (
-                                <video
-                                  src={file.file_url}
-                                  className="w-full h-full object-cover"
-                                  muted
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <FileAudio className="h-8 w-8 text-muted-foreground" />
-                                </div>
-                              )}
-                              {file.duration_seconds && (
-                                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
-                                  {Math.floor(file.duration_seconds / 60)}:{String(file.duration_seconds % 60).padStart(2, '0')}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate" title={file.file_name.replace(/\.[^/.]+$/, "")}>
-                                {file.file_name.replace(/\.[^/.]+$/, "").slice(0, Math.ceil(file.file_name.replace(/\.[^/.]+$/, "").length / 2))}
-                                {file.file_name.replace(/\.[^/.]+$/, "").length > 10 && '...'}
-                              </p>
-                              {file.edit_transcript?.summary && (
-                                <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                                  {file.edit_transcript.summary.slice(0, Math.ceil(file.edit_transcript.summary.length / 2))}
-                                  {file.edit_transcript.summary.length > 20 && '...'}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
+                         <TableCell>
+                           <div className="flex items-center gap-3">
+                             <div className="relative w-32 h-20 bg-black rounded overflow-hidden flex-shrink-0">
+                               {file.file_type === 'video' ? (
+                                 <>
+                                   <video
+                                     src={file.file_url}
+                                     className="w-full h-full object-cover"
+                                     muted
+                                     onLoadedMetadata={async (e) => {
+                                       const video = e.currentTarget;
+                                       try {
+                                         const metadata = await loadVideoMetadata(file.file_url);
+                                         // Update file with orientation info
+                                         setMediaFiles(prev => prev.map(f => 
+                                           f.id === file.id ? { ...f, orientation: metadata.orientation } : f
+                                         ));
+                                       } catch (error) {
+                                         console.error("Error loading video metadata:", error);
+                                       }
+                                     }}
+                                   />
+                                   {file.orientation && (
+                                     <div className="absolute top-1 left-1">
+                                       <VideoOrientationBadge 
+                                         orientation={file.orientation} 
+                                         className="text-[10px] py-0 px-1.5 h-4"
+                                       />
+                                     </div>
+                                   )}
+                                 </>
+                               ) : (
+                                 <div className="w-full h-full flex items-center justify-center">
+                                   <FileAudio className="h-8 w-8 text-muted-foreground" />
+                                 </div>
+                               )}
+                               {file.duration_seconds && (
+                                 <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
+                                   {Math.floor(file.duration_seconds / 60)}:{String(file.duration_seconds % 60).padStart(2, '0')}
+                                 </div>
+                               )}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                               <p className="font-medium truncate" title={file.file_name.replace(/\.[^/.]+$/, "")}>
+                                 {file.file_name.replace(/\.[^/.]+$/, "").slice(0, Math.ceil(file.file_name.replace(/\.[^/.]+$/, "").length / 2))}
+                                 {file.file_name.replace(/\.[^/.]+$/, "").length > 10 && '...'}
+                               </p>
+                               {file.edit_transcript?.summary && (
+                                 <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                                   {file.edit_transcript.summary.slice(0, Math.ceil(file.edit_transcript.summary.length / 2))}
+                                   {file.edit_transcript.summary.length > 20 && '...'}
+                                 </p>
+                               )}
+                             </div>
+                           </div>
+                         </TableCell>
                          <TableCell>
                            <div className="flex items-center gap-2">
                              {getStatusBadge(file)}
@@ -1326,36 +1352,58 @@ export default function MediaLibrary() {
                         <TableCell>
                           <Checkbox />
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="relative w-32 h-20 bg-black rounded overflow-hidden flex-shrink-0">
-                              {recording.file_type === 'video/webm' ? (
-                                <video
-                                  src={recording.file_url}
-                                  className="w-full h-full object-cover"
-                                  muted
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <FileAudio className="h-8 w-8 text-muted-foreground" />
-                                </div>
-                              )}
-                              {recording.duration_seconds && (
-                                <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
-                                  {Math.floor(recording.duration_seconds / 60)}:{String(recording.duration_seconds % 60).padStart(2, '0')}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium truncate">{recording.file_name.replace(/\.[^/.]+$/, "")}</p>
-                              {recording.edit_transcript?.summary && (
-                                <p className="text-xs text-muted-foreground truncate mt-0.5">
-                                  {recording.edit_transcript.summary}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </TableCell>
+                         <TableCell>
+                           <div className="flex items-center gap-3">
+                             <div className="relative w-32 h-20 bg-black rounded overflow-hidden flex-shrink-0">
+                               {recording.file_type === 'video/webm' ? (
+                                 <>
+                                   <video
+                                     src={recording.file_url}
+                                     className="w-full h-full object-cover"
+                                     muted
+                                     onLoadedMetadata={async (e) => {
+                                       const video = e.currentTarget;
+                                       try {
+                                         const metadata = await loadVideoMetadata(recording.file_url);
+                                         // Update recording with orientation info
+                                         setRecordings(prev => prev.map(r => 
+                                           r.id === recording.id ? { ...r, orientation: metadata.orientation } : r
+                                         ));
+                                       } catch (error) {
+                                         console.error("Error loading video metadata:", error);
+                                       }
+                                     }}
+                                   />
+                                   {recording.orientation && (
+                                     <div className="absolute top-1 left-1">
+                                       <VideoOrientationBadge 
+                                         orientation={recording.orientation} 
+                                         className="text-[10px] py-0 px-1.5 h-4"
+                                       />
+                                     </div>
+                                   )}
+                                 </>
+                               ) : (
+                                 <div className="w-full h-full flex items-center justify-center">
+                                   <FileAudio className="h-8 w-8 text-muted-foreground" />
+                                 </div>
+                               )}
+                               {recording.duration_seconds && (
+                                 <div className="absolute bottom-1 right-1 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
+                                   {Math.floor(recording.duration_seconds / 60)}:{String(recording.duration_seconds % 60).padStart(2, '0')}
+                                 </div>
+                               )}
+                             </div>
+                             <div className="flex-1 min-w-0">
+                               <p className="font-medium truncate">{recording.file_name.replace(/\.[^/.]+$/, "")}</p>
+                               {recording.edit_transcript?.summary && (
+                                 <p className="text-xs text-muted-foreground truncate mt-0.5">
+                                   {recording.edit_transcript.summary}
+                                 </p>
+                               )}
+                             </div>
+                           </div>
+                         </TableCell>
                          <TableCell>
                            <div className="flex items-center gap-2">
                              {getStatusBadge(recording)}
