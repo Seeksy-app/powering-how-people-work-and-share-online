@@ -94,6 +94,30 @@ export function StudioTopBar({
         
         <div className="h-6 w-px bg-border" />
         
+        {/* My Page Streaming Toggle */}
+        {isLiveOnProfile ? (
+          <Button
+            onClick={onGoLive}
+            size="sm"
+            variant="destructive"
+            className="bg-red-600 hover:bg-red-700 text-white font-semibold flex items-center gap-2"
+          >
+            <Radio className="h-4 w-4 animate-pulse" />
+            LIVE on My Page
+          </Button>
+        ) : (
+          <Button
+            onClick={onGoLive}
+            size="sm"
+            className="bg-brand-blue hover:bg-brand-blue/90 text-white font-semibold flex items-center gap-2"
+          >
+            <Radio className="h-4 w-4" />
+            Go Live on My Page
+          </Button>
+        )}
+        
+        <div className="h-6 w-px bg-border" />
+        
         <VideoLayoutSelector
           currentLayout={videoLayout}
           onLayoutChange={onVideoLayoutChange}
