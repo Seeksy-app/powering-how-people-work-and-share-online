@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Mic, DollarSign, Check, Clock, Zap, Star, Info, Trash2, BookOpen } from "lucide-react";
+import { Shield, Mic, DollarSign, Check, Clock, Zap, Star, Info, Trash2, BookOpen, Upload, User } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
@@ -46,6 +46,8 @@ export default function VoiceProtection() {
   const [script, setScript] = useState("");
   const [showConsentDialog, setShowConsentDialog] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
 
   // Fetch user's voice profiles
   const { data: voiceProfiles } = useQuery({
@@ -220,6 +222,34 @@ export default function VoiceProtection() {
     setTimeRemaining(cloneType === 'professional' ? 1800 : 120);
   };
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please upload an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setProfileImage(file);
+    setProfileImagePreview(URL.createObjectURL(file));
+  };
+
   // Upload and clone voice
   const cloneVoice = useMutation({
     mutationFn: async () => {
@@ -230,6 +260,7 @@ export default function VoiceProtection() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Upload audio
       const fileName = `${user.id}/voice-samples/${Date.now()}.mp3`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('audio-ads-generated')
@@ -242,6 +273,24 @@ export default function VoiceProtection() {
       const { data: { publicUrl } } = supabase.storage
         .from('audio-ads-generated')
         .getPublicUrl(fileName);
+
+      // Upload profile image if provided
+      let profileImageUrl = null;
+      if (profileImage) {
+        const imageFileName = `${user.id}/voice-profile-images/${Date.now()}-${profileImage.name}`;
+        const { error: imageUploadError } = await supabase.storage
+          .from('avatars')
+          .upload(imageFileName, profileImage, {
+            contentType: profileImage.type,
+          });
+
+        if (!imageUploadError) {
+          const { data: { publicUrl: imagePublicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(imageFileName);
+          profileImageUrl = imagePublicUrl;
+        }
+      }
 
       const { data: cloneData, error: cloneError } = await supabase.functions.invoke(
         'elevenlabs-clone-voice',
@@ -267,6 +316,7 @@ export default function VoiceProtection() {
           is_available_for_ads: availableForAds,
           price_per_ad: pricePerAd ? parseFloat(pricePerAd) : null,
           usage_terms: usageTerms,
+          profile_image_url: profileImageUrl,
         });
 
       if (insertError) throw insertError;
@@ -290,6 +340,8 @@ export default function VoiceProtection() {
       setAvailableForAds(false);
       setUsageTerms("");
       setAudioBlob(null);
+      setProfileImage(null);
+      setProfileImagePreview(null);
     },
     onError: (error) => {
       toast({
@@ -359,8 +411,19 @@ export default function VoiceProtection() {
               {voiceProfiles.map((profile) => (
                 <Card key={profile.id} className="border-primary/20">
                   <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
+                    <div className="flex items-start gap-3">
+                      {profile.profile_image_url ? (
+                        <img 
+                          src={profile.profile_image_url} 
+                          alt={profile.voice_name}
+                          className="w-16 h-16 rounded-full object-cover border-2 border-primary/20"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                          <User className="h-8 w-8 text-primary/50" />
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-2">
                         <CardTitle className="text-lg">{profile.voice_name}</CardTitle>
                         <VoiceCertifiedBadge size="sm" />
                       </div>
@@ -594,6 +657,62 @@ export default function VoiceProtection() {
             {/* Monetization Options */}
             {audioBlob && (
               <>
+                {/* Profile Photo Upload */}
+                <div className="space-y-3">
+                  <Label>Profile Photo (Optional)</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Add your photo to help advertisers connect with your voice personality
+                  </p>
+                  
+                  <div className="flex items-start gap-4">
+                    {profileImagePreview ? (
+                      <div className="relative">
+                        <img 
+                          src={profileImagePreview} 
+                          alt="Profile preview"
+                          className="w-24 h-24 rounded-full object-cover border-2 border-primary"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                          onClick={() => {
+                            setProfileImage(null);
+                            setProfileImagePreview(null);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/30">
+                        <User className="h-10 w-10 text-muted-foreground/50" />
+                      </div>
+                    )}
+                    
+                    <div className="flex-1">
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById('profile-image-upload')?.click()}
+                        className="w-full"
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        {profileImagePreview ? 'Change Photo' : 'Upload Photo'}
+                      </Button>
+                      <input
+                        id="profile-image-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Max 5MB • JPG, PNG, or GIF
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="price">Price per Ad Use</Label>
                   <div className="relative">

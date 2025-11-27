@@ -2856,6 +2856,7 @@ export type Database = {
           is_available_for_ads: boolean | null
           is_verified: boolean | null
           price_per_ad: number | null
+          profile_image_url: string | null
           sample_audio_url: string | null
           updated_at: string | null
           usage_terms: string | null
@@ -2869,6 +2870,7 @@ export type Database = {
           is_available_for_ads?: boolean | null
           is_verified?: boolean | null
           price_per_ad?: number | null
+          profile_image_url?: string | null
           sample_audio_url?: string | null
           updated_at?: string | null
           usage_terms?: string | null
@@ -2882,6 +2884,7 @@ export type Database = {
           is_available_for_ads?: boolean | null
           is_verified?: boolean | null
           price_per_ad?: number | null
+          profile_image_url?: string | null
           sample_audio_url?: string | null
           updated_at?: string | null
           usage_terms?: string | null
