@@ -59,6 +59,9 @@ export const PersonaCard = ({
   };
 
   const isIframe = videoUrl && (videoUrl.includes('heygen.com') || videoUrl.includes('iframe'));
+  
+  // Debug logging
+  console.log('PersonaCard render:', { name, videoUrl, isIframe });
 
   return (
     <motion.div
@@ -77,10 +80,17 @@ export const PersonaCard = ({
           {videoUrl ? (
             isIframe ? (
               <iframe
-                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                style={{ 
+                  width: '100%', 
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
                 src={videoUrl}
-                allow="encrypted-media; fullscreen;"
+                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
+                loading="lazy"
+                frameBorder="0"
               />
             ) : (
               <video
