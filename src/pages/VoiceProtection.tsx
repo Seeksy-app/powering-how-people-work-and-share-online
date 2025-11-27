@@ -741,7 +741,13 @@ export default function VoiceProtection() {
                   <CardContent className="space-y-6">
                     {!audioBlob && (
                       <>
-                        <div className="max-w-md mx-auto space-y-4">
+                        <ScriptEditor 
+                          script={script}
+                          onScriptChange={setScript}
+                          cloneType={cloneType}
+                        />
+
+                        <div className="max-w-3xl mx-auto space-y-4">
                           {isRecording && (
                             <div className="flex items-center justify-center p-6 bg-yellow-500/10 rounded-lg border-2 border-yellow-500">
                               <Clock className="h-8 w-8 text-yellow-500 mr-3" />
@@ -800,17 +806,11 @@ export default function VoiceProtection() {
                             </ul>
                           </div>
                         </div>
-
-                        <ScriptEditor 
-                          script={script}
-                          onScriptChange={setScript}
-                          cloneType={cloneType}
-                        />
                       </>
                     )}
 
                     {audioBlob && (
-                      <div className="max-w-md mx-auto space-y-4">
+                      <div className="max-w-3xl mx-auto space-y-4">
                         <div className="p-6 border rounded-lg bg-muted/50 space-y-4">
                           <div className="flex items-center gap-2">
                             <CheckCircle2 className="h-5 w-5 text-primary" />
