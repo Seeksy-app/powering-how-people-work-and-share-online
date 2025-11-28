@@ -21,6 +21,8 @@ export function useAdvertiserGuard(): AdvertiserStatus {
   });
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAdvertiserStatus = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -46,6 +48,8 @@ export function useAdvertiserGuard(): AdvertiserStatus {
           .eq('owner_profile_id', user.id)
           .maybeSingle();
 
+        if (!isMounted) return;
+
         // If onboarding not complete OR no advertiser record, redirect to signup
         if (!profile?.advertiser_onboarding_completed || !advertiser) {
           navigate('/advertiser/signup', { replace: true });
@@ -60,15 +64,21 @@ export function useAdvertiserGuard(): AdvertiserStatus {
         });
       } catch (error) {
         console.error('Error checking advertiser status:', error);
-        setStatus({
-          isOnboarded: false,
-          advertiserId: null,
-          isLoading: false,
-        });
+        if (isMounted) {
+          setStatus({
+            isOnboarded: false,
+            advertiserId: null,
+            isLoading: false,
+          });
+        }
       }
     };
 
     checkAdvertiserStatus();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [navigate]);
 
   return status;
