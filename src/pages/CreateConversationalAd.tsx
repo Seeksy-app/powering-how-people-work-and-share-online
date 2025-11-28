@@ -24,7 +24,7 @@ const CreateConversationalAd = () => {
       const { data, error } = await supabase
         .from('advertisers')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('owner_profile_id', user.id)
         .single();
 
       if (error) throw error;
