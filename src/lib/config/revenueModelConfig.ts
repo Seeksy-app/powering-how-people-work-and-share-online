@@ -24,6 +24,18 @@ export const revenueModelConfig = {
   // Impressions bonus for episodes with ad reads
   // Each ad read increases impressions by this percentage
   adReadImpressionBonus: 0.1, // 10% bonus per ad read
+
+  // Voice Certification CPM Uplift
+  // Certified voices earn higher CPM due to authenticity verification
+  certifiedVoiceCpmMultiplier: 1.25, // 25% CPM boost for certified voices
+  
+  // Advertiser-side CPM rates
+  advertiserHostReadCpm: 30, // CPM paid by advertisers for host-read ads
+  advertiserAnnouncerCpm: 20, // CPM for announcer/pre-recorded ads
+  
+  // Platform revenue share
+  platformRevenueShare: 0.30, // 30% platform fee
+  creatorRevenueShare: 0.70, // 70% to creator
 };
 
 /**

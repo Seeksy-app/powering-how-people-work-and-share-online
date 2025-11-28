@@ -406,6 +406,270 @@ Platform fees on ad spending
 
 ---
 
+## Monetization Engine
+
+The Monetization Engine is the financial backbone of Seeksy, connecting podcast creation, advertising, voice certification, and creator payouts into a unified revenue system.
+
+### Core Components
+
+#### 1. Revenue Event Tracking
+- **Episode Revenue**: Automatically calculated when episodes are published
+- **Ad Read Revenue**: Tracked per ad-read event with timestamp precision
+- **Voice Certification Uplift**: 25% CPM bonus for certified voices
+- **Platform Fees**: 30% platform fee, 70% creator payout
+
+#### 2. CPM Tier System
+Three-tier CPM pricing model:
+- **Host-Read Ads**: $30 CPM base (certified voice: $37.50)
+- **Announcer Ads**: $20 CPM base
+- **Dynamic Insertion**: $15 CPM base
+
+#### 3. Ad Marketplace Revenue Flow
+
+```
+Advertiser → Campaign → Ad Script → Podcast Studio Recording → Episode Publication → Revenue Distribution
+```
+
+**Detailed Flow:**
+
+1. **Script Creation Phase**
+   - Advertiser creates campaign and uploads ad scripts
+   - Scripts include: brand name, script text, estimated read duration
+   - Scripts become available in Podcast Studio dropdown
+
+2. **Recording Phase**
+   - Creator selects ad script during recording
+   - "Mark Ad Read" captures exact timestamp in episode
+   - AdReadEvent stores: timestamp, scriptId, brandName, duration
+
+3. **Publication Phase**
+   - Episode is saved and published
+   - `track-episode-revenue` edge function calculates:
+     - Base impressions (1000 + bonuses)
+     - CPM rate (with voice certification multiplier if applicable)
+     - Ad read count multiplier (10% per ad)
+     - Total revenue = (impressions / 1000) × CPM × multipliers
+   - Revenue split: 70% creator, 30% platform
+
+4. **Financial Recording**
+   - Revenue event recorded in `revenue_events` table
+   - Individual ad reads tracked in `ad_revenue_events` table
+   - Creator payout queued in `creator_payouts` table
+
+#### 4. Voice Certification Revenue Uplift
+
+**Certification Impact:**
+- Base CPM: $25
+- Certified Voice CPM: $31.25 (25% uplift)
+- Applied automatically when creator has certified voice profile
+
+**Integration Flow:**
+```
+Voice Recording → Fingerprint Generation → Blockchain NFT → Certification Status → CPM Multiplier
+```
+
+When episode is published:
+- System checks if creator has certified voice (via `creator_voice_profiles` table)
+- If certified, applies `certifiedVoiceCpmMultiplier` (1.25x)
+- Uplift displayed on:
+  - Episode stats page
+  - Podcast analytics dashboard
+  - CFO financial reports
+
+#### 5. Impression Calculation Model
+
+**Base Formula:**
+```javascript
+impressions = baseImpressionsPerEpisode × bonuses
+
+Bonuses:
+- New Episode (< 30 days): 1.5x
+- Per Ad Read: 1 + (adReadCount × 0.1)
+
+Example:
+Episode with 3 ad reads, 10 days old:
+impressions = 1000 × 1.5 × 1.3 = 1,950
+```
+
+**Revenue Formula:**
+```javascript
+baseRevenue = (impressions / 1000) × cpm
+totalRevenue = baseRevenue × adReadMultiplier
+
+Platform Fee: totalRevenue × 0.30
+Creator Payout: totalRevenue × 0.70
+```
+
+#### 6. Financial APIs for CFO Dashboard
+
+Six API endpoints provide unified financial data:
+
+**`/api/financials/revenue/by-episode`**
+- Query: `?id=episodeId`
+- Returns: revenue events, impressions, ad reads, payout amount
+
+**`/api/financials/revenue/by-podcast`**
+- Query: `?id=podcastId`
+- Returns: aggregated revenue, total impressions, episode-level breakdown
+
+**`/api/financials/ad-spend`**
+- Query: `?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
+- Returns: advertiser spending, campaign performance, impression delivery
+
+**`/api/financials/forecasts`**
+- Returns: 30-day revenue projections, confidence scores
+
+**`/api/financials/cpm-tiers`**
+- Returns: active CPM tiers, base rates, certification multipliers
+
+**`/api/financials/creator-payouts`**
+- Query: `?id=creatorId`
+- Returns: payout history, pending amounts, payment status
+
+#### 7. Advertiser Billing Flow
+
+```
+Campaign Created → Budget Allocated → Scripts Approved → Ad Reads Delivered → Impressions Tracked → Billing Processed
+```
+
+**Billing Events:**
+- `script_created`: Ad script uploaded to campaign
+- `script_approved`: Script available for creators
+- `ad_marked`: Creator marks ad read during recording
+- `ad_read_complete`: Episode published with ad read
+
+**Cost Calculation:**
+```javascript
+costPerAdRead = (impressionsDelivered / 1000) × advertiserCPM
+
+Advertiser CPM Rates:
+- Host-read: $30
+- Announcer: $20
+```
+
+#### 8. Creator Payout Flow
+
+**Payout Cycle:**
+1. Revenue events accumulate throughout month
+2. At month end, system aggregates:
+   - Total revenue from all episodes
+   - Platform fees deducted (30%)
+   - Net payout calculated (70%)
+3. Payout record created with status "pending"
+4. Payment processed via configured method (PayPal, Stripe, etc.)
+5. Status updated to "completed" and `processed_at` timestamp set
+
+**Payout Record Structure:**
+```javascript
+{
+  creator_id: UUID,
+  payout_period_start: Date,
+  payout_period_end: Date,
+  total_revenue: Decimal,
+  platform_fee: Decimal,
+  payout_amount: Decimal,
+  status: 'pending' | 'processing' | 'completed' | 'failed',
+  payment_reference: String
+}
+```
+
+### Integration Architecture
+
+#### Connected Systems
+
+**1. Podcast Studio ↔ Monetization Engine**
+- Ad script selection during recording
+- Real-time ad-read timestamp capture
+- Revenue tracking on episode export
+
+**2. Content Certification ↔ Monetization Engine**
+- Voice certification status verification
+- CPM uplift application for certified voices
+- Blockchain certificate metadata in revenue events
+
+**3. Advertiser Portal ↔ Monetization Engine**
+- Campaign budget tracking
+- Script performance analytics
+- Ad delivery confirmation
+
+**4. Podcast Analytics ↔ Monetization Engine**
+- Episode-level revenue display
+- Podcast-level revenue aggregation
+- Impression and ad-read metrics
+
+**5. CFO Dashboard ↔ Monetization Engine**
+- Unified financial API consumption
+- Revenue forecasting models
+- Creator payout management
+- Platform fee tracking
+
+### Data Flow Diagram
+
+```
+┌─────────────────┐
+│  Podcast Studio │
+│   (Recording)   │
+└────────┬────────┘
+         │ Ad Read Events
+         │ Episode Metadata
+         ▼
+┌─────────────────┐
+│  Episode Saved  │◄────────── Voice Certification
+│   & Published   │              (CPM Uplift)
+└────────┬────────┘
+         │
+         │ Triggers Revenue Tracking
+         ▼
+┌─────────────────────────────┐
+│ Monetization Engine         │
+│  • Calculate Impressions    │
+│  • Apply CPM Tier           │
+│  • Apply Voice Multiplier   │
+│  • Calculate Revenue        │
+└──────┬─────────┬─────────┬──┘
+       │         │         │
+       │         │         │
+       ▼         ▼         ▼
+┌──────────┐ ┌──────────┐ ┌──────────┐
+│ Revenue  │ │   Ad     │ │ Creator  │
+│  Events  │ │ Revenue  │ │ Payouts  │
+│  Table   │ │  Events  │ │  Table   │
+└────┬─────┘ └────┬─────┘ └────┬─────┘
+     │            │             │
+     └────────────┴─────────────┘
+                  │
+                  ▼
+         ┌─────────────────┐
+         │  CFO Dashboard  │
+         │   Financial     │
+         │     APIs        │
+         └─────────────────┘
+```
+
+### Financial Configuration
+
+All monetization parameters centralized in `revenueModelConfig.ts`:
+
+```typescript
+{
+  defaultCpm: 25,
+  adReadMultiplier: 1.0,
+  baseImpressionsPerEpisode: 1000,
+  certifiedVoiceCpmMultiplier: 1.25,
+  advertiserHostReadCpm: 30,
+  platformRevenueShare: 0.30,
+  creatorRevenueShare: 0.70,
+}
+```
+
+Easily adjustable for:
+- Market rate changes
+- Promotional campaigns
+- A/B testing revenue models
+- Investor financial modeling
+
+---
+
 ## Technology Stack
 
 **Frontend**

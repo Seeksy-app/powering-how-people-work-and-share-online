@@ -112,6 +112,35 @@ const NewEpisodeFromStudio = () => {
 
       if (error) throw error;
 
+      // Track revenue if episode is published
+      if (isPublished && data) {
+        try {
+          // Calculate impressions (mock for now)
+          const baseImpressions = 1000;
+          const episodeAge = 0; // New episode
+          const impressions = Math.round(baseImpressions * 1.5); // New episode bonus
+          
+          // Track revenue via edge function
+          await supabase.functions.invoke('track-episode-revenue', {
+            body: {
+              episodeId: data.id,
+              podcastId: data.podcast_id,
+              userId: user.id,
+              impressions,
+              adReadCount: adReadEvents.length,
+              adReadEvents,
+              duration: duration || 0,
+              isCertifiedVoice: false, // TODO: Check if user has certified voice
+            },
+          });
+          
+          console.log('Revenue tracking initiated for episode:', data.id);
+        } catch (revenueError) {
+          console.error('Revenue tracking error (non-blocking):', revenueError);
+          // Don't fail episode creation if revenue tracking fails
+        }
+      }
+
       return data;
     },
     onSuccess: (data) => {
