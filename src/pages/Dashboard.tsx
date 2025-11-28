@@ -242,7 +242,7 @@ const Dashboard = () => {
     const { data } = await supabase
       .from("advertisers")
       .select("status")
-      .eq("user_id", user.id)
+      .eq("owner_profile_id", user.id)
       .maybeSingle();
     
     if (data) {
