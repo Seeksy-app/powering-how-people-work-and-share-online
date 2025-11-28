@@ -54,7 +54,7 @@ const AdvertiserCampaignsList = () => {
           const { data: liveCreators, error: liveError } = await supabase
             .from('profiles')
             .select('id, username, full_name, avatar_url')
-            .eq('is_live', true)
+            .eq('is_live_on_profile', true)
             .limit(5);
 
           if (liveError || !liveCreators) {
