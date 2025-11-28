@@ -96,13 +96,13 @@ export function PreviewPane({ theme, device, onDeviceChange, mode, onModeChange 
             <div className="absolute inset-0">
               {/* Screen Content - positioned to fit within frame bezels */}
               <div 
-                className="absolute bg-white overflow-y-auto overflow-x-hidden"
+                className="absolute bg-white overflow-y-auto overflow-x-hidden z-0"
                 style={{
-                  top: "24px",
-                  left: "14px",
-                  right: "14px",
-                  bottom: "24px",
-                  borderRadius: "38px",
+                  top: "26px",
+                  left: "16px",
+                  right: "16px",
+                  bottom: "26px",
+                  borderRadius: "36px",
                 }}
               >
                 <MyPagePreview theme={theme} mode={mode} />
@@ -112,7 +112,7 @@ export function PreviewPane({ theme, device, onDeviceChange, mode, onModeChange 
               <img
                 src={iphoneFrame}
                 alt="iPhone 16 Plus"
-                className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-2xl"
+                className="absolute inset-0 w-full h-full pointer-events-none drop-shadow-2xl z-10"
                 style={{ objectFit: "contain" }}
               />
             </div>
