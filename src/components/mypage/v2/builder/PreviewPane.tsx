@@ -94,18 +94,18 @@ export function PreviewPane({ theme, device, onDeviceChange, mode, onModeChange 
             {/* Phone Frame Container */}
             <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-[60px] shadow-2xl p-3">
               {/* Dynamic Island */}
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 w-32 h-8 bg-black rounded-full z-20" />
+              <div className="absolute top-6 left-1/2 -translate-x-1/2 w-32 h-8 bg-black rounded-full z-20" />
               
-              {/* Screen Content */}
-              <div className="relative w-full h-full bg-white rounded-[48px] overflow-hidden">
+              {/* Screen Content - scrollable without white background */}
+              <div className="relative w-full h-full rounded-[48px] overflow-y-auto overflow-x-hidden">
                 <MyPagePreview theme={theme} mode={mode} />
               </div>
               
               {/* Side Buttons */}
-              <div className="absolute left-0 top-32 w-1 h-16 bg-gray-800 rounded-r-sm" />
-              <div className="absolute left-0 top-52 w-1 h-12 bg-gray-800 rounded-r-sm" />
-              <div className="absolute left-0 top-68 w-1 h-12 bg-gray-800 rounded-r-sm" />
-              <div className="absolute right-0 top-44 w-1 h-20 bg-gray-800 rounded-l-sm" />
+              <div className="absolute left-0 top-32 w-1 h-16 bg-gray-700 rounded-r-sm" />
+              <div className="absolute left-0 top-52 w-1 h-12 bg-gray-700 rounded-r-sm" />
+              <div className="absolute left-0 top-68 w-1 h-12 bg-gray-700 rounded-r-sm" />
+              <div className="absolute right-0 top-44 w-1 h-20 bg-gray-700 rounded-l-sm" />
             </div>
           </div>
         ) : (
