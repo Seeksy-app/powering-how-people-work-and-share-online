@@ -103,15 +103,27 @@ export function MyPagePreview({ theme, mode }: MyPagePreviewProps) {
             enabledSections.map((section) => (
               <Card key={section.id} className={cn(cardClasses, "p-6")}>
                 {section.type === "stream" && (
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div className="flex items-center gap-2 text-primary">
                       <Video className="w-5 h-5" />
                       <h3 className="font-semibold">Featured Video</h3>
                     </div>
-                    <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-                      <Eye className="w-12 h-12 text-muted-foreground/50" />
+                    <div className="relative aspect-video bg-gradient-to-br from-primary/10 via-primary/5 to-background rounded-xl overflow-hidden border border-primary/20 group">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="relative">
+                          <div className="w-20 h-20 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                            <div className="w-0 h-0 border-l-[16px] border-l-white border-y-[10px] border-y-transparent ml-1" />
+                          </div>
+                          <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                        </div>
+                      </div>
+                      <div className="absolute top-3 left-3 flex items-center gap-2 text-white">
+                        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-xs font-medium">LIVE</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">Your featured video will appear here</p>
+                    <p className="text-sm text-muted-foreground text-center">Your featured video will appear here</p>
                   </div>
                 )}
 

@@ -77,22 +77,39 @@ export function PreviewPane({ theme, device, onDeviceChange, mode, onModeChange 
 
       {/* Device Preview */}
       <div className="flex-1 flex items-center justify-center p-8 overflow-hidden">
-        <div
-          className={cn(
-            "transition-all duration-300",
-            device === "desktop" 
-              ? "w-full h-full" 
-              : "rounded-3xl shadow-2xl border-8 border-gray-900"
-          )}
-          style={device !== "desktop" ? {
-            width: deviceSizes[device].width,
-            height: deviceSizes[device].height,
-          } : undefined}
-        >
-          <div className="bg-white w-full h-full overflow-y-auto overflow-x-hidden">
-            <MyPagePreview theme={theme} mode={mode} />
+        {device === "desktop" ? (
+          <div className="w-full h-full">
+            <div className="bg-white w-full h-full overflow-y-auto overflow-x-hidden rounded-lg shadow-xl">
+              <MyPagePreview theme={theme} mode={mode} />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div
+            className="relative transition-all duration-300"
+            style={{
+              width: deviceSizes[device].width,
+              height: deviceSizes[device].height,
+            }}
+          >
+            {/* iPhone Frame */}
+            <div className="absolute inset-0 rounded-[3rem] bg-black shadow-2xl">
+              {/* Dynamic Island */}
+              {device === "mobile" && (
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-32 h-8 bg-black rounded-full z-10" />
+              )}
+              
+              {/* Screen */}
+              <div className="absolute inset-[3px] rounded-[2.85rem] overflow-hidden bg-white">
+                <div className="w-full h-full overflow-y-auto overflow-x-hidden">
+                  <MyPagePreview theme={theme} mode={mode} />
+                </div>
+              </div>
+              
+              {/* Bezel highlight */}
+              <div className="absolute inset-0 rounded-[3rem] ring-1 ring-white/10 pointer-events-none" />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
