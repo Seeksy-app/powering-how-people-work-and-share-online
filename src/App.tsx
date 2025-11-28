@@ -194,6 +194,13 @@ import VoiceCertification from "./pages/VoiceCertification";
 import VoiceTag from "./pages/VoiceTag";
 import VoiceTagAdmin from "./pages/VoiceTagAdmin";
 import ScreenshotGenerator from "./pages/admin/ScreenshotGenerator";
+import VoiceCertificationDashboard from "./pages/voice-certification/VoiceCertificationDashboard";
+import UploadOrRecordVoice from "./pages/voice-certification/UploadOrRecordVoice";
+import AIVoiceFingerprinting from "./pages/voice-certification/AIVoiceFingerprinting";
+import MatchConfidence from "./pages/voice-certification/MatchConfidence";
+import ApproveAndMint from "./pages/voice-certification/ApproveAndMint";
+import MintingProgress from "./pages/voice-certification/MintingProgress";
+import VerifiedVoiceSuccess from "./pages/voice-certification/VerifiedVoiceSuccess";
 
 const queryClient = new QueryClient();
 
@@ -283,6 +290,15 @@ const AppContent = () => {
               <Route path="/voice-certification" element={<VoiceCertification />} />
               <Route path="/voice-tag" element={<VoiceTag />} />
               <Route path="/admin/voice-tag-certification" element={<VoiceTagAdmin />} />
+              
+              {/* Voice Certification Flow */}
+              <Route path="/voice-certification-flow" element={<VoiceCertificationDashboard />} />
+              <Route path="/voice-certification/upload" element={<UploadOrRecordVoice />} />
+              <Route path="/voice-certification/fingerprint" element={<AIVoiceFingerprinting />} />
+              <Route path="/voice-certification/confidence" element={<MatchConfidence />} />
+              <Route path="/voice-certification/approve-mint" element={<ApproveAndMint />} />
+              <Route path="/voice-certification/minting-progress" element={<MintingProgress />} />
+              <Route path="/voice-certification/success" element={<VerifiedVoiceSuccess />} />
             <Route path="/investor" element={<InvestorPortal />} />
             <Route path="/project-management" element={<ProjectManagement />} />
             <Route path="/client-tickets" element={<ClientTickets />} />
