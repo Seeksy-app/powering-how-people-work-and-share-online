@@ -75,9 +75,9 @@ const VerifiedVoiceSuccess = () => {
             </div>
 
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-3">Certification Complete!</h1>
+              <h1 className="text-4xl md:text-5xl font-bold mb-3">Success — Your Voice Is Certified</h1>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Your voice has been successfully verified and minted as a blockchain credential
+                Your voice has been verified and minted as a certified profile. You now have a permanent, blockchain-secured proof of authenticity.
               </p>
             </div>
           </div>
@@ -137,7 +137,7 @@ const VerifiedVoiceSuccess = () => {
               className="h-auto py-6"
             >
               <Shield className="mr-2 h-5 w-5" />
-              View Voice Credentials
+              View My Voice Profile
             </Button>
 
             <Button
@@ -147,17 +147,17 @@ const VerifiedVoiceSuccess = () => {
               className="h-auto py-6"
             >
               <Award className="mr-2 h-5 w-5" />
-              Return to Dashboard
+              Return to Voice Certification
             </Button>
 
             <Button
               size="lg"
               variant="outline"
-              onClick={() => navigate("/studio")}
+              onClick={() => navigate("/ad-scripts")}
               className="h-auto py-6"
             >
               <FileText className="mr-2 h-5 w-5" />
-              Create Ad Script
+              Create an Ad-Ready Voice Script
             </Button>
           </div>
 

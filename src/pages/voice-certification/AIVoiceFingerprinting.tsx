@@ -77,7 +77,7 @@ const AIVoiceFingerprinting = () => {
 
             <h2 className="text-3xl font-bold">AI Voice Fingerprinting</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Our AI is creating a unique cryptographic signature of your voice using advanced audio analysis.
+              We're analyzing your voice sample to generate a unique fingerprint. This ensures authenticity and prevents impersonation.
             </p>
 
             {/* Circular Progress Visualization */}
@@ -185,7 +185,7 @@ const AIVoiceFingerprinting = () => {
               onClick={handleContinue}
               disabled={isAnalyzing}
             >
-              View Results
+              Continue
             </Button>
           </div>
         </Card>

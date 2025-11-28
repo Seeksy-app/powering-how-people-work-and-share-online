@@ -15,10 +15,10 @@ const MintingProgress = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [steps, setSteps] = useState<MintingStep[]>([
-    { label: "Preparing", status: "active", progress: 0 },
-    { label: "Signing", status: "pending", progress: 0 },
-    { label: "Minting", status: "pending", progress: 0 },
-    { label: "Finalizing", status: "pending", progress: 0 },
+    { label: "Preparing metadata", status: "active", progress: 0 },
+    { label: "Registering fingerprint", status: "pending", progress: 0 },
+    { label: "Writing to Polygon", status: "pending", progress: 0 },
+    { label: "Finalizing your profile", status: "pending", progress: 0 },
   ]);
 
   useEffect(() => {
@@ -82,9 +82,9 @@ const MintingProgress = () => {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
               <Shield className="h-10 w-10 text-primary animate-pulse" />
             </div>
-            <h2 className="text-3xl font-bold">Minting Your Voice Credential</h2>
+            <h2 className="text-3xl font-bold">Minting Your Certified Voice…</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Creating your blockchain-verified voice NFT on Polygon network...
+              Your voice profile is being registered and secured on the blockchain. This normally takes a few moments.
             </p>
           </div>
 

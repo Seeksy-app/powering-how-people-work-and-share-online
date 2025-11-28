@@ -32,9 +32,9 @@ const ApproveAndMint = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
               <Award className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="text-3xl font-bold">Voice Credential Summary</h2>
+            <h2 className="text-3xl font-bold">Approve & Mint Your Certified Voice</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Review your voice credential details before minting on the blockchain.
+              Your voice is ready to be minted as a certified digital voice profile on the Polygon network. This creates a permanent authenticity record tied to you.
             </p>
           </div>
 
@@ -98,7 +98,7 @@ const ApproveAndMint = () => {
               onClick={handleMintNFT}
             >
               <Shield className="mr-2 h-5 w-5" />
-              Approve & Mint Voice Credential
+              Mint Voice NFT
             </Button>
           </div>
         </Card>
