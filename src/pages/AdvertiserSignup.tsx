@@ -71,11 +71,12 @@ export default function AdvertiserSignup() {
   });
 
   // Check if already onboarded - redirect to dashboard if complete
+  // Only redirect if NOT showing confirmation screen
   useEffect(() => {
-    if (profile?.advertiser_onboarding_completed && existingAdvertiser) {
+    if (!showConfirmation && profile?.advertiser_onboarding_completed && existingAdvertiser) {
       navigate('/advertiser', { replace: true });
     }
-  }, [profile, existingAdvertiser, navigate]);
+  }, [profile, existingAdvertiser, navigate, showConfirmation]);
 
   const signupMutation = useMutation({
     mutationFn: async (formData: any) => {
@@ -271,11 +272,11 @@ export default function AdvertiserSignup() {
               </p>
             </div>
             <div className="flex gap-2 justify-center">
-              <Button onClick={() => navigate("/")}>
-                Return to Dashboard
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/advertiser")}>
-                View Advertiser Portal
+              <Button onClick={() => {
+                setShowConfirmation(false);
+                navigate("/advertiser", { replace: true });
+              }}>
+                Go to Advertiser Dashboard
               </Button>
             </div>
           </CardContent>
@@ -284,10 +285,11 @@ export default function AdvertiserSignup() {
     );
   }
 
-  if (existingAdvertiser && profile?.advertiser_onboarding_completed !== false) {
-    // Show status for existing advertisers
+  // Show status screen for existing advertisers with non-pending status
+  if (existingAdvertiser && profile?.advertiser_onboarding_completed === true && !showConfirmation) {
     if (existingAdvertiser.status === "approved") {
-      navigate("/advertiser/dashboard");
+      // Approved advertisers should be on dashboard
+      navigate("/advertiser", { replace: true });
       return null;
     }
 
