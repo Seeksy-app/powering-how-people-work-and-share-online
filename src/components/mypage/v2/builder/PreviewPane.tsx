@@ -87,25 +87,28 @@ export function PreviewPane({ theme, device, onDeviceChange, mode, onModeChange 
           <div
             className="relative transition-all duration-300"
             style={{
-              width: "390px",
-              height: "844px",
+              width: "320px",
+              height: "680px",
             }}
           >
-            {/* Phone Frame Container */}
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-[60px] shadow-2xl p-3">
-              {/* Dynamic Island */}
-              <div className="absolute top-6 left-1/2 -translate-x-1/2 w-32 h-8 bg-black rounded-full z-20" />
-              
-              {/* Screen Content - scrollable without white background */}
-              <div className="relative w-full h-full rounded-[48px] overflow-y-auto overflow-x-hidden">
-                <MyPagePreview theme={theme} mode={mode} />
+            {/* Phone Frame Container with defined outline */}
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-[52px] shadow-2xl border-4 border-black">
+              {/* Inner padding for bezel */}
+              <div className="absolute inset-2">
+                {/* Dynamic Island */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-28 h-7 bg-black rounded-full z-20" />
+                
+                {/* Screen Content - scrollable */}
+                <div className="relative w-full h-full rounded-[44px] overflow-y-auto overflow-x-hidden">
+                  <MyPagePreview theme={theme} mode={mode} />
+                </div>
               </div>
               
               {/* Side Buttons */}
-              <div className="absolute left-0 top-32 w-1 h-16 bg-gray-700 rounded-r-sm" />
-              <div className="absolute left-0 top-52 w-1 h-12 bg-gray-700 rounded-r-sm" />
-              <div className="absolute left-0 top-68 w-1 h-12 bg-gray-700 rounded-r-sm" />
-              <div className="absolute right-0 top-44 w-1 h-20 bg-gray-700 rounded-l-sm" />
+              <div className="absolute left-0 top-28 w-1 h-14 bg-gray-700 rounded-r-sm" />
+              <div className="absolute left-0 top-44 w-1 h-10 bg-gray-700 rounded-r-sm" />
+              <div className="absolute left-0 top-56 w-1 h-10 bg-gray-700 rounded-r-sm" />
+              <div className="absolute right-0 top-36 w-1 h-16 bg-gray-700 rounded-l-sm" />
             </div>
           </div>
         ) : (
