@@ -31,7 +31,7 @@ const UploadReadyAd = () => {
       const { data, error } = await supabase
         .from('advertisers')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('owner_profile_id', user.id)
         .maybeSingle();
 
       if (error) throw error;
