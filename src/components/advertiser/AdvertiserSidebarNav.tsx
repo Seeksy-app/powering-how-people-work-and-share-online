@@ -95,7 +95,7 @@ export function AdvertiserSidebarNav() {
       });
 
       setShowResetDialog(false);
-      navigate('/advertiser/onboarding/start');
+      navigate('/advertiser/signup');
     } catch (error) {
       console.error('Error resetting onboarding:', error);
       toast({
