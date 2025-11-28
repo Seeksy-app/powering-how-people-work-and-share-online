@@ -1623,7 +1623,6 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
 
       <SidebarContent className="pb-6 overflow-hidden">
         {isAdmin ? (
-          // Admin View: Show admin sidebar only
           <div className="overflow-y-auto">
             {getVisibleSections()
               .filter(section => section.id !== 'settings')

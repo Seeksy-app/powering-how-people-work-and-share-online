@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Mail, User as UserIcon, Phone, Lock, Bell, FileText, Puzzle, Shield, Palette, Check, Eye, MessageSquare, Settings as SettingsIcon, Info, Save, X, Upload } from "lucide-react";
+import { Loader2, Mail, User as UserIcon, Phone, Lock, Bell, FileText, Puzzle, Shield, Palette, Check, Eye, MessageSquare, Settings as SettingsIcon, Info, Save, X, Upload, UserCog } from "lucide-react";
 import { NotificationPreferencesDialog } from "@/components/NotificationPreferencesDialog";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -884,6 +884,24 @@ const Settings = () => {
               </div>
             </CardHeader>
           </Card>
+
+          {/* Admin Profile (Admin Only) */}
+          {isAdmin && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Admin Profile</CardTitle>
+                    <CardDescription>Configure your admin identity separate from your personal profile</CardDescription>
+                  </div>
+                  <Button onClick={() => navigate("/admin/profile-settings")}>
+                    <UserCog className="h-4 w-4 mr-2" />
+                    Manage Admin Profile
+                  </Button>
+                </div>
+              </CardHeader>
+            </Card>
+          )}
 
           {/* Legal Pages */}
           <Card>
