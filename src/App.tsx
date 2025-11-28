@@ -521,7 +521,7 @@ const AppContent = () => {
               <Route path="/advertiser/pricing" element={<ProtectedRoute requiredRole="advertiser"><AdvertiserPricing /></ProtectedRoute>} />
           <Route path="/podcast-ads" element={<PodcastAds />} />
           <Route path="/podcast-revenue" element={<PodcastRevenue />} />
-          <Route path="/voice-protection" element={<Navigate to="/voice-certification-flow" replace />} />
+          <Route path="/voice-protection" element={<VoiceProtection />} />
           <Route path="/voice-credentials" element={<VoiceCredentials />} />
           <Route path="/admin/voice-credentials" element={<VoiceCredentialsAdmin />} />
               <Route path="/settings" element={<Settings />} />
