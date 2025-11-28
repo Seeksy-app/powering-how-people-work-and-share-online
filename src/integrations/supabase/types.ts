@@ -3239,6 +3239,81 @@ export type Database = {
           },
         ]
       }
+      content_credentials: {
+        Row: {
+          blog_post_id: string | null
+          chain: string | null
+          content_hash: string
+          content_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          metadata_uri: string | null
+          nft_metadata: Json | null
+          status: string
+          summary: string | null
+          title: string
+          token_id: string | null
+          transcript_id: string | null
+          tx_hash: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          blog_post_id?: string | null
+          chain?: string | null
+          content_hash: string
+          content_type: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metadata_uri?: string | null
+          nft_metadata?: Json | null
+          status?: string
+          summary?: string | null
+          title: string
+          token_id?: string | null
+          transcript_id?: string | null
+          tx_hash?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          blog_post_id?: string | null
+          chain?: string | null
+          content_hash?: string
+          content_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          metadata_uri?: string | null
+          nft_metadata?: Json | null
+          status?: string
+          summary?: string | null
+          title?: string
+          token_id?: string | null
+          transcript_id?: string | null
+          tx_hash?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_credentials_blog_post_id_fkey"
+            columns: ["blog_post_id"]
+            isOneToOne: true
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_credentials_transcript_id_fkey"
+            columns: ["transcript_id"]
+            isOneToOne: true
+            referencedRelation: "transcripts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversational_ad_charges: {
         Row: {
           advertiser_id: string
@@ -10142,6 +10217,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      transcripts: {
+        Row: {
+          ai_model: string
+          asset_id: string | null
+          created_at: string | null
+          id: string
+          language: string | null
+          metadata: Json | null
+          raw_text: string
+          source_type: string
+          updated_at: string | null
+          user_id: string
+          word_timestamps: Json | null
+        }
+        Insert: {
+          ai_model?: string
+          asset_id?: string | null
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          raw_text: string
+          source_type: string
+          updated_at?: string | null
+          user_id: string
+          word_timestamps?: Json | null
+        }
+        Update: {
+          ai_model?: string
+          asset_id?: string | null
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          metadata?: Json | null
+          raw_text?: string
+          source_type?: string
+          updated_at?: string | null
+          user_id?: string
+          word_timestamps?: Json | null
+        }
+        Relationships: []
       }
       upload_failure_logs: {
         Row: {

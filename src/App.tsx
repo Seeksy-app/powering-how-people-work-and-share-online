@@ -232,6 +232,10 @@ import ApproveAndMintContent from "./pages/content-certification/ApproveAndMintC
 import MintingProgressContent from "./pages/content-certification/MintingProgressContent";
 import CertifiedContentSuccess from "./pages/content-certification/CertifiedContentSuccess";
 import StudioHome from "./pages/podcast-studio/StudioHome";
+import BlogLibrary from "./pages/blog/BlogLibrary";
+import BlogEditor from "./pages/blog/BlogEditor";
+import BlogCertify from "./pages/blog/BlogCertify";
+import ContentCredentialPublic from "./pages/public/ContentCredentialPublic";
 import MicrophoneSetup from "./pages/podcast-studio/MicrophoneSetup";
 import RecordingConsole from "./pages/podcast-studio/RecordingConsole";
 import AICleanup from "./pages/podcast-studio/AICleanup";
@@ -406,8 +410,13 @@ const AppContent = () => {
           <Route path="/communication-history" element={<CommunicationHistory />} />
           <Route path="/newsletter" element={<Newsletter />} />
           <Route path="/unsubscribe" element={<Unsubscribe />} />
-          <Route path="/v/:username/voice-credential" element={<VoiceCredentialPublic />} />
-          <Route path="/ad/click/:adId" element={<AdClickRedirect />} />
+              <Route path="/v/:username/voice-credential" element={<VoiceCredentialPublic />} />
+              <Route path="/c/:id" element={<ContentCredentialPublic />} />
+              <Route path="/ad/click/:adId" element={<AdClickRedirect />} />
+              <Route path="/blog" element={<BlogLibrary />} />
+              <Route path="/blog/new" element={<BlogEditor />} />
+              <Route path="/blog/:id/edit" element={<BlogEditor />} />
+              <Route path="/blog/:id/certify" element={<BlogCertify />} />
               <Route path="/marketing" element={<Marketing />} />
               <Route path="/create-event" element={<CreateEvent />} />
               <Route path="/event/:id" element={<EventDetail />} />
