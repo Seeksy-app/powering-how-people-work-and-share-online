@@ -20,6 +20,22 @@ export default function AdvertiserSignup() {
     },
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("advertiser_onboarding_completed")
+        .eq("id", user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   const { data: existingAdvertiser } = useQuery({
     queryKey: ["advertiser-status", user?.id],
     queryFn: async () => {
@@ -137,8 +153,8 @@ export default function AdvertiserSignup() {
     signupMutation.mutate(formData);
   };
 
-  if (existingAdvertiser) {
-    // Redirect approved advertisers to dashboard
+  if (existingAdvertiser && profile?.advertiser_onboarding_completed !== false) {
+    // Redirect approved advertisers to dashboard (unless they explicitly reset onboarding)
     if (existingAdvertiser.status === "approved") {
       navigate("/advertiser/dashboard");
       return null;
