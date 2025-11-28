@@ -670,6 +670,353 @@ Easily adjustable for:
 
 ---
 
+## Awards Platform Architecture
+
+### Overview
+The Awards Platform enables creators to host awards programs (e.g., Veteran Podcast Awards) with full nomination, voting, and revenue management capabilities integrated into the Monetization Engine.
+
+### Routes
+
+**Awards Program Management**
+- `/awards` — Awards programs dashboard
+- `/awards/create` — Create new awards program
+- `/awards/:programId` — Program details and management
+- `/awards/:programId/categories` — Manage categories
+- `/awards/:programId/nominees` — Manage nominees
+- `/awards/:programId/settings` — Program settings
+
+**Public Voting & Engagement**
+- `/awards/:programId/vote/:nomineeSlug` — Public voting page (shareable)
+- `/awards/:programId/results` — Results page (live or admin-only)
+- `/awards/:programId/register` — Event registration
+
+### Data Entities
+
+**AwardProgram**
+```typescript
+{
+  id: string;
+  title: string;
+  description: string;
+  cover_image_url: string;
+  user_id: string; // program creator
+  status: 'draft' | 'published' | 'voting_open' | 'voting_closed' | 'completed';
+  
+  // Nomination Settings
+  nomination_type: 'public' | 'paid' | 'jury_only' | 'hybrid';
+  allow_public_nominations: boolean;
+  self_nomination_fee: number;
+  
+  // Voting Settings
+  voting_method: 'public' | 'registered' | 'jury' | 'hybrid';
+  require_voter_registration: boolean;
+  max_votes_per_voter: number;
+  show_live_results: boolean;
+  
+  // Registration Settings
+  registration_fee: number;
+  
+  // Important Dates
+  nominations_open_date: Date;
+  nominations_close_date: Date;
+  voting_open_date: Date;
+  voting_close_date: Date;
+  ceremony_date: Date;
+  payout_scheduled_date: Date;
+  
+  // Financial
+  stripe_connect_account_id: string;
+}
+```
+
+**AwardCategory**
+```typescript
+{
+  id: string;
+  program_id: string;
+  name: string;
+  description: string;
+  display_order: number;
+  max_nominees: number;
+  allow_media_submission: boolean;
+}
+```
+
+**Nominee**
+```typescript
+{
+  id: string;
+  program_id: string;
+  category_id: string;
+  nominee_name: string;
+  nominee_description: string;
+  nominee_image_url: string;
+  nominee_email: string;
+  audio_url: string;
+  video_url: string;
+  rss_feed_url: string;
+  podcast_episode_id: string; // link to episode
+  total_votes: number;
+  unique_voting_link: string; // shareable slug
+  status: 'pending' | 'approved' | 'rejected';
+  submitted_by_user_id: string;
+}
+```
+
+**Vote**
+```typescript
+{
+  id: string;
+  program_id: string;
+  category_id: string;
+  nominee_id: string;
+  voter_id: string; // if authenticated
+  voter_ip_hash: string; // if anonymous
+  voter_email: string;
+  voter_name: string;
+  vote_weight: number;
+  rank_position: number; // for ranked voting
+  voted_at: Date;
+}
+```
+
+**AwardRevenue**
+```typescript
+{
+  // Self-Nominations
+  award_self_nominations: {
+    amount_paid: number;
+    status: 'pending' | 'paid' | 'refunded';
+    nominee_id: string;
+  };
+  
+  // Registrations
+  award_registrations: {
+    amount_paid: number;
+    attendee_name: string;
+    attendee_email: string;
+  };
+  
+  // Sponsorships
+  award_sponsorships: {
+    amount_paid: number;
+    sponsor_name: string;
+    package_id: string;
+  };
+  
+  // Payouts
+  award_payouts: {
+    amount: number;
+    net_amount: number;
+    platform_fee: number;
+    status: 'pending' | 'processing' | 'completed';
+    hold_until_date: Date;
+  };
+}
+```
+
+### Data Flows
+
+#### 1. Awards Program Creation Flow
+```
+Creator → Create Program → Set Nomination/Voting/Registration Settings
+  → Create Categories → Add Initial Nominees (optional)
+  → Publish Program → Generate Shareable Links
+```
+
+#### 2. Nomination Flow (Public or Paid)
+```
+Public User → Visit Program Page → Submit Nomination
+  → (If Paid) Process Payment via Stripe
+  → Create Nominee Record (status: pending)
+  → Admin Reviews → Approve/Reject
+  → Approved Nominees → Generate Voting Links
+```
+
+#### 3. Voting Flow
+```
+Voter → Visit /awards/:programId/vote/:nomineeSlug
+  → Check Voting Window (open/close dates)
+  → (If Required) Authenticate/Register
+  → Check Max Votes Per Voter
+  → Submit Vote
+  → Hash IP or User ID for Fraud Prevention
+  → Update nominee.total_votes
+  → Record in award_votes table
+```
+
+#### 4. Results & Winner Announcement Flow
+```
+Admin → Close Voting → Calculate Final Tallies
+  → Select Winners → Announce Winners
+  → (If show_live_results = true) → Public Views Live Results
+  → (If false) → Admin-Only Until Ceremony
+```
+
+#### 5. Revenue Flow
+```
+Self-Nomination Fee → Stripe Payment → award_self_nominations
+Registration Fee → Stripe Payment → award_registrations
+Sponsorship Package → Stripe Payment → award_sponsorships
+  ↓
+All Revenue → Monetization Engine → revenue_events
+  ↓
+Platform Fee (10%) → Seeksy
+Creator Net Amount → award_payouts (held until payout_date)
+  ↓
+After Ceremony → Process Payout → Stripe Connect Transfer
+```
+
+### Fraud Prevention & Voting Integrity
+
+**IP Hashing**
+- Anonymous votes: Hash IP + User Agent → `voter_ip_hash`
+- Prevents simple duplicate votes from same device
+
+**User Authentication**
+- Registered voting: Requires user login → `voter_id`
+- Tracks votes per authenticated user
+
+**Max Votes Enforcement**
+- Check `max_votes_per_voter` before accepting vote
+- Count votes by `voter_id` OR `voter_ip_hash`
+
+**Voting Window Validation**
+- Enforce `voting_open_date` and `voting_close_date`
+- Reject votes outside window
+
+### Awards → Podcasts Integration
+
+**Episode Submission to Awards**
+- From Episode Detail Page → "Submit to Awards" button
+- Pre-fills nominee form with:
+  - Episode title → nominee_name
+  - Episode description → nominee_description
+  - Episode audio_url → nominee audio
+  - Episode cover image → nominee image
+- Links `nominee.podcast_episode_id` to episode
+
+**Nominee → Episode Linking**
+- Nominee page displays linked episode details
+- "Listen to Episode" button → episode player
+- Drives podcast engagement from awards traffic
+
+### Awards → Monetization Engine Integration
+
+**Revenue Tracking**
+Awards revenue feeds into the central Monetization Engine via:
+
+1. **Revenue Events**
+   - `track-awards-revenue` edge function
+   - Logs all awards transactions to `revenue_events` table
+   - Categories: `awards_self_nomination`, `awards_registration`, `awards_sponsorship`
+
+2. **Financial APIs**
+   - `/api/financials/awards/by-program?id={programId}` → Revenue breakdown per program
+   - `/api/financials/awards/summary` → All awards revenue summary
+   - `/api/financials/awards/submissions/count` → Total submissions count
+
+3. **CFO Dashboard Integration**
+   - Awards revenue appears in Revenue by Source
+   - Awards programs listed in Revenue Breakdown
+   - Awards forecasts included in 3-Year Pro Forma
+   - Custom assumptions adjustable via CFO AI
+
+4. **Revenue Sources**
+   ```
+   Awards Total Revenue = Self-Nominations + Registrations + Sponsorships
+   Platform Revenue (10%) = Total Revenue × 0.10
+   Creator Net Revenue = Total Revenue - Platform Fee
+   ```
+
+5. **Payout Management**
+   - All awards revenue held until `payout_scheduled_date`
+   - Payouts processed via `award_payouts` table
+   - Integrated with creator payout dashboard
+
+### Awards Ecosystem Position
+
+```
+                    ┌─────────────────┐
+                    │  Awards Program │
+                    └────────┬────────┘
+                             │
+          ┌──────────────────┼──────────────────┐
+          │                  │                  │
+     ┌────▼─────┐      ┌────▼─────┐      ┌────▼─────┐
+     │Nominations│      │  Voting  │      │Registration│
+     └────┬─────┘      └────┬─────┘      └────┬─────┘
+          │                  │                  │
+          │            ┌─────▼─────┐           │
+          │            │Vote Tally │           │
+          │            │& Results  │           │
+          │            └─────┬─────┘           │
+          │                  │                  │
+          └──────────────────┼──────────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │Revenue Tracking │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │  Monetization   │
+                    │     Engine      │
+                    └────────┬────────┘
+                             │
+          ┌──────────────────┼──────────────────┐
+          │                  │                  │
+     ┌────▼─────┐      ┌────▼─────┐      ┌────▼─────┐
+     │ Revenue  │      │   CFO    │      │ Creator  │
+     │Forecasts │      │Dashboard │      │ Payouts  │
+     └──────────┘      └──────────┘      └──────────┘
+```
+
+### Integration Points
+
+**With Podcast Studio**
+- Episodes recorded in Studio can be submitted to Awards
+- Award nominees link to podcast episodes
+- Awards drive podcast discovery and engagement
+
+**With Content Certification**
+- Award-winning content can be certified
+- Certified nominees display authenticity badges
+- Certification adds credibility to awards
+
+**With Advertiser Module**
+- Award ceremony sponsorships
+- Sponsored categories
+- Advertiser packages tied to award programs
+
+**With Voice Certification**
+- Certified creator voices highlighted in nominations
+- Voice authenticity verification for award content
+- CPM uplift for certified award-winning podcasts
+
+**With Media Library**
+- Award ceremony recordings stored in Media Library
+- Highlight reels auto-generated from winner announcements
+- Social clips created from award moments
+
+### Use Cases
+
+1. **Industry Awards** (e.g., Veteran Podcast Awards)
+   - Recognize excellence in podcast categories
+   - Drive community engagement
+   - Generate revenue from nominations, registrations, sponsorships
+
+2. **Community Recognition**
+   - User-voted awards for favorite creators
+   - Category-based voting (Best Interview, Best Series, etc.)
+   - Public engagement and discovery
+
+3. **Monetization Showcase**
+   - Awards as revenue-generating product
+   - Demonstrates platform versatility
+   - Investor showcase asset
+
+---
+
 ## Technology Stack
 
 **Frontend**

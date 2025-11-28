@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const url = new URL(req.url);
-    const queryType = url.searchParams.get('type'); // 'by-episode', 'by-podcast', 'ad-spend', 'forecasts', 'cpm-tiers', 'creator-payouts'
+    const queryType = url.searchParams.get('type'); // 'by-episode', 'by-podcast', 'ad-spend', 'forecasts', 'cpm-tiers', 'creator-payouts', 'awards-by-program', 'awards-summary', 'awards-submissions'
     const entityId = url.searchParams.get('id');
     const startDate = url.searchParams.get('startDate');
     const endDate = url.searchParams.get('endDate');
@@ -103,6 +103,123 @@ Deno.serve(async (req) => {
           .eq('creator_id', entityId)
           .order('created_at', { ascending: false });
         result = { payouts };
+        break;
+
+      case 'awards-by-program':
+        if (!entityId) throw new Error('Program ID required');
+        
+        // Get all revenue for this program
+        const { data: sponsorships } = await supabase
+          .from('award_sponsorships')
+          .select('amount_paid, status, created_at')
+          .eq('program_id', entityId)
+          .eq('status', 'paid');
+        
+        const { data: nominations } = await supabase
+          .from('award_self_nominations')
+          .select('amount_paid, status, created_at')
+          .eq('program_id', entityId)
+          .eq('status', 'paid');
+        
+        const { data: registrations } = await supabase
+          .from('award_registrations')
+          .select('amount_paid, status, created_at')
+          .eq('program_id', entityId)
+          .eq('status', 'paid');
+        
+        const totalSponsorship = sponsorships?.reduce((sum, s) => sum + Number(s.amount_paid), 0) || 0;
+        const totalNominations = nominations?.reduce((sum, n) => sum + Number(n.amount_paid), 0) || 0;
+        const totalRegistrations = registrations?.reduce((sum, r) => sum + Number(r.amount_paid), 0) || 0;
+        
+        result = {
+          program_id: entityId,
+          revenue_breakdown: {
+            sponsorships: totalSponsorship,
+            self_nominations: totalNominations,
+            registrations: totalRegistrations,
+            total: totalSponsorship + totalNominations + totalRegistrations,
+          },
+          transactions: {
+            sponsorships,
+            nominations,
+            registrations,
+          },
+        };
+        break;
+
+      case 'awards-summary':
+        // Get all awards programs revenue summary
+        const { data: allPrograms } = await supabase
+          .from('awards_programs')
+          .select('id, title, user_id, created_at');
+        
+        const programsWithRevenue = await Promise.all(
+          (allPrograms || []).map(async (prog) => {
+            const { data: sponsorshipsData } = await supabase
+              .from('award_sponsorships')
+              .select('amount_paid')
+              .eq('program_id', prog.id)
+              .eq('status', 'paid');
+            
+            const { data: nominationsData } = await supabase
+              .from('award_self_nominations')
+              .select('amount_paid')
+              .eq('program_id', prog.id)
+              .eq('status', 'paid');
+            
+            const { data: registrationsData } = await supabase
+              .from('award_registrations')
+              .select('amount_paid')
+              .eq('program_id', prog.id)
+              .eq('status', 'paid');
+            
+            const revenue = 
+              (sponsorshipsData?.reduce((s, x) => s + Number(x.amount_paid), 0) || 0) +
+              (nominationsData?.reduce((s, x) => s + Number(x.amount_paid), 0) || 0) +
+              (registrationsData?.reduce((s, x) => s + Number(x.amount_paid), 0) || 0);
+            
+            return {
+              ...prog,
+              total_revenue: revenue,
+              sponsorship_count: sponsorshipsData?.length || 0,
+              nomination_count: nominationsData?.length || 0,
+              registration_count: registrationsData?.length || 0,
+            };
+          })
+        );
+        
+        const totalAwardsRevenue = programsWithRevenue.reduce((sum, p) => sum + p.total_revenue, 0);
+        
+        result = {
+          total_revenue: totalAwardsRevenue,
+          program_count: allPrograms?.length || 0,
+          programs: programsWithRevenue,
+        };
+        break;
+
+      case 'awards-submissions':
+        // Count total submissions across all programs
+        const { count: sponsorshipCount } = await supabase
+          .from('award_sponsorships')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'paid');
+        
+        const { count: nominationCount } = await supabase
+          .from('award_self_nominations')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'paid');
+        
+        const { count: registrationCount } = await supabase
+          .from('award_registrations')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'paid');
+        
+        result = {
+          total_submissions: (sponsorshipCount || 0) + (nominationCount || 0) + (registrationCount || 0),
+          sponsorships: sponsorshipCount || 0,
+          nominations: nominationCount || 0,
+          registrations: registrationCount || 0,
+        };
         break;
 
       default:
