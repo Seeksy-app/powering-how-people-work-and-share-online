@@ -9789,6 +9789,121 @@ export type Database = {
           },
         ]
       }
+      voice_detections: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          detected_at: string
+          first_spoken_at_sec: number | null
+          id: string
+          last_spoken_at_sec: number | null
+          linked_revenue_event_id: string | null
+          notes: string | null
+          platform: string
+          raw_metadata: Json | null
+          source_id: string | null
+          source_title: string | null
+          source_type: string
+          source_url: string | null
+          status: string
+          updated_at: string
+          usage_category: string | null
+          user_id: string
+          voice_fingerprint_id: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          detected_at?: string
+          first_spoken_at_sec?: number | null
+          id?: string
+          last_spoken_at_sec?: number | null
+          linked_revenue_event_id?: string | null
+          notes?: string | null
+          platform: string
+          raw_metadata?: Json | null
+          source_id?: string | null
+          source_title?: string | null
+          source_type: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          usage_category?: string | null
+          user_id: string
+          voice_fingerprint_id?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          detected_at?: string
+          first_spoken_at_sec?: number | null
+          id?: string
+          last_spoken_at_sec?: number | null
+          linked_revenue_event_id?: string | null
+          notes?: string | null
+          platform?: string
+          raw_metadata?: Json | null
+          source_id?: string | null
+          source_title?: string | null
+          source_type?: string
+          source_url?: string | null
+          status?: string
+          updated_at?: string
+          usage_category?: string | null
+          user_id?: string
+          voice_fingerprint_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_detections_voice_fingerprint_id_fkey"
+            columns: ["voice_fingerprint_id"]
+            isOneToOne: false
+            referencedRelation: "voice_fingerprints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_fingerprints: {
+        Row: {
+          created_at: string
+          fingerprint_data: Json | null
+          fingerprint_id: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+          voice_profile_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          fingerprint_data?: Json | null
+          fingerprint_id: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          voice_profile_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          fingerprint_data?: Json | null
+          fingerprint_id?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          voice_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_fingerprints_voice_profile_id_fkey"
+            columns: ["voice_profile_id"]
+            isOneToOne: false
+            referencedRelation: "creator_voice_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_licensing_proposals: {
         Row: {
           advertiser_company: string | null
@@ -9910,6 +10025,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voice_monitoring_sources: {
+        Row: {
+          channel_id: string | null
+          created_at: string
+          external_account_id: string | null
+          id: string
+          is_active: boolean
+          label: string | null
+          last_scan_at: string | null
+          platform: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_id?: string | null
+          created_at?: string
+          external_account_id?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          last_scan_at?: string | null
+          platform: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: string | null
+          created_at?: string
+          external_account_id?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          last_scan_at?: string | null
+          platform?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       voice_social_detections: {
         Row: {
