@@ -912,27 +912,49 @@ Awards revenue feeds into the central Monetization Engine via:
    - Categories: `awards_self_nomination`, `awards_registration`, `awards_sponsorship`
 
 2. **Financial APIs**
-   - `/api/financials/awards/by-program?id={programId}` → Revenue breakdown per program
-   - `/api/financials/awards/summary` → All awards revenue summary
-   - `/api/financials/awards/submissions/count` → Total submissions count
+   - GET `/api/financials/revenue/by-episode?id={episodeId}` → Episode-level revenue with impressions and ad reads
+   - GET `/api/financials/revenue/by-podcast?id={podcastId}` → Podcast-level aggregated revenue
+   - GET `/api/financials/ad-spend?startDate={date}&endDate={date}` → Ad campaign spending with date filters
+   - GET `/api/financials/forecasts` → Revenue forecast projections (30-day rolling)
+   - GET `/api/financials/cpm-tiers` → Active CPM pricing tiers
+   - GET `/api/financials/creator-payouts?id={creatorId}` → Creator payout history
+   - GET `/api/financials/awards/by-program?id={programId}` → Revenue breakdown per program
+   - GET `/api/financials/awards/summary` → All awards revenue summary
+   - GET `/api/financials/awards/submissions/count` → Total submissions count
 
 3. **CFO Dashboard Integration**
    - Awards revenue appears in Revenue by Source
    - Awards programs listed in Revenue Breakdown
    - Awards forecasts included in 3-Year Pro Forma
    - Custom assumptions adjustable via CFO AI
+   - Real-time data toggle for live metrics vs. projections
 
-4. **Revenue Sources**
+4. **Impression & Listen Tracking**
+   - **Impressions**: Tracked via `ad_impressions` table on episode view/load
+   - **Listens**: Tracked via `listen_events` table for audio playback with duration and completion percentage
+   - **Analytics Dashboard**: Admin → Analytics → Impressions & Listens
+   - **Revenue Calculation**: Impressions directly feed CPM-based revenue calculations
+   - **Episode-to-Podcast Aggregation**: Individual episode metrics roll up to podcast-level analytics
+   - **Geographic Data**: IP-based city/country tracking for audience insights
+   - **Privacy**: IP hashing for anonymous tracking with session-based identifiers
+
+5. **Revenue Sources**
    ```
    Awards Total Revenue = Self-Nominations + Registrations + Sponsorships
    Platform Revenue (10%) = Total Revenue × 0.10
    Creator Net Revenue = Total Revenue - Platform Fee
    ```
 
-5. **Payout Management**
+6. **Payout Management**
    - All awards revenue held until `payout_scheduled_date`
    - Payouts processed via `award_payouts` table
    - Integrated with creator payout dashboard
+
+7. **Podcast → Awards Integration**
+   - "Submit to Awards" button on episode detail pages
+   - Pre-fills nomination with episode metadata (title, description, audio, cover image)
+   - Links `nominee.podcast_episode_id` to episode for cross-referencing
+   - Drives engagement and cross-promotion between Podcasts and Awards modules
 
 ### Awards Ecosystem Position
 

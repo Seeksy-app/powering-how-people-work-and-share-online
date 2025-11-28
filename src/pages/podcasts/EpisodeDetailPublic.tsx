@@ -3,12 +3,15 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Calendar, Clock, Radio, Shield, Waves } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Radio, Shield, Waves, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { SubmitToAwardsDialog } from "@/components/episode/SubmitToAwardsDialog";
+import { useState } from "react";
 
 const EpisodeDetailPublic = () => {
   const { podcastId, episodeId } = useParams();
   const navigate = useNavigate();
+  const [showAwardsDialog, setShowAwardsDialog] = useState(false);
 
   const { data: episode, isLoading } = useQuery({
     queryKey: ["episode", episodeId],
@@ -152,7 +155,17 @@ const EpisodeDetailPublic = () => {
           </CardContent>
         </Card>
 
-        {/* Ad Reads Section */}
+        {/* Actions */}
+        <div className="mb-6 flex gap-2">
+          <Button
+            onClick={() => setShowAwardsDialog(true)}
+            variant="outline"
+            className="flex-1"
+          >
+            <Trophy className="w-4 h-4 mr-2" />
+            Submit to Awards
+          </Button>
+        </div>
         {adReads && adReads.length > 0 && (
           <Card>
             <CardHeader>
@@ -213,6 +226,21 @@ const EpisodeDetailPublic = () => {
           </Card>
         )}
       </div>
+
+      {/* Awards Submission Dialog */}
+      {episode && (
+        <SubmitToAwardsDialog
+          open={showAwardsDialog}
+          onOpenChange={setShowAwardsDialog}
+          episode={{
+            id: episode.id,
+            title: episode.title,
+            description: episode.description || undefined,
+            audio_url: episode.audio_url || undefined,
+            podcast_id: podcastId!,
+          }}
+        />
+      )}
     </div>
   );
 };

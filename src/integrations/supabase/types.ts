@@ -4829,6 +4829,57 @@ export type Database = {
           },
         ]
       }
+      listen_events: {
+        Row: {
+          completion_percentage: number | null
+          created_at: string | null
+          creator_id: string
+          episode_id: string
+          id: string
+          listen_duration_seconds: number
+          listened_at: string | null
+          listener_ip_hash: string | null
+          podcast_id: string
+        }
+        Insert: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          creator_id: string
+          episode_id: string
+          id?: string
+          listen_duration_seconds?: number
+          listened_at?: string | null
+          listener_ip_hash?: string | null
+          podcast_id: string
+        }
+        Update: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          creator_id?: string
+          episode_id?: string
+          id?: string
+          listen_duration_seconds?: number
+          listened_at?: string | null
+          listener_ip_hash?: string | null
+          podcast_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listen_events_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listen_events_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       live_stream_viewers: {
         Row: {
           id: string
