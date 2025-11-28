@@ -42,6 +42,9 @@ export interface MyPageTheme {
   
   // Sections
   sections: MyPageSection[];
+
+  // Social Links
+  socialLinks?: Record<string, any>;
 }
 
 export interface MyPageSection {

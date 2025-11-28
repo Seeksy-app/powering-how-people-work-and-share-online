@@ -44,25 +44,28 @@ export const MonetizationTab = ({ podcastId }: MonetizationTabProps) => {
       const { data, error } = await supabase
         .from("ad_campaigns")
         .select("*")
+        .limit(10)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
+
+  const episodeRevenueData = revenue?.episodes?.map((ep, idx) => ({
+    name: `Ep ${idx + 1}`,
+    revenue: ep.revenue_amount,
+  })).slice(0, 10) || [];
 
   if (revenueLoading) {
     return (
       <div className="space-y-6">
+        <div className="grid md:grid-cols-3 gap-4">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-24" />)}
+        </div>
         <Skeleton className="h-64" />
-        <Skeleton className="h-48" />
       </div>
     );
   }
-
-  const episodeRevenueData = revenue?.episodes?.map((ep) => ({
-    name: ep.episode_id.slice(0, 8),
-    revenue: ep.revenue_amount,
-  })) || [];
 
   return (
     <div className="space-y-6">
@@ -103,7 +106,7 @@ export const MonetizationTab = ({ podcastId }: MonetizationTabProps) => {
       </div>
 
       {/* Revenue Breakdown Chart */}
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Revenue by Episode</CardTitle>
           <CardDescription>Earnings breakdown across your podcast episodes</CardDescription>
@@ -112,23 +115,31 @@ export const MonetizationTab = ({ podcastId }: MonetizationTabProps) => {
           {episodeRevenueData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={episodeRevenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="revenue" fill="hsl(var(--primary))" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--card))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }} 
+                />
+                <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-64 flex items-center justify-center text-muted-foreground">
-              No revenue data available yet
+            <div className="h-64 flex flex-col items-center justify-center text-muted-foreground">
+              <DollarSign className="w-12 h-12 mb-2 opacity-50" />
+              <p>No revenue data available yet</p>
+              <p className="text-sm">Publish episodes with ads to start tracking revenue</p>
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Ad Campaigns */}
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Ad Campaigns</CardTitle>
           <CardDescription>Active and completed advertising campaigns</CardDescription>
@@ -137,21 +148,25 @@ export const MonetizationTab = ({ podcastId }: MonetizationTabProps) => {
           {campaigns && campaigns.length > 0 ? (
             <div className="space-y-3">
               {campaigns.slice(0, 5).map((campaign) => (
-                <div key={campaign.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                  <div>
+                <div key={campaign.id} className="flex items-center justify-between p-3 border rounded-lg bg-card/50 hover:bg-card transition-colors">
+                  <div className="flex-1">
                     <p className="font-medium">{campaign.name}</p>
                     <p className="text-sm text-muted-foreground">
-                      {campaign.total_impressions?.toLocaleString() || 0} impressions • ${campaign.total_spent || 0}
+                      {campaign.total_impressions?.toLocaleString() || 0} impressions • ${campaign.total_spent?.toFixed(2) || '0.00'} spent
                     </p>
                   </div>
-                  <Badge variant={campaign.status === "active" ? "default" : "secondary"}>
+                  <Badge variant={campaign.status === "active" ? "default" : "secondary"} className="ml-4">
                     {campaign.status}
                   </Badge>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground text-center py-8">No campaigns yet</p>
+            <div className="py-12 text-center text-muted-foreground">
+              <Megaphone className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p className="font-medium">No campaigns yet</p>
+              <p className="text-sm">Connect with advertisers to start monetizing</p>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -189,18 +204,18 @@ export const MonetizationTab = ({ podcastId }: MonetizationTabProps) => {
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
-      <Card>
+      {/* Voice Ad Tools */}
+      <Card className="shadow-sm border-2 border-primary/10 bg-gradient-to-br from-primary/5 to-background">
         <CardHeader>
           <CardTitle>Voice Ad Tools</CardTitle>
           <CardDescription>Create and manage voice-powered advertisements</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Button variant="outline" className="w-full justify-start">
+          <Button variant="outline" className="w-full justify-start hover:bg-primary/10 transition-colors">
             <FileText className="w-4 h-4 mr-2" />
             Voice Ad Script Generator
           </Button>
-          <Button variant="outline" className="w-full justify-start">
+          <Button variant="outline" className="w-full justify-start hover:bg-primary/10 transition-colors">
             <Mic2 className="w-4 h-4 mr-2" />
             View Certified Voice Profile
           </Button>

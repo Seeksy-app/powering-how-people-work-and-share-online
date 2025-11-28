@@ -16,7 +16,8 @@ import {
   Eye,
   FileText,
   CheckCircle2,
-  Clock
+  Clock,
+  ExternalLink
 } from "lucide-react";
 import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
@@ -95,33 +96,47 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Podcast Header */}
-      <Card>
+      {/* Hero Band */}
+      <Card className="overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-background">
         <CardContent className="pt-6">
           <div className="flex items-start gap-6">
             {podcast?.cover_image_url && (
               <img 
                 src={podcast.cover_image_url} 
                 alt={podcast.title}
-                className="w-24 h-24 rounded-lg object-cover"
+                className="w-28 h-28 rounded-xl object-cover shadow-lg ring-2 ring-primary/20"
               />
             )}
             <div className="flex-1">
-              <h2 className="text-2xl font-bold mb-2">{podcast?.title}</h2>
-              <p className="text-muted-foreground mb-4">Host: {podcast?.author_name || "Not specified"}</p>
-              <div className="flex gap-2">
-                <Button onClick={() => navigate(`/podcasts/${podcastId}/episodes/new-from-studio`)}>
-                  <Mic className="w-4 h-4 mr-2" />
+              <div className="flex items-center gap-2 mb-2">
+                <Radio className="w-4 h-4 text-primary" />
+                <span className="text-xs font-medium text-primary uppercase tracking-wide">Your Podcast</span>
+              </div>
+              <h2 className="text-3xl font-bold mb-1">{podcast?.title}</h2>
+              <p className="text-muted-foreground mb-4">
+                Host: {podcast?.author_name || "Not specified"}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={() => navigate(`/podcasts/${podcastId}/episodes/new-from-studio`)} size="lg" className="gap-2">
+                  <Mic className="w-4 h-4" />
                   Create Episode
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/studio")}>
-                  <Radio className="w-4 h-4 mr-2" />
-                  Go to Studio
+                <Button variant="outline" onClick={() => navigate(`/podcasts/${podcastId}?tab=studio`)} size="lg" className="gap-2">
+                  <Radio className="w-4 h-4" />
+                  Open Studio
                 </Button>
-                <Button variant="outline" onClick={handleShare}>
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share Link
+                <Button variant="outline" onClick={handleShare} size="lg" className="gap-2">
+                  <Share2 className="w-4 h-4" />
+                  Share
                 </Button>
+                {podcast?.rss_feed_url && (
+                  <Button variant="ghost" asChild size="lg" className="gap-2">
+                    <a href={podcast.rss_feed_url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="w-4 h-4" />
+                      RSS Feed
+                    </a>
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -130,17 +145,18 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
 
       {/* Stats Summary */}
       <div className="grid md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Episodes</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{episodes?.length || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Published episodes</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Listens</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -149,10 +165,11 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
             <div className="text-2xl font-bold">
               {revenue?.total_impressions?.toLocaleString() || "0"}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">All-time plays</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Est. Revenue</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -161,10 +178,11 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
             <div className="text-2xl font-bold">
               ${revenue?.total_revenue?.toFixed(2) || "0.00"}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Total earnings</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ad Impressions</CardTitle>
             <Eye className="h-4 w-4 text-muted-foreground" />
@@ -173,13 +191,14 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
             <div className="text-2xl font-bold">
               {revenue?.total_ad_reads?.toLocaleString() || "0"}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Total ad reads</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Recent Episodes & Distribution Status */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid lg:grid-cols-2 gap-6">
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Recent Episodes</CardTitle>
           </CardHeader>
@@ -189,10 +208,10 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
                 {[1, 2, 3].map(i => <Skeleton key={i} className="h-16" />)}
               </div>
             ) : episodes && episodes.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {episodes.map((episode) => (
-                  <div key={episode.id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                    <div>
+                  <div key={episode.id} className="flex items-center justify-between p-3 border rounded-lg bg-card/50 hover:bg-card transition-colors">
+                    <div className="flex-1">
                       <p className="font-medium">{episode.title}</p>
                       <p className="text-sm text-muted-foreground">
                       {episode.created_at && format(new Date(episode.created_at), 'MMM d, yyyy')}
@@ -205,18 +224,21 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-8">No episodes yet</p>
+              <div className="py-12 text-center text-muted-foreground">
+                <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                <p>No episodes yet</p>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
             <CardTitle>Distribution Status</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span>Apple Podcasts</span>
+            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <span className="font-medium">Apple Podcasts</span>
               {appleStatus?.status === "listed" ? (
                 <Badge variant="default" className="bg-green-600">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -232,8 +254,8 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
               )}
             </div>
 
-            <div className="flex items-center justify-between">
-              <span>Spotify</span>
+            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <span className="font-medium">Spotify</span>
               {spotifyStatus?.status === "listed" ? (
                 <Badge variant="default" className="bg-green-600">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -249,8 +271,8 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
               )}
             </div>
 
-            <div className="flex items-center justify-between">
-              <span>Amazon Music</span>
+            <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <span className="font-medium">Amazon Music</span>
               {amazonStatus?.status === "listed" ? (
                 <Badge variant="default" className="bg-green-600">
                   <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -266,8 +288,8 @@ export const OverviewTab = ({ podcastId, userId }: OverviewTabProps) => {
               )}
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t">
-              <span>RSS Feed</span>
+            <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+              <span className="font-medium">RSS Feed</span>
               <Badge variant="default" className="bg-green-600">
                 <CheckCircle2 className="w-3 h-3 mr-1" />
                 Active

@@ -145,7 +145,7 @@ export const StatsTab = ({ podcastId }: StatsTabProps) => {
       </div>
 
       {/* Listens Over Time */}
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Listens Over Time</CardTitle>
           <CardDescription>Total podcast listens by episode release date</CardDescription>
@@ -153,11 +153,24 @@ export const StatsTab = ({ podcastId }: StatsTabProps) => {
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={listensOverTime}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="listens" stroke="hsl(var(--primary))" strokeWidth={2} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))', 
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="listens" 
+                stroke="hsl(var(--primary))" 
+                strokeWidth={3} 
+                dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </CardContent>

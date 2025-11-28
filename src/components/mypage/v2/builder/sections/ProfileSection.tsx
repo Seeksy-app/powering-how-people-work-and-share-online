@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Upload, AlertCircle } from "lucide-react";
 import { MyPageTheme } from "@/config/myPageThemes";
 import { useState } from "react";
+import { SocialLinksEditor } from "./SocialLinksEditor";
+import { Separator } from "@/components/ui/separator";
 
 interface ProfileSectionProps {
   theme: MyPageTheme;
@@ -26,6 +28,8 @@ const isValidUsername = (username: string): boolean => {
 
 export function ProfileSection({ theme, onUpdate }: ProfileSectionProps) {
   const [usernameError, setUsernameError] = useState<string>("");
+  const [socialLinks, setSocialLinks] = useState<Record<string, any>>(theme.socialLinks || {});
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -149,6 +153,16 @@ export function ProfileSection({ theme, onUpdate }: ProfileSectionProps) {
           </div>
         </div>
       </div>
+
+      <Separator className="my-8" />
+
+      <SocialLinksEditor 
+        links={socialLinks} 
+        onChange={(links) => {
+          setSocialLinks(links);
+          onUpdate({ ...theme, socialLinks: links });
+        }} 
+      />
     </div>
   );
 }
