@@ -41,6 +41,7 @@ import Availability from "./pages/Availability";
 import BookMeetings from "./pages/BookMeetings";
 import BookMeetingSlot from "./pages/BookMeetingSlot";
 import ProfileEdit from "./pages/ProfileEdit";
+import MyPageBuilderV2 from "./components/mypage/v2/MyPageBuilderV2";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
@@ -422,6 +423,7 @@ const AppContent = () => {
               <Route path="/book/:username" element={<BookMeetings />} />
               <Route path="/book/:username/:meetingTypeId" element={<BookMeetingSlot />} />
               <Route path="/profile/edit" element={<ProfileEdit />} />
+              <Route path="/profile/edit/v2" element={<MyPageBuilderV2 />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/legal" element={<AdminLegal />} />
             <Route path="/admin/conversational-demo" element={<AdminConversationalDemo />} />
