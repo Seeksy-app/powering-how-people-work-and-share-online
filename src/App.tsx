@@ -228,6 +228,11 @@ import StudioSuccess from "./pages/podcast-studio/StudioSuccess";
 import AdvertiserDashboardNew from "./pages/advertiser/AdvertiserDashboard";
 import CampaignDetails from "./pages/advertiser/CampaignDetails";
 import CreateScript from "./pages/advertiser/CreateScript";
+import AdvertiserCreatives from "./pages/advertiser/AdvertiserCreatives";
+import AdvertiserCreators from "./pages/advertiser/AdvertiserCreators";
+import AdvertiserReports from "./pages/advertiser/AdvertiserReports";
+import AdvertiserBilling from "./pages/advertiser/AdvertiserBilling";
+import AdvertiserIntegrations from "./pages/advertiser/AdvertiserIntegrations";
 import EpisodeDetails from "./pages/episodes/EpisodeDetails";
 import NewEpisodeFromStudio from "./pages/podcasts/NewEpisodeFromStudio";
 import EpisodeDetailPublic from "./pages/podcasts/EpisodeDetailPublic";
@@ -352,8 +357,14 @@ const AppContent = () => {
               
               {/* Advertiser Ad-Read Marketplace Routes */}
             <Route path="/advertiser" element={<AdvertiserDashboardNew />} />
+            <Route path="/advertiser/campaigns" element={<CampaignDetails />} />
             <Route path="/advertiser/campaigns/:id" element={<CampaignDetails />} />
+            <Route path="/advertiser/creatives" element={<AdvertiserCreatives />} />
             <Route path="/advertiser/scripts/new" element={<CreateScript />} />
+            <Route path="/advertiser/creators" element={<AdvertiserCreators />} />
+            <Route path="/advertiser/reports" element={<AdvertiserReports />} />
+            <Route path="/advertiser/billing" element={<AdvertiserBilling />} />
+            <Route path="/advertiser/integrations" element={<AdvertiserIntegrations />} />
             
             {/* Episode Details */}
             <Route path="/episodes/:id" element={<EpisodeDetails />} />
