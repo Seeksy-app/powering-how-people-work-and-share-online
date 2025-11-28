@@ -10,23 +10,23 @@ const VoiceCertificationDashboard = () => {
   const benefits = [
     {
       icon: Shield,
-      title: "Cryptographic Voice Fingerprint",
-      description: "Create a unique, tamper-proof digital signature of your voice"
+      title: "Create a unique AI fingerprint of your voice",
+      description: "Generate a tamper-proof digital signature"
     },
     {
       icon: Check,
-      title: "Blockchain Verification",
-      description: "Prove authenticity with on-chain voice ownership proof"
+      title: "Verify authenticity and protect your identity",
+      description: "Prove ownership with on-chain verification"
     },
     {
       icon: Sparkles,
-      title: "Build Audience Trust",
+      title: "Build trust with listeners and followers",
       description: "Show your audience that your content is genuinely yours"
     },
     {
       icon: Lock,
-      title: "NFT Voice Credential",
-      description: "Receive a permanent, verifiable voice certificate as an NFT"
+      title: "Mint your certified voice profile on Polygon",
+      description: "Receive a permanent, blockchain-secured credential"
     }
   ];
 
@@ -46,11 +46,11 @@ const VoiceCertificationDashboard = () => {
           </div>
           
           <h1 className="text-4xl md:text-6xl font-bold text-foreground">
-            Certify Your Voice Identity
+            Start Your Voice Certification
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Create a blockchain-verified voice credential that proves authenticity and builds trust with your audience.
+            Verify your identity, protect your voice, and build trust with your audience. This process will create a unique, AI-verified voice fingerprint secured on the blockchain.
           </p>
         </div>
 
@@ -71,7 +71,7 @@ const VoiceCertificationDashboard = () => {
             className="text-lg px-12 py-6 h-auto"
           >
             <Shield className="mr-2 h-5 w-5" />
-            Start Certification Process
+            Certify My Voice
           </Button>
         </div>
       </div>

@@ -33,9 +33,9 @@ const MatchConfidence = () => {
               <CheckCircle className="h-10 w-10 text-green-500" />
             </div>
 
-            <h2 className="text-3xl font-bold">Verification Successful</h2>
+            <h2 className="text-3xl font-bold">Your Voice Match Confidence</h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Your voice has been successfully analyzed and verified with high confidence.
+              We compared your voice sample against our verification model. The score below reflects how strongly this recording matches your identity.
             </p>
           </div>
 
@@ -91,7 +91,7 @@ const MatchConfidence = () => {
           <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 mb-8">
             <h3 className="font-semibold mb-2 flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
-              Next: Blockchain Certification
+              Higher scores indicate stronger identity verification
             </h3>
             <p className="text-sm text-muted-foreground">
               Your voice will be minted as a blockchain-verified NFT credential, creating permanent proof of ownership and authenticity. This is a gasless transaction covered by Seeksy.
@@ -113,7 +113,7 @@ const MatchConfidence = () => {
               onClick={handleApproveAndMint}
             >
               <Shield className="mr-2 h-5 w-5" />
-              Proceed to Certification
+              Approve & Continue
             </Button>
           </div>
         </Card>
