@@ -27,6 +27,10 @@ import { format } from "date-fns";
 import { BlockchainExplainer } from "@/components/voice/BlockchainExplainer";
 import { PlatformMonitoringBadge } from "@/components/voice/PlatformMonitoringBadge";
 import { VoiceNFTBadge } from "@/components/VoiceNFTBadge";
+import { VoiceDetectionsList } from "@/components/voice/VoiceDetectionsList";
+import { VoiceDetectionsFilters } from "@/components/voice/VoiceDetectionsFilters";
+import { getVoiceDetectionsForUser, getRecentDetectionCount } from "@/lib/api/voiceDetectionsAPI";
+import type { VoiceDetection } from "@/lib/api/voiceDetectionsAPI";
 
 export default function VoiceCredentials() {
   const [loading, setLoading] = useState(true);
@@ -34,8 +38,13 @@ export default function VoiceCredentials() {
   const [certificates, setCertificates] = useState<any[]>([]);
   const [listenAnalytics, setListenAnalytics] = useState<any[]>([]);
   const [proposals, setProposals] = useState<any[]>([]);
-  const [socialDetections, setSocialDetections] = useState<any[]>([]);
+  const [voiceDetections, setVoiceDetections] = useState<VoiceDetection[]>([]);
   const [badgeShares, setBadgeShares] = useState<any[]>([]);
+  
+  // Detection filters
+  const [platformFilter, setPlatformFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [dateRangeFilter, setDateRangeFilter] = useState<string>("all");
 
   useEffect(() => {
     fetchData();
@@ -87,19 +96,45 @@ export default function VoiceCredentials() {
         .order("created_at", { ascending: false })
         .then(({ data }: any) => setProposals(data || []));
 
-      // Fetch social detections
-      (supabase as any)
-        .from("voice_social_detections")
-        .select("*")
-        .eq("creator_id", user.id)
-        .order("detected_at", { ascending: false })
-        .then(({ data }: any) => setSocialDetections(data || []));
+      // Fetch voice detections using new API
+      fetchVoiceDetections(user.id);
 
     } catch (error) {
       console.error("Error fetching data:", error);
       toast.error("Failed to load data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchVoiceDetections = async (userId: string) => {
+    try {
+      // Build filters
+      const filters: any = {};
+      
+      if (platformFilter.length > 0) {
+        filters.platform = platformFilter;
+      }
+      
+      if (statusFilter.length > 0) {
+        filters.status = statusFilter;
+      }
+      
+      if (dateRangeFilter !== "all") {
+        const days = parseInt(dateRangeFilter);
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        filters.dateRange = {
+          start: startDate,
+          end: new Date(),
+        };
+      }
+      
+      const detections = await getVoiceDetectionsForUser(userId, filters);
+      setVoiceDetections(detections);
+    } catch (error) {
+      console.error("Error fetching voice detections:", error);
+      toast.error("Failed to load voice detections");
     }
   };
 
@@ -334,7 +369,7 @@ export default function VoiceCredentials() {
           </div>
         </TabsContent>
 
-        {/* Social Monitor Tab - Enhanced */}
+        {/* Social Monitor Tab - Enhanced with Real Data */}
         <TabsContent value="social">
           <Card className="mb-6">
             <div className="p-6 bg-gradient-to-r from-primary/10 to-accent/10">
@@ -343,92 +378,51 @@ export default function VoiceCredentials() {
                 <h3 className="text-xl font-bold">Cross-Platform Voice Monitoring</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                We track YouTube, Spotify, TikTok, Instagram, and Twitter for your certified voice. 
-                Detections appear automatically when your blockchain-verified voice is found.
+                We're actively monitoring your certified voice across Seeksy, YouTube, Spotify, and more.
+                New detections will appear here with links, timestamps, and usage context.
               </p>
             </div>
           </Card>
 
-          <div className="space-y-4">
-            {socialDetections.map((detection: any) => (
-              <Card key={detection.id} className="p-6 border-2 hover:border-primary/50 transition-all">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-                      {detection.platform === 'youtube' && <span className="text-2xl">🎥</span>}
-                      {detection.platform === 'spotify' && <span className="text-2xl">🎵</span>}
-                      {detection.platform === 'tiktok' && <span className="text-2xl">📱</span>}
-                      {detection.platform === 'instagram' && <span className="text-2xl">📸</span>}
-                      {detection.platform === 'twitter' && <span className="text-2xl">🐦</span>}
-                      {!['youtube', 'spotify', 'tiktok', 'instagram', 'twitter'].includes(detection.platform) && <Globe className="h-6 w-6" />}
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold line-clamp-1">
-                        {detection.content_title || 'Untitled Content'}
-                      </h4>
-                      <p className="text-sm text-muted-foreground capitalize">{detection.platform}</p>
-                    </div>
-                  </div>
-                  {detection.is_verified ? (
-                    <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      Verified
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600">
-                      <Clock className="h-3 w-3 mr-1" />
-                      Pending
-                    </Badge>
-                  )}
-                </div>
-
-                {detection.content_description && (
-                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                    {detection.content_description}
-                  </p>
-                )}
-
-                <div className="flex items-center gap-6 text-sm text-muted-foreground mb-4">
-                  <div className="flex items-center gap-1">
-                    <LineChart className="h-4 w-4" />
-                    <span>{detection.view_count?.toLocaleString() || 0} views</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{format(new Date(detection.detected_at), "MMM dd, yyyy")}</span>
-                  </div>
-                  {detection.confidence_score && (
-                    <div className="flex items-center gap-1">
-                      <Shield className="h-4 w-4" />
-                      <span>{detection.confidence_score}% match</span>
-                    </div>
-                  )}
-                </div>
-
-                {detection.content_url && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={detection.content_url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      View Content
-                    </a>
-                  </Button>
-                )}
+          {voiceDetections.length > 0 ? (
+            <>
+              {/* Filters */}
+              <Card className="mb-6 p-6">
+                <VoiceDetectionsFilters
+                  platformFilter={platformFilter}
+                  statusFilter={statusFilter}
+                  dateRangeFilter={dateRangeFilter}
+                  onPlatformChange={setPlatformFilter}
+                  onStatusChange={setStatusFilter}
+                  onDateRangeChange={setDateRangeFilter}
+                  onClearFilters={() => {
+                    setPlatformFilter([]);
+                    setStatusFilter([]);
+                    setDateRangeFilter("all");
+                  }}
+                />
               </Card>
-            ))}
-            {socialDetections.length === 0 && (
-              <Card className="p-12 text-center border-2 border-dashed">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 mx-auto mb-4 flex items-center justify-center">
-                  <Globe className="h-10 w-10 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">Monitoring Active</h3>
-                <p className="text-muted-foreground max-w-md mx-auto mb-4">
-                  We're scanning YouTube, Spotify, TikTok, Instagram, and Twitter for your certified voice. 
-                  Detections will appear here automatically.
-                </p>
-                <div className="flex items-center justify-center gap-4 text-sm">
-                  <Badge variant="outline" className="gap-1">
-                    <CheckCircle className="h-3 w-3" />
-                    YouTube
+
+              {/* Detections List */}
+              <VoiceDetectionsList
+                detections={voiceDetections}
+                onUpdate={fetchData}
+              />
+            </>
+          ) : (
+            <Card className="p-12 text-center border-2 border-dashed">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 mx-auto mb-4 flex items-center justify-center">
+                <Globe className="h-10 w-10 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Monitoring Active</h3>
+              <p className="text-muted-foreground max-w-md mx-auto mb-4">
+                We're scanning YouTube, Spotify, TikTok, Instagram, and Twitter for your certified voice. 
+                Detections will appear here automatically.
+              </p>
+              <div className="flex items-center justify-center gap-4 text-sm">
+                <Badge variant="outline" className="gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  YouTube
                   </Badge>
                   <Badge variant="outline" className="gap-1">
                     <CheckCircle className="h-3 w-3" />
@@ -448,8 +442,8 @@ export default function VoiceCredentials() {
                   </Badge>
                 </div>
               </Card>
-            )}
-          </div>
+            )
+          }
         </TabsContent>
 
         {/* Share Badges Tab */}
