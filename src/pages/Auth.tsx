@@ -109,15 +109,31 @@ const Auth = () => {
           .eq('user_id', session.user.id);
         
         const isAdmin = roles?.some(r => r.role === 'admin' || r.role === 'super_admin') || false;
+        const isAdvertiser = roles?.some(r => r.role === 'advertiser') || false;
         
         // Check for signup intent and redirect
         const intent = localStorage.getItem("signupIntent");
         if (intent) {
           localStorage.removeItem("signupIntent");
           navigate(intent);
+        } else if (isAdmin) {
+          navigate("/admin");
+        } else if (isAdvertiser) {
+          // Check if advertiser has completed onboarding
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('advertiser_onboarding_completed')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile?.advertiser_onboarding_completed) {
+            navigate("/advertiser");
+          } else {
+            navigate("/advertiser/signup");
+          }
         } else {
-          // Redirect based on user role
-          navigate(isAdmin ? "/admin" : "/dashboard");
+          // Default creator flow
+          navigate("/dashboard");
         }
       } else {
         // Validate password
