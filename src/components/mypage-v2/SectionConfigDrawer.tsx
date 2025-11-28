@@ -40,6 +40,7 @@ export function SectionConfigDrawer({ section, onClose, userId }: SectionConfigD
   const [config, setConfig] = useState<SectionConfig>({});
   const [videos, setVideos] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
+  const [podcasts, setPodcasts] = useState<any[]>([]);
 
   useEffect(() => {
     if (section) {
@@ -66,6 +67,14 @@ export function SectionConfigDrawer({ section, onClose, userId }: SectionConfigD
         .select("id, title")
         .eq("host_id", userId);
       setMeetings(result.data || []);
+    }
+
+    if (section.section_type === "podcast") {
+      const result: any = await (supabase as any)
+        .from("podcasts")
+        .select("id, title")
+        .eq("user_id", userId);
+      setPodcasts(result.data || []);
     }
   };
 
@@ -217,6 +226,59 @@ export function SectionConfigDrawer({ section, onClose, userId }: SectionConfigD
       products[index] = { ...products[index], [field]: value };
       setConfig({ ...config, products });
     }
+  };
+
+  // Custom Links helpers
+  const addCustomLink = () => {
+    const customLinks = config.customLinks || [];
+    setConfig({
+      ...config,
+      customLinks: [...customLinks, {
+        id: crypto.randomUUID(),
+        label: '',
+        url: '',
+        thumbnail: '',
+        groupName: '',
+      }],
+    });
+  };
+
+  const removeCustomLink = (id: string) => {
+    setConfig({ ...config, customLinks: (config.customLinks || []).filter(l => l.id !== id) });
+  };
+
+  const updateCustomLink = (id: string, field: string, value: string) => {
+    const customLinks = [...(config.customLinks || [])];
+    const index = customLinks.findIndex(l => l.id === id);
+    if (index >= 0) {
+      customLinks[index] = { ...customLinks[index], [field]: value };
+      setConfig({ ...config, customLinks });
+    }
+  };
+
+  // Payment Methods helpers
+  const addPaymentMethod = () => {
+    const paymentMethods = config.paymentMethods || [];
+    setConfig({
+      ...config,
+      paymentMethods: [...paymentMethods, {
+        type: 'paypal' as const,
+        username: '',
+        url: '',
+      }],
+    });
+  };
+
+  const removePaymentMethod = (index: number) => {
+    const paymentMethods = [...(config.paymentMethods || [])];
+    paymentMethods.splice(index, 1);
+    setConfig({ ...config, paymentMethods });
+  };
+
+  const updatePaymentMethod = (index: number, field: string, value: string) => {
+    const paymentMethods = [...(config.paymentMethods || [])];
+    paymentMethods[index] = { ...paymentMethods[index], [field]: value };
+    setConfig({ ...config, paymentMethods });
   };
 
   return (
@@ -387,6 +449,187 @@ export function SectionConfigDrawer({ section, onClose, userId }: SectionConfigD
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {section.section_type === "tips" && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Tips Title</Label>
+                <Input 
+                  value={config.tipsMessage || 'Support My Work'} 
+                  onChange={(e) => setConfig({ ...config, tipsMessage: e.target.value })} 
+                  placeholder="Support My Work" 
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Enable Tips</Label>
+                <Switch checked={config.tipsEnabled ?? true} onCheckedChange={(c) => setConfig({ ...config, tipsEnabled: c })} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tip Amounts (comma-separated)</Label>
+                <Input 
+                  value={(config.tipAmounts || [1, 3, 5, 10]).join(', ')} 
+                  onChange={(e) => {
+                    const amounts = e.target.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+                    setConfig({ ...config, tipAmounts: amounts });
+                  }}
+                  placeholder="1, 3, 5, 10" 
+                />
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <Label>Payment Methods</Label>
+                  <Button size="sm" onClick={addPaymentMethod}><Plus className="w-4 h-4 mr-2" />Add</Button>
+                </div>
+                {(config.paymentMethods || []).map((method, i) => (
+                  <div key={i} className="p-3 border rounded space-y-2">
+                    <div className="flex justify-between">
+                      <Select value={method.type} onValueChange={(v) => updatePaymentMethod(i, 'type', v)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="paypal">PayPal</SelectItem>
+                          <SelectItem value="venmo">Venmo</SelectItem>
+                          <SelectItem value="cashapp">Cash App</SelectItem>
+                          <SelectItem value="tipjar">Tip Jar</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" variant="ghost" onClick={() => removePaymentMethod(i)}><X className="w-4 h-4" /></Button>
+                    </div>
+                    <Input 
+                      placeholder="Username" 
+                      value={method.username} 
+                      onChange={(e) => updatePaymentMethod(i, 'username', e.target.value)} 
+                    />
+                    <Input 
+                      placeholder="Payment URL" 
+                      value={method.url} 
+                      onChange={(e) => updatePaymentMethod(i, 'url', e.target.value)} 
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {section.section_type === "custom_links" && (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <Label>Custom Links</Label>
+                <Button size="sm" onClick={addCustomLink}><Plus className="w-4 h-4 mr-2" />Add Link</Button>
+              </div>
+              {(config.customLinks || []).map((link) => (
+                <div key={link.id} className="p-4 border rounded-lg space-y-3">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-medium">Link</h4>
+                    <Button size="sm" variant="ghost" onClick={() => removeCustomLink(link.id)}><X className="w-4 h-4" /></Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Label</Label>
+                    <Input value={link.label} onChange={(e) => updateCustomLink(link.id, 'label', e.target.value)} placeholder="Link Label" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>URL</Label>
+                    <Input value={link.url} onChange={(e) => updateCustomLink(link.id, 'url', e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Thumbnail URL (optional)</Label>
+                    <Input value={link.thumbnail || ''} onChange={(e) => updateCustomLink(link.id, 'thumbnail', e.target.value)} placeholder="https://..." />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Group Name (optional)</Label>
+                    <Input value={link.groupName || ''} onChange={(e) => updateCustomLink(link.id, 'groupName', e.target.value)} placeholder="Resources, Gear, etc." />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {section.section_type === "podcast" && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Select Podcast</Label>
+                <Select value={config.podcastId} onValueChange={(v) => setConfig({ ...config, podcastId: v })}>
+                  <SelectTrigger><SelectValue placeholder="Choose a podcast" /></SelectTrigger>
+                  <SelectContent>
+                    {podcasts.map(p => <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label>Show Latest Episodes</Label>
+                <Switch checked={config.showLatestEpisodes ?? true} onCheckedChange={(c) => setConfig({ ...config, showLatestEpisodes: c })} />
+              </div>
+
+              {config.showLatestEpisodes && (
+                <div className="space-y-2">
+                  <Label>Number of Episodes to Show</Label>
+                  <Select value={String(config.episodeCount || 3)} onValueChange={(v) => setConfig({ ...config, episodeCount: parseInt(v) })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1</SelectItem>
+                      <SelectItem value="2">2</SelectItem>
+                      <SelectItem value="3">3</SelectItem>
+                      <SelectItem value="5">5</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          )}
+
+          {section.section_type === "blog" && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Display Mode</Label>
+                <Select value={config.blogDisplayMode || 'latest'} onValueChange={(v) => setConfig({ ...config, blogDisplayMode: v as 'latest' | 'featured' })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest Posts</SelectItem>
+                    <SelectItem value="featured">Featured Posts</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Number of Posts to Show</Label>
+                <Select value={String(config.blogPostCount || 3)} onValueChange={(v) => setConfig({ ...config, blogPostCount: parseInt(v) })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="5">5</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {section.section_type === "newsletter" && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Newsletter Title</Label>
+                <Input 
+                  value={config.newsletterTitle || 'Join My Newsletter'} 
+                  onChange={(e) => setConfig({ ...config, newsletterTitle: e.target.value })} 
+                  placeholder="Join My Newsletter" 
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea 
+                  value={config.newsletterDescription || ''} 
+                  onChange={(e) => setConfig({ ...config, newsletterDescription: e.target.value })} 
+                  placeholder="Get updates delivered to your inbox..." 
+                  rows={3} 
+                />
+              </div>
             </div>
           )}
 

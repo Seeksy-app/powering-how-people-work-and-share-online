@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Home, FileText, Radio, Monitor, Globe, DollarSign, BarChart3, List } from "lucide-react";
 import { useState, useEffect } from "react";
 import { OverviewTab } from "@/components/podcast/OverviewTab";
 import { EpisodesTab } from "@/components/podcast/EpisodesTab";
@@ -93,50 +93,58 @@ const PodcastDetail = () => {
           <TabsList className="bg-transparent border-b-0 h-auto p-0 gap-2">
             <TabsTrigger
               value="overview"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base flex items-center gap-2"
             >
+              <Home className="w-4 h-4" />
               Overview
             </TabsTrigger>
             <TabsTrigger
               value="episodes"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base flex items-center gap-2"
             >
+              <FileText className="w-4 h-4" />
               Episodes
             </TabsTrigger>
             <TabsTrigger
               value="studio"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base flex items-center gap-2"
             >
+              <Radio className="w-4 h-4" />
               Studio
             </TabsTrigger>
             <TabsTrigger
               value="players"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base flex items-center gap-2"
             >
+              <Monitor className="w-4 h-4" />
               Players
             </TabsTrigger>
             <TabsTrigger
               value="website"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base flex items-center gap-2"
             >
+              <Globe className="w-4 h-4" />
               Website
             </TabsTrigger>
             <TabsTrigger
               value="monetization"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base flex items-center gap-2"
             >
+              <DollarSign className="w-4 h-4" />
               Monetization
             </TabsTrigger>
             <TabsTrigger
               value="stats"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base flex items-center gap-2"
             >
+              <BarChart3 className="w-4 h-4" />
               Stats
             </TabsTrigger>
             <TabsTrigger
               value="directories"
-              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base"
+              className="data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 pb-3 text-base flex items-center gap-2"
             >
+              <List className="w-4 h-4" />
               Directories
             </TabsTrigger>
           </TabsList>

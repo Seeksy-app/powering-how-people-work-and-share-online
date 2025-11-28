@@ -83,24 +83,33 @@ export const WebsiteTab = ({ podcastId }: WebsiteTabProps) => {
   return (
     <div className="space-y-6">
       {/* Website Preview */}
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Website Preview</CardTitle>
           <CardDescription>
-            Preview of your auto-generated podcast website
+            Preview of your podcast's public page on My Page
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="bg-muted p-8 rounded-lg mb-4">
-            <div className="text-center text-muted-foreground">
-              <Globe className="w-12 h-12 mx-auto mb-2" />
-              <p>Website preview will appear here</p>
+          <div className="relative bg-muted rounded-xl overflow-hidden mb-4 border">
+            <div className="aspect-video flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+              <div className="text-center text-muted-foreground">
+                <Globe className="w-16 h-16 mx-auto mb-3 opacity-50" />
+                <p className="font-medium">Your podcast website will appear here</p>
+                <p className="text-sm mt-1">Enable Podcast section in My Page to display</p>
+              </div>
             </div>
           </div>
-          <Button onClick={() => navigate("/profile/edit")} className="w-full">
-            <Edit className="w-4 h-4 mr-2" />
-            Edit Website in My Page Builder
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate("/profile/edit")} className="flex-1 gap-2">
+              <Edit className="w-4 h-4" />
+              Edit in My Page Builder
+            </Button>
+            <Button variant="outline" onClick={() => window.open(`/${podcast?.author_name}`, '_blank')} className="gap-2">
+              <Globe className="w-4 h-4" />
+              View Public Page
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
