@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Plus, Mic, Music, Download, Rss, Copy, ExternalLink, Mail, Clock, Infinity } from "lucide-react";
+import { Plus, Mic, Music, Download, Rss, Copy, ExternalLink, Mail, Clock, Infinity, DollarSign, TrendingUp, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmailVerificationWizard } from "@/components/podcast/EmailVerificationWizard";
 import podcastStudio from "@/assets/podcast-studio.jpg";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { calculateEpisodeImpressions, calculateRevenue, formatCurrency, formatNumber } from "@/lib/config/revenueModelConfig";
 
 const Podcasts = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const Podcasts = () => {
         .from("podcasts")
         .select(`
           *,
-          episodes(count)
+          episodes(*)
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
@@ -43,6 +44,57 @@ const Podcasts = () => {
     },
     enabled: !!user,
   });
+
+  // Calculate aggregate analytics
+  const analyticsData = useMemo(() => {
+    if (!podcasts) return null;
+
+    let totalEpisodes = 0;
+    let totalAdReads = 0;
+    let totalImpressions = 0;
+    let totalRevenue = 0;
+
+    const podcastStats = podcasts.map((podcast) => {
+      const episodes = (podcast.episodes as any[]) || [];
+      const episodeCount = episodes.length;
+      
+      let podcastAdReads = 0;
+      let podcastImpressions = 0;
+      
+      episodes.forEach((episode: any) => {
+        const adReads = episode.ad_reads || [];
+        const episodeAge = Math.floor((Date.now() - new Date(episode.created_at).getTime()) / (1000 * 60 * 60 * 24));
+        const impressions = calculateEpisodeImpressions(episodeAge, adReads.length);
+        
+        podcastAdReads += adReads.length;
+        podcastImpressions += impressions;
+      });
+
+      const revenue = calculateRevenue(podcastImpressions, podcastAdReads);
+
+      totalEpisodes += episodeCount;
+      totalAdReads += podcastAdReads;
+      totalImpressions += podcastImpressions;
+      totalRevenue += revenue;
+
+      return {
+        podcastId: podcast.id,
+        podcastTitle: podcast.title,
+        episodeCount,
+        adReadCount: podcastAdReads,
+        impressions: podcastImpressions,
+        revenue,
+      };
+    });
+
+    return {
+      totalEpisodes,
+      totalAdReads,
+      totalImpressions,
+      totalRevenue,
+      podcastStats,
+    };
+  }, [podcasts]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -76,29 +128,81 @@ const Podcasts = () => {
           </div>
         </div>
 
-        {/* Podcast Analytics Overview - Coming Soon */}
-        <Card className="mb-8 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mic className="w-5 h-5 text-primary" />
-              Podcast Analytics
-            </CardTitle>
-            <CardDescription>
-              Track downloads, listeners, and engagement across all your podcasts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                <Rss className="w-8 h-8 text-primary" />
+        {/* Podcast Analytics Overview */}
+        {analyticsData && analyticsData.totalEpisodes > 0 && (
+          <Card className="mb-8 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-primary" />
+                Podcast Analytics & Revenue
+              </CardTitle>
+              <CardDescription>
+                Performance metrics and estimated revenue across all your podcasts
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Summary Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="p-4 rounded-lg bg-background border border-border">
+                  <div className="text-sm text-muted-foreground mb-1">Total Episodes</div>
+                  <div className="text-2xl font-bold">{analyticsData.totalEpisodes}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-background border border-border">
+                  <div className="text-sm text-muted-foreground mb-1">Total Ad Reads</div>
+                  <div className="text-2xl font-bold">{analyticsData.totalAdReads}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-background border border-border">
+                  <div className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    Impressions
+                  </div>
+                  <div className="text-2xl font-bold">{formatNumber(analyticsData.totalImpressions)}</div>
+                </div>
+                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                  <div className="text-sm text-green-600 dark:text-green-400 mb-1 flex items-center gap-1">
+                    <DollarSign className="w-3 h-3" />
+                    Est. Revenue
+                  </div>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {formatCurrency(analyticsData.totalRevenue)}
+                  </div>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold mb-2">Analytics Coming Soon</h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                We're building comprehensive analytics to help you understand your audience and grow your podcast. Track downloads, listener demographics, episode performance, and more.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+
+              {/* Per-Podcast Breakdown */}
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-muted-foreground mb-2">Revenue by Podcast</div>
+                {analyticsData.podcastStats.map((stat) => (
+                  <div
+                    key={stat.podcastId}
+                    className="p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors cursor-pointer"
+                    onClick={() => navigate(`/podcasts/${stat.podcastId}/stats`)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{stat.podcastTitle}</div>
+                        <div className="text-sm text-muted-foreground mt-1">
+                          {stat.episodeCount} episodes · {stat.adReadCount} ad reads · {formatNumber(stat.impressions)} impressions
+                        </div>
+                      </div>
+                      <div className="text-right ml-4">
+                        <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                          {formatCurrency(stat.revenue)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">estimated</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground">
+                <strong>Note:</strong> Revenue calculations based on ${analyticsData ? 25 : 0} CPM with mock impression data. 
+                Real-time tracking coming soon.
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Podcasts Grid */}
         {isLoading ? (
@@ -110,7 +214,8 @@ const Podcasts = () => {
         ) : podcasts && podcasts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {podcasts.map((podcast) => {
-              const episodeCount = podcast.episodes?.[0]?.count || 0;
+              const episodes = (podcast.episodes as any[]) || [];
+              const episodeCount = episodes.length;
               const hasVerificationEmail = !!podcast.verification_email;
               const isExpired = podcast.verification_email_expires_at && 
                 new Date(podcast.verification_email_expires_at) < new Date();

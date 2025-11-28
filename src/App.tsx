@@ -220,6 +220,7 @@ import CreateScript from "./pages/advertiser/CreateScript";
 import EpisodeDetails from "./pages/episodes/EpisodeDetails";
 import NewEpisodeFromStudio from "./pages/podcasts/NewEpisodeFromStudio";
 import EpisodeDetailPublic from "./pages/podcasts/EpisodeDetailPublic";
+import PodcastStats from "./pages/podcasts/PodcastStats";
 
 const queryClient = new QueryClient();
 
@@ -401,6 +402,7 @@ const AppContent = () => {
               <Route path="/podcasts/:id" element={<PodcastDetail />} />
               <Route path="/podcasts/:id/edit" element={<EditPodcast />} />
               <Route path="/podcasts/:id/upload" element={<UploadEpisode />} />
+              <Route path="/podcasts/:podcastId/stats" element={<PodcastStats />} />
               <Route path="/podcasts/:podcastId/episodes/new-from-studio" element={<NewEpisodeFromStudio />} />
               <Route path="/podcasts/:podcastId/episodes/:episodeId" element={<EpisodeDetailPublic />} />
               <Route path="/podcasts/:id/migrate" element={<RSSMigrationPage />} />
