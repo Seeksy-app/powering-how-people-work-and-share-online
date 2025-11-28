@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,11 @@ import { Badge } from "@/components/ui/badge";
 
 export default function CreateCampaign() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    advertiser_id: "",
+    advertiser_id: (location.state as any)?.preSelectedAdvertiserId || "",
     budget: "",
     start_date: "",
     end_date: "",
