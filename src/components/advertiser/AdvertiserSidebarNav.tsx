@@ -81,8 +81,7 @@ export function AdvertiserSidebarNav() {
       const { error } = await supabase
         .from('profiles')
         .update({
-          advertiser_onboarding_status: null,
-          advertiser_onboarding_step: null,
+          advertiser_onboarding_completed: false,
           preferred_role: 'advertiser',
         })
         .eq('id', user.id);
