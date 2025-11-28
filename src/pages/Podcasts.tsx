@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Plus, Mic, Music, Download, Rss, Copy, ExternalLink } from "lucide-react";
+import { Plus, Mic, Music, Download, Rss, Copy, ExternalLink, Mail, Clock, Infinity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,10 @@ const Podcasts = () => {
       if (!user) return [];
       const { data, error } = await supabase
         .from("podcasts")
-        .select("*, episodes(count)")
+        .select(`
+          *,
+          episodes(count)
+        `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       
@@ -103,6 +106,10 @@ const Podcasts = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {podcasts.map((podcast) => {
               const episodeCount = podcast.episodes?.[0]?.count || 0;
+              const hasVerificationEmail = !!podcast.verification_email;
+              const isExpired = podcast.verification_email_expires_at && 
+                new Date(podcast.verification_email_expires_at) < new Date();
+              
               return (
                 <Card
                   key={podcast.id}
@@ -131,7 +138,7 @@ const Podcasts = () => {
                     
                     {/* Individual Podcast RSS Feed */}
                     <div 
-                      className="flex items-center gap-1.5 mb-3 p-2 bg-muted/50 rounded-md hover:bg-muted/70 transition-colors cursor-pointer"
+                      className="flex items-center gap-1.5 mb-2 p-2 bg-muted/50 rounded-md hover:bg-muted/70 transition-colors cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         const rssUrl = `https://taxqcioheqdqtlmjeaht.supabase.co/functions/v1/podcast-rss/${podcast.slug || podcast.id}`;
@@ -144,6 +151,26 @@ const Podcasts = () => {
                       </code>
                       <Copy className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                     </div>
+
+                    {/* Email Verification Status */}
+                    {hasVerificationEmail && !isExpired && (
+                      <div className="flex items-center gap-1.5 mb-3 p-2 bg-primary/5 border border-primary/20 rounded-md">
+                        <Mail className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                        <span className="text-[10px] text-primary font-medium">
+                          {podcast.verification_email_permanent ? (
+                            <>
+                              <Infinity className="h-3 w-3 inline mr-1" />
+                              Email Verified
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-3 w-3 inline mr-1" />
+                              Verified (48h)
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    )}
                     
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">
