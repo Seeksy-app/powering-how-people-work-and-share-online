@@ -26,10 +26,34 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session) {
-        navigate("/dashboard");
+        // Check user role and redirect appropriately
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('preferred_role, is_creator, is_advertiser')
+          .eq('id', session.user.id)
+          .single();
+
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        // Admin users go to admin
+        if (roles?.role === 'admin' || roles?.role === 'super_admin') {
+          navigate('/admin');
+        }
+        // Advertiser users go to advertiser dashboard
+        else if (profile?.preferred_role === 'advertiser' || (profile?.is_advertiser && !profile?.is_creator)) {
+          navigate('/advertiser');
+        }
+        // Creator users go to creator dashboard
+        else {
+          navigate('/dashboard');
+        }
       }
     });
 
