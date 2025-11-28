@@ -365,6 +365,81 @@ export type Database = {
           },
         ]
       }
+      ad_revenue_events: {
+        Row: {
+          ad_read_duration: number | null
+          ad_read_timestamp: number | null
+          advertiser_id: string
+          campaign_id: string
+          cpm_rate: number | null
+          created_at: string | null
+          creator_id: string
+          episode_id: string | null
+          event_type: string
+          id: string
+          impressions: number | null
+          is_certified_voice: boolean | null
+          metadata: Json | null
+          podcast_id: string | null
+          revenue_amount: number | null
+          script_id: string
+          voice_uplift_applied: boolean | null
+        }
+        Insert: {
+          ad_read_duration?: number | null
+          ad_read_timestamp?: number | null
+          advertiser_id: string
+          campaign_id: string
+          cpm_rate?: number | null
+          created_at?: string | null
+          creator_id: string
+          episode_id?: string | null
+          event_type: string
+          id?: string
+          impressions?: number | null
+          is_certified_voice?: boolean | null
+          metadata?: Json | null
+          podcast_id?: string | null
+          revenue_amount?: number | null
+          script_id: string
+          voice_uplift_applied?: boolean | null
+        }
+        Update: {
+          ad_read_duration?: number | null
+          ad_read_timestamp?: number | null
+          advertiser_id?: string
+          campaign_id?: string
+          cpm_rate?: number | null
+          created_at?: string | null
+          creator_id?: string
+          episode_id?: string | null
+          event_type?: string
+          id?: string
+          impressions?: number | null
+          is_certified_voice?: boolean | null
+          metadata?: Json | null
+          podcast_id?: string | null
+          revenue_amount?: number | null
+          script_id?: string
+          voice_uplift_applied?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_revenue_events_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ad_revenue_events_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_slots: {
         Row: {
           ad_source: string
@@ -2622,6 +2697,42 @@ export type Database = {
           },
         ]
       }
+      cpm_tiers: {
+        Row: {
+          ad_type: string
+          base_cpm: number
+          certified_voice_multiplier: number | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          min_impressions: number | null
+          tier_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          ad_type: string
+          base_cpm: number
+          certified_voice_multiplier?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_impressions?: number | null
+          tier_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          ad_type?: string
+          base_cpm?: number
+          certified_voice_multiplier?: number | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          min_impressions?: number | null
+          tier_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       creator_campaign_alerts: {
         Row: {
           alert_type: string | null
@@ -2727,6 +2838,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      creator_payouts: {
+        Row: {
+          created_at: string | null
+          creator_id: string
+          id: string
+          payment_method: string | null
+          payment_reference: string | null
+          payout_amount: number
+          payout_period_end: string
+          payout_period_start: string
+          platform_fee: number
+          processed_at: string | null
+          status: string | null
+          total_revenue: number
+        }
+        Insert: {
+          created_at?: string | null
+          creator_id: string
+          id?: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          payout_amount: number
+          payout_period_end: string
+          payout_period_start: string
+          platform_fee: number
+          processed_at?: string | null
+          status?: string | null
+          total_revenue: number
+        }
+        Update: {
+          created_at?: string | null
+          creator_id?: string
+          id?: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          payout_amount?: number
+          payout_period_end?: string
+          payout_period_start?: string
+          platform_fee?: number
+          processed_at?: string | null
+          status?: string | null
+          total_revenue?: number
+        }
+        Relationships: []
       }
       creator_shopify_stores: {
         Row: {
@@ -6629,6 +6785,102 @@ export type Database = {
           endpoint?: string
           id?: string
           ip_address?: string
+        }
+        Relationships: []
+      }
+      revenue_events: {
+        Row: {
+          created_at: string | null
+          creator_payout: number | null
+          currency: string | null
+          episode_id: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          platform_fee: number | null
+          podcast_id: string | null
+          processed_at: string | null
+          revenue_amount: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          creator_payout?: number | null
+          currency?: string | null
+          episode_id?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          platform_fee?: number | null
+          podcast_id?: string | null
+          processed_at?: string | null
+          revenue_amount: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          creator_payout?: number | null
+          currency?: string | null
+          episode_id?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          platform_fee?: number | null
+          podcast_id?: string | null
+          processed_at?: string | null
+          revenue_amount?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revenue_events_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "revenue_events_podcast_id_fkey"
+            columns: ["podcast_id"]
+            isOneToOne: false
+            referencedRelation: "podcasts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      revenue_forecasts: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          forecast_date: string
+          forecast_type: string
+          id: string
+          metadata: Json | null
+          projected_ad_reads: number | null
+          projected_impressions: number | null
+          projected_revenue: number
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          forecast_date: string
+          forecast_type: string
+          id?: string
+          metadata?: Json | null
+          projected_ad_reads?: number | null
+          projected_impressions?: number | null
+          projected_revenue: number
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          forecast_date?: string
+          forecast_type?: string
+          id?: string
+          metadata?: Json | null
+          projected_ad_reads?: number | null
+          projected_impressions?: number | null
+          projected_revenue?: number
         }
         Relationships: []
       }
