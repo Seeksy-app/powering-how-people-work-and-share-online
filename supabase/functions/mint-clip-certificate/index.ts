@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { ethers } from "https://esm.sh/ethers@6.13.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,22 +10,26 @@ const corsHeaders = {
 /**
  * Mint Clip Certificate (Blockchain Certification)
  * 
- * Simulates minting an on-chain certificate for a finished clip.
- * Phase 1: Mock implementation with proper data structure.
- * Phase 2: Will integrate actual blockchain contract calls.
+ * Mints real on-chain ERC-721 certificate for finished clips on Polygon.
  * 
  * Process:
  * 1. Validates clip is ready for certification (status = 'ready')
  * 2. Sets cert_status = 'minting'
- * 3. Simulates blockchain minting (TODO: Replace with real web3 integration)
- * 4. Updates clip with certificate details
+ * 3. Mints ERC-721 NFT on Polygon via smart contract
+ * 4. Updates clip with real tx hash, token ID, and explorer URL
  * 
- * Future integration points:
- * - Real wallet connection (user or platform wallet)
- * - Smart contract interaction (Polygon, Base, etc.)
- * - Gas estimation and transaction submission
- * - Transaction confirmation polling
+ * Integration:
+ * - Uses Polygon RPC via POLYGON_RPC_URL
+ * - Platform wallet signs transactions via SEEKSY_MINTER_PRIVATE_KEY
+ * - Contract address configured via SEEKSY_CERTIFICATE_CONTRACT_ADDRESS
+ * - Supports gasless transactions via Biconomy (future)
  */
+
+// Minimal ERC-721 Certificate Contract ABI
+const CERTIFICATE_CONTRACT_ABI = [
+  "function mintCertificate(address to, string calldata clipId, string calldata clipUrl, string calldata metadataJsonUri, bytes32 contentHash) external returns (uint256)",
+  "event ClipCertified(uint256 indexed tokenId, string clipId, bytes32 contentHash)"
+];
 
 interface MintCertificateRequest {
   clipId: string;
@@ -99,88 +104,162 @@ serve(async (req) => {
 
     if (mintingError) throw mintingError;
 
-    console.log("→ Simulating blockchain minting...");
+    console.log("→ Minting on-chain certificate on Polygon...");
 
     // ============================================================
-    // PHASE 1: MOCK IMPLEMENTATION
+    // REAL BLOCKCHAIN INTEGRATION
     // ============================================================
-    // TODO: Replace this section with real blockchain integration
-    // 
-    // Future implementation will:
-    // 1. Load user/workspace wallet config
-    // 2. Prepare contract call with clip metadata
-    // 3. Submit transaction to selected chain
-    // 4. Poll for confirmation
-    // 5. Parse transaction receipt for token ID
-    // 
-    // For now, simulate success after brief delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Generate mock certificate data
-    const mockTxHash = `0x${Array.from({length: 64}, () => 
-      Math.floor(Math.random() * 16).toString(16)).join('')}`;
     
-    const mockTokenId = Math.floor(Math.random() * 1000000).toString();
-    
-    const explorerUrls: Record<string, string> = {
-      polygon: `https://polygonscan.com/tx/${mockTxHash}`,
-      base: `https://basescan.org/tx/${mockTxHash}`,
-      ethereum: `https://etherscan.io/tx/${mockTxHash}`,
-    };
+    // 1. Load blockchain configuration
+    const rpcUrl = Deno.env.get("POLYGON_RPC_URL");
+    const minterPrivateKey = Deno.env.get("SEEKSY_MINTER_PRIVATE_KEY");
+    const contractAddress = Deno.env.get("SEEKSY_CERTIFICATE_CONTRACT_ADDRESS");
 
-    console.log("✓ Mock certificate minted");
-    console.log(`  Chain: ${chain}`);
-    console.log(`  TX Hash: ${mockTxHash}`);
-    console.log(`  Token ID: ${mockTokenId}`);
-    console.log(`  Explorer: ${explorerUrls[chain]}`);
-
-    // ============================================================
-    // END MOCK IMPLEMENTATION
-    // ============================================================
-
-    // Update clip with certificate details
-    const { data: certifiedClip, error: certError } = await supabase
-      .from('clips')
-      .update({
-        cert_status: 'minted',
-        cert_chain: chain,
-        cert_tx_hash: mockTxHash,
-        cert_token_id: mockTokenId,
-        cert_explorer_url: explorerUrls[chain],
-        cert_created_at: new Date().toISOString(),
-      })
-      .eq('id', clipId)
-      .select()
-      .single();
-
-    if (certError) {
-      // Rollback to failed status
-      await supabase
-        .from('clips')
-        .update({ cert_status: 'failed' })
-        .eq('id', clipId);
-      
-      throw certError;
+    if (!rpcUrl || !minterPrivateKey || !contractAddress) {
+      throw new Error("Missing blockchain configuration (RPC_URL, MINTER_KEY, or CONTRACT_ADDRESS)");
     }
 
-    console.log("✓ Clip certified successfully");
+    // 2. Initialize provider and signer
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const signer = new ethers.Wallet(minterPrivateKey, provider);
+    
+    console.log(`Platform wallet: ${signer.address}`);
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        clip: certifiedClip,
-        certificate: {
-          chain,
-          tx_hash: mockTxHash,
-          token_id: mockTokenId,
-          explorer_url: explorerUrls[chain],
-        },
-        message: "Clip certificate minted successfully",
-      }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+    // 3. Create contract instance
+    const contract = new ethers.Contract(
+      contractAddress,
+      CERTIFICATE_CONTRACT_ABI,
+      signer
     );
+
+    // 4. Compute content hash (hash of clip metadata)
+    const clipMetadata = JSON.stringify({
+      clipId: clip.id,
+      outputUrl: clip.output_url,
+      createdAt: clip.created_at,
+      userId: user.id,
+    });
+    const contentHash = ethers.keccak256(ethers.toUtf8Bytes(clipMetadata));
+
+    console.log(`Content hash: ${contentHash}`);
+
+    // 5. Mint certificate NFT
+    try {
+      const tx = await contract.mintCertificate(
+        signer.address, // Platform wallet owns the NFT (future: creator wallet)
+        clip.id,
+        clip.output_url || "",
+        "", // Metadata URI (future: IPFS)
+        contentHash
+      );
+
+      console.log(`Transaction submitted: ${tx.hash}`);
+
+      // 6. Wait for confirmation
+      const receipt = await tx.wait();
+      console.log(`Transaction confirmed in block ${receipt.blockNumber}`);
+
+      // 7. Extract tokenId from event
+      let tokenId = "0";
+      for (const log of receipt.logs) {
+        try {
+          const parsed = contract.interface.parseLog({
+            topics: log.topics as string[],
+            data: log.data,
+          });
+          if (parsed && parsed.name === "ClipCertified") {
+            tokenId = parsed.args.tokenId.toString();
+            console.log(`Token ID from event: ${tokenId}`);
+            break;
+          }
+        } catch (e) {
+          // Skip logs that don't match our ABI
+          continue;
+        }
+      }
+
+      // 8. Build explorer URLs
+      const explorerUrls: Record<string, string> = {
+        polygon: `https://polygonscan.com/tx/${tx.hash}`,
+        base: `https://basescan.org/tx/${tx.hash}`,
+        ethereum: `https://etherscan.io/tx/${tx.hash}`,
+      };
+
+      console.log("✓ Certificate minted on-chain");
+      console.log(`  Chain: ${chain}`);
+      console.log(`  TX Hash: ${tx.hash}`);
+      console.log(`  Token ID: ${tokenId}`);
+      console.log(`  Block: ${receipt.blockNumber}`);
+      console.log(`  Contract: ${contractAddress}`);
+      console.log(`  Explorer: ${explorerUrls[chain]}`);
+
+      const finalTxHash = tx.hash;
+      const finalTokenId = tokenId;
+      const finalExplorerUrl = explorerUrls[chain];
+
+      // 9. Update clip with certificate details
+      const { data: certifiedClip, error: certError } = await supabase
+        .from('clips')
+        .update({
+          cert_status: 'minted',
+          cert_chain: chain,
+          cert_tx_hash: finalTxHash,
+          cert_token_id: finalTokenId,
+          cert_explorer_url: finalExplorerUrl,
+          cert_created_at: new Date().toISOString(),
+        })
+        .eq('id', clipId)
+        .select()
+        .single();
+
+      if (certError) {
+        // Rollback to failed status
+        await supabase
+          .from('clips')
+          .update({ cert_status: 'failed' })
+          .eq('id', clipId);
+        
+        throw certError;
+      }
+
+      console.log("✓ Clip certified successfully on-chain");
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          clip: certifiedClip,
+          certificate: {
+            chain,
+            tx_hash: finalTxHash,
+            token_id: finalTokenId,
+            explorer_url: finalExplorerUrl,
+            contract_address: contractAddress,
+          },
+          message: "Clip certificate minted on Polygon blockchain",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+
+    } catch (blockchainError) {
+      console.error("❌ Blockchain minting failed:", blockchainError);
+      
+      // Set failed status with error details
+      await supabase
+        .from('clips')
+        .update({ 
+          cert_status: 'failed',
+          cert_updated_at: new Date().toISOString(),
+        })
+        .eq('id', clipId);
+      
+      throw new Error(`Blockchain minting failed: ${blockchainError instanceof Error ? blockchainError.message : String(blockchainError)}`);
+    }
+
+    // ============================================================
+    // END REAL BLOCKCHAIN INTEGRATION
+    // ============================================================
 
   } catch (error) {
     console.error("❌ Certificate minting error:", error);
