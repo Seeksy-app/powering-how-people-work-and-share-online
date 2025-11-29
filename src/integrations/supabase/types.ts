@@ -11919,6 +11919,10 @@ export type Database = {
         }
         Returns: string
       }
+      user_has_any_role: {
+        Args: { _roles: string[]; _user_id: string }
+        Returns: boolean
+      }
       validate_ad_impression: {
         Args: {
           p_ad_slot_id: string
@@ -11952,6 +11956,9 @@ export type Database = {
         | "member"
         | "advertiser"
         | "staff"
+        | "subscriber"
+        | "influencer"
+        | "agency"
       award_program_status:
         | "draft"
         | "nominations_open"
@@ -12121,6 +12128,9 @@ export const Constants = {
         "member",
         "advertiser",
         "staff",
+        "subscriber",
+        "influencer",
+        "agency",
       ],
       award_program_status: [
         "draft",
