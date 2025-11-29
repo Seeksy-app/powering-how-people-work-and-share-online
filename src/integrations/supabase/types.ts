@@ -3135,14 +3135,17 @@ export type Database = {
           created_at: string
           duration_seconds: number | null
           end_seconds: number
+          error_message: string | null
           id: string
           source_media_id: string
           start_seconds: number
           status: string
           storage_path: string | null
           suggested_caption: string | null
+          thumbnail_url: string | null
           title: string | null
           user_id: string
+          vertical_url: string | null
           virality_score: number | null
         }
         Insert: {
@@ -3150,14 +3153,17 @@ export type Database = {
           created_at?: string
           duration_seconds?: number | null
           end_seconds: number
+          error_message?: string | null
           id?: string
           source_media_id: string
           start_seconds: number
           status?: string
           storage_path?: string | null
           suggested_caption?: string | null
+          thumbnail_url?: string | null
           title?: string | null
           user_id: string
+          vertical_url?: string | null
           virality_score?: number | null
         }
         Update: {
@@ -3165,14 +3171,17 @@ export type Database = {
           created_at?: string
           duration_seconds?: number | null
           end_seconds?: number
+          error_message?: string | null
           id?: string
           source_media_id?: string
           start_seconds?: number
           status?: string
           storage_path?: string | null
           suggested_caption?: string | null
+          thumbnail_url?: string | null
           title?: string | null
           user_id?: string
+          vertical_url?: string | null
           virality_score?: number | null
         }
         Relationships: [

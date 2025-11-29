@@ -153,6 +153,9 @@ export default function CreateClips() {
     setIsGenerating(index);
     
     try {
+      // Get transcript if available
+      const transcriptText = selectedMedia && (selectedMedia as any).edit_transcript?.transcript;
+
       const { data, error } = await supabase.functions.invoke("generate-clip", {
         body: {
           mediaId: selectedMedia?.id,
@@ -161,19 +164,50 @@ export default function CreateClips() {
           endTime: clip.end_time,
           title: clip.title,
           hook: clip.hook,
+          caption: clip.description,
+          transcript: transcriptText || null,
         },
       });
 
       if (error) throw error;
 
-      // Open preview in new tab with timestamp
-      window.open(data.clipUrl, '_blank');
-      
       toast({
-        title: "Clip preview opened!",
-        description: `Opens at ${formatTime(clip.start_time)} - ${formatTime(clip.end_time)}. Full 9:16 processing coming soon.`,
+        title: "Processing started!",
+        description: `Generating vertical and thumbnail clips. This may take 30-60 seconds.`,
         duration: 5000,
       });
+      
+      // Poll for completion (check every 3 seconds)
+      const clipId = data.clipId;
+      let attempts = 0;
+      const maxAttempts = 30; // 90 seconds max wait
+      
+      const checkStatus = setInterval(async () => {
+        attempts++;
+        const { data: clipStatus } = await supabase
+          .from('clips')
+          .select('status, vertical_url, thumbnail_url, error_message')
+          .eq('id', clipId)
+          .single();
+        
+        if (clipStatus?.status === 'ready') {
+          clearInterval(checkStatus);
+          toast({
+            title: "Clips ready!",
+            description: `Generated vertical and thumbnail formats. View in Media Library.`,
+          });
+          setIsGenerating(null);
+        } else if (clipStatus?.status === 'failed' || attempts >= maxAttempts) {
+          clearInterval(checkStatus);
+          toast({
+            title: "Generation failed",
+            description: clipStatus?.error_message || "Processing timed out",
+            variant: "destructive",
+          });
+          setIsGenerating(null);
+        }
+      }, 3000);
+
     } catch (error) {
       console.error("Generation error:", error);
       toast({
@@ -181,7 +215,6 @@ export default function CreateClips() {
         description: "Could not generate clip",
         variant: "destructive",
       });
-    } finally {
       setIsGenerating(null);
     }
   };
