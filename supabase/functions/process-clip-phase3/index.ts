@@ -362,6 +362,7 @@ async function uploadToCloudflareStream(sourceVideoUrl: string): Promise<string>
 
 /**
  * Process vertical 9:16 clip with AI enhancements
+ * Uses Cloudflare Stream's proper clip creation API
  */
 async function processVerticalClip(params: {
   streamVideoId: string;
@@ -401,69 +402,110 @@ async function processVerticalClip(params: {
 
   if (jobError) throw jobError;
 
-  // Use Cloudflare Stream clip and resize features
   const CLOUDFLARE_ACCOUNT_ID = Deno.env.get("CLOUDFLARE_ACCOUNT_ID");
   const CLOUDFLARE_STREAM_API_TOKEN = Deno.env.get("CLOUDFLARE_STREAM_API_TOKEN");
 
-  // Create clipped version
-  const clipUrl = `https://customer-${CLOUDFLARE_ACCOUNT_ID}.cloudflarestream.com/${streamVideoId}/downloads/default.mp4`;
-  const clipParams = new URLSearchParams({
-    startTime: startTime.toString(),
-    endTime: (startTime + duration).toString(),
-  });
-
-  // For vertical format, we need to:
-  // 1. Crop to 1080x1920
-  // 2. Apply face detection/tracking (if available in Stream API)
-  // 3. Burn in captions (would need separate processing or overlay service)
-  
-  // For MVP Phase 3, return the clip URL with transformation hints
-  // A production version would use FFmpeg or a specialized service for captions
-  const processedUrl = `${clipUrl}?${clipParams.toString()}&fit=crop&width=1080&height=1920`;
-
-  // Create asset record
-  const { data: asset, error: assetError } = await supabase
-    .from("ai_edited_assets")
-    .insert({
-      ai_job_id: job.id,
-      source_media_id: sourceMediaId, // Use actual media_files ID
-      output_type: 'vertical',
-      storage_path: processedUrl,
-      duration_seconds: duration,
-      metadata: {
-        format: 'vertical',
-        resolution: '1080x1920',
-        aspect_ratio: '9:16',
-        has_captions: captions.length > 0,
-        has_face_tracking: true,
-        has_dynamic_zoom: true,
-        processing_method: 'cloudflare_stream',
-        captions_count: captions.length,
+  try {
+    // Create a proper clip using Cloudflare Stream's clip API
+    // This creates an actual new video asset with proper encoding
+    const clipResponse = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/${streamVideoId}/clip`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${CLOUDFLARE_STREAM_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clippedFromVideoUID: streamVideoId,
+          startTimeSeconds: startTime,
+          endTimeSeconds: startTime + duration,
+          allowedOrigins: ["*"],
+          requireSignedURLs: false,
+          meta: {
+            name: `Vertical Clip: ${title}`,
+            format: "vertical_9x16",
+          },
+        }),
       }
-    })
-    .select()
-    .single();
+    );
 
-  if (assetError) throw assetError;
+    const clipData = await clipResponse.json();
+    
+    if (!clipData.success || !clipData.result) {
+      const errorMsg = JSON.stringify(clipData.errors || clipData);
+      console.error("  ✗ Cloudflare clip creation failed:", errorMsg);
+      throw Object.assign(
+        new Error(`Cloudflare clip API failed: ${errorMsg}`),
+        { step: "process_vertical", cloudflareErrors: clipData.errors }
+      );
+    }
 
-  // Update job as completed
-  await supabase
-    .from("ai_jobs")
-    .update({
-      status: "completed",
-      completed_at: new Date().toISOString(),
-      processing_time_seconds: duration * 2, // Estimate
-    })
-    .eq("id", job.id);
+    const newClipVideoId = clipData.result.uid;
+    console.log(`  ✓ Created clip video: ${newClipVideoId}`);
 
-  return {
-    url: processedUrl,
-    jobId: job.id,
-  };
+    // Construct playback URL with vertical format transformations
+    // Cloudflare Stream automatically encodes videos, we just need the right dimensions
+    const processedUrl = `https://customer-${CLOUDFLARE_ACCOUNT_ID}.cloudflarestream.com/${newClipVideoId}/downloads/default.mp4?width=1080&height=1920&fit=crop`;
+
+    // Create asset record
+    const { data: asset, error: assetError } = await supabase
+      .from("ai_edited_assets")
+      .insert({
+        ai_job_id: job.id,
+        source_media_id: sourceMediaId,
+        output_type: 'vertical',
+        storage_path: processedUrl,
+        duration_seconds: duration,
+        metadata: {
+          format: 'vertical',
+          resolution: '1080x1920',
+          aspect_ratio: '9:16',
+          has_captions: captions.length > 0,
+          has_face_tracking: false, // Not implemented in this phase
+          has_dynamic_zoom: false, // Not implemented in this phase
+          processing_method: 'cloudflare_stream_clip_api',
+          captions_count: captions.length,
+          cloudflare_clip_id: newClipVideoId,
+        }
+      })
+      .select()
+      .single();
+
+    if (assetError) throw assetError;
+
+    // Update job as completed
+    await supabase
+      .from("ai_jobs")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        processing_time_seconds: duration * 2,
+      })
+      .eq("id", job.id);
+
+    return {
+      url: processedUrl,
+      jobId: job.id,
+    };
+  } catch (error) {
+    // Update job as failed
+    await supabase
+      .from("ai_jobs")
+      .update({
+        status: "failed",
+        error_message: error instanceof Error ? error.message : String(error),
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", job.id);
+    
+    throw error;
+  }
 }
 
 /**
  * Process thumbnail clip (1:1 or 16:9) with title overlay
+ * Uses Cloudflare Stream's proper clip creation API
  */
 async function processThumbnailClip(params: {
   streamVideoId: string;
@@ -502,52 +544,98 @@ async function processThumbnailClip(params: {
   if (jobError) throw jobError;
 
   const CLOUDFLARE_ACCOUNT_ID = Deno.env.get("CLOUDFLARE_ACCOUNT_ID");
+  const CLOUDFLARE_STREAM_API_TOKEN = Deno.env.get("CLOUDFLARE_STREAM_API_TOKEN");
   
-  // Create thumbnail clip (1:1 square)
-  const clipUrl = `https://customer-${CLOUDFLARE_ACCOUNT_ID}.cloudflarestream.com/${streamVideoId}/downloads/default.mp4`;
-  const clipParams = new URLSearchParams({
-    startTime: startTime.toString(),
-    endTime: (startTime + duration).toString(),
-  });
-
-  // For thumbnail format: crop to 1080x1080 square
-  const processedUrl = `${clipUrl}?${clipParams.toString()}&fit=crop&width=1080&height=1080`;
-
-  // Create asset record
-  const { data: asset, error: assetError } = await supabase
-    .from("ai_edited_assets")
-    .insert({
-      ai_job_id: job.id,
-      source_media_id: sourceMediaId, // Use actual media_files ID
-      output_type: 'thumbnail',
-      storage_path: processedUrl,
-      duration_seconds: duration,
-      metadata: {
-        format: 'thumbnail_square',
-        resolution: '1080x1080',
-        aspect_ratio: '1:1',
-        title: title,
-        has_color_grading: true,
-        processing_method: 'cloudflare_stream',
+  try {
+    // Create a proper clip using Cloudflare Stream's clip API
+    const clipResponse = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/${streamVideoId}/clip`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${CLOUDFLARE_STREAM_API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clippedFromVideoUID: streamVideoId,
+          startTimeSeconds: startTime,
+          endTimeSeconds: startTime + duration,
+          allowedOrigins: ["*"],
+          requireSignedURLs: false,
+          meta: {
+            name: `Thumbnail Clip: ${title}`,
+            format: "thumbnail_1x1",
+          },
+        }),
       }
-    })
-    .select()
-    .single();
+    );
 
-  if (assetError) throw assetError;
+    const clipData = await clipResponse.json();
+    
+    if (!clipData.success || !clipData.result) {
+      const errorMsg = JSON.stringify(clipData.errors || clipData);
+      console.error("  ✗ Cloudflare thumbnail clip creation failed:", errorMsg);
+      throw Object.assign(
+        new Error(`Cloudflare clip API failed: ${errorMsg}`),
+        { step: "process_thumbnail", cloudflareErrors: clipData.errors }
+      );
+    }
 
-  // Update job as completed
-  await supabase
-    .from("ai_jobs")
-    .update({
-      status: "completed",
-      completed_at: new Date().toISOString(),
-      processing_time_seconds: duration * 1.5, // Estimate
-    })
-    .eq("id", job.id);
+    const newClipVideoId = clipData.result.uid;
+    console.log(`  ✓ Created thumbnail clip video: ${newClipVideoId}`);
 
-  return {
-    url: processedUrl,
-    jobId: job.id,
-  };
+    // Construct playback URL with square format transformations
+    const processedUrl = `https://customer-${CLOUDFLARE_ACCOUNT_ID}.cloudflarestream.com/${newClipVideoId}/downloads/default.mp4?width=1080&height=1080&fit=crop`;
+
+    // Create asset record
+    const { data: asset, error: assetError } = await supabase
+      .from("ai_edited_assets")
+      .insert({
+        ai_job_id: job.id,
+        source_media_id: sourceMediaId,
+        output_type: 'thumbnail',
+        storage_path: processedUrl,
+        duration_seconds: duration,
+        metadata: {
+          format: 'thumbnail',
+          resolution: '1080x1080',
+          aspect_ratio: '1:1',
+          has_color_grading: false, // Not implemented in this phase
+          processing_method: 'cloudflare_stream_clip_api',
+          title: title,
+          cloudflare_clip_id: newClipVideoId,
+        }
+      })
+      .select()
+      .single();
+
+    if (assetError) throw assetError;
+
+    // Update job as completed
+    await supabase
+      .from("ai_jobs")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        processing_time_seconds: duration * 2,
+      })
+      .eq("id", job.id);
+
+    return {
+      url: processedUrl,
+      jobId: job.id,
+    };
+  } catch (error) {
+    // Update job as failed
+    await supabase
+      .from("ai_jobs")
+      .update({
+        status: "failed",
+        error_message: error instanceof Error ? error.message : String(error),
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", job.id);
+    
+    throw error;
+  }
 }
