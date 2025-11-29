@@ -107,19 +107,20 @@ serve(async (req) => {
     });
 
     if (processResponse.error) {
-      console.error("Phase 3 processing failed:", JSON.stringify({
-        error: processResponse.error,
-        status: (processResponse.error as any)?.status,
-        context: (processResponse.error as any)?.context,
-      }, null, 2));
+      // Extract actual error details from Phase 3
+      const phase3Error = processResponse.error;
+      const errorDetails = {
+        step: (phase3Error as any)?.step || 'unknown',
+        message: phase3Error.message || 'Phase 3 processing failed',
+        code: (phase3Error as any)?.code,
+        details: (phase3Error as any)?.details,
+      };
+      
+      console.error("Phase 3 processing failed:", JSON.stringify(errorDetails, null, 2));
       
       throw new Error(JSON.stringify({
         error: "Phase 3 processing failed",
-        details: {
-          message: processResponse.error.message,
-          name: processResponse.error.name,
-          context: (processResponse.error as any)?.context,
-        }
+        ...errorDetails,
       }));
     }
 
