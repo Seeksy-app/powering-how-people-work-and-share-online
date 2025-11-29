@@ -18,6 +18,9 @@ interface Clip {
   id: string;
   title: string | null;
   storage_path: string | null;
+  vertical_url: string | null;
+  thumbnail_url: string | null;
+  error_message: string | null;
   start_seconds: number;
   end_seconds: number;
   duration_seconds: number;
@@ -45,6 +48,9 @@ export function ClipsGallery() {
         .from("clips")
         .select(`
           *,
+          vertical_url,
+          thumbnail_url,
+          error_message,
           source_media:source_media_id (
             file_name,
             file_url
@@ -75,26 +81,26 @@ export function ClipsGallery() {
     }
   };
 
-  const handleDownload = async (clip: Clip) => {
-    if (!clip.storage_path) {
-      toast.error("Clip not yet processed");
+  const handleDownload = async (clip: Clip, format: 'vertical' | 'thumbnail') => {
+    const clipUrl = format === 'vertical' ? clip.vertical_url : clip.thumbnail_url;
+    
+    if (!clipUrl) {
+      toast.error(`${format === 'vertical' ? 'Vertical' : 'Thumbnail'} clip not ready yet`);
       return;
     }
 
     try {
-      // For now, clips are time-stamped URLs (demo mode)
-      // In production with FFmpeg, this would be actual clip files
-      const response = await fetch(clip.storage_path.split('#')[0]);
+      const response = await fetch(clipUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${clip.title || 'clip'}.mp4`;
+      a.download = `${clip.title || 'clip'}_${format}.mp4`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      toast.success("Note: This downloads the full video. Clip extraction requires FFmpeg integration.");
+      toast.success(`${format === 'vertical' ? 'Vertical' : 'Thumbnail'} clip downloaded!`);
     } catch (error) {
       console.error("Error downloading clip:", error);
       toast.error("Failed to download clip");
@@ -147,90 +153,158 @@ export function ClipsGallery() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {clips.map((clip) => (
-            <Card key={clip.id} className="overflow-hidden">
-              <div className="relative aspect-video bg-muted">
-                {clip.source_media?.file_url ? (
-                  <video
-                    src={`${clip.source_media.file_url}#t=${clip.start_seconds}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <Play className="h-12 w-12 text-muted-foreground" />
-                  </div>
-                )}
-                {clip.status === "processing" && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <Badge variant="secondary">Processing...</Badge>
-                  </div>
-                )}
-                {clip.virality_score && clip.virality_score > 70 && (
-                  <Badge className="absolute top-2 right-2 bg-primary" variant="default">
-                    🔥 {clip.virality_score}% Viral
-                  </Badge>
-                )}
-              </div>
-              
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <h4 className="font-semibold line-clamp-2">{clip.title || 'Untitled Clip'}</h4>
-                  {clip.source_media && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      From: {clip.source_media.file_name}
-                    </p>
+          {clips.map((clip) => {
+            const hasVertical = !!clip.vertical_url;
+            const hasThumbnail = !!clip.thumbnail_url;
+            const isProcessing = clip.status === 'processing';
+            const hasFailed = clip.status === 'failed';
+            
+            return (
+              <Card key={clip.id} className="overflow-hidden">
+                <div className="relative aspect-video bg-muted">
+                  {/* Show thumbnail if available, otherwise vertical, otherwise source */}
+                  {hasThumbnail ? (
+                    <video
+                      src={clip.thumbnail_url!}
+                      className="w-full h-full object-cover"
+                      muted
+                    />
+                  ) : hasVertical ? (
+                    <video
+                      src={clip.vertical_url!}
+                      className="w-full h-full object-contain bg-black"
+                      muted
+                    />
+                  ) : clip.source_media?.file_url ? (
+                    <video
+                      src={`${clip.source_media.file_url}#t=${clip.start_seconds}`}
+                      className="w-full h-full object-cover"
+                      muted
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <Play className="h-12 w-12 text-muted-foreground" />
+                    </div>
                   )}
-                  {clip.suggested_caption && (
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {clip.suggested_caption}
-                    </p>
+                  
+                  {/* Status badges */}
+                  {isProcessing && (
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                      <Badge variant="secondary">Generating clips...</Badge>
+                    </div>
+                  )}
+                  
+                  {hasFailed && (
+                    <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                      <Badge variant="destructive">Failed</Badge>
+                    </div>
+                  )}
+                  
+                  {clip.virality_score && clip.virality_score > 70 && !isProcessing && (
+                    <Badge className="absolute top-2 right-2 bg-primary" variant="default">
+                      🔥 {clip.virality_score}% Viral
+                    </Badge>
+                  )}
+                  
+                  {/* Format badges */}
+                  {!isProcessing && !hasFailed && (
+                    <div className="absolute bottom-2 left-2 flex gap-1">
+                      {hasVertical && (
+                        <Badge variant="secondary" className="text-xs">
+                          9:16
+                        </Badge>
+                      )}
+                      {hasThumbnail && (
+                        <Badge variant="secondary" className="text-xs">
+                          Thumbnail
+                        </Badge>
+                      )}
+                    </div>
                   )}
                 </div>
-
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatDuration(clip.duration_seconds)}
+                
+                <CardContent className="p-4 space-y-3">
+                  <div>
+                    <h4 className="font-semibold line-clamp-2">{clip.title || 'Untitled Clip'}</h4>
+                    {clip.source_media && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        From: {clip.source_media.file_name}
+                      </p>
+                    )}
+                    {clip.suggested_caption && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                        {clip.suggested_caption}
+                      </p>
+                    )}
+                    {hasFailed && clip.error_message && (
+                      <p className="text-xs text-red-500 mt-1">
+                        {clip.error_message}
+                      </p>
+                    )}
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    AI
-                  </Badge>
-                </div>
 
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      setSelectedClip(clip);
-                      setPreviewOpen(true);
-                    }}
-                    disabled={clip.status === "processing"}
-                  >
-                    <Play className="h-4 w-4 mr-1" />
-                    Preview
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDownload(clip)}
-                    disabled={clip.status === "processing"}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDelete(clip.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {formatDuration(clip.duration_seconds)}
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      AI
+                    </Badge>
+                  </div>
+
+                  {/* Download buttons for each format */}
+                  <div className="flex gap-2">
+                    {hasVertical && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleDownload(clip, 'vertical')}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Vertical
+                      </Button>
+                    )}
+                    {hasThumbnail && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleDownload(clip, 'thumbnail')}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Thumbnail
+                      </Button>
+                    )}
+                    {!hasVertical && !hasThumbnail && !isProcessing && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedClip(clip);
+                          setPreviewOpen(true);
+                        }}
+                      >
+                        <Play className="h-4 w-4 mr-1" />
+                        Preview Source
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleDelete(clip.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
