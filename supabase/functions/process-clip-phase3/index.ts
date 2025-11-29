@@ -131,6 +131,7 @@ serve(async (req) => {
       captions,
       title: title || hook || "Viral Moment",
       clipId,
+      sourceMediaId: clip.source_media_id, // Use actual media_files ID
       userId: user.id,
       supabase,
     });
@@ -145,6 +146,7 @@ serve(async (req) => {
       duration,
       title: title || hook || "Watch This!",
       clipId,
+      sourceMediaId: clip.source_media_id, // Use actual media_files ID
       userId: user.id,
       supabase,
     });
@@ -193,7 +195,9 @@ serve(async (req) => {
       name: error instanceof Error ? error.name : 'Unknown',
       stack: error instanceof Error ? error.stack : undefined,
       code: (error as any)?.code,
-      details: (error as any)?.details,
+      details: typeof (error as any)?.details === 'string' 
+        ? (error as any).details 
+        : JSON.stringify((error as any)?.details),
       hint: (error as any)?.hint,
       clipId: clipRecord?.id,
       hasSupabaseClient: !!supabase,
@@ -366,10 +370,11 @@ async function processVerticalClip(params: {
   captions: any[];
   title: string;
   clipId: string;
+  sourceMediaId: string;
   userId: string;
   supabase: any;
 }): Promise<{ url: string; jobId: string }> {
-  const { streamVideoId, startTime, duration, captions, title, clipId, userId, supabase } = params;
+  const { streamVideoId, startTime, duration, captions, title, clipId, sourceMediaId, userId, supabase } = params;
 
   // Create AI job
   const { data: job, error: jobError } = await supabase
@@ -421,7 +426,7 @@ async function processVerticalClip(params: {
     .from("ai_edited_assets")
     .insert({
       ai_job_id: job.id,
-      source_media_id: params.clipId,
+      source_media_id: sourceMediaId, // Use actual media_files ID
       output_type: 'vertical',
       storage_path: processedUrl,
       duration_seconds: duration,
@@ -466,10 +471,11 @@ async function processThumbnailClip(params: {
   duration: number;
   title: string;
   clipId: string;
+  sourceMediaId: string;
   userId: string;
   supabase: any;
 }): Promise<{ url: string; jobId: string }> {
-  const { streamVideoId, startTime, duration, title, clipId, userId, supabase } = params;
+  const { streamVideoId, startTime, duration, title, clipId, sourceMediaId, userId, supabase } = params;
 
   // Create AI job
   const { data: job, error: jobError } = await supabase
@@ -512,7 +518,7 @@ async function processThumbnailClip(params: {
     .from("ai_edited_assets")
     .insert({
       ai_job_id: job.id,
-      source_media_id: params.clipId,
+      source_media_id: sourceMediaId, // Use actual media_files ID
       output_type: 'thumbnail',
       storage_path: processedUrl,
       duration_seconds: duration,
