@@ -37,6 +37,7 @@ interface Clip {
 export function ClipsGallery() {
   const [selectedClip, setSelectedClip] = useState<Clip | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [isCreatingDemo, setIsCreatingDemo] = useState(false);
 
   const { data: clips, isLoading, refetch } = useQuery({
     queryKey: ["clips"],
@@ -63,6 +64,32 @@ export function ClipsGallery() {
       return data as unknown as Clip[];
     },
   });
+
+  const createDemoClip = async () => {
+    setIsCreatingDemo(true);
+    try {
+      toast("Creating demo clip...", { description: "This will validate the pipeline" });
+      
+      const { data, error } = await supabase.functions.invoke("create-demo-clip", {
+        body: {},
+      });
+
+      if (error) throw error;
+
+      toast.success("Demo clip created!", {
+        description: data.message,
+      });
+
+      refetch();
+    } catch (error) {
+      console.error("Error creating demo:", error);
+      toast.error("Failed to create demo clip", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    } finally {
+      setIsCreatingDemo(false);
+    }
+  };
 
   const handleDelete = async (clipId: string) => {
     try {
@@ -130,13 +157,31 @@ export function ClipsGallery() {
             AI-Generated Clips
           </CardTitle>
           <CardDescription>
-            Clips are automatically generated from your broadcasts
+            Create a demo clip to validate the complete pipeline
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground text-center py-8">
-            No clips yet. Start a broadcast to generate clips automatically!
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground text-center py-4">
+            No clips yet. Create a demo clip to test the pipeline!
           </p>
+          <Button 
+            onClick={createDemoClip} 
+            disabled={isCreatingDemo}
+            className="w-full"
+            size="lg"
+          >
+            {isCreatingDemo ? (
+              <>
+                <Sparkles className="mr-2 h-4 w-4 animate-pulse" />
+                Creating Demo Clip...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Create Demo Clip
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
     );
@@ -150,6 +195,24 @@ export function ClipsGallery() {
             <Sparkles className="h-5 w-5 text-primary" />
             AI-Generated Clips ({clips.length})
           </h3>
+          <Button 
+            onClick={createDemoClip} 
+            disabled={isCreatingDemo}
+            variant="outline"
+            size="sm"
+          >
+            {isCreatingDemo ? (
+              <>
+                <Sparkles className="mr-2 h-3 w-3 animate-pulse" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-3 w-3" />
+                Create Demo Clip
+              </>
+            )}
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -138,3 +138,12 @@ verify_jwt = true
 
 [functions.analyze-clips]
 verify_jwt = true
+
+[functions.test-ffmpeg]
+verify_jwt = false
+
+[functions.r2-upload]
+verify_jwt = true
+
+[functions.create-demo-clip]
+verify_jwt = true
