@@ -50,10 +50,18 @@ serve(async (req) => {
   let clipRecord: any = null;
   let supabase: any = null;
 
+  let currentStep = "initialization";
+  
   try {
+    console.log("=== PHASE 3 START ===");
+    
+    currentStep = "auth_check";
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Not authenticated");
+    if (!authHeader) {
+      throw Object.assign(new Error("Not authenticated"), { step: "auth_check" });
+    }
 
+    currentStep = "supabase_init";
     // Use service role key for edge function to bypass RLS
     supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -67,22 +75,24 @@ serve(async (req) => {
       }
     );
 
+    currentStep = "user_verification";
     // Extract and verify user JWT from Authorization header
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    if (userError || !user) throw new Error("Not authenticated");
+    if (userError || !user) {
+      throw Object.assign(new Error("User authentication failed"), { 
+        step: "user_verification",
+        details: userError 
+      });
+    }
+    console.log(`✓ Authenticated user: ${user.id}`);
 
+    currentStep = "parse_request";
     const requestData: ProcessClipRequest = await req.json();
     const { clipId, sourceVideoUrl, startTime, duration, title, transcript, hook } = requestData;
+    console.log(`✓ Parsed request for clip ${clipId}`);
 
-    console.log(`[Phase 3] Processing clip ${clipId}:`, {
-      sourceUrl: sourceVideoUrl,
-      startTime,
-      duration,
-      hasTranscript: !!transcript,
-      hasHook: !!hook,
-    });
-
+    currentStep = "fetch_clip_record";
     // Get the clip record
     const { data: clip, error: clipError } = await supabase
       .from("clips")
@@ -90,20 +100,29 @@ serve(async (req) => {
       .eq("id", clipId)
       .single();
 
-    if (clipError || !clip) throw new Error("Clip not found");
+    if (clipError || !clip) {
+      throw Object.assign(new Error(`Clip not found: ${clipId}`), { 
+        step: "fetch_clip_record",
+        details: clipError 
+      });
+    }
     clipRecord = clip;
+    console.log(`✓ Found clip record`);
 
     // Step 1: Generate AI captions using Lovable AI
+    currentStep = "generate_captions";
     console.log("\n=== Step 1: Generating AI Captions ===");
     const captions = await generateAICaptions(transcript || "", startTime, duration);
-    console.log(`Generated ${captions.length} caption segments`);
+    console.log(`✓ Generated ${captions.length} caption segments`);
 
     // Step 2: Upload source video to Cloudflare Stream
+    currentStep = "cloudflare_upload";
     console.log("\n=== Step 2: Uploading to Cloudflare Stream ===");
     const streamVideoId = await uploadToCloudflareStream(sourceVideoUrl);
-    console.log(`Uploaded to Stream: ${streamVideoId}`);
+    console.log(`✓ Uploaded to Stream: ${streamVideoId}`);
 
     // Step 3: Process vertical clip (9:16)
+    currentStep = "process_vertical";
     console.log("\n=== Step 3: Processing Vertical Clip (9:16) ===");
     const verticalResult = await processVerticalClip({
       streamVideoId,
@@ -115,8 +134,10 @@ serve(async (req) => {
       userId: user.id,
       supabase,
     });
+    console.log(`✓ Vertical clip processed: ${verticalResult.url}`);
 
     // Step 4: Process thumbnail clip (1:1 or 16:9)
+    currentStep = "process_thumbnail";
     console.log("\n=== Step 4: Processing Thumbnail Clip ===");
     const thumbnailResult = await processThumbnailClip({
       streamVideoId,
@@ -127,8 +148,10 @@ serve(async (req) => {
       userId: user.id,
       supabase,
     });
+    console.log(`✓ Thumbnail clip processed: ${thumbnailResult.url}`);
 
     // Step 5: Update clip record with URLs
+    currentStep = "update_clip_record";
     await supabase
       .from("clips")
       .update({
@@ -138,6 +161,7 @@ serve(async (req) => {
         storage_path: verticalResult.url,
       })
       .eq("id", clipId);
+    console.log(`✓ Updated clip record with URLs`);
 
     console.log("PHASE3 SUCCESS", JSON.stringify({
       clipId: clipId,
@@ -161,7 +185,10 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("process-clip-phase3 error", {
+    const step = (error as any)?.step || currentStep;
+    
+    console.error("❌ PHASE3 ERROR", {
+      step: step,
       message: error instanceof Error ? error.message : String(error),
       name: error instanceof Error ? error.name : 'Unknown',
       stack: error instanceof Error ? error.stack : undefined,
@@ -184,7 +211,7 @@ serve(async (req) => {
           .from("clips")
           .update({
             status: 'failed',
-            error_message: errorMessage
+            error_message: `[${step}] ${errorMessage}`
           })
           .eq("id", clipRecord.id);
       } catch (updateError) {
@@ -194,14 +221,15 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        error: "process-clip-phase3 failed",
+        error: "Phase 3 failed",
+        step: step,
+        message: error instanceof Error ? error.message : String(error),
+        code: (error as any)?.code ?? null,
         details: {
-          message: error instanceof Error ? error.message : String(error),
           name: error instanceof Error ? error.name : 'Unknown',
-          code: (error as any)?.code,
-          details: (error as any)?.details,
           hint: (error as any)?.hint,
-          stack: error instanceof Error ? error.stack : undefined,
+          rawDetails: (error as any)?.details,
+          stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3).join('\n') : undefined,
         },
       }),
       {
@@ -286,10 +314,16 @@ async function uploadToCloudflareStream(sourceVideoUrl: string): Promise<string>
   const CLOUDFLARE_ACCOUNT_ID = Deno.env.get("CLOUDFLARE_ACCOUNT_ID");
   const CLOUDFLARE_STREAM_API_TOKEN = Deno.env.get("CLOUDFLARE_STREAM_API_TOKEN");
 
+  console.log("  → Checking Cloudflare credentials...");
   if (!CLOUDFLARE_ACCOUNT_ID || !CLOUDFLARE_STREAM_API_TOKEN) {
-    throw new Error("Cloudflare credentials not configured");
+    throw Object.assign(
+      new Error("Cloudflare credentials not configured"), 
+      { step: "cloudflare_upload" }
+    );
   }
+  console.log(`  → Account ID: ${CLOUDFLARE_ACCOUNT_ID}`);
 
+  console.log(`  → Uploading video from: ${sourceVideoUrl}`);
   // Upload via URL
   const response = await fetch(
     `https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/stream/copy`,
@@ -306,11 +340,19 @@ async function uploadToCloudflareStream(sourceVideoUrl: string): Promise<string>
     }
   );
 
+  console.log(`  → Cloudflare response status: ${response.status}`);
   const data = await response.json();
+  
   if (!data.success) {
-    throw new Error(`Cloudflare upload failed: ${JSON.stringify(data.errors)}`);
+    const errorDetails = JSON.stringify(data.errors || data);
+    console.error(`  ✗ Cloudflare upload failed:`, errorDetails);
+    throw Object.assign(
+      new Error(`Cloudflare upload failed: ${errorDetails}`),
+      { step: "cloudflare_upload", cloudflareErrors: data.errors }
+    );
   }
 
+  console.log(`  ✓ Upload successful, video ID: ${data.result.uid}`);
   return data.result.uid;
 }
 
