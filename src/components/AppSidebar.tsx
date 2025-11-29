@@ -1585,20 +1585,10 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
                     <TooltipTrigger asChild>
                       <button
                         onClick={() => setModuleLauncherOpen(true)}
-                        className="relative group cursor-pointer hover:opacity-80 transition-opacity"
+                        className="relative group cursor-pointer hover:scale-110 transition-transform"
                         aria-label="Open Active Apps"
                       >
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <circle cx="10" cy="10" r="5" fill="hsl(207, 90%, 65%)" />
-                          <circle cx="24" cy="10" r="5" fill="hsl(280, 65%, 70%)" />
-                          <circle cx="38" cy="10" r="5" fill="hsl(25, 90%, 65%)" />
-                          <circle cx="10" cy="24" r="5" fill="hsl(150, 65%, 60%)" />
-                          <circle cx="24" cy="24" r="5" fill="hsl(45, 90%, 65%)" />
-                          <circle cx="38" cy="24" r="5" fill="hsl(240, 65%, 70%)" />
-                          <circle cx="10" cy="38" r="5" fill="hsl(330, 75%, 70%)" />
-                          <circle cx="24" cy="38" r="5" fill="hsl(180, 65%, 60%)" />
-                          <circle cx="38" cy="38" r="5" fill="hsl(0, 75%, 65%)" />
-                        </svg>
+                        <Sparkles className="h-8 w-8 text-brand-gold" />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>

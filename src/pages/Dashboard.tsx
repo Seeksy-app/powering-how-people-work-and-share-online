@@ -556,7 +556,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-brand-navy/5 to-brand-blue/5">
+    <div className="min-h-screen bg-background">
       <WelcomeModal />
       <main className="container mx-auto py-8 px-4">
         <div className="mb-8 flex items-start justify-between">
@@ -584,25 +584,25 @@ const Dashboard = () => {
         {/* Live Stream Indicator */}
         {isLiveStreaming && (
           <div className="mb-8 animate-fade-in">
-            <Card className="border-2 border-red-500 bg-gradient-to-r from-red-500/10 via-red-600/10 to-red-500/10 shadow-lg">
-              <CardContent className="p-6">
+            <Card className="border border-red-500/30 bg-card shadow-sm hover:shadow-md transition-all">
+              <CardContent className="p-5">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="relative flex h-3 w-3">
+                    <div className="relative flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-red-500">LIVE</span>
-                      <span className="text-muted-foreground">|</span>
-                      <span className="text-lg font-semibold">
-                        {liveStreamTitle || "Studio Session Active"}
-                      </span>
+                    <div className="inline-flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-md text-sm font-semibold">
+                      LIVE
                     </div>
+                    <span className="text-base font-semibold">
+                      {liveStreamTitle || "Studio Session Active"}
+                    </span>
                   </div>
                   <div className="ml-auto">
                     <Button 
                       onClick={() => navigate("/studio")}
+                      size="sm"
                       className="bg-red-500 hover:bg-red-600 text-white"
                     >
                       Go to Studio
