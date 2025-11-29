@@ -102,7 +102,13 @@ serve(async (req) => {
     const processData = processResponse.data;
     console.log("Processing complete:", processData);
 
-    console.log("✅ Demo clip created successfully with Phase 3 processing");
+    console.log("PHASE3 SUCCESS", JSON.stringify({
+      clipId: clipRecord.id,
+      jobId: processData.vertical?.jobId,
+      engine: 'cloudflare_stream',
+      verticalUrl: processData.vertical?.url,
+      thumbnailUrl: processData.thumbnail?.url,
+    }, null, 2));
 
     return new Response(
       JSON.stringify({
@@ -121,23 +127,38 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error creating demo clip:", error);
+    console.error("PHASE3 ERROR - Full details:", JSON.stringify({
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
+      code: (error as any)?.code,
+      details: (error as any)?.details,
+      hint: (error as any)?.hint,
+      clipId: clipRecord?.id,
+      hasSupabaseClient: !!supabase,
+    }, null, 2));
     
     // Update clip status to failed if we have a clipRecord
-    if (clipRecord?.id) {
-      await supabase
-        .from("clips")
-        .update({ 
-          status: 'failed',
-          error_message: error instanceof Error ? error.message : String(error)
-        })
-        .eq("id", clipRecord.id);
+    if (clipRecord?.id && supabase) {
+      try {
+        await supabase
+          .from("clips")
+          .update({ 
+            status: 'failed',
+            error_message: error instanceof Error ? error.message : String(error)
+          })
+          .eq("id", clipRecord.id);
+      } catch (updateError) {
+        console.error("Failed to update clip status:", updateError);
+      }
     }
     
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : "Unknown error",
         details: String(error),
+        code: (error as any)?.code,
+        hint: (error as any)?.hint,
       }),
       {
         status: 500,
