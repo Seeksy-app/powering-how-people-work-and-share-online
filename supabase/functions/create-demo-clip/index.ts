@@ -93,6 +93,9 @@ serve(async (req) => {
     console.log("Calling process-clip-phase3 to generate OpusClip-quality clips...");
     
     const processResponse = await supabase.functions.invoke('process-clip-phase3', {
+      headers: {
+        Authorization: authHeader, // Pass the user's JWT token
+      },
       body: {
         clipId: clipRecord.id,
         sourceVideoUrl: sourceVideo.file_url,
