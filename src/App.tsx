@@ -82,8 +82,6 @@ import RSSMigrationPage from "./pages/RSSMigrationPage";
 import PaidAdsTerms from "./pages/legal/PaidAdsTerms";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
 import { SeeksyAIChatWidget } from "./components/SeeksyAIChatWidget";
-import { SparkSnowfall } from "./components/spark/SparkSnowfall";
-import { SeeksySantaWidget } from "./components/spark/SeeksySantaWidget";
 import AdminAds from "./pages/AdminAds";
 import AdminAudioAds from "./pages/AdminAudioAds";
 import PodcastAds from "./pages/PodcastAds";
@@ -331,9 +329,6 @@ const AppContent = () => {
   return (
     <RoleProvider>
       <SidebarProvider>
-        {/* Holiday features temporarily disabled */}
-        {/* <SparkSnowfall /> */}
-        {/* <SeeksySantaWidget /> */}
         <div className="min-h-screen flex w-full bg-background">
           {/* Hide Sidebar on Studio workspace (but show on Studio Hub) */}
           {user && location.pathname !== '/studio/session/:id' && !location.pathname.includes('/studio/session/') && <AppSidebar user={user} isAdmin={isAdmin} />}
