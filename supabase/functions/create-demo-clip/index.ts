@@ -93,18 +93,9 @@ serve(async (req) => {
     // STEP 2: Submit to Shotstack for rendering
     console.log("Submitting to Shotstack for OpusClip-quality rendering...");
     
-    // Get Cloudflare download URL for the source video
-    // Extract video ID from file_url (format: https://customer-xxx.cloudflarestream.com/VIDEO_ID/...)
-    const videoIdMatch = sourceVideo.file_url.match(/cloudflarestream\.com\/([^\/]+)/);
-    if (!videoIdMatch) {
-      throw new Error("Could not extract Cloudflare video ID from file_url");
-    }
-    
-    const videoId = videoIdMatch[1];
-    const CLOUDFLARE_ACCOUNT_ID = Deno.env.get("CLOUDFLARE_ACCOUNT_ID");
-    const cloudflareDownloadUrl = `https://customer-${CLOUDFLARE_ACCOUNT_ID}.cloudflarestream.com/${videoId}/downloads/default.mp4`;
-    
-    console.log("Cloudflare download URL:", cloudflareDownloadUrl);
+    // Use the direct file URL from media_files table (Supabase Storage URL)
+    const sourceVideoUrl = sourceVideo.file_url;
+    console.log("Source video URL:", sourceVideoUrl);
 
     const shotstackResponse = await supabase.functions.invoke('submit-shotstack-render', {
       headers: {
@@ -112,7 +103,7 @@ serve(async (req) => {
       },
       body: {
         clipId: clipRecord.id,
-        cloudflareDownloadUrl: cloudflareDownloadUrl,
+        cloudflareDownloadUrl: sourceVideoUrl,
         start: 0, // Clip from the beginning (Shotstack doesn't support trimming before render)
         length: duration,
         orientation: "vertical",
