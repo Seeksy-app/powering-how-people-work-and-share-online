@@ -130,7 +130,13 @@ serve(async (req) => {
       })
       .eq("id", clipId);
 
-    console.log(`\n✅ Phase 3 processing complete for clip ${clipId}`);
+    console.log("PHASE3 SUCCESS", JSON.stringify({
+      clipId: clipId,
+      jobId: verticalResult.jobId,
+      engine: 'cloudflare_stream',
+      verticalUrl: verticalResult.url,
+      thumbnailUrl: thumbnailResult.url,
+    }, null, 2));
 
     return new Response(
       JSON.stringify({
@@ -146,7 +152,16 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("[Phase 3] Error:", error);
+    console.error("PHASE3 ERROR - Full details:", JSON.stringify({
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
+      code: (error as any)?.code,
+      details: (error as any)?.details,
+      hint: (error as any)?.hint,
+      clipId: clipRecord?.id,
+      hasSupabaseClient: !!supabase,
+    }, null, 2));
 
     // Extract detailed error message (first 300 chars for UI display)
     let errorMessage = error instanceof Error ? error.message : String(error);
@@ -155,19 +170,25 @@ serve(async (req) => {
     }
 
     if (clipRecord?.id && supabase) {
-      await supabase
-        .from("clips")
-        .update({
-          status: 'failed',
-          error_message: errorMessage
-        })
-        .eq("id", clipRecord.id);
+      try {
+        await supabase
+          .from("clips")
+          .update({
+            status: 'failed',
+            error_message: errorMessage
+          })
+          .eq("id", clipRecord.id);
+      } catch (updateError) {
+        console.error("Failed to update clip status:", updateError);
+      }
     }
 
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : "Unknown error",
         details: String(error),
+        code: (error as any)?.code,
+        hint: (error as any)?.hint,
       }),
       {
         status: 500,
