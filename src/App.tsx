@@ -466,7 +466,7 @@ const AppContent = () => {
               <Route path="/podcasts" element={<Podcasts />} />
               <Route path="/podcasts/create" element={<CreatePodcast />} />
               <Route path="/podcasts/import" element={<ImportPodcast />} />
-              <Route path="/podcasts/:id" element={<PodcastDetail />} />
+              <Route path="/podcasts/:id" element={<PodcastDashboard />} />
               <Route path="/podcasts/:id/edit" element={<EditPodcast />} />
               <Route path="/podcasts/:id/upload" element={<UploadEpisode />} />
               <Route path="/podcasts/:podcastId/stats" element={<PodcastStats />} />
