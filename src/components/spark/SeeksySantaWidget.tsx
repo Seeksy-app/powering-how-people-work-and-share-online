@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 export const SeeksySantaWidget = () => {
   const [showModal, setShowModal] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
   const isHoliday = isHolidaySeason();
 
   // Only show during holiday season
@@ -22,6 +23,7 @@ export const SeeksySantaWidget = () => {
         onClick={() => setShowModal(true)}
         className={cn(
           "fixed bottom-6 right-6 z-40",
+          "bg-transparent p-0 m-0 shadow-none border-none",
           "hover:scale-110 transition-transform duration-300",
           "cursor-pointer drop-shadow-2xl"
         )}
@@ -31,8 +33,8 @@ export const SeeksySantaWidget = () => {
           pose="waving" 
           size={80} 
           animated
-          triggerAnimation={showModal}
-          className="animate-float"
+          triggerAnimation={!hasAnimated}
+          onAnimationComplete={() => setHasAnimated(true)}
         />
       </button>
 

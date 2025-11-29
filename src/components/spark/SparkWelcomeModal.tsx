@@ -38,8 +38,8 @@ export const SparkWelcomeModal = ({ role, onComplete }: SparkWelcomeModalProps) 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md max-w-[90vw]">
         <DialogHeader>
-          <div className="flex justify-center mb-4">
-            <div className="w-24 h-24 sm:w-32 sm:h-32">
+          <div className="flex justify-center mb-4 bg-transparent">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 bg-transparent">
               <SparkAvatar pose="waving" size="full" animated />
             </div>
           </div>

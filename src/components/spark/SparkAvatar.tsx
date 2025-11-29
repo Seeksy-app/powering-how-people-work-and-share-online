@@ -13,6 +13,7 @@ interface SparkAvatarProps {
   className?: string;
   animated?: boolean;
   triggerAnimation?: boolean; // External trigger for single animation
+  onAnimationComplete?: () => void; // Callback when animation finishes
   onClick?: () => void;
   alt?: string;
 }
@@ -23,6 +24,7 @@ export const SparkAvatar = ({
   className,
   animated = false,
   triggerAnimation,
+  onAnimationComplete,
   onClick,
   alt = "Seeksy Spark"
 }: SparkAvatarProps) => {
@@ -49,17 +51,25 @@ export const SparkAvatar = ({
   useEffect(() => {
     if (hasLoaded && animated && !shouldAnimate) {
       setShouldAnimate(true);
-      setTimeout(() => setShouldAnimate(false), 1500);
+      const timer = setTimeout(() => {
+        setShouldAnimate(false);
+        onAnimationComplete?.();
+      }, 700);
+      return () => clearTimeout(timer);
     }
-  }, [hasLoaded, animated]);
+  }, [hasLoaded, animated, onAnimationComplete]);
 
   // External animation trigger
   useEffect(() => {
     if (triggerAnimation) {
       setShouldAnimate(true);
-      setTimeout(() => setShouldAnimate(false), 1500);
+      const timer = setTimeout(() => {
+        setShouldAnimate(false);
+        onAnimationComplete?.();
+      }, 700);
+      return () => clearTimeout(timer);
     }
-  }, [triggerAnimation]);
+  }, [triggerAnimation, onAnimationComplete]);
 
   const updateAsset = () => {
     const actualSize = typeof size === "number" ? "full" : size;
@@ -77,16 +87,16 @@ export const SparkAvatar = ({
     : { width: "16px", height: "16px" };
 
   return (
-    <div className="relative inline-block">
+    <div className="relative inline-block bg-transparent">
       <img
         src={assetPath}
         alt={alt}
         className={cn(
-          "object-contain select-none",
-          shouldAnimate && "animate-bounce-gentle",
+          "object-contain select-none pointer-events-none",
+          shouldAnimate && "animate-bounce-once",
           animated && "transition-all duration-300 ease-in-out",
           animated && isHovering && "scale-110 brightness-110",
-          onClick && "cursor-pointer",
+          onClick && "cursor-pointer pointer-events-auto",
           className
         )}
         style={sizeStyles}
