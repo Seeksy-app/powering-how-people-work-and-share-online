@@ -63,12 +63,20 @@ export function ClipsGallery() {
       if (error) throw error;
       return data as unknown as Clip[];
     },
+    refetchInterval: (query) => {
+      // Poll every 2 seconds if there are any processing clips
+      const hasProcessing = query.state.data?.some(clip => clip.status === 'processing');
+      return hasProcessing ? 2000 : false;
+    },
   });
 
   const createDemoClip = async () => {
     setIsCreatingDemo(true);
     try {
-      toast("Creating demo clip...", { description: "This will validate the pipeline" });
+      toast.loading("Creating demo clip...", { 
+        id: "demo-clip",
+        description: "Processing pipeline validation" 
+      });
       
       const { data, error } = await supabase.functions.invoke("create-demo-clip", {
         body: {},
@@ -77,13 +85,16 @@ export function ClipsGallery() {
       if (error) throw error;
 
       toast.success("Demo clip created!", {
-        description: data.message,
+        id: "demo-clip",
+        description: "Pipeline validated successfully",
       });
 
+      // Start polling for updates
       refetch();
     } catch (error) {
       console.error("Error creating demo:", error);
       toast.error("Failed to create demo clip", {
+        id: "demo-clip",
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
@@ -255,12 +266,16 @@ export function ClipsGallery() {
                     <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
                       <Badge variant="secondary">Generating clips...</Badge>
+                      <p className="text-xs text-white/80">Auto-refreshing every 2s</p>
                     </div>
                   )}
                   
                   {hasFailed && (
-                    <div className="absolute inset-0 bg-red-500/20 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-red-500/20 flex flex-col items-center justify-center gap-2 p-4">
                       <Badge variant="destructive">Failed</Badge>
+                      {clip.error_message && (
+                        <p className="text-xs text-white text-center">{clip.error_message}</p>
+                      )}
                     </div>
                   )}
                   

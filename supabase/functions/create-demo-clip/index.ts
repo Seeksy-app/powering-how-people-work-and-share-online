@@ -81,103 +81,140 @@ serve(async (req) => {
     console.log("Created clip record:", clipRecord.id);
 
     // STEP 2: Create AI jobs for both formats
-    const jobPromises = ['vertical', 'thumbnail'].map(async (format) => {
-      const { data: job, error: jobError } = await supabase
-        .from("ai_jobs")
-        .insert({
-          user_id: user.id,
-          job_type: 'clip_processing',
-          engine: 'demo_pipeline',
-          params: {
-            clip_id: clipRecord.id,
-            start_time: startTime,
-            end_time: endTime,
-            output_format: format,
-            title: "Demo: AI Clip Test",
-            note: "Pipeline validation - FFmpeg not available, using source video reference"
-          },
-          status: 'processing',
-          started_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+    // STEP 2: Process both formats sequentially for better error tracking
+    const results = [];
+    
+    for (const format of ['vertical', 'thumbnail']) {
+      try {
+        console.log(`Creating ${format} job...`);
+        
+        const { data: job, error: jobError } = await supabase
+          .from("ai_jobs")
+          .insert({
+            user_id: user.id,
+            job_type: 'clip_processing',
+            engine: 'demo_pipeline',
+            params: {
+              clip_id: clipRecord.id,
+              start_time: startTime,
+              end_time: endTime,
+              output_format: format,
+              title: "Demo: AI Clip Test",
+              note: "Pipeline validation - FFmpeg not available, using source video reference"
+            },
+            status: 'processing',
+            started_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
 
-      if (jobError) throw jobError;
+        if (jobError) {
+          console.error(`Job creation error for ${format}:`, jobError);
+          throw jobError;
+        }
 
-      // Simulate processing delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log(`Job created for ${format}:`, job.id);
 
-      // STEP 3: Create asset records (using source video URL for demo)
-      const assetUrl = `${sourceVideo.file_url}#t=${startTime},${endTime}`;
-      
-      const { data: asset, error: assetError } = await supabase
-        .from("ai_edited_assets")
-        .insert({
-          ai_job_id: job.id,
-          source_media_id: sourceVideo.id,
-          output_type: format === 'vertical' ? 'vertical_clip' : 'thumbnail_clip',
-          storage_path: assetUrl,
-          duration_seconds: duration,
-          metadata: {
-            format: format,
-            resolution: format === 'vertical' ? '1080x1920' : '1920x1080',
-            demo_mode: true,
-            note: "Using source video with time fragment - will be replaced with processed clip",
-            start_time: startTime,
-            end_time: endTime,
-          }
-        })
-        .select()
-        .single();
+        // STEP 3: Create asset records (using source video URL for demo)
+        const assetUrl = `${sourceVideo.file_url}#t=${startTime},${endTime}`;
+        
+        const { data: asset, error: assetError } = await supabase
+          .from("ai_edited_assets")
+          .insert({
+            ai_job_id: job.id,
+            source_media_id: sourceVideo.id,
+            output_type: format === 'vertical' ? 'vertical_clip' : 'thumbnail_clip',
+            storage_path: assetUrl,
+            duration_seconds: duration,
+            metadata: {
+              format: format,
+              resolution: format === 'vertical' ? '1080x1920' : '1920x1080',
+              demo_mode: true,
+              note: "Using source video with time fragment - will be replaced with processed clip",
+              start_time: startTime,
+              end_time: endTime,
+            }
+          })
+          .select()
+          .single();
 
-      if (assetError) throw assetError;
+        if (assetError) {
+          console.error(`Asset creation error for ${format}:`, assetError);
+          throw assetError;
+        }
 
-      // STEP 4: Update job as completed
-      const { error: updateJobError } = await supabase
-        .from("ai_jobs")
-        .update({
-          status: "completed",
-          completed_at: new Date().toISOString(),
-          processing_time_seconds: 1.5,
-        })
-        .eq("id", job.id);
+        console.log(`Asset created for ${format}:`, asset.id);
 
-      if (updateJobError) throw updateJobError;
+        // STEP 4: Update job as completed
+        const { error: updateJobError } = await supabase
+          .from("ai_jobs")
+          .update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+            processing_time_seconds: 1.5,
+          })
+          .eq("id", job.id);
 
-      // STEP 5: Create edit event
-      await supabase
-        .from("ai_edit_events")
-        .insert({
-          ai_job_id: job.id,
-          event_type: 'clip_generated',
-          timestamp_seconds: startTime,
-          details: {
-            format: format,
-            duration: duration,
-            demo_mode: true,
-          }
-        });
+        if (updateJobError) {
+          console.error(`Job update error for ${format}:`, updateJobError);
+          throw updateJobError;
+        }
 
-      return { format, assetUrl, jobId: job.id, assetId: asset.id };
-    });
+        console.log(`Job completed for ${format}`);
 
-    const results = await Promise.all(jobPromises);
+        // STEP 5: Create edit event
+        const { error: eventError } = await supabase
+          .from("ai_edit_events")
+          .insert({
+            ai_job_id: job.id,
+            event_type: 'clip_generated',
+            timestamp_seconds: startTime,
+            details: {
+              format: format,
+              duration: duration,
+              demo_mode: true,
+            }
+          });
+
+        if (eventError) {
+          console.error(`Edit event error for ${format}:`, eventError);
+          // Don't throw - this is not critical
+        }
+
+        results.push({ format, assetUrl, jobId: job.id, assetId: asset.id });
+      } catch (error) {
+        console.error(`Failed to process ${format} format:`, error);
+        // Continue with other format
+      }
+    }
+
+    if (results.length === 0) {
+      throw new Error("Failed to create any clips");
+    }
 
     // STEP 6: Update clips record with URLs
     const verticalResult = results.find(r => r.format === 'vertical');
     const thumbnailResult = results.find(r => r.format === 'thumbnail');
 
+    console.log("Updating clip record with URLs...", {
+      vertical: verticalResult?.assetUrl,
+      thumbnail: thumbnailResult?.assetUrl,
+    });
+
     const { error: updateClipError } = await supabase
       .from("clips")
       .update({
         status: 'ready',
-        vertical_url: verticalResult?.assetUrl,
-        thumbnail_url: thumbnailResult?.assetUrl,
-        storage_path: verticalResult?.assetUrl,
+        vertical_url: verticalResult?.assetUrl || null,
+        thumbnail_url: thumbnailResult?.assetUrl || null,
+        storage_path: verticalResult?.assetUrl || thumbnailResult?.assetUrl || null,
       })
       .eq("id", clipRecord.id);
 
-    if (updateClipError) throw updateClipError;
+    if (updateClipError) {
+      console.error("Clip update error:", updateClipError);
+      throw updateClipError;
+    }
 
     console.log("✅ Demo clip created successfully");
 
