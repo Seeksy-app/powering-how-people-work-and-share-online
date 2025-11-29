@@ -1,6 +1,6 @@
 /**
  * Seeksy Spark Asset Utilities
- * Handles dynamic asset selection based on theme and season
+ * Handles dynamic asset selection based on theme, season, and holiday mode
  */
 
 export type SparkPose = 
@@ -13,6 +13,20 @@ export type SparkPose =
 
 export type SparkSize = "full" | "icon-32" | "icon-20" | "icon-16";
 
+// Global holiday mode state (updated by components via setHolidayMode)
+let holidayModeEnabled = false;
+
+/**
+ * Set the global holiday mode state
+ */
+export const setHolidayMode = (enabled: boolean) => {
+  holidayModeEnabled = enabled;
+};
+
+/**
+ * Get the current holiday mode state
+ */
+export const getHolidayMode = () => holidayModeEnabled;
 
 /**
  * Detect current theme from DOM or system preference
@@ -37,7 +51,7 @@ export const getCurrentTheme = (): "light" | "dark" => {
 };
 
 /**
- * Get the appropriate Spark asset path based on pose, theme, and season
+ * Get the appropriate Spark asset path based on pose, theme, and holiday mode
  */
 export const getSparkAsset = (
   pose: SparkPose = "idle",
@@ -49,6 +63,11 @@ export const getSparkAsset = (
   // Icon sizes
   if (size !== "full") {
     return `/spark/icons/spark-icon-${size.replace("icon-", "")}.png`;
+  }
+  
+  // Holiday mode - use Santa Spark variants
+  if (holidayModeEnabled) {
+    return `/spark/holiday/spark-${pose}-santa.png`;
   }
   
   // Regular assets

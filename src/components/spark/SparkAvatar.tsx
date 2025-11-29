@@ -5,7 +5,8 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { getSparkAsset, preloadSparkAssets, type SparkPose, type SparkSize } from "@/lib/spark/sparkAssets";
+import { getSparkAsset, preloadSparkAssets, setHolidayMode, type SparkPose, type SparkSize } from "@/lib/spark/sparkAssets";
+import { useHolidaySettings } from "@/hooks/useHolidaySettings";
 
 interface SparkAvatarProps {
   pose?: SparkPose;
@@ -32,6 +33,16 @@ export const SparkAvatar = ({
   const [isHovering, setIsHovering] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [shouldAnimate, setShouldAnimate] = useState(false);
+  
+  // Fetch holiday settings and sync with global state
+  const { data: holidaySettings } = useHolidaySettings();
+  
+  useEffect(() => {
+    if (holidaySettings) {
+      setHolidayMode(holidaySettings.holidayMode);
+      updateAsset(); // Refresh asset when holiday mode changes
+    }
+  }, [holidaySettings]);
 
   useEffect(() => {
     preloadSparkAssets();
