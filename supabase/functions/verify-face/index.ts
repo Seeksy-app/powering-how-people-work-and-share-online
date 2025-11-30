@@ -124,6 +124,7 @@ serve(async (req) => {
         .single();
 
       if (createError || !newAsset) {
+        console.error("❌ Failed to create face identity asset:", createError);
         throw new Error("Failed to create face identity asset");
       }
 
@@ -148,8 +149,11 @@ serve(async (req) => {
     
     const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
     if (!openaiApiKey) {
+      console.error("❌ OPENAI_API_KEY not configured");
       throw new Error("OpenAI API key not configured");
     }
+
+    console.log("→ OpenAI API key found, calling Vision API...");
 
     const openaiResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -181,7 +185,9 @@ serve(async (req) => {
     });
 
     if (!openaiResponse.ok) {
-      throw new Error(`OpenAI API error: ${openaiResponse.statusText}`);
+      const errorText = await openaiResponse.text();
+      console.error("❌ OpenAI API error:", openaiResponse.status, errorText);
+      throw new Error(`OpenAI API error: ${openaiResponse.status} - ${errorText}`);
     }
 
     const openaiData = await openaiResponse.json();
@@ -208,13 +214,12 @@ serve(async (req) => {
 
     console.log(`→ Metadata URI: ${metadataUri}`);
 
-    // Step 5: Update asset with face_hash and metadata
+    // Step 5: Update asset with face_hash and metadata (let mint function handle status)
     await supabase
       .from('identity_assets')
       .update({
         face_hash: faceHash,
         face_metadata_uri: metadataUri,
-        cert_status: 'minting',
         cert_updated_at: new Date().toISOString(),
       })
       .eq('id', assetId);
@@ -240,7 +245,8 @@ serve(async (req) => {
     const mintResult = await mintResponse.json();
 
     if (!mintResult.success) {
-      console.error("❌ Blockchain minting failed:", mintResult.error);
+      const errorMsg = mintResult.error || mintResult.message || "Unknown minting error";
+      console.error("❌ Blockchain minting failed:", errorMsg);
       
       // Update to failed status
       await supabase
@@ -253,14 +259,14 @@ serve(async (req) => {
         identity_asset_id: assetId,
         action: 'face_failed',
         actor_id: user.id,
-        details: { error: mintResult.error },
+        details: { error: errorMsg },
       });
 
       return new Response(
         JSON.stringify({
           status: "failed",
           message: "Face verification failed during blockchain minting",
-          error: mintResult.error,
+          error: errorMsg,
         }),
         {
           status: 500,
@@ -300,10 +306,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("❌ Face verification error:", error);
+    console.error("❌ Error stack:", error instanceof Error ? error.stack : "No stack trace");
     return new Response(
       JSON.stringify({
         status: "failed",
         error: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.stack : undefined,
       }),
       {
         status: 500,
