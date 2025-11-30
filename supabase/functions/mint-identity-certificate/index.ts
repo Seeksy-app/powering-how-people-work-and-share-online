@@ -156,7 +156,7 @@ serve(async (req) => {
       })
       .eq('id', identityAssetId);
 
-    console.log("→ Minting on-chain certificate on Polygon Amoy...");
+    console.log("→ Minting on-chain certificate on Polygon mainnet...");
 
     // Blockchain integration
     const rpcUrl = Deno.env.get("POLYGON_RPC_URL");
