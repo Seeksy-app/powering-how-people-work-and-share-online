@@ -82,11 +82,12 @@ serve(async (req) => {
         source_media_id: sourceVideo.id,
         start_seconds: startTime,
         end_seconds: endTime,
+        duration_seconds: duration,
         title: "Demo: AI Clip Test",
         suggested_caption: "🎯 This is a demonstration clip showing the complete pipeline architecture",
         status: 'processing',
         enable_certification: enableCertification,
-        cert_status: enableCertification ? 'pending' : 'not_requested',
+        cert_status: 'not_requested', // Always start with not_requested, webhook will handle certification
       })
       .select()
       .single();

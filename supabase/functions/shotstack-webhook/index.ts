@@ -220,9 +220,9 @@ serve(async (req) => {
         console.log(`→ Waiting for ${isVertical ? 'thumbnail' : 'vertical'} render to complete`);
       }
 
-      // Blockchain certification trigger (only when both renders complete)
-      if (updateData.status === "ready" && clip.cert_status === 'not_requested') {
-        console.log("→ Certification will be triggered via mint-clip-certificate");
+      // Blockchain certification trigger (only when both renders complete AND certification enabled)
+      if (updateData.status === "ready" && clip.cert_status === 'not_requested' && clip.enable_certification === true) {
+        console.log("→ Automatic certification enabled - will trigger mint-clip-certificate");
         updateData.cert_status = 'pending';
       }
 
@@ -277,20 +277,19 @@ serve(async (req) => {
 
     // If certification was triggered, call real minting function
     if (updateData.cert_status === 'pending') {
-      console.log("→ Calling mint-clip-certificate edge function");
+      console.log("→ Triggering automatic blockchain certification");
       
-      // Call the mint-clip-certificate function in background
-      fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/mint-clip-certificate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({ clipId: clip.id }),
+      // Call the mint-clip-certificate function using Supabase client (proper way)
+      // Don't await - let it run in background
+      supabase.functions.invoke('mint-clip-certificate', {
+        body: { clipId: clip.id },
       })
-        .then(response => response.json())
-        .then(data => {
-          console.log("✓ Certification function called:", data);
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("❌ Certification function error:", error);
+          } else {
+            console.log("✓ Certification function completed:", data);
+          }
         })
         .catch(err => {
           console.error("❌ Failed to call certification function:", err);

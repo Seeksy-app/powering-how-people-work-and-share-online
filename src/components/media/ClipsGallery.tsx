@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Download, Play, Trash2, Type, Clock, Calendar } from "lucide-react";
+import { Sparkles, Download, Play, Trash2, Type, Clock, Calendar, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -172,6 +172,30 @@ export function ClipsGallery() {
     } catch (error) {
       console.error("Error downloading clip:", error);
       toast.error("Failed to download clip");
+    }
+  };
+
+  const handleCertifyClip = async (clipId: string) => {
+    try {
+      toast.loading("Requesting blockchain certification...", { id: "cert-clip" });
+      
+      const { data, error } = await supabase.functions.invoke("mint-clip-certificate", {
+        body: { clipId },
+      });
+
+      if (error) throw error;
+
+      toast.success("Certification initiated! This may take a few moments.", {
+        id: "cert-clip",
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error("Certification error:", error);
+      toast.error("Failed to certify clip", {
+        id: "cert-clip",
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   };
 
@@ -420,6 +444,18 @@ export function ClipsGallery() {
                       >
                         <Play className="h-4 w-4 mr-1" />
                         Preview Source
+                      </Button>
+                    )}
+                    {/* Certification retry for failed certs */}
+                    {clip.cert_status === 'failed' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCertifyClip(clip.id)}
+                        title="Retry blockchain certification"
+                      >
+                        <Shield className="h-4 w-4 mr-1" />
+                        Retry Cert
                       </Button>
                     )}
                     <Button
