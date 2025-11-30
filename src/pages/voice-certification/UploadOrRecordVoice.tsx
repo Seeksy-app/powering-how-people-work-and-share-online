@@ -37,7 +37,7 @@ const UploadOrRecordVoice = () => {
     setSelectedFile(null);
     setIsRecording(true);
     
-    // Simulate recording for demo purposes
+    // Simulate recording for demo purposes - 10 seconds to match minimum recommended length
     setTimeout(() => {
       setIsRecording(false);
       const mockBlob = new Blob(["mock audio data"], { type: "audio/wav" });
@@ -46,7 +46,7 @@ const UploadOrRecordVoice = () => {
         title: "Recording captured",
         description: "Voice sample recorded successfully",
       });
-    }, 3000);
+    }, 10000);
   };
 
   const handleContinue = () => {
@@ -123,7 +123,7 @@ const UploadOrRecordVoice = () => {
                 className="w-full py-6 text-lg"
               >
                 <Mic className="mr-2 h-5 w-5" />
-                {isRecording ? "Recording... (3 seconds)" : recordedBlob ? "✓ Recorded - Click to Re-record" : "Record New Sample"}
+                {isRecording ? "Recording... (10 seconds)" : recordedBlob ? "✓ Recorded - Click to Re-record" : "Record New Sample"}
               </Button>
             </div>
           </div>
