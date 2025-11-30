@@ -138,6 +138,11 @@ const VoiceConsentScreen = () => {
                   I confirm this is my real voice and I consent to Seeksy using this recording solely for identity verification and account security purposes.
                 </Label>
               </div>
+
+              {/* Note: Script will be shown on the next screen */}
+              <p className="text-xs text-center text-muted-foreground">
+                You'll see your personalized verification script on the next screen.
+              </p>
             </div>
 
             {/* Continue Button */}
