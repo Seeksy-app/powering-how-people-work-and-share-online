@@ -264,6 +264,8 @@ import EpisodeDetailPublic from "./pages/podcasts/EpisodeDetailPublic";
 import PodcastStats from "./pages/podcasts/PodcastStats";
 import PodcastDashboard from "./pages/podcasts/PodcastDashboard";
 import VoiceCloningWizard from "./pages/voice-cloning/VoiceCloningWizard";
+import CertificationConsole from "./pages/admin/CertificationConsole";
+import Verified from "./pages/Verified";
 
 const queryClient = new QueryClient();
 
@@ -392,6 +394,7 @@ const AppContent = () => {
               
               {/* Clip Certification */}
               <Route path="/certificate/:clipId" element={<Certificate />} />
+              <Route path="/verified" element={<Verified />} />
               
               {/* Podcast Studio Flow */}
               <Route path="/podcast-studio" element={<StudioHome />} />
@@ -523,6 +526,7 @@ const AppContent = () => {
               <Route path="/admin/credits" element={<CreditManagement />} />
               <Route path="/admin/profile-settings" element={<AdminProfileSettings />} />
               <Route path="/admin/creators" element={<AdminCreators />} />
+              <Route path="/admin/certification" element={<CertificationConsole />} />
               <Route path="/admin/investor-spreadsheets" element={<ManageInvestorSpreadsheets />} />
               <Route path="/marketing/app-audio" element={<AppAudioAdmin />} />
               <Route path="/admin/keys-vault" element={<KeysVault />} />

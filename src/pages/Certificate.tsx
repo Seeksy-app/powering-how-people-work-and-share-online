@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Shield, ExternalLink, Copy, ArrowLeft } from "lucide-react";
+import { Shield, ExternalLink, Copy, ArrowLeft, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { CertificationBadge } from "@/components/clips/CertificationBadge";
+import { CertificationSection } from "@/components/clips/CertificationSection";
 
 export default function Certificate() {
   const { clipId } = useParams();
@@ -30,7 +31,8 @@ export default function Certificate() {
           cert_token_id,
           cert_explorer_url,
           cert_created_at,
-          user_id
+          user_id,
+          thumbnail_url
         `)
         .eq("id", clipId)
         .single();
@@ -100,11 +102,14 @@ export default function Certificate() {
               </div>
             </div>
             <div>
-              <CardTitle className="text-3xl mb-2">
-                Seeksy Blockchain Certificate
-              </CardTitle>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <CardTitle className="text-3xl">
+                  Certified by Seeksy
+                </CardTitle>
+              </div>
               <CardDescription className="text-base">
-                Certificate of Authenticity
+                Clip Authenticity Certificate
               </CardDescription>
             </div>
             <div className="flex justify-center">
@@ -113,6 +118,18 @@ export default function Certificate() {
           </CardHeader>
 
           <CardContent className="space-y-6">
+            {/* Clip Thumbnail */}
+            {clip.thumbnail_url && (
+              <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+                <video
+                  src={clip.thumbnail_url}
+                  className="w-full h-full object-contain"
+                  muted
+                  playsInline
+                />
+              </div>
+            )}
+
             {/* Clip Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-muted/50 rounded-lg">
               <div>
@@ -125,6 +142,11 @@ export default function Certificate() {
                 <p className="text-sm font-semibold">
                   {clip.creator?.full_name || clip.creator?.username || "Unknown"}
                 </p>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-1">Clip ID</p>
+                <code className="text-xs bg-muted px-2 py-1 rounded">{clip.id}</code>
               </div>
 
               <div>
@@ -201,13 +223,19 @@ export default function Certificate() {
             )}
 
             {/* Footer */}
-            <div className="text-center pt-6 border-t">
-              <p className="text-sm text-muted-foreground">
-                Issued by <span className="font-semibold text-foreground">Seeksy</span>
+            <div className="text-center pt-6 border-t space-y-3">
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                Seeksy uses smart contracts on the Polygon blockchain to anchor creator clip certifications.
+                This certificate proves that this clip was officially certified for the wallet above at the time shown.
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Verified media identity for creators
-              </p>
+              <div className="pt-2">
+                <p className="text-sm text-muted-foreground">
+                  Issued by <span className="font-semibold text-foreground">Seeksy</span>
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Verified media identity for creators
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
