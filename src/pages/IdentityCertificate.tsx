@@ -11,22 +11,32 @@ const IdentityCertificate = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: asset, isLoading } = useQuery({
+  const { data: asset, isLoading, error: queryError } = useQuery({
     queryKey: ["identity-certificate", id],
     queryFn: async () => {
       if (!id) throw new Error("No certificate ID provided");
 
+      console.log("[IdentityCertificate] Fetching asset with ID:", id);
       const { data, error } = await supabase
         .from("identity_assets")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("[IdentityCertificate] Query error:", error);
+        throw error;
+      }
+      
+      console.log("[IdentityCertificate] Asset data:", data);
       return data;
     },
     enabled: !!id,
   });
+
+  if (queryError) {
+    console.error("[IdentityCertificate] React Query error:", queryError);
+  }
 
   if (isLoading) {
     return (

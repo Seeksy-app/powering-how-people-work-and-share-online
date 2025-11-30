@@ -106,7 +106,7 @@ export default function CertificationConsole() {
       return createdDate > yesterday && c.cert_status === "minted";
     }).length || 0,
     failed: clips?.filter(c => c.cert_status === "failed").length || 0,
-    chains: ["Polygon Amoy"],
+    chains: ["Polygon (MATIC)"],
   };
 
   const getStatusBadge = (status: string) => {

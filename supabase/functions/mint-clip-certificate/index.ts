@@ -10,7 +10,7 @@ const corsHeaders = {
 /**
  * Mint Clip Certificate (Automatic Blockchain Certification)
  * 
- * Mints real on-chain ERC-721 certificate for finished clips on Polygon Amoy.
+ * Mints real on-chain ERC-721 certificate for finished clips on Polygon mainnet.
  * 
  * Supports two modes:
  * 1. Automatic (service role): Called by shotstack-webhook when clips complete
@@ -23,12 +23,12 @@ const corsHeaders = {
  * 4. Updates clip with real tx hash, token ID, and explorer URL
  * 
  * Integration:
- * - Uses Polygon Amoy RPC via POLYGON_RPC_URL
- * - Platform wallet signs transactions via SEEKSY_MINTER_PRIVATE_KEY
- * - Contract: 0xB5627bDbA3ab392782E7E542a972013E3e7F37C3 (Polygon Amoy)
+ * - Uses Polygon mainnet RPC via POLYGON_RPC_URL
+ * - Platform wallet signs transactions via POLYGON_PRIVATE_KEY
+ * - Contract: 0xB5627bDbA3ab392782E7E542a972013E3e7F37C3 (Polygon mainnet)
  */
 
-// SeeksyClipCertificate Contract ABI (Deployed on Polygon Amoy)
+// SeeksyClipCertificate Contract ABI (Deployed on Polygon mainnet)
 // Contract Address: 0xB5627bDbA3ab392782E7E542a972013E3e7F37C3
 const CERTIFICATE_CONTRACT_ABI = [
   {
@@ -189,7 +189,7 @@ serve(async (req) => {
 
     if (mintingError) throw mintingError;
 
-    console.log("→ Minting on-chain certificate on Polygon Amoy...");
+    console.log("→ Minting on-chain certificate on Polygon mainnet...");
 
     // ============================================================
     // REAL BLOCKCHAIN INTEGRATION
@@ -197,9 +197,9 @@ serve(async (req) => {
     
     // 1. Load blockchain configuration
     const rpcUrl = Deno.env.get("POLYGON_RPC_URL");
-    const minterPrivateKey = Deno.env.get("SEEKSY_MINTER_PRIVATE_KEY");
+    const minterPrivateKey = Deno.env.get("POLYGON_PRIVATE_KEY");
     
-    // Contract deployed on Polygon Amoy testnet
+    // Contract deployed on Polygon mainnet
     const contractAddress = "0xB5627bDbA3ab392782E7E542a972013E3e7F37C3";
 
     if (!rpcUrl || !minterPrivateKey) {
@@ -268,9 +268,9 @@ serve(async (req) => {
       // Generate tokenId from timestamp for display purposes
       const tokenId = certTimestamp;
 
-      // Build explorer URL (Polygon Amoy testnet)
+      // Build explorer URL (Polygon mainnet)
       const explorerUrls: Record<string, string> = {
-        polygon: `https://amoy.polygonscan.com/tx/${tx.hash}`,
+        polygon: `https://polygonscan.com/tx/${tx.hash}`,
         base: `https://basescan.org/tx/${tx.hash}`,
         ethereum: `https://etherscan.io/tx/${tx.hash}`,
       };
