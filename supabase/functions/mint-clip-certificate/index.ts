@@ -25,10 +25,11 @@ const corsHeaders = {
  * - Supports gasless transactions via Biconomy (future)
  */
 
-// SeeksyClipCertificate Contract ABI
+// SeeksyClipCertificate Contract ABI (Deployed on Polygon Amoy)
+// Contract Address: 0xB5627bDbA3ab392782E7E542a972013E3e7F37C3
 const CERTIFICATE_CONTRACT_ABI = [
-  "function mintCertificate(address to, string calldata clipId, string calldata tokenUri) external returns (uint256)",
-  "event CertificateMinted(address indexed creator, uint256 indexed tokenId, string clipId, string tokenUri)"
+  "function certifyClip(address creator, string calldata clipId) external",
+  "event ClipCertified(address indexed creator, string clipId, uint256 timestamp)"
 ];
 
 interface MintCertificateRequest {
@@ -113,10 +114,12 @@ serve(async (req) => {
     // 1. Load blockchain configuration
     const rpcUrl = Deno.env.get("POLYGON_RPC_URL");
     const minterPrivateKey = Deno.env.get("SEEKSY_MINTER_PRIVATE_KEY");
-    const contractAddress = Deno.env.get("SEEKSY_CERTIFICATE_CONTRACT_ADDRESS");
+    
+    // Contract deployed on Polygon Amoy testnet
+    const contractAddress = "0xB5627bDbA3ab392782E7E542a972013E3e7F37C3";
 
-    if (!rpcUrl || !minterPrivateKey || !contractAddress) {
-      throw new Error("Missing blockchain configuration (RPC_URL, MINTER_KEY, or CONTRACT_ADDRESS)");
+    if (!rpcUrl || !minterPrivateKey) {
+      throw new Error("Missing blockchain configuration (POLYGON_RPC_URL or SEEKSY_MINTER_PRIVATE_KEY)");
     }
 
     // 2. Initialize provider and signer
@@ -132,18 +135,11 @@ serve(async (req) => {
       signer
     );
 
-    // 4. Build metadata URI (future: IPFS)
-    // For now, use a public URL that displays certificate info
-    const metadataUri = `https://seeksy.io/api/clip-metadata/${clip.id}`;
-
-    console.log(`Metadata URI: ${metadataUri}`);
-
-    // 5. Mint certificate NFT
+    // 4. Certify clip on-chain
     try {
-      const tx = await contract.mintCertificate(
-        signer.address, // Platform wallet owns the NFT (future: creator wallet)
-        clip.id,
-        metadataUri
+      const tx = await contract.certifyClip(
+        signer.address, // Creator address (platform wallet for now, future: user wallet)
+        clip.id
       );
 
       console.log(`Transaction submitted: ${tx.hash}`);
@@ -152,17 +148,20 @@ serve(async (req) => {
       const receipt = await tx.wait();
       console.log(`Transaction confirmed in block ${receipt.blockNumber}`);
 
-      // 7. Extract tokenId from event
-      let tokenId = "0";
+      // 7. Extract certification timestamp from event
+      let certTimestamp = Date.now().toString();
+      let eventFound = false;
+      
       for (const log of receipt.logs) {
         try {
           const parsed = contract.interface.parseLog({
             topics: log.topics as string[],
             data: log.data,
           });
-          if (parsed && parsed.name === "CertificateMinted") {
-            tokenId = parsed.args.tokenId.toString();
-            console.log(`Token ID from event: ${tokenId}`);
+          if (parsed && parsed.name === "ClipCertified") {
+            certTimestamp = parsed.args.timestamp.toString();
+            eventFound = true;
+            console.log(`Certificate timestamp from event: ${certTimestamp}`);
             break;
           }
         } catch (e) {
@@ -171,9 +170,16 @@ serve(async (req) => {
         }
       }
 
-      // 8. Build explorer URLs
+      if (!eventFound) {
+        console.warn("ClipCertified event not found in logs, using current timestamp");
+      }
+
+      // Generate tokenId from timestamp for display purposes
+      const tokenId = certTimestamp;
+
+      // 8. Build explorer URLs (Polygon Amoy testnet)
       const explorerUrls: Record<string, string> = {
-        polygon: `https://polygonscan.com/tx/${tx.hash}`,
+        polygon: `https://amoy.polygonscan.com/tx/${tx.hash}`,
         base: `https://basescan.org/tx/${tx.hash}`,
         ethereum: `https://etherscan.io/tx/${tx.hash}`,
       };
