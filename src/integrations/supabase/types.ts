@@ -3192,8 +3192,10 @@ export type Database = {
           cert_status: string | null
           cert_token_id: string | null
           cert_tx_hash: string | null
+          cert_updated_at: string | null
           collection_id: string | null
           created_at: string
+          deleted_at: string | null
           duration_seconds: number | null
           enable_certification: boolean | null
           end_seconds: number
@@ -3223,8 +3225,10 @@ export type Database = {
           cert_status?: string | null
           cert_token_id?: string | null
           cert_tx_hash?: string | null
+          cert_updated_at?: string | null
           collection_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           duration_seconds?: number | null
           enable_certification?: boolean | null
           end_seconds: number
@@ -3254,8 +3258,10 @@ export type Database = {
           cert_status?: string | null
           cert_token_id?: string | null
           cert_tx_hash?: string | null
+          cert_updated_at?: string | null
           collection_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           duration_seconds?: number | null
           enable_certification?: boolean | null
           end_seconds?: number
@@ -6493,6 +6499,7 @@ export type Database = {
           clip_metadata: Json | null
           converted_to_episode_id: string | null
           created_at: string | null
+          deleted_at: string | null
           duration_seconds: number | null
           edit_status: string | null
           edit_transcript: Json | null
@@ -6500,6 +6507,7 @@ export type Database = {
           file_size_bytes: number | null
           file_type: string
           file_url: string
+          folder_id: string | null
           id: string
           original_file_url: string | null
           source: string | null
@@ -6511,6 +6519,7 @@ export type Database = {
           clip_metadata?: Json | null
           converted_to_episode_id?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           duration_seconds?: number | null
           edit_status?: string | null
           edit_transcript?: Json | null
@@ -6518,6 +6527,7 @@ export type Database = {
           file_size_bytes?: number | null
           file_type: string
           file_url: string
+          folder_id?: string | null
           id?: string
           original_file_url?: string | null
           source?: string | null
@@ -6529,6 +6539,7 @@ export type Database = {
           clip_metadata?: Json | null
           converted_to_episode_id?: string | null
           created_at?: string | null
+          deleted_at?: string | null
           duration_seconds?: number | null
           edit_status?: string | null
           edit_transcript?: Json | null
@@ -6536,6 +6547,7 @@ export type Database = {
           file_size_bytes?: number | null
           file_type?: string
           file_url?: string
+          folder_id?: string | null
           id?: string
           original_file_url?: string | null
           source?: string | null
@@ -6557,7 +6569,44 @@ export type Database = {
             referencedRelation: "episodes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "media_files_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "media_folders"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      media_folders: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       media_processing_jobs: {
         Row: {
@@ -11918,6 +11967,18 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      move_media_to_folder: {
+        Args: { media_id: string; media_type: string; target_folder_id: string }
+        Returns: boolean
+      }
+      restore_media: {
+        Args: { media_id: string; media_type: string }
+        Returns: boolean
+      }
+      soft_delete_media: {
+        Args: { media_id: string; media_type: string }
+        Returns: boolean
       }
       user_has_any_role: {
         Args: { _roles: string[]; _user_id: string }
