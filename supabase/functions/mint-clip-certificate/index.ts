@@ -8,21 +8,24 @@ const corsHeaders = {
 };
 
 /**
- * Mint Clip Certificate (Blockchain Certification)
+ * Mint Clip Certificate (Automatic Blockchain Certification)
  * 
- * Mints real on-chain ERC-721 certificate for finished clips on Polygon.
+ * Mints real on-chain ERC-721 certificate for finished clips on Polygon Amoy.
+ * 
+ * Supports two modes:
+ * 1. Automatic (service role): Called by shotstack-webhook when clips complete
+ * 2. Manual (user): Called by creators to certify existing clips
  * 
  * Process:
  * 1. Validates clip is ready for certification (status = 'ready')
  * 2. Sets cert_status = 'minting'
- * 3. Mints ERC-721 NFT on Polygon via smart contract
+ * 3. Mints certificate on Polygon blockchain via SeeksyClipCertificate contract
  * 4. Updates clip with real tx hash, token ID, and explorer URL
  * 
  * Integration:
- * - Uses Polygon RPC via POLYGON_RPC_URL
+ * - Uses Polygon Amoy RPC via POLYGON_RPC_URL
  * - Platform wallet signs transactions via SEEKSY_MINTER_PRIVATE_KEY
- * - Contract address configured via SEEKSY_CERTIFICATE_CONTRACT_ADDRESS
- * - Supports gasless transactions via Biconomy (future)
+ * - Contract: 0xB5627bDbA3ab392782E7E542a972013E3e7F37C3 (Polygon Amoy)
  */
 
 // SeeksyClipCertificate Contract ABI (Deployed on Polygon Amoy)
@@ -75,67 +78,118 @@ serve(async (req) => {
   try {
     console.log("=== MINT CLIP CERTIFICATE ===");
 
-    // Auth check
+    // Determine if this is a service role call or user call
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("Not authenticated");
-    }
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const isServiceRole = authHeader?.includes(serviceRoleKey || "");
 
+    console.log(`→ Call type: ${isServiceRole ? 'SERVICE_ROLE (automatic)' : 'USER (manual)'}`);
+
+    // Create appropriate Supabase client
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      isServiceRole 
+        ? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+        : Deno.env.get("SUPABASE_ANON_KEY") ?? "",
       {
         global: {
-          headers: { Authorization: authHeader },
+          headers: authHeader ? { Authorization: authHeader } : {},
         },
       }
     );
 
-    // Verify user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      throw new Error("User authentication failed");
+    // For user calls, verify authentication
+    let userId: string | null = null;
+    if (!isServiceRole) {
+      if (!authHeader) {
+        throw new Error("Not authenticated");
+      }
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error("User authentication failed");
+      }
+      userId = user.id;
+      console.log(`→ Authenticated user: ${userId}`);
     }
 
     const requestData: MintCertificateRequest = await req.json();
     const { clipId, chain = 'polygon' } = requestData;
 
-    console.log(`Minting certificate for clip: ${clipId} on ${chain}`);
+    console.log(`→ Certifying clip: ${clipId} on ${chain}`);
 
-    // Get clip and verify ownership
-    const { data: clip, error: clipError } = await supabase
+    // Get clip - for user calls, verify ownership
+    const clipQuery = supabase
       .from('clips')
       .select('*')
-      .eq('id', clipId)
-      .eq('user_id', user.id)
-      .single();
+      .eq('id', clipId);
+    
+    if (userId) {
+      clipQuery.eq('user_id', userId);
+    }
+
+    const { data: clip, error: clipError } = await clipQuery.single();
 
     if (clipError || !clip) {
       throw new Error("Clip not found or access denied");
     }
+
+    console.log(`✓ Found clip owned by user: ${clip.user_id}`);
 
     // Validate clip is ready for certification
     if (clip.status !== 'ready') {
       throw new Error(`Clip must be in 'ready' status for certification. Current status: ${clip.status}`);
     }
 
-    if (!clip.output_url) {
-      throw new Error("Clip must have output URL before certification");
+    // Check if already certified
+    if (clip.cert_status === 'minted') {
+      console.log("✓ Clip already certified, returning existing certificate");
+      return new Response(
+        JSON.stringify({
+          success: true,
+          alreadyCertified: true,
+          clip,
+          certificate: {
+            chain: clip.cert_chain,
+            tx_hash: clip.cert_tx_hash,
+            token_id: clip.cert_token_id,
+            explorer_url: clip.cert_explorer_url,
+            contract_address: "0xB5627bDbA3ab392782E7E542a972013E3e7F37C3",
+          },
+          message: "Clip already has a valid certificate",
+        }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
-    if (clip.cert_status === 'minted') {
-      throw new Error("Clip already has a certificate");
+    // Prevent duplicate minting attempts
+    if (clip.cert_status === 'minting') {
+      console.log("⚠ Certification already in progress");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Certification already in progress for this clip",
+        }),
+        {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     // Set status to minting
     const { error: mintingError } = await supabase
       .from('clips')
-      .update({ cert_status: 'minting' })
+      .update({ 
+        cert_status: 'minting',
+        cert_updated_at: new Date().toISOString(),
+      })
       .eq('id', clipId);
 
     if (mintingError) throw mintingError;
 
-    console.log("→ Minting on-chain certificate on Polygon...");
+    console.log("→ Minting on-chain certificate on Polygon Amoy...");
 
     // ============================================================
     // REAL BLOCKCHAIN INTEGRATION
@@ -156,7 +210,7 @@ serve(async (req) => {
     const provider = new ethers.JsonRpcProvider(rpcUrl);
     const signer = new ethers.Wallet(minterPrivateKey, provider);
     
-    console.log(`Platform wallet: ${signer.address}`);
+    console.log(`→ Platform wallet: ${signer.address}`);
 
     // 3. Create contract instance
     const contract = new ethers.Contract(
@@ -167,18 +221,25 @@ serve(async (req) => {
 
     // 4. Certify clip on-chain
     try {
+      // Use platform wallet as creator address (future: user wallet from profiles table)
+      const creatorAddress = signer.address;
+      
+      console.log(`→ Certifying for creator: ${creatorAddress}`);
+      console.log(`→ Clip ID: ${clip.id}`);
+
       const tx = await contract.certifyClip(
-        signer.address, // Creator address (platform wallet for now, future: user wallet)
+        creatorAddress,
         clip.id
       );
 
-      console.log(`Transaction submitted: ${tx.hash}`);
+      console.log(`→ Transaction submitted: ${tx.hash}`);
+      console.log(`→ Waiting for confirmation...`);
 
-      // 6. Wait for confirmation
+      // Wait for confirmation
       const receipt = await tx.wait();
-      console.log(`Transaction confirmed in block ${receipt.blockNumber}`);
+      console.log(`✓ Transaction confirmed in block ${receipt.blockNumber}`);
 
-      // 7. Extract certification timestamp from event
+      // Extract certification timestamp from event
       let certTimestamp = Date.now().toString();
       let eventFound = false;
       
@@ -191,7 +252,7 @@ serve(async (req) => {
           if (parsed && parsed.name === "ClipCertified") {
             certTimestamp = parsed.args.timestamp.toString();
             eventFound = true;
-            console.log(`Certificate timestamp from event: ${certTimestamp}`);
+            console.log(`✓ Certificate timestamp from event: ${certTimestamp}`);
             break;
           }
         } catch (e) {
@@ -201,13 +262,13 @@ serve(async (req) => {
       }
 
       if (!eventFound) {
-        console.warn("ClipCertified event not found in logs, using current timestamp");
+        console.warn("⚠ ClipCertified event not found in logs, using current timestamp");
       }
 
       // Generate tokenId from timestamp for display purposes
       const tokenId = certTimestamp;
 
-      // 8. Build explorer URLs (Polygon Amoy testnet)
+      // Build explorer URL (Polygon Amoy testnet)
       const explorerUrls: Record<string, string> = {
         polygon: `https://amoy.polygonscan.com/tx/${tx.hash}`,
         base: `https://basescan.org/tx/${tx.hash}`,
@@ -226,7 +287,7 @@ serve(async (req) => {
       const finalTokenId = tokenId;
       const finalExplorerUrl = explorerUrls[chain];
 
-      // 9. Update clip with certificate details
+      // Update clip with certificate details
       const { data: certifiedClip, error: certError } = await supabase
         .from('clips')
         .update({
@@ -236,16 +297,22 @@ serve(async (req) => {
           cert_token_id: finalTokenId,
           cert_explorer_url: finalExplorerUrl,
           cert_created_at: new Date().toISOString(),
+          cert_updated_at: new Date().toISOString(),
         })
         .eq('id', clipId)
         .select()
         .single();
 
       if (certError) {
+        console.error("❌ Failed to update clip with certificate:", certError);
+        
         // Rollback to failed status
         await supabase
           .from('clips')
-          .update({ cert_status: 'failed' })
+          .update({ 
+            cert_status: 'failed',
+            cert_updated_at: new Date().toISOString(),
+          })
           .eq('id', clipId);
         
         throw certError;
@@ -263,6 +330,7 @@ serve(async (req) => {
             token_id: finalTokenId,
             explorer_url: finalExplorerUrl,
             contract_address: contractAddress,
+            creator_address: creatorAddress,
           },
           message: "Clip certificate minted on Polygon blockchain",
         }),
@@ -274,6 +342,10 @@ serve(async (req) => {
     } catch (blockchainError) {
       console.error("❌ Blockchain minting failed:", blockchainError);
       
+      const errorMessage = blockchainError instanceof Error 
+        ? blockchainError.message 
+        : String(blockchainError);
+      
       // Set failed status with error details
       await supabase
         .from('clips')
@@ -283,7 +355,7 @@ serve(async (req) => {
         })
         .eq('id', clipId);
       
-      throw new Error(`Blockchain minting failed: ${blockchainError instanceof Error ? blockchainError.message : String(blockchainError)}`);
+      throw new Error(`Blockchain minting failed: ${errorMessage}`);
     }
 
     // ============================================================
@@ -292,31 +364,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("❌ Certificate minting error:", error);
-    
-    // Attempt to set failed status
-    try {
-      const authHeader = req.headers.get("Authorization");
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL") ?? "",
-        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-        {
-          global: {
-            headers: { Authorization: authHeader || "" },
-          },
-        }
-      );
-
-      const requestData = await req.json();
-      await supabase
-        .from('clips')
-        .update({ cert_status: 'failed' })
-        .eq('id', requestData.clipId);
-    } catch (rollbackError) {
-      console.error("Failed to update cert_status to failed:", rollbackError);
-    }
 
     return new Response(
       JSON.stringify({
+        success: false,
         error: error instanceof Error ? error.message : String(error),
       }),
       {
