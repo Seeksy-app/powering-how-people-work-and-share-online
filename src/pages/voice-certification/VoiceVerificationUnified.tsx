@@ -19,11 +19,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const VOICE_PROMPTS = [
-  "Hi, my name is {name}. I'm recording this sample to verify my voice on Seeksy and protect my identity.",
-  "This is {name} confirming that Seeksy can use this recording only to verify my voice and secure my account.",
-  "I'm {name}, and I'm recording this voice sample so Seeksy can help keep my identity safe on the platform.",
-  "My name is {name}, and I'm verifying my voice on Seeksy to protect my content and identity.",
-  "This is {name}. I authorize Seeksy to use this voice recording for identity verification purposes only."
+  "Hi, my name is {name}. I'm recording this sample to verify my voice on Seeksy and protect my identity. This helps confirm it's really me when I'm using the platform.",
+  "This is {name} confirming that Seeksy can use this recording only to verify my voice and secure my account. I understand it won't be shared without my permission.",
+  "I'm {name}, and I'm recording this voice sample so Seeksy can help keep my identity safe on the platform. This verification ensures no one else can impersonate me.",
+  "My name is {name}, and I'm verifying my voice on Seeksy to protect my content and identity. I want to make sure only I have access to my authentic voice signature.",
+  "This is {name}. I authorize Seeksy to use this voice recording for identity verification purposes only. This recording helps secure my account and content against unauthorized use."
 ];
 
 type RecordingState = 'idle' | 'countdown' | 'recording' | 'review' | 'verifying' | 'already-verified';
@@ -100,6 +100,7 @@ const VoiceVerificationUnified = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const animationRef = useRef<number | null>(null);
   const [waveformData, setWaveformData] = useState<number[]>(new Array(40).fill(0));
+  const previousWaveformRef = useRef<number[]>(new Array(40).fill(0));
 
   useEffect(() => {
     checkExistingVerification();
@@ -273,17 +274,27 @@ const VoiceVerificationUnified = () => {
       
       analyserRef.current.getByteFrequencyData(dataArray);
       
-      // Take 40 samples and normalize to 0-1
+      // Take 40 samples and normalize with enhanced amplitude
       const samples = [];
       const sampleSize = Math.floor(dataArray.length / 40);
       for (let i = 0; i < 40; i++) {
         const start = i * sampleSize;
         const slice = dataArray.slice(start, start + sampleSize);
         const average = slice.reduce((a, b) => a + b, 0) / slice.length;
-        samples.push(average / 255);
+        // Amplify the signal and clamp to 0-1 range
+        const normalized = Math.min((average / 255) * 2.5, 1);
+        samples.push(normalized);
       }
       
-      setWaveformData(samples);
+      // Apply smoothing with decay for natural movement
+      const smoothed = samples.map((value, i) => {
+        const previous = previousWaveformRef.current[i];
+        // Ease towards new value with 70% current + 30% previous for smooth transitions
+        return value * 0.7 + previous * 0.3;
+      });
+      
+      previousWaveformRef.current = smoothed;
+      setWaveformData(smoothed);
       animationRef.current = requestAnimationFrame(animate);
     };
     
@@ -394,10 +405,14 @@ const VoiceVerificationUnified = () => {
           const successResponse = data as VerifyVoiceAndMintSuccess;
           
           // Invalidate all identity-related queries to update UI instantly
-          queryClient.invalidateQueries({ queryKey: ['voice-identity-status'] });
-          queryClient.invalidateQueries({ queryKey: ['identity-status'] });
-          queryClient.invalidateQueries({ queryKey: ['identity-status-widget'] });
-          queryClient.invalidateQueries({ queryKey: ['identity-assets'] });
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['voice-identity-status'] }),
+            queryClient.invalidateQueries({ queryKey: ['identity-status'] }),
+            queryClient.invalidateQueries({ queryKey: ['identity-status-widget'] }),
+            queryClient.invalidateQueries({ queryKey: ['identity-assets'] }),
+            queryClient.invalidateQueries({ queryKey: ['face-identity-status'] }),
+            queryClient.invalidateQueries({ queryKey: ['dashboard-widgets'] })
+          ]);
           queryClient.invalidateQueries({ queryKey: ['identity-activity-logs'] });
           queryClient.invalidateQueries({ queryKey: ['dashboard-widgets'] });
           
@@ -522,7 +537,7 @@ const VoiceVerificationUnified = () => {
                 {/* Script Block - Always visible except in review and verifying */}
                 {state !== 'review' && state !== 'verifying' && prompts.length > 0 && (
                   <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 p-8 shadow-sm">
-                    <p className="text-lg leading-relaxed text-blue-900 dark:text-blue-100">
+                    <p className="text-xl leading-relaxed text-blue-900 dark:text-blue-100">
                       "{prompts[selectedPromptIndex]}"
                     </p>
                   </Card>
@@ -602,7 +617,7 @@ const VoiceVerificationUnified = () => {
                 {state === 'verifying' && (
                   <div className="space-y-6 animate-in fade-in duration-500">
                     <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 p-8 shadow-sm">
-                      <p className="text-lg leading-relaxed text-blue-900 dark:text-blue-100">
+                      <p className="text-xl leading-relaxed text-blue-900 dark:text-blue-100">
                         "{prompts[selectedPromptIndex]}"
                       </p>
                     </Card>
