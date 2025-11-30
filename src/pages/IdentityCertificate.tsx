@@ -176,36 +176,22 @@ const IdentityCertificate = () => {
         </CardContent>
       </Card>
 
-      {/* Identity Promise */}
+      {/* Seeksy Identity Promise */}
       <Card className="border-primary/20 bg-primary/5">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            The Seeksy Identity Promise
+            Seeksy Identity Promise
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="font-semibold">Your face, your voice, your identity — always yours.</p>
-          
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Seeksy will never:</p>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Sell your identity</li>
-              <li>• Share your identity without consent</li>
-              <li>• Generate AI clones without approval</li>
-              <li>• Allow advertisers to use your likeness without your permission</li>
-            </ul>
-          </div>
-
-          <div className="space-y-2 pt-2">
-            <p className="text-sm font-medium">Seeksy will always:</p>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Put you in control</li>
-              <li>• Use blockchain for transparency</li>
-              <li>• Secure your identity with encryption</li>
-              <li>• Allow revocation anytime</li>
-            </ul>
-          </div>
+          <p className="text-base font-semibold">Your likeness is yours.</p>
+          <p className="text-sm text-muted-foreground">
+            Seeksy will never sell, license, or use your face, voice, or identity without your explicit permission.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Every use of your identity — whether in clips, AI generation, or advertising — requires your consent, recorded on-chain for transparency and security.
+          </p>
         </CardContent>
       </Card>
     </div>

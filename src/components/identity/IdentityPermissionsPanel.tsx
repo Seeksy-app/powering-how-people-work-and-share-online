@@ -191,10 +191,13 @@ export function IdentityPermissionsPanel({ assets }: IdentityPermissionsPanelPro
       </div>
 
       <div className="mt-6 bg-primary/5 border border-primary/20 rounded-lg p-4">
-        <p className="text-sm font-medium mb-2">Safety & Privacy Notice</p>
+        <p className="text-sm font-semibold mb-2">Seeksy Identity Promise</p>
+        <p className="text-sm font-medium mb-1">Your likeness is yours.</p>
+        <p className="text-sm text-muted-foreground mb-2">
+          Seeksy will never sell, license, or use your face, voice, or identity without your explicit permission.
+        </p>
         <p className="text-sm text-muted-foreground">
-          Seeksy does not sell, license, or share your likeness without your explicit permission. 
-          Your identity belongs to you. All AI usage requires your consent.
+          Every use of your identity — whether in clips, AI generation, or advertising — requires your consent, recorded on-chain for transparency and security.
         </p>
       </div>
     </div>
