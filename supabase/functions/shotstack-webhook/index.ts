@@ -222,7 +222,7 @@ serve(async (req) => {
 
       // Blockchain certification trigger (only when both renders complete)
       if (updateData.status === "ready" && clip.cert_status === 'not_requested') {
-        console.log("→ Certification triggered");
+        console.log("→ Certification will be triggered via mint-clip-certificate");
         updateData.cert_status = 'pending';
       }
 
@@ -275,12 +275,26 @@ serve(async (req) => {
 
     console.log(`✓ Clip ${clip.id} updated successfully`);
 
-    // If certification was triggered, mint certificate in background
+    // If certification was triggered, call real minting function
     if (updateData.cert_status === 'pending') {
-      // Run minting asynchronously (don't block webhook response)
-      mintCertificate(supabase, clip.id).catch(err => {
-        console.error("❌ Background certification failed:", err);
-      });
+      console.log("→ Calling mint-clip-certificate edge function");
+      
+      // Call the mint-clip-certificate function in background
+      fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/mint-clip-certificate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+        },
+        body: JSON.stringify({ clipId: clip.id }),
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log("✓ Certification function called:", data);
+        })
+        .catch(err => {
+          console.error("❌ Failed to call certification function:", err);
+        });
     }
 
     return new Response(
