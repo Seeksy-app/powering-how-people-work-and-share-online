@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mic, Square, Play, Pause, AlertCircle, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,14 +22,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const VOICE_PROMPTS = [
-  "Hi, my name is {name}. I'm recording this sample to verify my voice on Seeksy and protect my identity. This helps confirm it's really me when I'm using the platform.",
-  "This is {name} confirming that Seeksy can use this recording only to verify my voice and secure my account. I understand it won't be shared without my permission.",
-  "I'm {name}, and I'm recording this voice sample so Seeksy can help keep my identity safe on the platform. This verification ensures no one else can impersonate me.",
-  "My name is {name}, and I'm verifying my voice on Seeksy to protect my content and identity. I want to make sure only I have access to my authentic voice signature.",
-  "This is {name}. I authorize Seeksy to use this voice recording for identity verification purposes only. This recording helps secure my account and content against unauthorized use."
+  "Hi, my name is {name}. I'm recording this sample to verify my voice on Seeksy and protect my identity. This helps confirm it's really me when I'm using the platform, and ensures my voice cannot be used without my permission.",
+  "This is {name} confirming that Seeksy can use this recording only to verify my voice and secure my account. I understand it won't be shared without my permission, and I agree to these terms for voice verification and authentication.",
+  "I'm {name}, and I'm recording this voice sample so Seeksy can help keep my identity safe on the platform. This verification ensures no one else can impersonate me, and my voice remains under my full control at all times.",
+  "My name is {name}, and I'm verifying my voice on Seeksy to protect my content and identity. I want to make sure only I have access to my authentic voice signature, and that it's used solely for security purposes.",
+  "This is {name}. I authorize Seeksy to use this voice recording for identity verification purposes only. This recording helps secure my account and content against unauthorized use, and I confirm this is my real voice speaking right now."
 ];
 
-type RecordingState = 'idle' | 'countdown' | 'recording' | 'review' | 'verifying' | 'already-verified';
+type RecordingState = 'consent' | 'idle' | 'countdown' | 'recording' | 'review' | 'verifying' | 'already-verified';
 
 type VerifyVoiceAndMintPayload = {
   audioData: string;
@@ -74,6 +77,9 @@ const VoiceVerificationUnified = () => {
   
   // User & Script
   const [userName, setUserName] = useState<string>("there");
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [consentName, setConsentName] = useState<string>("");
+  const [consentConfirmed, setConsentConfirmed] = useState<boolean>(false);
   const [selectedPromptIndex, setSelectedPromptIndex] = useState<number>(0);
   const [prompts, setPrompts] = useState<string[]>([]);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -81,7 +87,7 @@ const VoiceVerificationUnified = () => {
   const [mintProgress, setMintProgress] = useState(0);
   
   // State Machine
-  const [state, setState] = useState<RecordingState>('idle');
+  const [state, setState] = useState<RecordingState>('consent');
   const [countdown, setCountdown] = useState(3);
   
   // Recording
@@ -138,7 +144,10 @@ const VoiceVerificationUnified = () => {
   const fetchUserAndPrompt = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     const name = user?.user_metadata?.full_name?.split(' ')[0] || "there";
+    const email = user?.email || "";
     setUserName(name);
+    setUserEmail(email);
+    setConsentName(name); // Pre-fill with account name
     
     // Generate all prompts with user's name
     const personalizedPrompts = VOICE_PROMPTS.map(prompt => prompt.replace('{name}', name));
@@ -175,13 +184,58 @@ const VoiceVerificationUnified = () => {
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['voice-identity-status'] });
       queryClient.invalidateQueries({ queryKey: ['identity-status'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-widgets'] });
-      
+      queryClient.invalidateQueries({ queryKey: ['creator_voice_profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['voice_blockchain_certificates'] });
     } catch (error) {
       console.error("Error resetting verification:", error);
-      toast.error("Reset failed", {
-        description: "Could not reset verification. Please try again."
+      toast.error("Failed to reset verification");
+    }
+  };
+
+  const handleConsentConfirm = async () => {
+    if (!consentName.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+    if (!consentConfirmed) {
+      toast.error("Please confirm this is your voice");
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Log consent to CRM (contacts table)
+      const { error: contactError } = await supabase
+        .from('contacts')
+        .upsert({
+          user_id: user.id,
+          email: userEmail,
+          name: consentName,
+          notes: `Voice verification consent confirmed on ${new Date().toISOString()}`,
+          lead_status: 'active',
+          lead_source: 'Voice Verification'
+        }, {
+          onConflict: 'user_id,email'
+        });
+
+      if (contactError) {
+        console.error("Error logging to CRM:", contactError);
+      }
+
+      // Update userName with consent name and regenerate prompts
+      setUserName(consentName);
+      const personalizedPrompts = VOICE_PROMPTS.map(prompt => prompt.replace('{name}', consentName));
+      setPrompts(personalizedPrompts);
+
+      setState('idle');
+      toast.success("Consent confirmed", {
+        description: "You can now proceed with voice verification."
       });
+    } catch (error) {
+      console.error("Error processing consent:", error);
+      toast.error("Failed to process consent");
     }
   };
 
@@ -467,6 +521,58 @@ const VoiceVerificationUnified = () => {
 
         <Card className="p-12 transition-all duration-300">
           <div className="text-center space-y-6">
+            {/* Consent State */}
+            {state === 'consent' && (
+              <div className="space-y-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-500/10">
+                  <ShieldCheck className="h-12 w-12 text-blue-600" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold mb-3">Voice Verification Consent</h1>
+                  <p className="text-muted-foreground">
+                    Before we begin, please confirm your identity and consent to voice verification.
+                  </p>
+                </div>
+                
+                <div className="space-y-4 max-w-md mx-auto text-left">
+                  <div className="space-y-2">
+                    <Label htmlFor="consent-name">
+                      Your Full Name
+                    </Label>
+                    <Input
+                      id="consent-name"
+                      type="text"
+                      value={consentName}
+                      onChange={(e) => setConsentName(e.target.value)}
+                      placeholder="Enter your name"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      This will be used to personalize your verification script.
+                    </p>
+                  </div>
+
+                  <div className="flex items-start gap-3 p-4 rounded-lg bg-muted/30">
+                    <Checkbox
+                      id="consent-checkbox"
+                      checked={consentConfirmed}
+                      onCheckedChange={(checked) => setConsentConfirmed(checked === true)}
+                    />
+                    <Label htmlFor="consent-checkbox" className="text-sm font-normal cursor-pointer">
+                      I confirm this is my real voice and I consent to Seeksy using this recording solely for identity verification and account security purposes.
+                    </Label>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleConsentConfirm}
+                  size="lg"
+                  className="w-full max-w-md"
+                >
+                  Continue to Verification
+                </Button>
+              </div>
+            )}
+
             {/* Already Verified State */}
             {state === 'already-verified' && (
               <div className="space-y-6">
@@ -504,6 +610,7 @@ const VoiceVerificationUnified = () => {
                 <div>
                   <h1 className="text-3xl font-bold mb-3">Verify Your Voice Identity</h1>
                   <p className="text-muted-foreground">
+                    {state === 'consent' && 'Before we begin, please confirm your identity.'}
                     {state === 'countdown' && `Recording starts in...`}
                     {state === 'recording' && 'Recording in progress'}
                     {(state === 'idle' || state === 'review') && 'Read the phrase below out loud.'}
