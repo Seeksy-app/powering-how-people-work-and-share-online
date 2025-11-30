@@ -117,6 +117,7 @@ import BroadcastStudio from "./pages/BroadcastStudio";
 import CreditInfo from "./pages/CreditInfo";
 import StudioTemplates from "./pages/StudioTemplates";
 import MediaLibrary from "./pages/MediaLibrary";
+import MediaVault from "./pages/MediaVault";
 import PostProductionStudio from "./pages/PostProductionStudio";
 import CreateClips from "./pages/CreateClips";
 import SystemStatus from "./pages/SystemStatus";
@@ -579,7 +580,8 @@ const AppContent = () => {
           <Route path="/studio" element={<StudioTemplates />} />
           <Route path="/studio/session/:id" element={<BroadcastStudio />} />
           <Route path="/studio/broadcast/:id" element={<BroadcastStudio />} />
-          <Route path="/media-library" element={<MediaLibrary />} />
+          <Route path="/media-library" element={<MediaVault />} />
+          <Route path="/media-library-legacy" element={<MediaLibrary />} />
           <Route path="/update-media-durations" element={<UpdateMediaDurations />} />
           <Route path="/post-production-studio" element={<PostProductionStudio />} />
           <Route path="/create-clips" element={<CreateClips />} />

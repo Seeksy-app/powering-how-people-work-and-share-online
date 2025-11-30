@@ -67,7 +67,8 @@ export default function CertificationConsole() {
           cert_explorer_url,
           cert_created_at,
           created_at,
-          user_id
+          user_id,
+          deleted_at
         `)
         .order("cert_created_at", { ascending: false, nullsFirst: false });
 
@@ -90,7 +91,7 @@ export default function CertificationConsole() {
       return clipsData.map(clip => ({
         ...clip,
         profiles: profilesMap.get(clip.user_id) || null,
-      })) as CertifiedClip[];
+      })) as (CertifiedClip & { deleted_at: string | null })[];
     },
   });
 
@@ -287,7 +288,16 @@ export default function CertificationConsole() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="font-medium">{clip.title || "Untitled"}</div>
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium">
+                          {clip.title || "Untitled"}
+                          {clip.deleted_at && (
+                            <Badge variant="outline" className="ml-2 text-xs text-muted-foreground">
+                              Deleted
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
                       <div className="text-xs text-muted-foreground">{clip.id.substring(0, 8)}...</div>
                     </TableCell>
                     <TableCell>
