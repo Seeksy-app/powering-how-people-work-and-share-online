@@ -11685,6 +11685,7 @@ export type Database = {
       voice_blockchain_certificates: {
         Row: {
           blockchain_network: string
+          cert_explorer_url: string | null
           certification_status: string
           contract_address: string
           created_at: string | null
@@ -11701,6 +11702,7 @@ export type Database = {
         }
         Insert: {
           blockchain_network?: string
+          cert_explorer_url?: string | null
           certification_status?: string
           contract_address: string
           created_at?: string | null
@@ -11717,6 +11719,7 @@ export type Database = {
         }
         Update: {
           blockchain_network?: string
+          cert_explorer_url?: string | null
           certification_status?: string
           contract_address?: string
           created_at?: string | null
