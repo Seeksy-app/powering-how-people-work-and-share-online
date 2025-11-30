@@ -245,8 +245,15 @@ export function IdentityRequestModal({ open, onOpenChange, creatorId, creatorUse
             </div>
           </div>
 
-          {/* Submit Button */}
+          {/* Seeksy Identity Promise */}
           <div className="pt-4 border-t">
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-4">
+              <p className="text-xs font-semibold mb-1">Seeksy Identity Promise</p>
+              <p className="text-xs text-muted-foreground">
+                Seeksy will never sell, license, or use a creator's identity without explicit permission. Every use requires consent, recorded on-chain for transparency.
+              </p>
+            </div>
+            
             <Button
               className="w-full"
               onClick={() => createRequestMutation.mutate()}

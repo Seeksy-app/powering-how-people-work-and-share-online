@@ -284,39 +284,22 @@ const IdentityRights = () => {
         </CardContent>
           </Card>
 
-          {/* Identity Promise */}
+          {/* Seeksy Identity Promise */}
           <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
-                Our Identity Promise
+                Seeksy Identity Promise
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                <p className="text-sm">
-                  We never sell a creator's identity or likeness data.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                <p className="text-sm">
-                  Brands can't use a creator's face or voice without explicit approval.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                <p className="text-sm">
-                  Creators can revoke permissions at any time, and the identity record reflects it.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                <p className="text-sm">
-                  Everything here is opt-in, not buried in fine print.
-                </p>
-              </div>
+              <p className="text-base font-semibold">Your likeness is yours.</p>
+              <p className="text-sm text-muted-foreground">
+                Seeksy will never sell, license, or use your face, voice, or identity without your explicit permission.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Every use of your identity — whether in clips, AI generation, or advertising — requires your consent, recorded on-chain for transparency and security.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

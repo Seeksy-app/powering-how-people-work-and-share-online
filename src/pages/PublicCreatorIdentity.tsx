@@ -248,6 +248,20 @@ const PublicCreatorIdentity = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Seeksy Identity Promise - Footer */}
+        {identityAssets.length > 0 && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <div className="text-center space-y-2">
+                <p className="text-sm font-semibold">Seeksy Identity Promise</p>
+                <p className="text-xs text-muted-foreground">
+                  Seeksy will never sell, license, or use {profile.account_full_name || profile.username}'s identity without explicit permission. Every use requires consent, recorded on-chain for transparency and security.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {profile && (
