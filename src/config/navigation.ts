@@ -81,18 +81,46 @@ export const NAVIGATION_CONFIG: {
       "group": "Email",
       "items": [
         {
-          "id": "email_home",
-          "label": "Email Home",
-          "icon": "mail",
+          "id": "email_inbox",
+          "label": "Inbox",
+          "icon": "inbox",
           "path": "/email",
+          "roles": ["creator", "influencer", "agency", "advertiser", "admin"]
+        },
+        {
+          "id": "email_scheduled",
+          "label": "Scheduled",
+          "icon": "clock",
+          "path": "/email/scheduled",
+          "roles": ["creator", "influencer", "agency", "advertiser", "admin"]
+        },
+        {
+          "id": "email_drafts",
+          "label": "Drafts",
+          "icon": "file-text",
+          "path": "/email/drafts",
+          "roles": ["creator", "influencer", "agency", "advertiser", "admin"]
+        },
+        {
+          "id": "email_sent",
+          "label": "Sent",
+          "icon": "send",
+          "path": "/email/sent",
+          "roles": ["creator", "influencer", "agency", "advertiser", "admin"]
+        },
+        {
+          "id": "email_automations",
+          "label": "Automations",
+          "icon": "zap",
+          "path": "/email-automations",
           "roles": ["creator", "influencer", "agency", "admin"]
         },
         {
           "id": "email_campaigns",
           "label": "Campaigns",
-          "icon": "mail",
+          "icon": "megaphone",
           "path": "/email-campaigns",
-          "roles": ["creator", "influencer", "agency", "admin"]
+          "roles": ["creator", "influencer", "agency", "advertiser", "admin"]
         },
         {
           "id": "email_templates",
@@ -109,11 +137,11 @@ export const NAVIGATION_CONFIG: {
           "roles": ["creator", "influencer", "agency", "admin"]
         },
         {
-          "id": "email_automations",
-          "label": "Automations",
-          "icon": "zap",
-          "path": "/email-automations",
-          "roles": ["creator", "influencer", "agency", "admin"]
+          "id": "email_analytics",
+          "label": "Analytics",
+          "icon": "bar-chart",
+          "path": "/email/analytics",
+          "roles": ["creator", "influencer", "agency", "advertiser", "admin"]
         },
         {
           "id": "email_settings",

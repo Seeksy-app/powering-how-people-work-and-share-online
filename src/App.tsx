@@ -219,6 +219,10 @@ import EmailTemplates from "./pages/EmailTemplates";
 import EmailSegments from "./pages/EmailSegments";
 import EmailAutomations from "./pages/EmailAutomations";
 import EmailAccountHealth from "./pages/EmailAccountHealth";
+import EmailScheduled from "./pages/email/EmailScheduled";
+import EmailDrafts from "./pages/email/EmailDrafts";
+import EmailSent from "./pages/email/EmailSent";
+import EmailAnalytics from "./pages/email/EmailAnalytics";
 import ContactProfile from "./pages/ContactProfile";
 import ClientTickets from "./pages/ClientTickets";
 import Proposals from "./pages/Proposals";
@@ -515,6 +519,10 @@ const AppContent = () => {
               <Route path="/transcripts/:id" element={<TranscriptDetailPage />} />
               <Route path="/marketing" element={<Marketing />} />
               <Route path="/email" element={<EmailHome />} />
+              <Route path="/email/scheduled" element={<EmailScheduled />} />
+              <Route path="/email/drafts" element={<EmailDrafts />} />
+              <Route path="/email/sent" element={<EmailSent />} />
+              <Route path="/email/analytics" element={<EmailAnalytics />} />
               <Route path="/email-settings" element={<EmailSettings />} />
             <Route path="/email-campaigns" element={<EmailCampaigns />} />
             <Route path="/email-campaigns/new" element={<EmailCampaignBuilder />} />

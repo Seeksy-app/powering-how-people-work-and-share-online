@@ -451,11 +451,15 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
   ];
 
   const emailItems = [
-    { title: "Dashboard", url: "/email", icon: Mail },
-    { title: "Campaigns", url: "/email-campaigns", icon: Send },
+    { title: "Inbox", url: "/email", icon: Mail },
+    { title: "Scheduled", url: "/email/scheduled", icon: Calendar },
+    { title: "Drafts", url: "/email/drafts", icon: FileText },
+    { title: "Sent", url: "/email/sent", icon: Send },
+    { title: "Automations", url: "/email-automations", icon: Target },
+    { title: "Campaigns", url: "/email-campaigns", icon: Megaphone },
     { title: "Templates", url: "/email-templates", icon: FileText },
     { title: "Segments", url: "/email-segments", icon: Users },
-    { title: "Automations", url: "/email-automations", icon: Target },
+    { title: "Analytics", url: "/email/analytics", icon: BarChart3 },
     { title: "Settings", url: "/email-settings", icon: Settings },
   ];
 
@@ -1001,8 +1005,8 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
   };
 
   const renderEmailSection = () => {
-    // Show if marketing OR newsletter module is enabled
-    if (isAdvertiser || (!modulePrefs.marketing && !modulePrefs.newsletter) || emailItems.length === 0) return null;
+    // Always show for creators/admins (remove the module check to match PM's instructions)
+    if (isAdvertiser || emailItems.length === 0) return null;
     
     return (
       <Collapsible
@@ -1012,7 +1016,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
       >
         <SidebarGroup className="py-0">
           <CollapsibleTrigger asChild>
-            <SidebarGroupLabel className="text-base font-semibold cursor-pointer flex items-center justify-between mb-0 py-1.5">
+            <SidebarGroupLabel className="text-base font-semibold cursor-pointer flex items-center justify-between mb-0 py-1.5 bg-[#0A1A3B] text-white hover:bg-[#0A1A3B]/90">
               <span>Email</span>
               {!collapsed && <ChevronDown className={`h-3 w-3 transition-transform ${openSections.email ? '' : '-rotate-90'}`} />}
             </SidebarGroupLabel>
@@ -1029,8 +1033,8 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
                             <NavLink
                               to={item.url}
                               end
-                              className="hover:bg-accent hover:text-accent-foreground text-sm py-0.5 h-8 pl-4"
-                              activeClassName="bg-accent text-accent-foreground font-medium"
+                              className="hover:bg-[rgba(255,255,255,0.08)] text-sm py-0.5 h-8 pl-4"
+                              activeClassName="bg-[rgba(255,255,255,0.12)] border-l-2 border-l-[#4A90FF] font-medium"
                             >
                               <item.icon className="h-4 w-4" />
                               {!collapsed && <span>{item.title}</span>}
