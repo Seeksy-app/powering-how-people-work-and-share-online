@@ -11,8 +11,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useEmailNotifications } from "@/hooks/useEmailNotifications";
 import { useUnreadCount } from "@/hooks/useUnreadCount";
 import { useSearchParams } from "react-router-dom";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { useFaviconManager } from "@/hooks/useFaviconManager";
 
 export default function EmailHome() {
+  // Page title and favicon
+  usePageTitle("Inbox");
+  useFaviconManager();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [selectedFolder, setSelectedFolder] = useState("inbox");
