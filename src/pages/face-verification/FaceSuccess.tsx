@@ -32,11 +32,29 @@ const FaceSuccess = () => {
             )}
             <Button 
               onClick={() => navigate("/identity")}
-              variant="outline"
+              size="lg"
               className="w-full"
             >
-              Back to Identity
+              Back to Identity Hub
             </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => navigate("/my-voice-identity")}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                Voice Identity
+              </Button>
+              <Button 
+                onClick={() => navigate("/identity/rights")}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                Rights
+              </Button>
+            </div>
           </div>
         </div>
       </Card>

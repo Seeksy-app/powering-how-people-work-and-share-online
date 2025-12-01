@@ -48,9 +48,16 @@ export const NAVIGATION_CONFIG: {
         },
         {
           "id": "identity",
-          "label": "Identity",
+          "label": "Identity & Rights",
           "icon": "shield",
           "path": "/identity",
+          "roles": ["creator", "influencer", "agency", "admin"]
+        },
+        {
+          "id": "rights",
+          "label": "Rights Management",
+          "icon": "lock",
+          "path": "/identity/rights",
           "roles": ["creator", "influencer", "agency", "admin"]
         },
         {
@@ -174,6 +181,27 @@ export const NAVIGATION_CONFIG: {
     {
       "group": "Content Management",
       "items": [
+        {
+          "id": "logo_manager",
+          "label": "Logo Manager",
+          "icon": "image",
+          "path": "/admin/logo-manager",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "hero_manager",
+          "label": "Hero Manager",
+          "icon": "layout",
+          "path": "/admin/hero-manager",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "global_settings",
+          "label": "Global Settings",
+          "icon": "settings",
+          "path": "/admin/settings",
+          "roles": ["admin", "super_admin"]
+        },
         {
           "id": "hero_generator",
           "label": "Hero Generator",

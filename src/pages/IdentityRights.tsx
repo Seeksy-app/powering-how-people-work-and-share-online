@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, ShieldCheck, XCircle, Camera, Mic, ExternalLink } from "lucide-react";
+import { Shield, ShieldCheck, XCircle, Camera, Mic, ExternalLink, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { IdentityPromiseBanner } from "@/components/identity/IdentityPromiseBanner";
@@ -97,9 +97,21 @@ const IdentityRights = () => {
           </CardContent>
         </Card>
 
-        <div className="text-center text-sm text-muted-foreground">
-          Complete both face and voice verification to secure your identity.
-        </div>
+      {/* Identity Tabs */}
+      <div className="flex justify-center gap-3 mb-8">
+        <Button onClick={() => navigate("/identity")} variant="default" size="sm">
+          <Shield className="h-4 w-4 mr-2" />
+          Identity Hub
+        </Button>
+        <Button onClick={() => navigate("/my-voice-identity")} variant="outline" size="sm">
+          <Mic className="h-4 w-4 mr-2" />
+          Voice Identity
+        </Button>
+        <Button onClick={() => navigate("/identity/rights")} variant="outline" size="sm">
+          <Lock className="h-4 w-4 mr-2" />
+          Rights
+        </Button>
+      </div>
 
         {/* Identity Cards Side by Side */}
         <div className="grid grid-cols-2 gap-6">

@@ -54,10 +54,20 @@ const IdentityCertificatePage = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-3xl mx-auto space-y-6">
-        <Button variant="ghost" onClick={() => navigate("/identity")}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Identity
-        </Button>
+        <div className="flex gap-3 mb-6">
+          <Button variant="ghost" size="sm" onClick={() => navigate("/identity")}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Identity Hub
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/my-voice-identity")}>
+            <Shield className="h-4 w-4 mr-2" />
+            Voice Identity
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/identity/rights")}>
+            <Shield className="h-4 w-4 mr-2" />
+            Rights
+          </Button>
+        </div>
 
         <Card className="p-12">
           <div className="text-center space-y-6">

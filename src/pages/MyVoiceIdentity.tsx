@@ -18,7 +18,8 @@ import {
   DollarSign,
   Award,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Lock
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -190,16 +191,22 @@ export default function MyVoiceIdentity() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold mb-1">
-                Manage your full identity (voice + face + rights)
+                Complete Identity Management
               </h3>
               <p className="text-sm text-muted-foreground">
-                Control how your voice and likeness can be used across Seeksy
+                Manage face, voice, and licensing rights from Identity Hub
               </p>
             </div>
-            <Button onClick={() => navigate("/identity")} variant="default">
-              Open Identity & Rights Hub
-              <ExternalLink className="h-4 w-4 ml-2" />
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => navigate("/identity")} variant="default" size="sm">
+                <Shield className="h-4 w-4 mr-2" />
+                Identity Hub
+              </Button>
+              <Button onClick={() => navigate("/identity/rights")} variant="outline" size="sm">
+                <Lock className="h-4 w-4 mr-2" />
+                Rights
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
