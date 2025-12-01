@@ -54,9 +54,9 @@ export function ThemeToggle() {
   };
 
   const getThemeIcon = () => {
-    if (theme === "light") return <Sun className="h-[1.2rem] w-[1.2rem]" />;
-    if (theme === "dark" || theme === "midnight") return <Moon className="h-[1.2rem] w-[1.2rem]" />;
-    return <Monitor className="h-[1.2rem] w-[1.2rem]" />;
+    if (theme === "light") return <Sun className="h-[1.2rem] w-[1.2rem] transition-transform duration-300" />;
+    if (theme === "dark" || theme === "midnight") return <Moon className="h-[1.2rem] w-[1.2rem] transition-transform duration-300" />;
+    return <Monitor className="h-[1.2rem] w-[1.2rem] transition-transform duration-300" />;
   };
 
   return (

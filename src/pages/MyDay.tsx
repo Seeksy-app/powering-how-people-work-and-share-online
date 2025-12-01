@@ -75,78 +75,63 @@ export default function MyDay() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <Link to="/inbox">
-            <Card className="cursor-pointer transition-all hover:scale-[1.01] hover:bg-accent/5 active:scale-[0.99]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Link to="/email">
+            <Card className="cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:border-muted active:scale-[0.98] active:shadow-xl bg-background border border-border/60 rounded-xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
+                  <Mail className="h-4 w-4 text-primary" />
                   Inbox
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.unreadEmails}</div>
+                <div className="text-[28px] font-bold text-foreground">{stats.unreadEmails}</div>
                 <p className="text-xs text-muted-foreground">unread messages</p>
               </CardContent>
             </Card>
           </Link>
 
-          <Link to="/audience">
-            <Card className="cursor-pointer transition-all hover:scale-[1.01] hover:bg-accent/5 active:scale-[0.99]">
+          <Link to="/contacts">
+            <Card className="cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:border-muted active:scale-[0.98] active:shadow-xl bg-background border border-border/60 rounded-xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Users className="h-4 w-4" />
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
+                  <Users className="h-4 w-4 text-primary" />
                   Audience
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.newContacts}</div>
+                <div className="text-[28px] font-bold text-foreground">{stats.newContacts}</div>
                 <p className="text-xs text-muted-foreground">new contacts</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link to="/meetings">
-            <Card className="cursor-pointer transition-all hover:scale-[1.01] hover:bg-accent/5 active:scale-[0.99]">
+            <Card className="cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:border-muted active:scale-[0.98] active:shadow-xl bg-background border border-border/60 rounded-xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
+                  <Calendar className="h-4 w-4 text-primary" />
                   Meetings
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.meetingsToday}</div>
+                <div className="text-[28px] font-bold text-foreground">{stats.meetingsToday}</div>
                 <p className="text-xs text-muted-foreground">meetings today</p>
               </CardContent>
             </Card>
           </Link>
 
           <Link to="/tasks">
-            <Card className="cursor-pointer transition-all hover:scale-[1.01] hover:bg-accent/5 active:scale-[0.99]">
+            <Card className="cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-lg hover:border-muted active:scale-[0.98] active:shadow-xl bg-background border border-border/60 rounded-xl">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <CheckSquare className="h-4 w-4" />
+                <CardTitle className="text-sm font-medium flex items-center gap-2 text-foreground">
+                  <CheckSquare className="h-4 w-4 text-primary" />
                   Tasks
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingTasks}</div>
+                <div className="text-[28px] font-bold text-foreground">{stats.pendingTasks}</div>
                 <p className="text-xs text-muted-foreground">pending tasks</p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link to="/alerts">
-            <Card className="cursor-pointer transition-all hover:scale-[1.01] hover:bg-accent/5 active:scale-[0.99]">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Bell className="h-4 w-4" />
-                  Alerts
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.alerts}</div>
-                <p className="text-xs text-muted-foreground">needs review</p>
               </CardContent>
             </Card>
           </Link>
