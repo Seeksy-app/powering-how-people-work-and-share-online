@@ -46,7 +46,6 @@ import Availability from "./pages/Availability";
 import MasterStudio from "./pages/MasterStudio";
 import VideoStudio from "./pages/VideoStudio";
 import LiveStudio from "./pages/LiveStudio";
-import StudioLayout from "./pages/studio/StudioLayout";
 import StudioHome from "./pages/studio/StudioHome";
 import StudioRecording from "./pages/studio/StudioRecording";
 import StudioPostSession from "./pages/studio/StudioPostSession";
@@ -323,7 +322,6 @@ import NewEpisodeFromStudio from "./pages/podcasts/NewEpisodeFromStudio";
 import NewEpisode from "./pages/podcasts/NewEpisode";
 import EpisodeDetailPublic from "./pages/podcasts/EpisodeDetailPublic";
 import PodcastStats from "./pages/podcasts/PodcastStats";
-import PodcastDashboard from "./pages/podcasts/PodcastDashboard";
 import VoiceCloningWizard from "./pages/voice-cloning/VoiceCloningWizard";
 import CertificationConsole from "./pages/admin/CertificationConsole";
 import Verified from "./pages/Verified";
@@ -571,18 +569,16 @@ const AppContent = () => {
               <Route path="/studio/solo" element={<VideoStudio />} />
               <Route path="/studio/live" element={<LiveStudio />} />
               
-              {/* New Flagship Studio */}
-              <Route path="/studio" element={<StudioLayout />}>
-                <Route index element={<StudioHome />} />
-                <Route path="recording/new" element={<StudioRecordingNew />} />
-                <Route path="post-session/:sessionId" element={<StudioPostSession />} />
-                <Route path="recordings" element={<StudioRecordings />} />
-                <Route path="clips" element={<StudioClips />} />
-                <Route path="ads" element={<StudioAds />} />
-                <Route path="guests" element={<StudioGuests />} />
-                <Route path="settings" element={<StudioSettings />} />
-                <Route path="live/new" element={<StudioLiveNew />} />
-              </Route>
+              {/* Studio Routes - No wrapper, renders with unified sidebar */}
+              <Route path="/studio" element={<StudioHome />} />
+              <Route path="/studio/recording/new" element={<StudioRecordingNew />} />
+              <Route path="/studio/post-session/:sessionId" element={<StudioPostSession />} />
+              <Route path="/studio/recordings" element={<StudioRecordings />} />
+              <Route path="/studio/clips" element={<StudioClips />} />
+              <Route path="/studio/ads" element={<StudioAds />} />
+              <Route path="/studio/guests" element={<StudioGuests />} />
+              <Route path="/studio/settings" element={<StudioSettings />} />
+              <Route path="/studio/live/new" element={<StudioLiveNew />} />
               
             <Route path="/events" element={<Events />} />
             <Route path="/signup-sheets" element={<SignupSheets />} />
@@ -603,7 +599,7 @@ const AppContent = () => {
               <Route path="/podcasts" element={<Podcasts />} />
               <Route path="/podcasts/create" element={<CreatePodcast />} />
               <Route path="/podcasts/import" element={<ImportPodcast />} />
-              <Route path="/podcasts/:podcastId" element={<PodcastDashboard />} />
+              <Route path="/podcasts/:podcastId" element={<PodcastDetail />} />
               <Route path="/podcasts/:podcastId/edit" element={<EditPodcast />} />
               <Route path="/podcasts/:podcastId/upload" element={<UploadEpisode />} />
               <Route path="/podcasts/:podcastId/stats" element={<PodcastStats />} />
