@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Send, Loader2, Calendar, Save } from "lucide-react";
+import { Send, Loader2, Calendar, Save, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { ScribeAssistant } from "./ScribeAssistant";
 
 interface CampaignBuilderProps {
   onCampaignCreated?: (campaignId: string) => void;
@@ -24,6 +25,8 @@ export const CampaignBuilder = ({ onCampaignCreated }: CampaignBuilderProps) => 
   const [selectedAccount, setSelectedAccount] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
+  const [scribeOpen, setScribeOpen] = useState(false);
+  const [scribeAction, setScribeAction] = useState<"draft" | "rewrite" | "improve_subject" | "check_deliverability">("draft");
 
   const { data: user } = useQuery({
     queryKey: ["user"],
@@ -155,6 +158,12 @@ export const CampaignBuilder = ({ onCampaignCreated }: CampaignBuilderProps) => 
     return tomorrow.toISOString().split('T')[0];
   };
 
+  const handleScribeApply = (result: any) => {
+    if (result.subject) setSubject(result.subject);
+    if (result.preheader) setPreheader(result.preheader);
+    if (result.body) setHtmlContent(result.body);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -197,7 +206,20 @@ export const CampaignBuilder = ({ onCampaignCreated }: CampaignBuilderProps) => 
         </div>
 
         <div className="space-y-2">
-          <Label>Subject</Label>
+          <div className="flex items-center justify-between">
+            <Label>Subject</Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setScribeAction("improve_subject");
+                setScribeOpen(true);
+              }}
+            >
+              <Sparkles className="h-4 w-4 mr-1" />
+              Improve
+            </Button>
+          </div>
           <Input
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
@@ -219,7 +241,48 @@ export const CampaignBuilder = ({ onCampaignCreated }: CampaignBuilderProps) => 
         </div>
 
         <div className="space-y-2">
-          <Label>Message</Label>
+          <div className="flex items-center justify-between">
+            <Label>Message</Label>
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setScribeAction("draft");
+                  setScribeOpen(true);
+                }}
+              >
+                <Sparkles className="h-4 w-4 mr-1" />
+                Draft with Scribe
+              </Button>
+              {htmlContent && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setScribeAction("rewrite");
+                      setScribeOpen(true);
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4 mr-1" />
+                    Rewrite
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setScribeAction("check_deliverability");
+                      setScribeOpen(true);
+                    }}
+                  >
+                    <Sparkles className="h-4 w-4 mr-1" />
+                    Check
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
           <Textarea
             value={htmlContent}
             onChange={(e) => setHtmlContent(e.target.value)}
@@ -298,6 +361,21 @@ export const CampaignBuilder = ({ onCampaignCreated }: CampaignBuilderProps) => 
           </Button>
         </div>
       </CardContent>
+
+      <ScribeAssistant
+        open={scribeOpen}
+        onOpenChange={setScribeOpen}
+        action={scribeAction}
+        initialInput={
+          scribeAction === "improve_subject"
+            ? subject
+            : scribeAction === "draft"
+            ? ""
+            : htmlContent
+        }
+        context={{ subject, emailBody: htmlContent }}
+        onApply={handleScribeApply}
+      />
     </Card>
   );
 };
