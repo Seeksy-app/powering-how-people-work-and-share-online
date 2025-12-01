@@ -19,6 +19,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { PersonaDialog } from "@/components/ai/PersonaDialog";
+import { AskAIButton } from "@/components/ai/AskAIButton";
 
 const CreateEvent = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -30,6 +32,8 @@ const CreateEvent = () => {
   const [capacity, setCapacity] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isPublished, setIsPublished] = useState(false);
+  const [miaDialogOpen, setMiaDialogOpen] = useState(false);
+  const [miaPrompt, setMiaPrompt] = useState("");
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -123,7 +127,16 @@ const CreateEvent = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description">Description</Label>
+                <AskAIButton
+                  persona="Mia"
+                  onClick={() => {
+                    setMiaPrompt(`Generate an engaging event description for: ${title || "an upcoming event"}`);
+                    setMiaDialogOpen(true);
+                  }}
+                />
+              </div>
               <Textarea
                 id="description"
                 value={description}
@@ -200,6 +213,16 @@ const CreateEvent = () => {
             </div>
           </form>
         </Card>
+
+        <PersonaDialog
+          open={miaDialogOpen}
+          onOpenChange={setMiaDialogOpen}
+          persona="Mia"
+          prompt={miaPrompt}
+          context={{ title, eventDate, location }}
+          onApply={(result) => setDescription(result)}
+          placeholder="Describe the event purpose and Mia will create an engaging description"
+        />
       </main>
     </div>
   );

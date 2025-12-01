@@ -10,6 +10,8 @@ import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import { PersonaDialog } from "@/components/ai/PersonaDialog";
+import { AskAIButton } from "@/components/ai/AskAIButton";
 
 interface Question {
   id: string;
@@ -29,6 +31,8 @@ const CreateMeetingType = () => {
   const [locationType, setLocationType] = useState("zoom");
   const [customLocationUrl, setCustomLocationUrl] = useState("");
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [miaDialogOpen, setMiaDialogOpen] = useState(false);
+  const [miaPrompt, setMiaPrompt] = useState("");
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -160,7 +164,16 @@ const CreateMeetingType = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="description">Description</Label>
+                <AskAIButton
+                  persona="Mia"
+                  onClick={() => {
+                    setMiaPrompt("Generate a professional description for a meeting type");
+                    setMiaDialogOpen(true);
+                  }}
+                />
+              </div>
               <Textarea
                 id="description"
                 value={description}
@@ -301,6 +314,16 @@ const CreateMeetingType = () => {
             </Button>
           </form>
         </Card>
+
+        <PersonaDialog
+          open={miaDialogOpen}
+          onOpenChange={setMiaDialogOpen}
+          persona="Mia"
+          prompt={miaPrompt}
+          context={{ name, duration, locationType }}
+          onApply={(result) => setDescription(result)}
+          placeholder="Describe the meeting purpose and Mia will create a clear description"
+        />
       </main>
     </div>
   );
