@@ -320,25 +320,28 @@ serve(async (req) => {
 
     console.log('[verify-voice-and-mint] Voice profile marked as verified');
 
-    // Step 7: Deactivate all other voice certificates for this creator
+    // Step 7: Deactivate all other voice certificates for this creator (non-critical)
     console.log('[verify-voice-and-mint] Deactivating previous certificates...');
     
-    const { error: deactivateError } = await supabaseClient
-      .from('voice_blockchain_certificates')
-      .update({ 
-        is_active: false,
-        certification_status: 'revoked',
-        revoked_at: new Date().toISOString()
-      })
-      .eq('creator_id', user.id)
-      .neq('voice_profile_id', voiceProfileId);
-    
-    if (deactivateError) {
-      console.error('[verify-voice-and-mint] Deactivate error:', deactivateError);
-      // Don't fail - this is a cleanup operation
+    try {
+      const { error: deactivateError } = await supabaseClient
+        .from('voice_blockchain_certificates')
+        .update({ 
+          is_active: false,
+          certification_status: 'revoked',
+          revoked_at: new Date().toISOString()
+        })
+        .eq('creator_id', user.id)
+        .neq('voice_profile_id', voiceProfileId);
+      
+      if (deactivateError) {
+        console.warn('[verify-voice-and-mint] Deactivate error (non-critical):', deactivateError);
+      } else {
+        console.log('[verify-voice-and-mint] Previous certificates deactivated');
+      }
+    } catch (deactivateErr) {
+      console.warn('[verify-voice-and-mint] Deactivation failed (non-critical):', deactivateErr);
     }
-
-    console.log('[verify-voice-and-mint] Previous certificates deactivated');
 
     // Step 8: Activate the new certificate
     const { error: activateError } = await supabaseClient
@@ -357,28 +360,33 @@ serve(async (req) => {
 
     console.log('[verify-voice-and-mint] New certificate activated');
 
-    // Step 9: Log certification event to identity_access_logs
-    const { error: logError } = await supabaseClient
-      .from('identity_access_logs')
-      .insert({
-        identity_asset_id: voiceProfileId, // Using voice_profile_id as identifier
-        action: 'certified',
-        actor_id: user.id,
-        details: {
-          type: 'voice_identity',
-          chain: 'polygon',
-          tx_hash: tx.hash,
-          token_id: tokenId,
-          explorer_url: explorerUrl,
-        },
-      });
+    // Step 9: Log certification event to identity_access_logs (non-critical)
+    try {
+      const { error: logError } = await supabaseClient
+        .from('identity_access_logs')
+        .insert({
+          identity_asset_id: voiceProfileId, // Using voice_profile_id as identifier
+          action: 'certified',
+          actor_id: user.id,
+          details: {
+            type: 'voice_identity',
+            chain: 'polygon',
+            tx_hash: tx.hash,
+            token_id: tokenId,
+            explorer_url: explorerUrl,
+          },
+        });
 
-    if (logError) {
-      console.error('[verify-voice-and-mint] Activity log error:', logError);
-      // Don't fail - log is optional
+      if (logError) {
+        console.warn('[verify-voice-and-mint] Activity log error (non-critical):', logError);
+      } else {
+        console.log('[verify-voice-and-mint] Activity logged');
+      }
+    } catch (logErr) {
+      console.warn('[verify-voice-and-mint] Activity logging failed (non-critical):', logErr);
     }
 
-    console.log('[verify-voice-and-mint] Activity logged');
+    console.log('[verify-voice-and-mint] Verification complete - returning success');
 
     // Return success
     return new Response(
