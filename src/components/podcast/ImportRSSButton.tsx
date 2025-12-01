@@ -1,0 +1,215 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Download, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+
+interface ImportRSSButtonProps {
+  onImportComplete?: () => void;
+}
+
+interface ImportResult {
+  podcast: {
+    title: string;
+    description: string;
+    author: string;
+    imageUrl: string;
+  };
+  episodes: Array<{
+    title: string;
+    description: string;
+    audioUrl: string;
+    pubDate: string;
+    duration: number;
+    guid: string;
+  }>;
+}
+
+export function ImportRSSButton({ onImportComplete }: ImportRSSButtonProps) {
+  const [open, setOpen] = useState(false);
+  const [rssUrl, setRssUrl] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<"idle" | "success" | "error">("idle");
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const { toast } = useToast();
+
+  const handleImport = async () => {
+    if (!rssUrl.trim()) {
+      toast({
+        title: "RSS URL required",
+        description: "Please enter a valid RSS feed URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+    setImportStatus("idle");
+    setErrorMessage("");
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Call edge function to import RSS
+      const { data, error } = await supabase.functions.invoke("import-rss-feed", {
+        body: { rssUrl: rssUrl.trim() },
+      });
+
+      if (error) throw error;
+
+      if (!data || !data.podcast) {
+        throw new Error("Failed to parse RSS feed");
+      }
+
+      setImportResult(data);
+
+      // Create podcast in database
+      const { data: podcastData, error: podcastError } = await supabase
+        .from("podcasts")
+        .insert({
+          user_id: user.id,
+          title: data.podcast.title,
+          description: data.podcast.description || "",
+          cover_image_url: data.podcast.imageUrl || null,
+          author: data.podcast.author || "",
+          source: "rss",
+          rss_feed_url: rssUrl.trim(),
+        })
+        .select()
+        .single();
+
+      if (podcastError) throw podcastError;
+
+      // Create episodes
+      if (data.episodes && data.episodes.length > 0) {
+        const episodeInserts = data.episodes.map((ep: any) => ({
+          podcast_id: podcastData.id,
+          title: ep.title,
+          description: ep.description || "",
+          audio_url: ep.audioUrl,
+          published_at: ep.pubDate || new Date().toISOString(),
+          duration_seconds: ep.duration || null,
+          source: "rss",
+          guid: ep.guid,
+          status: "published",
+        }));
+
+        const { error: episodesError } = await supabase
+          .from("episodes")
+          .insert(episodeInserts);
+
+        if (episodesError) {
+          console.error("Error inserting episodes:", episodesError);
+        }
+      }
+
+      setImportStatus("success");
+      toast({
+        title: "Import successful!",
+        description: `Imported "${data.podcast.title}" with ${data.episodes?.length || 0} episodes`,
+      });
+
+      setTimeout(() => {
+        onImportComplete?.();
+        setOpen(false);
+        setRssUrl("");
+        setImportStatus("idle");
+        setImportResult(null);
+      }, 2000);
+    } catch (error: any) {
+      console.error("RSS Import error:", error);
+      setImportStatus("error");
+      setErrorMessage(error.message || "Failed to import RSS feed");
+      toast({
+        title: "Import failed",
+        description: error.message || "Unable to import RSS feed. Please check the URL and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Download className="w-4 h-4 mr-2" />
+          Import from RSS
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[525px]">
+        <DialogHeader>
+          <DialogTitle>Import Podcast from RSS Feed</DialogTitle>
+          <DialogDescription>
+            Paste your podcast RSS feed URL (from Buzzsprout, Anchor, Libsyn, etc.) to import existing episodes into Seeksy.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="rss-url">RSS Feed URL</Label>
+            <Input
+              id="rss-url"
+              placeholder="https://feeds.buzzsprout.com/..."
+              value={rssUrl}
+              onChange={(e) => setRssUrl(e.target.value)}
+              disabled={isImporting || importStatus === "success"}
+            />
+            <p className="text-xs text-muted-foreground">
+              Enter the full RSS feed URL of your podcast
+            </p>
+          </div>
+
+          {importStatus === "success" && importResult && (
+            <Alert className="bg-green-500/10 border-green-500/50">
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+              <AlertDescription>
+                Successfully imported "{importResult.podcast.title}" with{" "}
+                {importResult.episodes?.length || 0} episodes!
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {importStatus === "error" && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{errorMessage}</AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={isImporting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleImport}
+            disabled={isImporting || !rssUrl.trim() || importStatus === "success"}
+          >
+            {isImporting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {importStatus === "success" ? "Imported!" : "Import Podcast"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

@@ -144,6 +144,7 @@ import AdvertiserCampaignDetail from "./pages/AdvertiserCampaignDetail";
 import BroadcastStudio from "./pages/BroadcastStudio";
 import CreditInfo from "./pages/CreditInfo";
 import StudioTemplates from "./pages/StudioTemplates";
+import ClipsLibrary from "./pages/ClipsLibrary";
 import MediaLibrary from "./pages/MediaLibrary";
 import MediaVault from "./pages/MediaVault";
 import PostProductionStudio from "./pages/PostProductionStudio";
@@ -718,7 +719,9 @@ const AppContent = () => {
           <Route path="/broadcast/session/:id" element={<BroadcastStudio />} />
           <Route path="/broadcast/:id" element={<BroadcastStudio />} />
           <Route path="/media-library" element={<MediaVault />} />
+          <Route path="/media/library" element={<MediaVault />} />
           <Route path="/media-library-legacy" element={<MediaLibrary />} />
+          <Route path="/clips" element={<ClipsLibrary />} />
           <Route path="/update-media-durations" element={<UpdateMediaDurations />} />
           <Route path="/post-production-studio" element={<PostProductionStudio />} />
           <Route path="/create-clips" element={<CreateClips />} />
