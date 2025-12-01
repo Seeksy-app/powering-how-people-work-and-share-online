@@ -100,6 +100,45 @@ export const NAVIGATION_CONFIG: {
     },
 
     {
+      "group": "Media",
+      "description": "Podcasts and studio tools",
+      "items": [
+        {
+          "id": "podcasts",
+          "label": "Podcasts",
+          "icon": "mic",
+          "path": "/podcasts",
+          "roles": ["creator", "influencer", "agency", "admin"],
+          "description": "Manage your podcasts"
+        },
+        {
+          "id": "studio",
+          "label": "Studio",
+          "icon": "radio",
+          "path": "/studio",
+          "roles": ["creator", "influencer", "agency", "admin"],
+          "description": "Recording studio"
+        },
+        {
+          "id": "media_library",
+          "label": "Media Library",
+          "icon": "folder-open",
+          "path": "/media-library",
+          "roles": ["creator", "influencer", "agency", "admin"],
+          "description": "Your media files"
+        },
+        {
+          "id": "clips",
+          "label": "Clips",
+          "icon": "scissors",
+          "path": "/clips",
+          "roles": ["creator", "influencer", "agency", "admin"],
+          "description": "Video clips"
+        }
+      ]
+    },
+
+    {
       "group": "Admin",
       "description": "System administration",
       "items": [
