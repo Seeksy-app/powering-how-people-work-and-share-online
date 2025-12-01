@@ -9,10 +9,15 @@ import { IdentityPromiseBanner } from "@/components/identity/IdentityPromiseBann
 import { IdentityActivityLog } from "@/components/identity/IdentityActivityLog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { AskAIButton } from "@/components/ai/AskAIButton";
+import { useState } from "react";
+import { PersonaDialog } from "@/components/ai/PersonaDialog";
 
 export default function IdentityHub() {
   const navigate = useNavigate();
   const { data: identityStatus } = useIdentityStatus();
+  const [lexDialogOpen, setLexDialogOpen] = useState(false);
+  const [lexPrompt, setLexPrompt] = useState("");
 
   const { data: activityLogs = [] } = useQuery({
     queryKey: ["identity-activity-logs"],
@@ -192,7 +197,32 @@ export default function IdentityHub() {
         <IdentityPromiseBanner />
 
         {/* Activity Log */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Identity Activity & Access Log</h3>
+          <AskAIButton
+            persona="Lex"
+            onClick={() => {
+              setLexPrompt("Explain my identity verification status and what blockchain certificates mean");
+              setLexDialogOpen(true);
+            }}
+          >
+            Explain My Status
+          </AskAIButton>
+        </div>
         <IdentityActivityLog logs={activityLogs} />
+
+        <PersonaDialog
+          open={lexDialogOpen}
+          onOpenChange={setLexDialogOpen}
+          persona="Lex"
+          prompt={lexPrompt}
+          context={{ 
+            faceVerified, 
+            voiceVerified, 
+            overallStatus: identityStatus?.overallStatus 
+          }}
+          placeholder="Ask Lex about identity verification, rights, or certificates"
+        />
       </div>
     </IdentityLayout>
   );

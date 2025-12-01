@@ -9,10 +9,13 @@ import { ContactOverviewTab } from "@/components/contacts/tabs/ContactOverviewTa
 import { ContactPreferencesTab } from "@/components/contacts/tabs/ContactPreferencesTab";
 import { ContactListsTab } from "@/components/contacts/tabs/ContactListsTab";
 import { ContactCommunicationTab } from "@/components/contacts/tabs/ContactCommunicationTab";
+import { ScribeAssistant } from "@/components/email/ScribeAssistant";
+import { useState } from "react";
 
 export default function ContactProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [scribeOpen, setScribeOpen] = useState(false);
 
   const { data: contact, isLoading } = useQuery({
     queryKey: ["contact", id],
@@ -66,7 +69,7 @@ export default function ContactProfile() {
             </div>
           </div>
 
-          <Button>
+          <Button onClick={() => setScribeOpen(true)}>
             <Mail className="h-4 w-4 mr-2" />
             Send Email
           </Button>
@@ -99,6 +102,14 @@ export default function ContactProfile() {
             <ContactCommunicationTab contactId={contact.id} />
           </TabsContent>
         </Tabs>
+
+        <ScribeAssistant
+          open={scribeOpen}
+          onOpenChange={setScribeOpen}
+          action="draft"
+          contactId={contact.id}
+          context={{ contactName: contact.name, contactEmail: contact.email }}
+        />
       </div>
     </div>
   );

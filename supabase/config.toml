@@ -187,8 +187,8 @@ verify_jwt = true
 [functions.automation-engine]
 verify_jwt = false
 
-[functions.scribe-agent]
+[functions.global-agent]
 verify_jwt = true
 
-[functions.global-agent]
+[functions.scribe-agent]
 verify_jwt = true

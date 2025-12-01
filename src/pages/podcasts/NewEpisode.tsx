@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, FolderOpen, ArrowLeft } from "lucide-react";
+import { PersonaDialog } from "@/components/ai/PersonaDialog";
+import { AskAIButton } from "@/components/ai/AskAIButton";
 
 const NewEpisode = () => {
   const navigate = useNavigate();
@@ -27,6 +29,8 @@ const NewEpisode = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [selectedMediaId, setSelectedMediaId] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
+  const [castorDialogOpen, setCastorDialogOpen] = useState(false);
+  const [castorPrompt, setCastorPrompt] = useState("");
 
   const { data: user } = useQuery({
     queryKey: ["user"],
@@ -251,7 +255,16 @@ const NewEpisode = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="title">Episode Title *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="title">Episode Title *</Label>
+                  <AskAIButton
+                    persona="Castor"
+                    onClick={() => {
+                      setCastorPrompt(`Generate a compelling podcast episode title for: ${podcast?.title || "my podcast"}`);
+                      setCastorDialogOpen(true);
+                    }}
+                  />
+                </div>
                 <Input
                   id="title"
                   value={title}
@@ -262,7 +275,16 @@ const NewEpisode = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description">Description</Label>
+                  <AskAIButton
+                    persona="Castor"
+                    onClick={() => {
+                      setCastorPrompt(`Write show notes and episode description for: ${title || "a podcast episode"}`);
+                      setCastorDialogOpen(true);
+                    }}
+                  />
+                </div>
                 <Textarea
                   id="description"
                   value={description}
@@ -345,6 +367,22 @@ const NewEpisode = () => {
             </Button>
           </div>
         </form>
+
+        <PersonaDialog
+          open={castorDialogOpen}
+          onOpenChange={setCastorDialogOpen}
+          persona="Castor"
+          prompt={castorPrompt}
+          context={{ podcastTitle: podcast?.title, episodeTitle: title }}
+          onApply={(result) => {
+            if (castorPrompt.includes("title")) {
+              setTitle(result);
+            } else {
+              setDescription(result);
+            }
+          }}
+          placeholder="Describe the episode topic and Castor will help you create it"
+        />
       </div>
     </div>
   );

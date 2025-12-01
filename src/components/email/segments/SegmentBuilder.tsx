@@ -8,6 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SegmentCountDisplay } from "./SegmentCountDisplay";
+import { AskAIButton } from "@/components/ai/AskAIButton";
 
 interface SegmentBuilderProps {
   segment: any;
@@ -108,30 +109,54 @@ export function SegmentBuilder({ segment, onUpdate }: SegmentBuilderProps) {
               placeholder="Segment name"
             />
           </div>
-          <div>
-            <label className="text-sm font-medium mb-2 block">Description</label>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe this segment"
-              rows={2}
-            />
-          </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium block">Description</label>
+                <AskAIButton
+                  persona="Atlas"
+                  onClick={() => {
+                    toast.info("Atlas can suggest smart filters based on your audience data");
+                  }}
+                  variant="ghost"
+                  size="sm"
+                >
+                  Suggest Filters
+                </AskAIButton>
+              </div>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe this segment"
+                rows={2}
+              />
+            </div>
         </div>
       </div>
 
       <div className="border-t pt-6">
         <div className="flex items-center justify-between mb-4">
           <h4 className="font-medium">Filters</h4>
-          <Select value={filterLogic} onValueChange={setFilterLogic}>
-            <SelectTrigger className="w-24">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="AND">AND</SelectItem>
-              <SelectItem value="OR">OR</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <AskAIButton
+              persona="Atlas"
+              onClick={() => {
+                // Open Atlas dialog with segment context
+                toast.info("Atlas can suggest smart filters based on your audience data");
+              }}
+              variant="ghost"
+            >
+              Suggest Filters
+            </AskAIButton>
+            <Select value={filterLogic} onValueChange={setFilterLogic}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="AND">AND</SelectItem>
+                <SelectItem value="OR">OR</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="space-y-3">
