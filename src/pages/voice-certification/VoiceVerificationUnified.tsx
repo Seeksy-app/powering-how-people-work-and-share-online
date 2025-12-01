@@ -114,9 +114,30 @@ const VoiceVerificationUnified = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      if (audioContextRef.current) audioContextRef.current.close();
+      safeCloseAudioContext();
     };
   }, []);
+
+  // Safe AudioContext lifecycle management
+  const safeCloseAudioContext = () => {
+    if (!audioContextRef.current) return;
+    
+    try {
+      const state = audioContextRef.current.state;
+      console.log('[VoiceVerification] AudioContext state before close:', state);
+      
+      if (state === 'closed') {
+        console.log('[VoiceVerification] AudioContext already closed, skipping');
+        return;
+      }
+      
+      audioContextRef.current.close().catch((err) => {
+        console.warn('[VoiceVerification] AudioContext close warning (safe to ignore):', err);
+      });
+    } catch (err) {
+      console.warn('[VoiceVerification] AudioContext close error (non-critical):', err);
+    }
+  };
 
   const checkExistingVerification = async () => {
     try {
@@ -206,22 +227,24 @@ const VoiceVerificationUnified = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Log consent to CRM (contacts table)
-      const { error: contactError } = await supabase
-        .from('contacts')
-        .upsert({
-          user_id: user.id,
-          email: userEmail,
-          name: consentName,
-          notes: `Voice verification consent confirmed on ${new Date().toISOString()}`,
-          lead_status: 'active',
-          lead_source: 'Voice Verification'
-        }, {
-          onConflict: 'user_id,email'
-        });
-
-      if (contactError) {
-        console.error("Error logging to CRM:", contactError);
+      // Log consent to CRM (non-critical - don't block on failure)
+      try {
+        await supabase
+          .from('contacts')
+          .upsert({
+            user_id: user.id,
+            email: userEmail,
+            name: consentName,
+            notes: `Voice verification consent confirmed on ${new Date().toISOString()}`,
+            lead_status: 'active',
+            lead_source: 'Voice Verification'
+          }, {
+            onConflict: 'user_id,email'
+          });
+        console.log('[VoiceVerification] CRM consent logged successfully');
+      } catch (crmError) {
+        console.warn('[VoiceVerification] CRM logging failed (non-critical):', crmError);
+        // Continue flow even if CRM fails
       }
 
       // Update userName with consent name and regenerate prompts
@@ -234,7 +257,7 @@ const VoiceVerificationUnified = () => {
         description: "You can now proceed with voice verification."
       });
     } catch (error) {
-      console.error("Error processing consent:", error);
+      console.error("[VoiceVerification] Critical error in consent flow:", error);
       toast.error("Failed to process consent");
     }
   };
@@ -286,12 +309,8 @@ const VoiceVerificationUnified = () => {
       mediaRecorder.onstop = () => {
         stream.getTracks().forEach(track => track.stop());
         
-        // Close AudioContext only if it's not already closed
-        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-          audioContextRef.current.close().catch(err => {
-            console.warn('AudioContext already closing:', err);
-          });
-        }
+        // Safely close AudioContext
+        safeCloseAudioContext();
         
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current);
@@ -411,6 +430,8 @@ const VoiceVerificationUnified = () => {
     setState('verifying');
     setMintProgress(0);
     
+    console.log('[VoiceVerification] Starting verification flow');
+    
     // Simulate progress during minting
     const progressInterval = setInterval(() => {
       setMintProgress(prev => {
@@ -425,84 +446,139 @@ const VoiceVerificationUnified = () => {
     try {
       // Convert blob to base64
       const reader = new FileReader();
+      
       reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-        
-        // Prepare payload with selected prompt
-        const payload: VerifyVoiceAndMintPayload = {
-          audioData: base64Audio,
-          recordingDuration: recordingTime,
-          selectedPrompt: prompts[selectedPromptIndex]
-        };
+        try {
+          const base64Audio = (reader.result as string).split(',')[1];
+          console.log('[VoiceVerification] Audio converted to base64');
+          
+          // Prepare payload with selected prompt
+          const payload: VerifyVoiceAndMintPayload = {
+            audioData: base64Audio,
+            recordingDuration: recordingTime,
+            selectedPrompt: prompts[selectedPromptIndex]
+          };
 
-        // Call verify-voice-and-mint edge function
-        const { data, error: invokeError } = await supabase.functions.invoke<VerifyVoiceAndMintSuccess | VerifyVoiceAndMintError>(
-          'verify-voice-and-mint',
-          { body: payload }
-        );
+          console.log('[VoiceVerification] Invoking verify-voice-and-mint function...');
+          
+          // Call verify-voice-and-mint edge function
+          const { data, error: invokeError } = await supabase.functions.invoke<VerifyVoiceAndMintSuccess | VerifyVoiceAndMintError>(
+            'verify-voice-and-mint',
+            { body: payload }
+          );
 
-        clearInterval(progressInterval);
-        setMintProgress(100);
+          console.log('[VoiceVerification] Edge function response received');
+          clearInterval(progressInterval);
+          setMintProgress(100);
 
-        if (invokeError) {
-          throw new Error(invokeError.message || "Failed to verify voice");
-        }
+          if (invokeError) {
+            console.error('[VoiceVerification] Invoke error:', invokeError);
+            throw new Error(invokeError.message || "Failed to verify voice");
+          }
 
-        // Check if response is an error
-        if (data && 'ok' in data && data.ok === false) {
-          const errorResponse = data as VerifyVoiceAndMintError;
-          setError(mapVoiceError(errorResponse));
+          // Check if response is an error
+          if (data && 'ok' in data && data.ok === false) {
+            const errorResponse = data as VerifyVoiceAndMintError;
+            console.error('[VoiceVerification] Verification failed:', errorResponse.error);
+            setError(mapVoiceError(errorResponse));
+            setState('review');
+            toast.error("Verification failed", {
+              description: mapVoiceError(errorResponse)
+            });
+            return;
+          }
+
+          // Success - handle completion with retry logic
+          if (data && 'success' in data && data.success) {
+            const successResponse = data as VerifyVoiceAndMintSuccess;
+            console.log('[VoiceVerification] Mint successful!', {
+              voiceProfileId: successResponse.voiceProfileId,
+              tokenId: successResponse.certificate.token_id,
+              txHash: successResponse.certificate.tx_hash
+            });
+            
+            // Invalidate queries with retry logic (non-blocking)
+            console.log('[VoiceVerification] Invalidating queries...');
+            const invalidateWithRetry = async (retries = 3) => {
+              for (let i = 0; i < retries; i++) {
+                try {
+                  await Promise.all([
+                    queryClient.invalidateQueries({ queryKey: ['creator_voice_profiles'] }),
+                    queryClient.invalidateQueries({ queryKey: ['voice_blockchain_certificates'] }),
+                    queryClient.invalidateQueries({ queryKey: ['voice-identity-status'] }),
+                    queryClient.invalidateQueries({ queryKey: ['identity-status'] }),
+                    queryClient.invalidateQueries({ queryKey: ['identity-status-widget'] }),
+                    queryClient.invalidateQueries({ queryKey: ['identity-assets'] }),
+                    queryClient.invalidateQueries({ queryKey: ['face-identity-status'] }),
+                    queryClient.invalidateQueries({ queryKey: ['dashboard-widgets'] }),
+                    queryClient.invalidateQueries({ queryKey: ['identity-activity-logs'] })
+                  ]);
+                  console.log('[VoiceVerification] Queries invalidated successfully');
+                  break;
+                } catch (queryError) {
+                  console.warn(`[VoiceVerification] Query invalidation attempt ${i + 1} failed:`, queryError);
+                  if (i === retries - 1) {
+                    console.error('[VoiceVerification] All query invalidation attempts failed (non-critical)');
+                  }
+                }
+              }
+            };
+            
+            // Run invalidation in background - don't wait for it
+            invalidateWithRetry().catch(err => {
+              console.warn('[VoiceVerification] Background query invalidation error (non-critical):', err);
+            });
+            
+            // Show success toast immediately
+            toast.success("Voice verified!", {
+              description: "Your voice identity is now on-chain."
+            });
+
+            console.log('[VoiceVerification] Navigating to success page...');
+            
+            // Navigate immediately - don't wait for queries
+            setTimeout(() => {
+              navigate("/identity/voice/success", {
+                state: {
+                  voiceProfileId: successResponse.voiceProfileId,
+                  voiceHash: successResponse.voiceHash,
+                  tokenId: successResponse.certificate.token_id,
+                  explorerUrl: successResponse.certificate.explorer_url,
+                  transactionHash: successResponse.certificate.tx_hash
+                }
+              });
+            }, 500);
+          } else {
+            // Unexpected response format
+            console.error('[VoiceVerification] Unexpected response format:', data);
+            throw new Error('Unexpected response from verification service');
+          }
+        } catch (innerError) {
+          clearInterval(progressInterval);
+          console.error('[VoiceVerification] Inner error during verification:', innerError);
+          const errorMsg = innerError instanceof Error ? innerError.message : "Unknown error occurred";
+          setError(errorMsg);
           setState('review');
           toast.error("Verification failed", {
-            description: mapVoiceError(errorResponse)
+            description: errorMsg
           });
-          return;
-        }
-
-        // Success - navigate to success page
-        if (data && 'success' in data && data.success) {
-          const successResponse = data as VerifyVoiceAndMintSuccess;
-          
-          // Invalidate all identity-related queries to update UI instantly
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ['creator_voice_profiles'] }),
-            queryClient.invalidateQueries({ queryKey: ['voice_blockchain_certificates'] }),
-            queryClient.invalidateQueries({ queryKey: ['voice-identity-status'] }),
-            queryClient.invalidateQueries({ queryKey: ['identity-status'] }),
-            queryClient.invalidateQueries({ queryKey: ['identity-status-widget'] }),
-            queryClient.invalidateQueries({ queryKey: ['identity-assets'] }),
-            queryClient.invalidateQueries({ queryKey: ['face-identity-status'] }),
-            queryClient.invalidateQueries({ queryKey: ['dashboard-widgets'] }),
-            queryClient.invalidateQueries({ queryKey: ['identity-activity-logs'] })
-          ]);
-          
-          toast.success("Voice verified!", {
-            description: "Your voice identity is now on-chain."
-          });
-
-          // Add smooth transition delay
-          setTimeout(() => {
-            navigate("/identity/voice/success", {
-              state: {
-                voiceProfileId: successResponse.voiceProfileId,
-                voiceHash: successResponse.voiceHash,
-                tokenId: successResponse.certificate.token_id,
-                explorerUrl: successResponse.certificate.explorer_url,
-                transactionHash: successResponse.certificate.tx_hash
-              }
-            });
-          }, 500);
-        } else {
-          throw new Error("Unexpected response format");
         }
       };
+      
+      reader.onerror = () => {
+        clearInterval(progressInterval);
+        console.error('[VoiceVerification] FileReader error');
+        setError("Failed to read audio file");
+        setState('review');
+        toast.error("Failed to read recording");
+      };
+      
       reader.readAsDataURL(audioBlob);
-
     } catch (err) {
-      console.error('Verification error:', err);
       clearInterval(progressInterval);
+      console.error('[VoiceVerification] Outer error:', err);
       const errorMsg = err instanceof Error ? err.message : "Unknown error occurred";
-      setError("Something went wrong\nWe hit a problem verifying this recording. Please try again. If it keeps happening, contact support.");
+      setError(errorMsg);
       setState('review');
       toast.error("Verification failed", {
         description: errorMsg

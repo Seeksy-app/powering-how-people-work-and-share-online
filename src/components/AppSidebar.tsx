@@ -56,7 +56,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import seeksyLogo from "@/assets/seeksy-logo.png";
-const newSeeksyLogo = "/spark/holiday/spark-waving-santa.png";
+const newSeeksyLogo = "/spark/holiday/spark-santa-waving.png";
 import { ModuleLauncher } from "@/components/ModuleLauncher";
 import { useRole } from "@/contexts/RoleContext";
 import { AdvertiserSidebarNav } from "@/components/advertiser/AdvertiserSidebarNav";
