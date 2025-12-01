@@ -19,11 +19,11 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { code, userId } = await req.json();
     
-    const GOOGLE_CLIENT_ID = Deno.env.get("GOOGLE_CALENDAR_CLIENT_ID");
-    const GOOGLE_CLIENT_SECRET = Deno.env.get("GOOGLE_CALENDAR_CLIENT_SECRET");
+    const GMAIL_CLIENT_ID = Deno.env.get("GMAIL_CLIENT_ID");
+    const GMAIL_CLIENT_SECRET = Deno.env.get("GMAIL_CLIENT_SECRET");
     
-    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
-      throw new Error("Google OAuth credentials not configured");
+    if (!GMAIL_CLIENT_ID || !GMAIL_CLIENT_SECRET) {
+      throw new Error("Gmail OAuth credentials not configured");
     }
 
     // Exchange code for tokens
@@ -32,8 +32,8 @@ const handler = async (req: Request): Promise<Response> => {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         code,
-        client_id: GOOGLE_CLIENT_ID,
-        client_secret: GOOGLE_CLIENT_SECRET,
+        client_id: GMAIL_CLIENT_ID,
+        client_secret: GMAIL_CLIENT_SECRET,
         redirect_uri: `${Deno.env.get("SUPABASE_URL")}/functions/v1/gmail-oauth-callback`,
         grant_type: "authorization_code",
       }),
