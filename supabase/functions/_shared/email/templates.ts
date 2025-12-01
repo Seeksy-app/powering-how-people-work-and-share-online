@@ -50,10 +50,11 @@ function baseEmail({ heading, content, ctaText, ctaUrl, enableMascot }: BaseEmai
     </div>
     <div class="footer">
       <hr class="divider">
+      <p class="footer-text">{{PERSONA_SIGNATURE}}</p>
       <p class="footer-text">© ${new Date().getFullYear()} Seeksy. All rights reserved.</p>
       <p class="footer-text">
         <a href="{{BASE_URL}}/email-preferences" class="footer-link">Update Preferences</a> · 
-        <a href="{{BASE_URL}}/unsubscribe?email={{EMAIL}}" class="footer-link">Unsubscribe</a>
+        <a href="{{UNSUBSCRIBE_URL}}" class="footer-link">Unsubscribe</a>
       </p>
     </div>
   </div>
