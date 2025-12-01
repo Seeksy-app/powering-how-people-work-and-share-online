@@ -5034,6 +5034,7 @@ export type Database = {
         Row: {
           campaign_name: string
           created_at: string | null
+          draft_status: string | null
           from_email_account_id: string | null
           html_content: string | null
           id: string
@@ -5042,6 +5043,7 @@ export type Database = {
           recipient_filter: Json | null
           recipient_list_id: string | null
           scheduled_at: string | null
+          scheduled_for: string | null
           sent_at: string | null
           status: string | null
           subject: string | null
@@ -5059,6 +5061,7 @@ export type Database = {
         Insert: {
           campaign_name: string
           created_at?: string | null
+          draft_status?: string | null
           from_email_account_id?: string | null
           html_content?: string | null
           id?: string
@@ -5067,6 +5070,7 @@ export type Database = {
           recipient_filter?: Json | null
           recipient_list_id?: string | null
           scheduled_at?: string | null
+          scheduled_for?: string | null
           sent_at?: string | null
           status?: string | null
           subject?: string | null
@@ -5084,6 +5088,7 @@ export type Database = {
         Update: {
           campaign_name?: string
           created_at?: string | null
+          draft_status?: string | null
           from_email_account_id?: string | null
           html_content?: string | null
           id?: string
@@ -5092,6 +5097,7 @@ export type Database = {
           recipient_filter?: Json | null
           recipient_list_id?: string | null
           scheduled_at?: string | null
+          scheduled_for?: string | null
           sent_at?: string | null
           status?: string | null
           subject?: string | null
@@ -5290,34 +5296,46 @@ export type Database = {
       }
       email_templates: {
         Row: {
+          category: string | null
           created_at: string | null
           description: string | null
           id: string
           is_active: boolean | null
+          persona: string | null
+          preference_channel: string | null
           template_key: string
           template_name: string
+          thumbnail_url: string | null
           updated_at: string | null
           variables: Json | null
           version: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
+          persona?: string | null
+          preference_channel?: string | null
           template_key: string
           template_name: string
+          thumbnail_url?: string | null
           updated_at?: string | null
           variables?: Json | null
           version?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
+          persona?: string | null
+          preference_channel?: string | null
           template_key?: string
           template_name?: string
+          thumbnail_url?: string | null
           updated_at?: string | null
           variables?: Json | null
           version?: string | null

@@ -45,6 +45,21 @@ const handler = async (req: Request): Promise<Response> => {
     // Render the template with variables
     let html = templateRenderer(variables);
 
+    // Get persona signature if template has persona
+    const personaSignatures: Record<string, string> = {
+      'Lex': 'Sent with ❤️ by Lex — Your Seeksy Identity Guardian',
+      'Mia': 'Sent with ❤️ by Mia — Your Seeksy Meeting Assistant',
+      'Echo': 'Sent with ❤️ by Echo — Your Seeksy Studio Assistant',
+      'Reel': 'Sent with ❤️ by Reel — Your Seeksy Clips Assistant',
+      'Castor': 'Sent with ❤️ by Castor — Your Seeksy Podcast Assistant',
+      'Atlas': 'Sent with ❤️ by Atlas — Your Seeksy Audience Assistant',
+      'Scribe': 'Sent with ❤️ by Scribe — Your Seeksy Marketing Assistant',
+    };
+
+    const personaSignature = template.persona && personaSignatures[template.persona as string]
+      ? personaSignatures[template.persona as string]
+      : 'Sent by Seeksy';
+
     // Replace common placeholders
     const baseUrl = Deno.env.get("SUPABASE_URL")?.replace("/rest/v1", "") || "https://seeksy.io";
     
@@ -52,6 +67,8 @@ const handler = async (req: Request): Promise<Response> => {
     html = html.replace(/\{\{EMAIL\}\}/g, recipientEmail || "");
     html = html.replace(/\{\{LOGO_URL\}\}/g, `${baseUrl}/storage/v1/object/public/logos/main_logo`);
     html = html.replace(/\{\{MASCOT_URL\}\}/g, `${baseUrl}/storage/v1/object/public/logos/mascots/default`);
+    html = html.replace(/\{\{PERSONA_SIGNATURE\}\}/g, personaSignature);
+    html = html.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, `${baseUrl}/unsubscribe?email=${recipientEmail}`);
 
     // Replace template-specific variables
     Object.entries(variables).forEach(([key, value]) => {
