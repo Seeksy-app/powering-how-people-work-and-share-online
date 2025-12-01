@@ -213,13 +213,13 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-hover/30 p-4">
-        <NavLink
-          to="/ask-spark"
-          className="flex items-center gap-2 text-sm hover:text-sidebar-accent transition-colors"
+        <button
+          onClick={() => window.dispatchEvent(new Event('openSparkChat'))}
+          className="flex items-center gap-2 text-sm hover:text-sidebar-accent transition-colors w-full text-left"
         >
           <SparkIcon size={20} />
           {!collapsed && <span>Ask Spark</span>}
-        </NavLink>
+        </button>
       </SidebarFooter>
     </Sidebar>
   );

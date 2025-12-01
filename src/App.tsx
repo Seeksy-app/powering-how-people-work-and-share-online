@@ -713,6 +713,7 @@ const AppContent = () => {
           <Route path="/admin/checklists/template/:templateId" element={<ChecklistTemplate />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/settings/billing" element={<SettingsBilling />} />
+              <Route path="/ask-spark" element={<Navigate to="/my-day" replace />} />
               <Route path="/notification-preferences" element={<NotificationPreferences />} />
               <Route path="/subscription" element={<SubscriptionSettings />} />
               <Route path="/credit-info" element={<CreditInfo />} />
