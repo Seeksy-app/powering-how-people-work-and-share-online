@@ -268,39 +268,27 @@ export const SeeksyAIChatWidget = () => {
 
   if (!isOpen) {
     return (
-      <div className="fixed bottom-6 right-6 z-50 group animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <button
-          onClick={() => {
-            setIsOpen(true);
-            setTriggerSparkAnimation(true);
-          }}
-          className="transition-all duration-300 hover:scale-110 bg-transparent border-0 p-0 m-0"
-          aria-label="Open Seeksy AI Chat"
-          style={{ 
-            background: 'transparent', 
-            boxShadow: 'none',
-            padding: 0,
-            margin: 0,
-            border: 'none'
-          }}
-        >
-          <div style={{ 
-            width: '80px', 
-            height: '80px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            background: 'transparent'
-          }}>
-            <SparkIcon 
-              variant="holiday"
-              size={80}
-              pose="waving"
-              animated
-            />
-          </div>
-        </button>
-      </div>
+      <button
+        onClick={() => {
+          setIsOpen(true);
+          setTriggerSparkAnimation(true);
+        }}
+        className="fixed bottom-6 right-6 z-50 transition-all duration-300 hover:scale-110 animate-in fade-in slide-in-from-bottom-4"
+        aria-label="Open Seeksy AI Chat"
+        style={{ 
+          background: 'transparent',
+          border: 'none',
+          padding: 0,
+          cursor: 'pointer'
+        }}
+      >
+        <SparkIcon 
+          variant="holiday"
+          size={80}
+          pose="waving"
+          animated
+        />
+      </button>
     );
   }
   
