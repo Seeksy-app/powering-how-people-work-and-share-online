@@ -98,7 +98,7 @@ export function VoiceIdentitySection({ asset }: VoiceIdentitySectionProps) {
                 variant="outline"
                 onClick={() => {
                   const url = asset.cert_explorer_url || 
-                    (asset.cert_tx_hash ? `https://polygonscan.com/tx/${asset.cert_tx_hash}` : null);
+                    (asset.cert_tx_hash ? `https://amoy.polygonscan.com/tx/${asset.cert_tx_hash}` : null);
                   if (url) window.open(url, "_blank");
                 }}
               >

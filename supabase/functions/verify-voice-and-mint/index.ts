@@ -198,7 +198,7 @@ serve(async (req) => {
 
     if (!rpcUrl || !minterPrivateKey) {
       console.error('[verify-voice-and-mint] Missing blockchain config');
-      throw new Error("Missing blockchain configuration");
+      throw new Error("Missing blockchain configuration: POLYGON_RPC_URL or POLYGON_PRIVATE_KEY");
     }
 
     console.log('[verify-voice-and-mint] RPC URL present:', !!rpcUrl);
@@ -221,25 +221,41 @@ serve(async (req) => {
     );
 
     let tx;
+    let receipt;
     try {
       const creatorAddress = signer.address;
       console.log('[verify-voice-and-mint] Certifying voice for:', creatorAddress);
       
+      // Actually broadcast the transaction
       tx = await contract.certifyClip(creatorAddress, voiceProfileId);
       console.log('[verify-voice-and-mint] TX sent:', tx.hash);
+      
+      // Wait for blockchain confirmation
+      console.log('[verify-voice-and-mint] Waiting for confirmation...');
+      receipt = await tx.wait();
+      console.log('[verify-voice-and-mint] TX confirmed in block:', receipt.blockNumber);
+      
     } catch (txError) {
       console.error('[verify-voice-and-mint] Transaction error:', txError);
-      throw new Error(`Blockchain transaction failed: ${txError}`);
+      const errorMsg = txError instanceof Error ? txError.message : String(txError);
+      
+      // Check for common blockchain errors
+      if (errorMsg.includes('insufficient funds')) {
+        throw new Error('Insufficient MATIC balance in platform wallet for gas fees');
+      } else if (errorMsg.includes('nonce')) {
+        throw new Error('Transaction nonce mismatch - please retry');
+      } else if (errorMsg.includes('revert')) {
+        throw new Error('Smart contract rejected the transaction');
+      }
+      
+      throw new Error(`Blockchain transaction failed: ${errorMsg}`);
     }
-    
-    console.log('[verify-voice-and-mint] Waiting for confirmation...');
-    const receipt = await tx.wait();
-    console.log('[verify-voice-and-mint] TX confirmed in block:', receipt.blockNumber);
 
     const tokenId = Date.now().toString();
-    const explorerUrl = `https://polygonscan.com/tx/${tx.hash}`;
+    const explorerUrl = `https://amoy.polygonscan.com/tx/${tx.hash}`;
     
     console.log('[verify-voice-and-mint] Certificate minted - Token ID:', tokenId);
+    console.log('[verify-voice-and-mint] Explorer URL:', explorerUrl);
 
     // Step 5: Create blockchain certificate record (pending state initially)
     const { data: certData, error: certError } = await supabaseClient

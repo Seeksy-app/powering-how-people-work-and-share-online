@@ -255,7 +255,7 @@ export default function VoiceCertificationPage() {
                               size="sm"
                               onClick={() => {
                                 const url = cert.cert_explorer_url || 
-                                  `https://polygonscan.com/tx/${cert.transaction_hash}`;
+                                  `https://amoy.polygonscan.com/tx/${cert.transaction_hash}`;
                                 window.open(url, "_blank");
                               }}
                             >

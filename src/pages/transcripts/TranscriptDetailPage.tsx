@@ -408,7 +408,7 @@ export default function TranscriptDetailPage() {
                     size="sm"
                     variant="outline"
                     className="w-full"
-                    onClick={() => window.open(`https://polygonscan.com/tx/${credential.tx_hash}`, '_blank')}
+                    onClick={() => window.open(`https://amoy.polygonscan.com/tx/${credential.tx_hash}`, '_blank')}
                   >
                     View on Polygonscan
                   </Button>

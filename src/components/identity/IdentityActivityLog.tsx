@@ -43,7 +43,7 @@ export const IdentityActivityLog = ({ logs, onViewFullLog }: IdentityActivityLog
                                          log.details?.type === 'voice' ||
                                          log.details?.type === 'face';
               const explorerUrl = log.details?.tx_hash 
-                ? `https://polygonscan.com/tx/${log.details.tx_hash}`
+                ? `https://amoy.polygonscan.com/tx/${log.details.tx_hash}`
                 : null;
 
               return (

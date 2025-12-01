@@ -21,7 +21,7 @@ export const VoiceNFTBadge = ({
   className,
   showLink = true
 }: VoiceNFTBadgeProps) => {
-  const polygonscanUrl = `https://polygonscan.com/tx/${transactionHash}`;
+  const polygonscanUrl = `https://amoy.polygonscan.com/tx/${transactionHash}`;
 
   return (
     <TooltipProvider>
