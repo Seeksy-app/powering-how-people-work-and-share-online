@@ -1,44 +1,28 @@
 import { useState, useEffect } from "react";
-import sparkGarland from "@/assets/spark-garland.png";
-import { removeBackground, loadImage } from "@/utils/removeBackground";
+import { useHolidaySettings } from "@/hooks/useHolidaySettings";
 
 export const FloatingSparkButton = () => {
-  const [transparentSpark, setTransparentSpark] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(true);
+  const { data: settings } = useHolidaySettings();
+  const [sparkImage, setSparkImage] = useState<string>("");
 
   useEffect(() => {
-    const processImage = async () => {
-      try {
-        // Load the original image
-        const response = await fetch(sparkGarland);
-        const blob = await response.blob();
-        const img = await loadImage(blob);
-        
-        // Remove background
-        const transparentBlob = await removeBackground(img);
-        const url = URL.createObjectURL(transparentBlob);
-        setTransparentSpark(url);
-        setIsProcessing(false);
-      } catch (error) {
-        console.error('Failed to remove background:', error);
-        // Fallback to original image
-        setTransparentSpark(sparkGarland);
-        setIsProcessing(false);
-      }
-    };
+    // Use holiday logo if holiday mode is enabled, otherwise use regular spark
+    const imagePath = settings?.holidayMode 
+      ? "/spark/holiday/seeksy-logo-santa.png"
+      : "/spark/holiday/seeksy-logo-wreath.png";
+    
+    setSparkImage(imagePath);
+  }, [settings?.holidayMode]);
 
-    processImage();
-  }, []);
+  if (!sparkImage) return null;
 
-  if (isProcessing || !transparentSpark) {
-    return null; // Hide while processing
-  }
+  if (!sparkImage) return null;
 
   return (
     <div
       id="seeksy-chat-trigger"
       onClick={() => window.dispatchEvent(new Event('openSparkChat'))}
-      className="fixed bottom-6 right-6 cursor-pointer transition-transform duration-200 hover:scale-105"
+      className="fixed bottom-6 right-6 cursor-pointer transition-transform duration-200 hover:scale-110 animate-bounce"
       style={{ zIndex: 99999 }}
       aria-label="Ask Spark"
       role="button"
@@ -50,11 +34,11 @@ export const FloatingSparkButton = () => {
       }}
     >
       <img 
-        src={transparentSpark} 
+        src={sparkImage} 
         alt="Spark assistant" 
-        className="block"
+        className="block drop-shadow-lg"
         style={{ 
-          width: '64px',
+          width: '72px',
           height: 'auto',
           display: 'block'
         }}
