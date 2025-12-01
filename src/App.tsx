@@ -94,7 +94,7 @@ import AdminSettings from "./pages/admin/Settings";
 import LogoManagerV2 from "./pages/admin/LogoManagerV2";
 import HeroManager from "./pages/admin/HeroManager";
 import BrandSettings from "./pages/admin/BrandSettings";
-import EmailTemplates from "./pages/admin/EmailTemplates";
+import AdminEmailTemplates from "./pages/admin/EmailTemplates";
 import GlobalSettings from "./pages/admin/GlobalSettings";
 import AdminAds from "./pages/AdminAds";
 import AdminAudioAds from "./pages/AdminAudioAds";
@@ -210,6 +210,8 @@ import EmailCampaignAnalytics from "./pages/EmailCampaignAnalytics";
 import EmailCampaignBuilder from "./pages/EmailCampaignBuilder";
 import EmailView from "./pages/EmailView";
 import EmailWebView from "./pages/EmailWebView";
+import EmailTemplates from "./pages/EmailTemplates";
+import ContactProfile from "./pages/ContactProfile";
 import ClientTickets from "./pages/ClientTickets";
 import Proposals from "./pages/Proposals";
 import CreateProposal from "./pages/CreateProposal";
@@ -505,11 +507,13 @@ const AppContent = () => {
               <Route path="/transcripts/:id" element={<TranscriptDetailPage />} />
               <Route path="/marketing" element={<Marketing />} />
               <Route path="/email-settings" element={<EmailSettings />} />
-              <Route path="/email-campaigns" element={<EmailCampaigns />} />
-              <Route path="/email-campaigns/new" element={<EmailCampaignBuilder />} />
-              <Route path="/email-campaigns/:id" element={<EmailCampaignAnalytics />} />
-              <Route path="/email/:id/view" element={<EmailView />} />
-              <Route path="/email/:emailId/view" element={<EmailWebView />} />
+            <Route path="/email-campaigns" element={<EmailCampaigns />} />
+            <Route path="/email-campaigns/new" element={<EmailCampaignBuilder />} />
+            <Route path="/email-campaigns/:id" element={<EmailCampaignAnalytics />} />
+            <Route path="/email/:id/view" element={<EmailView />} />
+            <Route path="/email/:emailId/view" element={<EmailWebView />} />
+            <Route path="/email-templates" element={<EmailTemplates />} />
+            <Route path="/contacts/:id" element={<ContactProfile />} />
               <Route path="/create-event" element={<CreateEvent />} />
               <Route path="/event/:id" element={<EventDetail />} />
               <Route path="/event/:id/edit" element={<EditEvent />} />
@@ -610,7 +614,7 @@ const AppContent = () => {
               <Route path="/admin/screenshot-generator" element={<ScreenshotGenerator />} />
             <Route path="/admin/hero-generator" element={<HeroImageGeneratorPage />} />
             <Route path="/admin/mascot-generator" element={<MascotGeneratorPage />} />
-            <Route path="/admin/email-templates" element={<EmailTemplates />} />
+            <Route path="/admin/email-templates" element={<AdminEmailTemplates />} />
               <Route path="/admin/revenue-reports" element={<RevenueReports />} />
               <Route path="/admin/billing" element={<Billing />} />
               <Route path="/admin/payments" element={<Payments />} />
