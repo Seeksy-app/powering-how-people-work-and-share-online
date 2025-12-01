@@ -78,6 +78,33 @@ export const NAVIGATION_CONFIG: {
     },
 
     {
+      "group": "Email",
+      "items": [
+        {
+          "id": "email_campaigns",
+          "label": "Campaigns",
+          "icon": "mail",
+          "path": "/email-campaigns",
+          "roles": ["creator", "influencer", "agency", "admin"]
+        },
+        {
+          "id": "email_templates",
+          "label": "Templates",
+          "icon": "layout",
+          "path": "/email-templates",
+          "roles": ["creator", "influencer", "agency", "admin"]
+        },
+        {
+          "id": "email_settings",
+          "label": "Settings",
+          "icon": "settings",
+          "path": "/email-settings",
+          "roles": ["creator", "influencer", "agency", "admin"]
+        }
+      ]
+    },
+
+    {
       "group": "Engagement",
       "items": [
         {
@@ -196,24 +223,17 @@ export const NAVIGATION_CONFIG: {
           "roles": ["admin", "super_admin"]
         },
         {
-          "id": "global_settings",
-          "label": "Global Settings",
-          "icon": "settings",
-          "path": "/admin/settings",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "hero_generator",
-          "label": "Hero Generator",
-          "icon": "image",
-          "path": "/admin/hero-generator",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "mascot_generator",
-          "label": "Mascot Generator",
+          "id": "mascot_manager",
+          "label": "Mascot Manager",
           "icon": "star",
-          "path": "/admin/mascot-generator",
+          "path": "/admin/mascot-manager",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "global_branding",
+          "label": "Global Branding",
+          "icon": "palette",
+          "path": "/admin/global-branding",
           "roles": ["admin", "super_admin"]
         }
       ]
