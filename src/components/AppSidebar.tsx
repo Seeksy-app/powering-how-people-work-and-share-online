@@ -101,7 +101,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
       <SidebarContent>
         {/* My Day OS */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/60 font-medium">My Day OS</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sidebar-foreground font-medium opacity-80">My Day OS</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNavItems.map((item) => (
@@ -129,7 +129,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
           <SidebarGroup>
             <Collapsible open={engagementOpen} onOpenChange={setEngagementOpen}>
               <SidebarGroupLabel asChild>
-                <CollapsibleTrigger className="flex w-full items-center justify-between hover:bg-sidebar-hover/50 rounded-lg px-2 py-1 transition-colors text-sidebar-foreground/60 font-medium">
+                <CollapsibleTrigger className="flex w-full items-center justify-between hover:bg-sidebar-hover/50 rounded-lg px-2 py-1 transition-colors text-sidebar-foreground font-medium opacity-80">
                   <span>Engagement</span>
                   {engagementOpen ? (
                     <ChevronDown className="h-4 w-4" />
@@ -188,7 +188,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
           <>
             <Separator className="my-3 bg-sidebar-hover/30" />
             <SidebarGroup>
-              <SidebarGroupLabel className="text-sidebar-foreground/60 font-medium">Admin</SidebarGroupLabel>
+              <SidebarGroupLabel className="text-sidebar-foreground font-medium opacity-80">Admin</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {adminNavItems.map((item) => (
