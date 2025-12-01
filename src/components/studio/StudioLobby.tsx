@@ -30,7 +30,7 @@ export function StudioLobby({ onEnterStudio }: StudioLobbyProps) {
       <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl">Welcome to Creator Studio</CardTitle>
+            <CardTitle className="text-3xl">Welcome to Studio</CardTitle>
             <CardDescription>
               Set up your recording session before you begin
             </CardDescription>

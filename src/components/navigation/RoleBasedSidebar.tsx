@@ -108,6 +108,7 @@ const ICON_MAP: Record<string, any> = {
   document: FileAudio,
   podcast: Podcast,
   folder: FolderOpen,
+  'folder-open': FolderOpen,
   plus: Plus,
   dollar: DollarSign,
   'dollar-sign': DollarSign,
@@ -168,6 +169,7 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
     "Business Operations": true,
     "Developer Tools": true,
     "My Day OS": true,
+    "Media": true,
   });
 
   const toggleGroup = (groupName: string) => {
