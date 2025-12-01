@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Circle } from "lucide-react";
+import { EmailTrackingPills } from "./EmailTrackingPills";
 
 interface Email {
   id: string;
@@ -55,6 +56,8 @@ const getStatusLabel = (eventType: string) => {
 
 interface EmailListActions {
   onCompose: () => void;
+  onOpenTimeline?: () => void;
+  emailEvents?: any[];
 }
 
 export function EmailList({
@@ -66,6 +69,8 @@ export function EmailList({
   sortBy,
   onSortChange,
   onCompose,
+  onOpenTimeline,
+  emailEvents = [],
 }: EmailListProps & EmailListActions) {
   return (
     <div className="h-full border-r flex flex-col">
@@ -157,6 +162,17 @@ export function EmailList({
                         </span>
                       )}
                     </div>
+                    
+                    {/* Tracking Pills */}
+                    {email.event_type !== "draft" && (
+                      <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                        <EmailTrackingPills
+                          events={emailEvents.filter((e: any) => e.resend_email_id === (email as any).resend_email_id)}
+                          sentAt={email.created_at}
+                          onClick={() => onOpenTimeline?.()}
+                        />
+                      </div>
+                    )}
                     
                     <div className="text-xs text-muted-foreground mt-1">
                       {new Date(email.created_at).toLocaleString()}

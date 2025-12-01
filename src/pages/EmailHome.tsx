@@ -6,16 +6,26 @@ import { EmailFolderList } from "@/components/email/client/EmailFolderList";
 import { EmailList } from "@/components/email/client/EmailList";
 import { EmailViewer } from "@/components/email/client/EmailViewer";
 import { EmailComposer } from "@/components/email/client/EmailComposer";
+import { EngagementTimelinePanel } from "@/components/email/client/EngagementTimelinePanel";
 import { useToast } from "@/hooks/use-toast";
+import { useEmailNotifications } from "@/hooks/useEmailNotifications";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
+import { useSearchParams } from "react-router-dom";
 
 export default function EmailHome() {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [selectedFolder, setSelectedFolder] = useState("inbox");
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
   const [sortBy, setSortBy] = useState("date");
   const [composerOpen, setComposerOpen] = useState(false);
   const [editDraftId, setEditDraftId] = useState<string | null>(null);
+  const [timelinePanelOpen, setTimelinePanelOpen] = useState(false);
+
+  // Enable notifications and unread count tracking
+  useEmailNotifications();
+  useUnreadCount();
 
   // Keyboard shortcut: C to compose
   useEffect(() => {
@@ -32,6 +42,14 @@ export default function EmailHome() {
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
   }, []);
+
+  // Handle ?open=<emailId> URL param for notifications
+  useEffect(() => {
+    const openEmailId = searchParams.get("open");
+    if (openEmailId) {
+      setSelectedEmailId(openEmailId);
+    }
+  }, [searchParams]);
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
@@ -88,6 +106,23 @@ export default function EmailHome() {
       }
 
       const { data } = await query;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch ALL email events for tracking pills
+  const { data: allEmailEvents = [] } = useQuery({
+    queryKey: ["all-email-events", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data } = await supabase
+        .from("email_events")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("occurred_at", { ascending: true });
+      
       return data || [];
     },
     enabled: !!user,
@@ -203,6 +238,8 @@ export default function EmailHome() {
             sortBy={sortBy}
             onSortChange={setSortBy}
             onCompose={() => setComposerOpen(true)}
+            onOpenTimeline={() => setTimelinePanelOpen(true)}
+            emailEvents={allEmailEvents}
           />
         </ResizablePanel>
 
@@ -256,6 +293,18 @@ export default function EmailHome() {
           setEditDraftId(null);
         }}
         draftId={editDraftId}
+      />
+
+      {/* Engagement Timeline Panel */}
+      <EngagementTimelinePanel
+        open={timelinePanelOpen}
+        onClose={() => setTimelinePanelOpen(false)}
+        email={selectedEmail ? {
+          to_email: selectedEmail.to_email,
+          email_subject: selectedEmail.email_subject,
+          created_at: selectedEmail.created_at,
+        } : null}
+        events={emailEvents}
       />
     </div>
   );

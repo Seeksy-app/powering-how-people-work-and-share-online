@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Copy, ExternalLink, FileText, Mail, ArrowRight } from "lucide-react";
 import { Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmailTrackingPills } from "./EmailTrackingPills";
+import { useState } from "react";
+import { EngagementTimelinePanel } from "./EngagementTimelinePanel";
 
 interface EmailEvent {
   event_type: string;
@@ -69,6 +72,8 @@ export function EmailViewer({
   onViewTemplate,
   onViewCampaign,
 }: EmailViewerProps) {
+  const [timelinePanelOpen, setTimelinePanelOpen] = useState(false);
+
   if (!email) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -86,10 +91,19 @@ export function EmailViewer({
         {/* Header */}
         <div>
           <h2 className="text-2xl font-semibold mb-2">{email.email_subject || "(No subject)"}</h2>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
             <span>To: {email.to_email}</span>
             <span>•</span>
             <span>From: {email.from_email}</span>
+          </div>
+          
+          {/* Tracking Pills in Header */}
+          <div className="mb-2">
+            <EmailTrackingPills
+              events={events}
+              sentAt={email.created_at}
+              onClick={() => setTimelinePanelOpen(true)}
+            />
           </div>
         </div>
 
@@ -208,6 +222,18 @@ export function EmailViewer({
           </Card>
         )}
       </div>
+
+      {/* Engagement Timeline Panel */}
+      <EngagementTimelinePanel
+        open={timelinePanelOpen}
+        onClose={() => setTimelinePanelOpen(false)}
+        email={email ? {
+          to_email: email.to_email,
+          email_subject: email.email_subject,
+          created_at: email.created_at,
+        } : null}
+        events={events}
+      />
     </div>
   );
 }
