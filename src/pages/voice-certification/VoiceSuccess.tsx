@@ -115,7 +115,7 @@ const VoiceSuccess = () => {
               </div>
               <div className="flex justify-between items-start">
                 <span className="text-sm text-muted-foreground">Network</span>
-                <span className="text-sm text-foreground">Polygon Mainnet</span>
+                <span className="text-sm text-foreground">Polygon Amoy Testnet</span>
               </div>
             </div>
 
@@ -138,6 +138,24 @@ const VoiceSuccess = () => {
                 Return to Identity Hub
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
+              <div className="flex gap-3">
+                <Button
+                  size="sm"
+                  onClick={() => navigate("/my-voice-identity")}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Voice Identity
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => navigate("/identity/rights")}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Rights Management
+                </Button>
+              </div>
             </div>
           </div>
         </Card>

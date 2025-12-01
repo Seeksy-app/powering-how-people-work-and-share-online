@@ -56,7 +56,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import seeksyLogo from "@/assets/seeksy-logo.png";
-const newSeeksyLogo = "/spark/holiday/spark-santa-waving.png";
+const santaLogo = "/spark/holiday/spark-santa-waving.png";
 import { ModuleLauncher } from "@/components/ModuleLauncher";
 import { useRole } from "@/contexts/RoleContext";
 import { AdvertiserSidebarNav } from "@/components/advertiser/AdvertiserSidebarNav";
@@ -1563,7 +1563,7 @@ export function AppSidebar({ user, isAdmin }: AppSidebarProps) {
         <SidebarHeader>
           <div className="flex items-center justify-between px-4 py-3">
             <Link to="/tasks" className="relative">
-              <img src={newSeeksyLogo} alt="Seeksy" className="h-10 object-contain" />
+              <img src={santaLogo} alt="Seeksy" className="h-10 object-contain" />
             </Link>
             {!collapsed && (
               <div className="flex items-center gap-4">

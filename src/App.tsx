@@ -91,6 +91,9 @@ import { SeeksyAIChatWidget } from "./components/SeeksyAIChatWidget";
 import { useHolidaySettings } from "./hooks/useHolidaySettings";
 import { HolidayWelcomeModal, SantaAssistantButton, Snowfall } from "./components/holiday";
 import AdminSettings from "./pages/admin/Settings";
+import LogoManager from "./pages/admin/LogoManager";
+import HeroManager from "./pages/admin/HeroManager";
+import GlobalSettings from "./pages/admin/GlobalSettings";
 import AdminAds from "./pages/AdminAds";
 import AdminAudioAds from "./pages/AdminAudioAds";
 import PodcastAds from "./pages/PodcastAds";
@@ -293,6 +296,7 @@ import CertificationConsole from "./pages/admin/CertificationConsole";
 import Verified from "./pages/Verified";
 import { IdentityDashboard } from "./components/identity/IdentityDashboard";
 import IdentityRights from "./pages/IdentityRights";
+import IdentityRightsManagement from "./pages/IdentityRightsManagement";
 import IdentityCertificatePage from "./pages/IdentityCertificatePage";
 import FaceUpload from "./pages/face-verification/FaceUpload";
 import FaceProcessing from "./pages/face-verification/FaceProcessing";
@@ -566,7 +570,9 @@ const AppContent = () => {
               <Route path="/profile/edit/legacy" element={<ProfileEdit />} />
               <Route path="/role-settings" element={<RoleSettings />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/settings" element={<GlobalSettings />} />
+            <Route path="/admin/logo-manager" element={<LogoManager />} />
+            <Route path="/admin/hero-manager" element={<HeroManager />} />
             <Route path="/admin/legal" element={<AdminLegal />} />
             <Route path="/admin/conversational-demo" element={<AdminConversationalDemo />} />
             <Route path="/admin/architecture" element={<SeeksyArchitecture />} />
@@ -628,6 +634,8 @@ const AppContent = () => {
           <Route path="/voice-protection" element={<VoiceProtection />} />
           <Route path="/voice-credentials" element={<MyVoiceIdentity />} />
           <Route path="/identity" element={<IdentityRights />} />
+          <Route path="/identity/rights" element={<IdentityRightsManagement />} />
+          <Route path="/identity/rights" element={<IdentityRightsManagement />} />
           <Route path="/certificate/identity/:id" element={<IdentityCertificatePage />} />
           <Route path="/creator/:username/identity" element={<PublicCreatorIdentity />} />
           <Route path="/identity-dashboard" element={<IdentityDashboard />} />

@@ -16,10 +16,14 @@ export const useIdentityStatus = () => {
     queryKey: ['identity-status'],
     staleTime: 0, // Always refetch
     gcTime: 0, // Don't cache
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<IdentityStatus> => {
+      console.log('[useIdentityStatus] Fetching identity status...');
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
+        console.log('[useIdentityStatus] No user authenticated');
         return {
           faceVerified: false,
           voiceVerified: false,
@@ -31,8 +35,10 @@ export const useIdentityStatus = () => {
         };
       }
 
+      console.log('[useIdentityStatus] User ID:', user.id);
+
       // Check face identity from identity_assets
-      const { data: faceAsset } = await supabase
+      const { data: faceAsset, error: faceError } = await supabase
         .from('identity_assets')
         .select('id, cert_status, cert_explorer_url')
         .eq('user_id', user.id)
@@ -41,16 +47,20 @@ export const useIdentityStatus = () => {
         .is('revoked_at', null)
         .maybeSingle();
 
+      console.log('[useIdentityStatus] Face asset:', faceAsset, 'Error:', faceError);
+
       // Check voice identity from creator_voice_profiles
-      const { data: voiceProfile } = await supabase
+      const { data: voiceProfile, error: voiceError } = await supabase
         .from('creator_voice_profiles')
         .select('id, is_verified')
         .eq('user_id', user.id)
         .eq('is_verified', true)
         .maybeSingle();
 
+      console.log('[useIdentityStatus] Voice profile:', voiceProfile, 'Error:', voiceError);
+
       // Check voice blockchain certificate
-      const { data: voiceCert } = await supabase
+      const { data: voiceCert, error: certError } = await supabase
         .from('voice_blockchain_certificates')
         .select('id, certification_status, is_active, cert_explorer_url')
         .eq('creator_id', user.id)
@@ -58,8 +68,12 @@ export const useIdentityStatus = () => {
         .eq('is_active', true)
         .maybeSingle();
 
+      console.log('[useIdentityStatus] Voice cert:', voiceCert, 'Error:', certError);
+
       const faceVerified = !!faceAsset;
       const voiceVerified = !!(voiceProfile && voiceCert);
+
+      console.log('[useIdentityStatus] Final status:', { faceVerified, voiceVerified });
 
       let overallStatus: 'verified' | 'partial' | 'none' = 'none';
       if (faceVerified && voiceVerified) {
