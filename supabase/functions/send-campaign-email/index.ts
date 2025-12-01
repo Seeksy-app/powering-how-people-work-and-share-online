@@ -1,148 +1,137 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const supabase = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+);
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { campaignId } = await req.json();
+    const { listId, accountId, subject, htmlContent, userId } = await req.json();
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    if (!listId || !accountId || !subject || !htmlContent) {
+      throw new Error("Missing required fields");
+    }
 
-    // Get campaign details
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    if (!RESEND_API_KEY) {
+      throw new Error("RESEND_API_KEY not configured");
+    }
+
+    const { data: account, error: accountError } = await supabase
+      .from("email_accounts")
+      .select("*")
+      .eq("id", accountId)
+      .eq("user_id", userId)
+      .single();
+
+    if (accountError || !account) {
+      throw new Error("Email account not found");
+    }
+
+    const { data: listMembers, error: membersError } = await supabase
+      .from("contact_list_members")
+      .select("contact_id")
+      .eq("list_id", listId);
+
+    if (membersError) throw membersError;
+
+    const contactIds = listMembers?.map(m => m.contact_id) || [];
+
+    if (contactIds.length === 0) {
+      throw new Error("No contacts in this list");
+    }
+
+    const { data: contacts, error: contactsError } = await supabase
+      .from("contacts")
+      .select("id, email, name")
+      .in("id", contactIds);
+
+    if (contactsError) throw contactsError;
+
     const { data: campaign, error: campaignError } = await supabase
-      .from('email_campaigns')
-      .select('*, email_accounts(*), contact_lists(*)')
-      .eq('id', campaignId)
+      .from("email_campaigns")
+      .insert({
+        name: subject,
+        subject,
+        html_content: htmlContent,
+        from_email_account_id: accountId,
+        recipient_list_id: listId,
+        status: "sending",
+        user_id: userId,
+        total_recipients: contacts?.length || 0,
+        total_sent: 0,
+      })
+      .select()
       .single();
 
     if (campaignError) throw campaignError;
 
-    // Update campaign status
-    await supabase
-      .from('email_campaigns')
-      .update({ status: 'sending' })
-      .eq('id', campaignId);
-
-    // Get contacts from list or filter
-    let contactsQuery = supabase.from('contacts').select('*');
-    
-    if (campaign.recipient_list_id) {
-      const { data: listMembers } = await supabase
-        .from('contact_list_members')
-        .select('contact_id')
-        .eq('list_id', campaign.recipient_list_id);
-      
-      const contactIds = listMembers?.map(m => m.contact_id) || [];
-      contactsQuery = contactsQuery.in('id', contactIds);
-    }
-
-    const { data: contacts, error: contactsError } = await contactsQuery;
-    if (contactsError) throw contactsError;
-
-    // Filter contacts by preferences
-    const eligibleContacts = [];
-    for (const contact of contacts || []) {
-      const { data: prefs } = await supabase
-        .from('contact_preferences')
-        .select('*')
-        .eq('contact_id', contact.id)
-        .single();
-
-      if (!prefs?.global_unsubscribe && prefs?.newsletter) {
-        eligibleContacts.push(contact);
-      }
-    }
-
-    console.log(`Sending to ${eligibleContacts.length} contacts`);
-
-    // Send emails via Resend
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
     let successCount = 0;
-    let failCount = 0;
 
-    for (const contact of eligibleContacts) {
+    for (const contact of contacts || []) {
       try {
-        const response = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
+        const response = await fetch("https://api.resend.com/emails", {
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
+            "Authorization": `Bearer ${RESEND_API_KEY}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: campaign.email_accounts?.email_address || 'noreply@seeksy.io',
+            from: `${account.display_name} <${account.email_address}>`,
             to: [contact.email],
-            subject: campaign.subject,
-            html: campaign.html_content,
-            text: campaign.plain_content,
+            subject,
+            html: htmlContent,
             tags: [
-              { name: 'campaign_id', value: campaignId },
-              { name: 'contact_id', value: contact.id },
+              { name: "user_id", value: userId },
+              { name: "campaign_id", value: campaign.id },
+              { name: "category", value: "campaign" },
             ],
           }),
         });
 
         if (response.ok) {
-          const result = await response.json();
-          
-          // Log the send event
-          await supabase.from('email_events').insert({
-            resend_email_id: result.id,
-            campaign_id: campaignId,
-            contact_id: contact.id,
-            event_type: 'sent',
-            email_subject: campaign.subject,
-            from_email: campaign.email_accounts?.email_address,
-            to_email: contact.email,
-            occurred_at: new Date().toISOString(),
-          });
-
           successCount++;
-        } else {
-          failCount++;
-          console.error(`Failed to send to ${contact.email}`);
         }
       } catch (error) {
-        failCount++;
-        console.error(`Error sending to ${contact.email}:`, error);
+        console.error(`Failed to send to ${contact.email}:`, error);
       }
     }
 
-    // Update campaign stats
     await supabase
-      .from('email_campaigns')
+      .from("email_campaigns")
       .update({
-        status: 'sent',
-        sent_at: new Date().toISOString(),
-        total_recipients: eligibleContacts.length,
+        status: "sent",
         total_sent: successCount,
+        sent_at: new Date().toISOString(),
       })
-      .eq('id', campaignId);
+      .eq("id", campaign.id);
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        sent: successCount,
-        failed: failCount,
-        total: eligibleContacts.length,
+      JSON.stringify({ 
+        success: true, 
+        campaignId: campaign.id,
+        recipientCount: successCount 
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error) {
-    console.error('Error in send-campaign-email:', error);
+  } catch (error: any) {
+    console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-});
+};
+
+serve(handler);

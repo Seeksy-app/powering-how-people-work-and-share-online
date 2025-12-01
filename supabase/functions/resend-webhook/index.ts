@@ -105,6 +105,8 @@ const handler = async (req: Request): Promise<Response> => {
       'email.bounced': 'bounced',
       'email.opened': 'opened',
       'email.clicked': 'clicked',
+      'email.complained': 'complained',
+      'email.unsubscribed': 'unsubscribed',
     };
 
     const eventType = eventTypeMap[webhookEvent.type];
@@ -116,17 +118,18 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // Find campaign ID from email_id via campaign lookup
+    const campaignIdTag = webhookEvent.data.tags?.find(t => t.name === 'campaign_id')?.value;
+
     // Store event in email_events table
     const eventData: any = {
       event_type: eventType,
-      recipient_email: webhookEvent.data.to?.[0] || null,
-      email_subject: webhookEvent.data.subject || null,
-      email_id: webhookEvent.data.email_id || null,
-      metadata: {
-        from: webhookEvent.data.from,
-        tags: webhookEvent.data.tags,
-        raw_event: webhookEvent,
-      },
+      to_email: webhookEvent.data.to?.[0] || null,
+      from_email: webhookEvent.data.from || null,
+      subject: webhookEvent.data.subject || null,
+      resend_email_id: webhookEvent.data.email_id || null,
+      raw_payload: webhookEvent,
+      occurred_at: webhookEvent.created_at,
     };
 
     // Add user_id if available
@@ -134,14 +137,17 @@ const handler = async (req: Request): Promise<Response> => {
       eventData.user_id = userId;
     }
 
-    // Add email type if available
-    if (emailType) {
-      eventData.email_type = emailType;
+    // Add campaign_id if available
+    if (campaignIdTag) {
+      eventData.campaign_id = campaignIdTag;
     }
 
     // Add click data if it's a click event
     if (eventType === 'clicked' && webhookEvent.data.clicked_link) {
-      eventData.click_url = webhookEvent.data.clicked_link.url;
+      eventData.raw_payload = {
+        ...webhookEvent,
+        click_url: webhookEvent.data.clicked_link.url,
+      };
     }
 
     const { error: insertError } = await supabase
@@ -151,6 +157,26 @@ const handler = async (req: Request): Promise<Response> => {
     if (insertError) {
       console.error("Error inserting email event:", insertError);
       throw insertError;
+    }
+
+    // Update campaign statistics if campaign_id is present
+    if (campaignIdTag) {
+      const updateField: Record<string, string> = {
+        'sent': 'sent_count',
+        'delivered': 'delivered_count',
+        'opened': 'opened_count',
+        'clicked': 'clicked_count',
+        'bounced': 'bounced_count',
+        'complained': 'complained_count',
+      };
+
+      const field = updateField[eventType];
+      if (field) {
+        await supabase.rpc('increment_campaign_stat', {
+          p_campaign_id: campaignIdTag,
+          p_field: field,
+        });
+      }
     }
 
     console.log(`Successfully recorded ${eventType} event for ${webhookEvent.data.to?.[0]}`);

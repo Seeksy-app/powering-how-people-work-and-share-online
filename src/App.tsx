@@ -203,6 +203,9 @@ import AgencyCampaigns from "./pages/agency/AgencyCampaigns";
 import InfluencerProfileSettings from "./pages/InfluencerProfileSettings";
 import InfluencerPortfolio from "./pages/InfluencerPortfolio";
 import Marketing from "./pages/Marketing";
+import EmailSettings from "./pages/EmailSettings";
+import EmailCampaigns from "./pages/EmailCampaigns";
+import EmailWebView from "./pages/EmailWebView";
 import ClientTickets from "./pages/ClientTickets";
 import Proposals from "./pages/Proposals";
 import CreateProposal from "./pages/CreateProposal";
@@ -497,6 +500,9 @@ const AppContent = () => {
               <Route path="/transcripts" element={<TranscriptLibrary />} />
               <Route path="/transcripts/:id" element={<TranscriptDetailPage />} />
               <Route path="/marketing" element={<Marketing />} />
+              <Route path="/email-settings" element={<EmailSettings />} />
+              <Route path="/email-campaigns" element={<EmailCampaigns />} />
+              <Route path="/email/:emailId/view" element={<EmailWebView />} />
               <Route path="/create-event" element={<CreateEvent />} />
               <Route path="/event/:id" element={<EventDetail />} />
               <Route path="/event/:id/edit" element={<EditEvent />} />
