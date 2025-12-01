@@ -176,16 +176,6 @@ export default function MyVoiceIdentity() {
 
   return (
     <IdentityLayout>
-      {/* Overview Cards */}
-        <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-          <Shield className="h-8 w-8 text-primary" />
-          My Voice Identity
-        </h1>
-        <p className="text-muted-foreground">
-          Your unified voice certification, AI clone, and authentication hub
-        </p>
-      </div>
-
       {/* Identity & Rights Hub Banner */}
       <Card className="mb-8 border-primary/20 bg-primary/5">
         <CardContent className="pt-6">
