@@ -64,6 +64,19 @@ export function FloatingEmailComposer({ open, onClose, draftId, initialRecipient
     }
   }, [open, initialRecipients, to]);
 
+  // Auto-save draft every 3 seconds
+  useEffect(() => {
+    if (!open || (!to && !subject && !body)) return;
+
+    const timer = setTimeout(() => {
+      if (to || subject || body) {
+        saveDraftMutation.mutate();
+      }
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [to, subject, body, open]);
+
   // Load draft if editing
   useEffect(() => {
     if (draftId && open) {

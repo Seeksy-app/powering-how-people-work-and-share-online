@@ -17,6 +17,9 @@ import {
 import { SparkIcon } from "@/components/spark/SparkIcon";
 import { Link } from "react-router-dom";
 import { FloatingEmailComposer } from "@/components/email/client/FloatingEmailComposer";
+import { usePageTitle } from "@/hooks/usePageTitle";
+import { useFaviconManager } from "@/hooks/useFaviconManager";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 export default function MyDay() {
   const [user, setUser] = useState<any>(null);
@@ -28,6 +31,10 @@ export default function MyDay() {
     pendingTasks: 0,
     alerts: 0
   });
+
+  // Page title and favicon management
+  usePageTitle("My Day");
+  useFaviconManager();
 
   useEffect(() => {
     loadUser();
@@ -64,15 +71,20 @@ export default function MyDay() {
     <div className="min-h-screen bg-background">
       <div className="container max-w-7xl mx-auto p-6 space-y-6">
         {/* Welcome Header */}
-        <div className="flex items-start gap-4">
-          <div className="mt-1">
-            <SparkIcon size={48} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-start gap-4">
+            <div className="mt-1">
+              <SparkIcon size={48} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Good morning, {firstName}! ✨</h1>
+              <p className="text-muted-foreground">
+                Here's what needs your attention today
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Good morning, {firstName}! ✨</h1>
-            <p className="text-muted-foreground">
-              Here's what needs your attention today
-            </p>
+          <div className="w-96">
+            <GlobalSearch />
           </div>
         </div>
 
