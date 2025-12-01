@@ -141,6 +141,27 @@ export const NAVIGATION_CONFIG: {
           "icon": "contacts",
           "path": "/engagement/contacts",
           "roles": ["creator", "influencer", "agency", "admin"]
+        },
+        {
+          "id": "forms",
+          "label": "Forms",
+          "icon": "form",
+          "path": "/forms",
+          "roles": ["creator", "influencer", "agency", "admin"]
+        },
+        {
+          "id": "sms",
+          "label": "SMS",
+          "icon": "sms",
+          "path": "/sms",
+          "roles": ["creator", "influencer", "agency", "admin"]
+        },
+        {
+          "id": "lead_pixel",
+          "label": "Lead Pixel",
+          "icon": "target",
+          "path": "/lead-pixel",
+          "roles": ["creator", "influencer", "agency", "admin"]
         }
       ]
     },
