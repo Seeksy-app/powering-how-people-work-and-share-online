@@ -5040,10 +5040,12 @@ export type Database = {
           id: string
           name: string | null
           plain_content: string | null
+          preheader: string | null
           recipient_filter: Json | null
           recipient_list_id: string | null
           scheduled_at: string | null
           scheduled_for: string | null
+          scheduled_send_at: string | null
           sent_at: string | null
           status: string | null
           subject: string | null
@@ -5067,10 +5069,12 @@ export type Database = {
           id?: string
           name?: string | null
           plain_content?: string | null
+          preheader?: string | null
           recipient_filter?: Json | null
           recipient_list_id?: string | null
           scheduled_at?: string | null
           scheduled_for?: string | null
+          scheduled_send_at?: string | null
           sent_at?: string | null
           status?: string | null
           subject?: string | null
@@ -5094,10 +5098,12 @@ export type Database = {
           id?: string
           name?: string | null
           plain_content?: string | null
+          preheader?: string | null
           recipient_filter?: Json | null
           recipient_list_id?: string | null
           scheduled_at?: string | null
           scheduled_for?: string | null
+          scheduled_send_at?: string | null
           sent_at?: string | null
           status?: string | null
           subject?: string | null
@@ -5200,6 +5206,7 @@ export type Database = {
       }
       email_logs: {
         Row: {
+          campaign_id: string | null
           created_at: string
           email_type: string
           error_message: string | null
@@ -5207,12 +5214,14 @@ export type Database = {
           recipient_email: string
           recipient_name: string
           related_id: string | null
+          resent_from_log_id: string | null
           sent_at: string
           status: string
           subject: string
           user_id: string
         }
         Insert: {
+          campaign_id?: string | null
           created_at?: string
           email_type: string
           error_message?: string | null
@@ -5220,12 +5229,14 @@ export type Database = {
           recipient_email: string
           recipient_name: string
           related_id?: string | null
+          resent_from_log_id?: string | null
           sent_at?: string
           status?: string
           subject: string
           user_id: string
         }
         Update: {
+          campaign_id?: string | null
           created_at?: string
           email_type?: string
           error_message?: string | null
@@ -5233,12 +5244,28 @@ export type Database = {
           recipient_email?: string
           recipient_name?: string
           related_id?: string | null
+          resent_from_log_id?: string | null
           sent_at?: string
           status?: string
           subject?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_logs_resent_from_log_id_fkey"
+            columns: ["resent_from_log_id"]
+            isOneToOne: false
+            referencedRelation: "email_logs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       email_reminders_sent: {
         Row: {
@@ -5298,6 +5325,7 @@ export type Database = {
         Row: {
           category: string | null
           created_at: string | null
+          default_preheader: string | null
           description: string | null
           id: string
           is_active: boolean | null
@@ -5313,6 +5341,7 @@ export type Database = {
         Insert: {
           category?: string | null
           created_at?: string | null
+          default_preheader?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -5328,6 +5357,7 @@ export type Database = {
         Update: {
           category?: string | null
           created_at?: string | null
+          default_preheader?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null

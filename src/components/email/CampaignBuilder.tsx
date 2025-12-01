@@ -7,15 +7,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Calendar, Save } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
-export const CampaignBuilder = () => {
+interface CampaignBuilderProps {
+  onCampaignCreated?: (campaignId: string) => void;
+}
+
+export const CampaignBuilder = ({ onCampaignCreated }: CampaignBuilderProps) => {
   const queryClient = useQueryClient();
   const [subject, setSubject] = useState("");
+  const [preheader, setPreheader] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
   const [selectedList, setSelectedList] = useState("");
   const [selectedAccount, setSelectedAccount] = useState("");
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
 
   const { data: user } = useQuery({
     queryKey: ["user"],
@@ -55,6 +63,41 @@ export const CampaignBuilder = () => {
     enabled: !!user,
   });
 
+  const saveDraft = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Not authenticated");
+      if (!selectedList || !selectedAccount || !subject) {
+        throw new Error("Please fill in required fields (account, list, subject)");
+      }
+
+      const { data, error } = await supabase
+        .from("email_campaigns")
+        .insert({
+          campaign_name: subject,
+          subject,
+          preheader: preheader || null,
+          html_content: htmlContent,
+          from_email_account_id: selectedAccount,
+          recipient_list_id: selectedList,
+          status: "draft",
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["email-campaigns"] });
+      toast.success("Draft saved successfully");
+      if (onCampaignCreated) onCampaignCreated(data.id);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to save draft");
+    },
+  });
+
   const sendCampaign = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not authenticated");
@@ -62,30 +105,49 @@ export const CampaignBuilder = () => {
         throw new Error("Please fill in all required fields");
       }
 
-      const { data, error } = await supabase.functions.invoke("send-campaign-email", {
-        body: {
-          listId: selectedList,
-          accountId: selectedAccount,
-          subject,
-          htmlContent,
-          userId: user.id,
-        },
-      });
+      const scheduledSendAt = scheduledDate && scheduledTime 
+        ? new Date(`${scheduledDate}T${scheduledTime}`).toISOString()
+        : null;
+
+    const { data, error } = await supabase.functions.invoke("send-campaign-email", {
+      body: {
+        listId: selectedList,
+        accountId: selectedAccount,
+        subject,
+        preheader: preheader || null,
+        htmlContent,
+        userId: user.id,
+        scheduledSendAt: scheduledSendAt,
+      },
+    });
 
       if (error) throw error;
       return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["email-campaigns"] });
-      toast.success(`Campaign sent to ${data.recipientCount} contacts`);
+      if (scheduledDate && scheduledTime) {
+        toast.success(`Campaign scheduled for ${format(new Date(`${scheduledDate}T${scheduledTime}`), "MMM d, yyyy 'at' h:mm a")}`);
+      } else {
+        toast.success(`Campaign sent to ${data.recipientCount} contacts`);
+      }
       setSubject("");
+      setPreheader("");
       setHtmlContent("");
       setSelectedList("");
+      setScheduledDate("");
+      setScheduledTime("");
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to send campaign");
     },
   });
+
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
 
   return (
     <Card>
@@ -138,6 +200,19 @@ export const CampaignBuilder = () => {
         </div>
 
         <div className="space-y-2">
+          <Label>Preheader (Optional)</Label>
+          <Input
+            value={preheader}
+            onChange={(e) => setPreheader(e.target.value)}
+            placeholder="Preview text that appears after subject line"
+            maxLength={100}
+          />
+          <p className="text-xs text-muted-foreground">
+            Shows in inbox preview. {preheader.length}/100 characters
+          </p>
+        </div>
+
+        <div className="space-y-2">
           <Label>Message</Label>
           <Textarea
             value={htmlContent}
@@ -147,23 +222,75 @@ export const CampaignBuilder = () => {
           />
         </div>
 
-        <Button
-          onClick={() => sendCampaign.mutate()}
-          disabled={sendCampaign.isPending || !selectedList || !selectedAccount || !subject || !htmlContent}
-          className="w-full"
-        >
-          {sendCampaign.isPending ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Sending Campaign...
-            </>
-          ) : (
-            <>
-              <Send className="h-4 w-4 mr-2" />
-              Send Campaign
-            </>
+        <div className="space-y-2">
+          <Label>Schedule Send (Optional)</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              type="date"
+              value={scheduledDate}
+              onChange={(e) => setScheduledDate(e.target.value)}
+              min={getTomorrowDate()}
+            />
+            <Input
+              type="time"
+              value={scheduledTime}
+              onChange={(e) => setScheduledTime(e.target.value)}
+            />
+          </div>
+          {scheduledDate && scheduledTime && (
+            <p className="text-xs text-muted-foreground">
+              Will send on {format(new Date(`${scheduledDate}T${scheduledTime}`), "MMM d, yyyy 'at' h:mm a")}
+            </p>
           )}
-        </Button>
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            onClick={() => saveDraft.mutate()}
+            disabled={saveDraft.isPending || !selectedList || !selectedAccount || !subject}
+            variant="outline"
+            className="flex-1"
+          >
+            {saveDraft.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Draft
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={() => sendCampaign.mutate()}
+            disabled={sendCampaign.isPending || !selectedList || !selectedAccount || !subject || !htmlContent}
+            className="flex-1"
+          >
+            {sendCampaign.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                {scheduledDate ? "Scheduling..." : "Sending..."}
+              </>
+            ) : (
+              <>
+                {scheduledDate ? (
+                  <>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Schedule Send
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Now
+                  </>
+                )}
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
