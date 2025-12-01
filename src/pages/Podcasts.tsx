@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -9,12 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EmailVerificationWizard } from "@/components/podcast/EmailVerificationWizard";
+import { ImportRSSButton } from "@/components/podcast/ImportRSSButton";
 import podcastStudio from "@/assets/podcast-studio.jpg";
 import { useState, useMemo } from "react";
 import { calculateEpisodeImpressions, calculateRevenue, formatCurrency, formatNumber } from "@/lib/config/revenueModelConfig";
 
 const Podcasts = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [verificationDialogOpen, setVerificationDialogOpen] = useState(false);
   const [selectedPodcast, setSelectedPodcast] = useState<any>(null);
 
@@ -117,10 +119,11 @@ const Podcasts = () => {
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/podcasts/import")}>
-              <Download className="w-4 h-4 mr-2" />
-              Import from RSS
-            </Button>
+            <ImportRSSButton 
+              onImportComplete={() => {
+                queryClient.invalidateQueries({ queryKey: ["podcasts"] });
+              }} 
+            />
             <Button onClick={() => navigate("/podcasts/create")}>
               <Plus className="w-4 h-4 mr-2" />
               Create Podcast
