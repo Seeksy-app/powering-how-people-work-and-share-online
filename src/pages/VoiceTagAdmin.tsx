@@ -408,7 +408,7 @@ export default function VoiceTagAdmin() {
                             <span className="font-medium">Network:</span> Polygon
                           </div>
                           <a
-                            href={cert.cert_explorer_url || `https://polygonscan.com/tx/${cert.transaction_hash}`}
+                            href={cert.cert_explorer_url || `https://amoy.polygonscan.com/tx/${cert.transaction_hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-xs text-primary hover:underline"

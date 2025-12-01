@@ -285,9 +285,14 @@ const VoiceVerificationUnified = () => {
 
       mediaRecorder.onstop = () => {
         stream.getTracks().forEach(track => track.stop());
-        if (audioContextRef.current) {
-          audioContextRef.current.close();
+        
+        // Close AudioContext only if it's not already closed
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+          audioContextRef.current.close().catch(err => {
+            console.warn('AudioContext already closing:', err);
+          });
         }
+        
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current);
         }

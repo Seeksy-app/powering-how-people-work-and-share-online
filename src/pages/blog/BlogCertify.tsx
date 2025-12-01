@@ -197,7 +197,7 @@ export default function BlogCertify() {
                           asChild
                         >
                           <a
-                            href={`https://polygonscan.com/tx/${credential.tx_hash}`}
+                            href={`https://amoy.polygonscan.com/tx/${credential.tx_hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                           >

@@ -70,7 +70,7 @@ export const BlockchainExplainer = ({
               asChild
             >
               <a 
-                href={`https://polygonscan.com/tx/${transactionHash}`}
+                href={`https://amoy.polygonscan.com/tx/${transactionHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

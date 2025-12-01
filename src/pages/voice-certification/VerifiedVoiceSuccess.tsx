@@ -309,7 +309,7 @@ const VerifiedVoiceSuccess = () => {
 
             {(transactionHash || explorerUrl) && (
               <a
-                href={explorerUrl || `https://polygonscan.com/tx/${transactionHash}`}
+                href={explorerUrl || `https://amoy.polygonscan.com/tx/${transactionHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
