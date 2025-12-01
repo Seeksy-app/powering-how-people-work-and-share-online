@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mic, Square, Play, Pause, AlertCircle, ShieldCheck } from "lucide-react";
+import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -433,12 +434,16 @@ const VoiceVerificationUnified = () => {
     
     console.log('[VoiceVerification] Starting verification flow');
     
-    // Simulate progress during minting
+    // Simulate progress during minting with smooth increments
     const progressInterval = setInterval(() => {
       setMintProgress(prev => {
+        if (prev >= 95) {
+          // Slow down near completion
+          return Math.min(prev + 1, 98);
+        }
         if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
+          // Gradual progress while waiting for backend
+          return prev + 2;
         }
         return prev + 10;
       });
@@ -470,7 +475,10 @@ const VoiceVerificationUnified = () => {
 
           console.log('[VoiceVerification] Edge function response received');
           clearInterval(progressInterval);
-          setMintProgress(100);
+          
+          // Smooth transition to 100%
+          setMintProgress(98);
+          setTimeout(() => setMintProgress(100), 200);
 
           if (invokeError) {
             console.error('[VoiceVerification] Invoke error:', invokeError);
@@ -492,11 +500,35 @@ const VoiceVerificationUnified = () => {
           // Success - handle completion with retry logic
           if (data && 'success' in data && data.success) {
             const successResponse = data as VerifyVoiceAndMintSuccess;
-            console.log('[VoiceVerification] Mint successful!', {
+            console.log('[VoiceVerification] ✓ Mint successful!', {
               voiceProfileId: successResponse.voiceProfileId,
               tokenId: successResponse.certificate.token_id,
               txHash: successResponse.certificate.tx_hash
             });
+            
+            // Show success toast immediately
+            toast.success("Voice verified!", {
+              description: "Your voice identity is now on-chain."
+            });
+            
+            // Trigger confetti celebration immediately
+            console.log('[VoiceVerification] 🎉 Triggering celebration confetti');
+            const duration = 3000;
+            const animationEnd = Date.now() + duration;
+            const confettiInterval = setInterval(() => {
+              const timeLeft = animationEnd - Date.now();
+              if (timeLeft <= 0) {
+                clearInterval(confettiInterval);
+                return;
+              }
+              confetti({
+                particleCount: 3,
+                angle: 60 + Math.random() * 60,
+                spread: 50 + Math.random() * 20,
+                origin: { x: Math.random(), y: Math.random() - 0.2 },
+                colors: ['#2C6BED', '#10B981', '#F59E0B', '#EC4899']
+              });
+            }, 100);
             
             // Invalidate queries with retry logic (non-blocking)
             console.log('[VoiceVerification] Invalidating queries...');
@@ -525,11 +557,6 @@ const VoiceVerificationUnified = () => {
               }
             };
             
-            // Show success toast immediately
-            toast.success("Voice verified!", {
-              description: "Your voice identity is now on-chain."
-            });
-            
             console.log('[VoiceVerification] Waiting 2 seconds for DB commit...');
             
             // Wait for DB to fully commit, then force refetch
@@ -541,7 +568,7 @@ const VoiceVerificationUnified = () => {
                   queryClient.refetchQueries({ queryKey: ['voice-identity-status'], type: 'all' }),
                   queryClient.refetchQueries({ queryKey: ['identity-assets'], type: 'all' }),
                 ]);
-                console.log('[VoiceVerification] Identity queries refetched');
+                console.log('[VoiceVerification] ✓ Identity queries refetched');
               } catch (refetchError) {
                 console.warn('[VoiceVerification] Refetch error (non-critical):', refetchError);
               }
