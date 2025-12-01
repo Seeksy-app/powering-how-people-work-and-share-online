@@ -1,12 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CampaignBuilder } from "@/components/email/CampaignBuilder";
-import { Mail, TrendingUp, MousePointerClick, AlertCircle } from "lucide-react";
+import { Mail, TrendingUp, MousePointerClick, AlertCircle, Eye } from "lucide-react";
 import { format } from "date-fns";
 
 export default function EmailCampaigns() {
+  const navigate = useNavigate();
+  
   const { data: user } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
@@ -63,7 +66,8 @@ export default function EmailCampaigns() {
                     return (
                       <div
                         key={campaign.id}
-                        className="p-4 border rounded-lg space-y-2"
+                        className="p-4 border rounded-lg space-y-2 cursor-pointer hover:bg-accent/50 transition-colors"
+                        onClick={() => navigate(`/email-campaigns/${campaign.id}`)}
                       >
                         <div className="flex items-start justify-between">
                           <div>

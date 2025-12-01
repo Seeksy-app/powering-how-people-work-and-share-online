@@ -17,9 +17,20 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { listId, accountId, subject, htmlContent, userId } = await req.json();
+    const { 
+      listId, 
+      accountId, 
+      subject, 
+      preheader,
+      htmlContent, 
+      userId, 
+      scheduledSendAt,
+      resendEmailLogId,
+      recipientEmail,
+      recipientName
+    } = await req.json();
 
-    if (!listId || !accountId || !subject || !htmlContent) {
+    if (!accountId || !subject || !htmlContent) {
       throw new Error("Missing required fields");
     }
 
@@ -32,54 +43,94 @@ const handler = async (req: Request): Promise<Response> => {
       .from("email_accounts")
       .select("*")
       .eq("id", accountId)
-      .eq("user_id", userId)
       .single();
 
     if (accountError || !account) {
       throw new Error("Email account not found");
     }
 
-    const { data: listMembers, error: membersError } = await supabase
-      .from("contact_list_members")
-      .select("contact_id")
-      .eq("list_id", listId);
+    let contacts: any[] = [];
 
-    if (membersError) throw membersError;
+    // Handle resend of single email
+    if (resendEmailLogId) {
+      if (!recipientEmail) {
+        throw new Error("Recipient email required for resend");
+      }
+      contacts = [{ email: recipientEmail, name: recipientName || recipientEmail }];
+    } else {
+      // Handle campaign send to list
+      if (!listId) {
+        throw new Error("List ID required for campaign");
+      }
 
-    const contactIds = listMembers?.map(m => m.contact_id) || [];
+      const { data: listMembers, error: membersError } = await supabase
+        .from("contact_list_members")
+        .select("contact_id")
+        .eq("list_id", listId);
 
-    if (contactIds.length === 0) {
-      throw new Error("No contacts in this list");
+      if (membersError) throw membersError;
+
+      const contactIds = listMembers?.map(m => m.contact_id) || [];
+
+      if (contactIds.length === 0) {
+        throw new Error("No contacts in this list");
+      }
+
+      const { data: contactsData, error: contactsError } = await supabase
+        .from("contacts")
+        .select("id, email, name")
+        .in("id", contactIds);
+
+      if (contactsError) throw contactsError;
+      contacts = contactsData || [];
     }
 
-    const { data: contacts, error: contactsError } = await supabase
-      .from("contacts")
-      .select("id, email, name")
-      .in("id", contactIds);
+    // Create campaign record
+    const campaignData: any = {
+      campaign_name: subject,
+      subject,
+      preheader: preheader || null,
+      html_content: htmlContent,
+      from_email_account_id: accountId,
+      user_id: userId,
+      total_recipients: contacts.length,
+      total_sent: 0,
+    };
 
-    if (contactsError) throw contactsError;
+    if (scheduledSendAt) {
+      campaignData.status = "scheduled";
+      campaignData.scheduled_send_at = scheduledSendAt;
+    } else {
+      campaignData.status = "sending";
+    }
+
+    if (listId) {
+      campaignData.recipient_list_id = listId;
+    }
 
     const { data: campaign, error: campaignError } = await supabase
       .from("email_campaigns")
-      .insert({
-        name: subject,
-        subject,
-        html_content: htmlContent,
-        from_email_account_id: accountId,
-        recipient_list_id: listId,
-        status: "sending",
-        user_id: userId,
-        total_recipients: contacts?.length || 0,
-        total_sent: 0,
-      })
+      .insert(campaignData)
       .select()
       .single();
 
     if (campaignError) throw campaignError;
 
+    // If scheduled, don't send yet
+    if (scheduledSendAt) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          campaignId: campaign.id,
+          scheduled: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     let successCount = 0;
 
-    for (const contact of contacts || []) {
+    for (const contact of contacts) {
       try {
         const response = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -92,16 +143,32 @@ const handler = async (req: Request): Promise<Response> => {
             to: [contact.email],
             subject,
             html: htmlContent,
+            headers: preheader ? {
+              "X-Preview-Text": preheader
+            } : undefined,
             tags: [
               { name: "user_id", value: userId },
               { name: "campaign_id", value: campaign.id },
-              { name: "category", value: "campaign" },
+              { name: "category", value: resendEmailLogId ? "resend" : "campaign" },
             ],
           }),
         });
 
         if (response.ok) {
           successCount++;
+          
+          // Log the email
+          await supabase.from("email_logs").insert({
+            recipient_email: contact.email,
+            recipient_name: contact.name,
+            subject,
+            email_type: "campaign",
+            status: "sent",
+            sent_at: new Date().toISOString(),
+            user_id: userId,
+            campaign_id: campaign.id,
+            resent_from_log_id: resendEmailLogId || null,
+          });
         }
       } catch (error) {
         console.error(`Failed to send to ${contact.email}:`, error);
@@ -113,6 +180,7 @@ const handler = async (req: Request): Promise<Response> => {
       .update({
         status: "sent",
         total_sent: successCount,
+        total_delivered: successCount,
         sent_at: new Date().toISOString(),
       })
       .eq("id", campaign.id);

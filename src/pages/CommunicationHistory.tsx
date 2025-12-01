@@ -4,7 +4,9 @@ import { User } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Mail, MessageSquare, CheckCircle, XCircle, MousePointerClick } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Mail, MessageSquare, CheckCircle, XCircle, MousePointerClick, RotateCw } from "lucide-react";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Breadcrumb,
@@ -177,6 +179,39 @@ const CommunicationHistory = () => {
     failed: sms.filter(s => s.status === 'failed').length,
   };
 
+  const handleResend = async (emailLog: CommunicationLog) => {
+    try {
+      const { data: account } = await supabase
+        .from("email_accounts")
+        .select("*")
+        .eq("is_active", true)
+        .single();
+
+      if (!account) {
+        toast.error("No active email account found");
+        return;
+      }
+
+      const { error } = await supabase.functions.invoke("send-campaign-email", {
+        body: {
+          resendEmailLogId: emailLog.id,
+          accountId: account.id,
+          subject: emailLog.subject,
+          htmlContent: emailLog.message_body,
+          recipientEmail: emailLog.recipient_email,
+          recipientName: emailLog.recipient_name,
+          userId: user?.id,
+        },
+      });
+
+      if (error) throw error;
+      toast.success(`Email resent to ${emailLog.recipient_email}`);
+      loadCommunications();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend email");
+    }
+  };
+
   const CommunicationCard = ({ comm }: { comm: CommunicationLog }) => (
     <Card key={comm.id} className="p-6">
       <div className="flex items-start justify-between gap-4">
@@ -244,6 +279,18 @@ const CommunicationHistory = () => {
             </p>
           )}
         </div>
+
+        {comm.type === 'email' && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleResend(comm)}
+            className="shrink-0"
+          >
+            <RotateCw className="h-4 w-4 mr-2" />
+            Resend
+          </Button>
+        )}
       </div>
     </Card>
   );

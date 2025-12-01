@@ -206,6 +206,8 @@ import InfluencerPortfolio from "./pages/InfluencerPortfolio";
 import Marketing from "./pages/Marketing";
 import EmailSettings from "./pages/EmailSettings";
 import EmailCampaigns from "./pages/EmailCampaigns";
+import EmailCampaignDetail from "./pages/CampaignDetail";
+import EmailView from "./pages/EmailView";
 import EmailWebView from "./pages/EmailWebView";
 import ClientTickets from "./pages/ClientTickets";
 import Proposals from "./pages/Proposals";
@@ -244,7 +246,7 @@ import CombinedFinancialModels from "./pages/admin/CombinedFinancialModels";
 import AdminRateDesk from "./pages/admin/advertising/AdminRateDesk";
 import AdminAdvertisersList from "./pages/admin/advertising/AdminAdvertisersList";
 import AdminCreateCampaign from "./pages/admin/advertising/CreateCampaign";
-import CampaignDetail from "./pages/admin/advertising/CampaignDetail";
+import AdminCampaignDetail from "./pages/admin/advertising/CampaignDetail";
 import CreateAd from "./pages/admin/advertising/CreateAd";
 import TranscriptLibrary from "./pages/transcripts/TranscriptLibrary";
 import TranscriptDetailPage from "./pages/transcripts/TranscriptDetailPage";
@@ -503,6 +505,8 @@ const AppContent = () => {
               <Route path="/marketing" element={<Marketing />} />
               <Route path="/email-settings" element={<EmailSettings />} />
               <Route path="/email-campaigns" element={<EmailCampaigns />} />
+              <Route path="/email-campaigns/:id" element={<EmailCampaignDetail />} />
+              <Route path="/email/:id/view" element={<EmailView />} />
               <Route path="/email/:emailId/view" element={<EmailWebView />} />
               <Route path="/create-event" element={<CreateEvent />} />
               <Route path="/event/:id" element={<EventDetail />} />
@@ -613,7 +617,7 @@ const AppContent = () => {
               <Route path="/admin/advertising/rate-desk" element={<AdminRateDesk />} />
               <Route path="/admin/advertising/advertisers" element={<AdminAdvertisersList />} />
               <Route path="/admin/advertising/campaigns/create" element={<AdminCreateCampaign />} />
-              <Route path="/admin/advertising/campaigns/:campaignId" element={<CampaignDetail />} />
+              <Route path="/admin/advertising/campaigns/:campaignId" element={<AdminCampaignDetail />} />
               <Route path="/admin/advertising/ads/create" element={<CreateAd />} />
               <Route path="/admin/advertisers" element={<AdminAdvertisers />} />
               <Route path="/admin/ad-campaigns" element={<AdminCampaigns />} />
