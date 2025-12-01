@@ -114,6 +114,24 @@ export function GlobalSearch() {
     setQuery("");
   };
 
+  // Group results by type
+  const groupedResults = results.reduce((acc, result) => {
+    const type = result.type;
+    if (!acc[type]) acc[type] = [];
+    acc[type].push(result);
+    return acc;
+  }, {} as Record<string, SearchResult[]>);
+
+  const typeLabels: Record<string, string> = {
+    contact: "Contacts",
+    email: "Emails",
+    meeting: "Meetings",
+    event: "Events",
+    clip: "Media",
+    post: "Pages",
+    page: "Pages"
+  };
+
   return (
     <div ref={searchRef} className="relative w-full max-w-md">
       <div className="relative">
@@ -127,7 +145,7 @@ export function GlobalSearch() {
             setIsOpen(true);
           }}
           onFocus={() => setIsOpen(true)}
-          className="pl-9 pr-9 bg-background"
+          className="pl-9 pr-9 bg-muted/50 rounded-full border-0 focus-visible:ring-1 focus-visible:ring-primary transition-all focus-visible:shadow-inner"
         />
         {isLoading && (
           <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground animate-spin" />
@@ -135,36 +153,55 @@ export function GlobalSearch() {
       </div>
 
       {isOpen && results.length > 0 && (
-        <Card className="absolute top-full mt-2 w-full max-h-96 overflow-y-auto shadow-lg z-50 border">
-          <div className="p-2 space-y-1">
-            {results.map((result) => {
-              const Icon = iconMap[result.type];
-              return (
-                <button
-                  key={`${result.type}-${result.id}`}
-                  onClick={() => handleResultClick(result.route)}
-                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors text-left"
-                >
-                  <div className="flex-shrink-0">
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{result.title}</div>
-                    {result.subtitle && (
-                      <div className="text-xs text-muted-foreground truncate">
-                        {result.subtitle}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
+        <Card className="absolute top-full mt-2 w-full max-h-[480px] overflow-y-auto shadow-xl z-50 border rounded-xl bg-background">
+          <div className="p-2">
+            {Object.entries(groupedResults).map(([type, items]) => (
+              <div key={type} className="mb-4 last:mb-0">
+                <div className="px-3 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {typeLabels[type] || type}
+                </div>
+                <div className="space-y-1">
+                  {items.slice(0, 3).map((result) => {
+                    const Icon = iconMap[result.type];
+                    return (
+                      <button
+                        key={`${result.type}-${result.id}`}
+                        onClick={() => handleResultClick(result.route)}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-primary/8 transition-colors text-left group"
+                      >
+                        <div className="flex-shrink-0">
+                          <Icon className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold truncate text-foreground group-hover:text-primary transition-colors">
+                            {result.title}
+                          </div>
+                          {result.subtitle && (
+                            <div className="text-xs text-muted-foreground truncate">
+                              {result.subtitle}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {items.length > 3 && (
+                    <button
+                      onClick={() => handleResultClick(`/${type}s`)}
+                      className="w-full px-3 py-2 text-xs text-primary hover:text-primary/80 transition-colors text-left font-medium"
+                    >
+                      View all {items.length} {typeLabels[type]?.toLowerCase() || type}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
       )}
 
       {isOpen && query.length >= 2 && !isLoading && results.length === 0 && (
-        <Card className="absolute top-full mt-2 w-full p-4 shadow-lg z-50 border">
+        <Card className="absolute top-full mt-2 w-full p-6 shadow-xl z-50 border rounded-xl bg-background">
           <p className="text-sm text-muted-foreground text-center">No results found</p>
         </Card>
       )}
