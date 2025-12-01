@@ -18,21 +18,6 @@ const VoiceSuccess = () => {
     const refetchIdentity = async () => {
       console.log('[VoiceSuccess] Force refetching all identity queries...');
       await refetchUserIdentity(queryClient);
-          queryKey: ['identity-status'], 
-          type: 'all',
-          exact: true 
-        }),
-        queryClient.refetchQueries({ 
-          queryKey: ['voice-identity-status'], 
-          type: 'all',
-          exact: true 
-        }),
-        queryClient.refetchQueries({ 
-          queryKey: ['identity-assets'], 
-          type: 'all',
-          exact: true 
-        }),
-      ]);
       console.log('[VoiceSuccess] All identity queries refetched');
     };
     
