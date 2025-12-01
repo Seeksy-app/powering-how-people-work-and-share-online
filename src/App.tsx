@@ -296,7 +296,6 @@ import CertificationConsole from "./pages/admin/CertificationConsole";
 import Verified from "./pages/Verified";
 import { IdentityDashboard } from "./components/identity/IdentityDashboard";
 import IdentityHub from "./pages/IdentityHub";
-import IdentityRights from "./pages/IdentityRights";
 import IdentityRightsManagement from "./pages/IdentityRightsManagement";
 import IdentityCertificatePage from "./pages/IdentityCertificatePage";
 import FaceUpload from "./pages/face-verification/FaceUpload";

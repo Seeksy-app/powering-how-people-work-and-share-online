@@ -2,11 +2,28 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { refetchUserIdentity } from "@/lib/identity/refetchIdentity";
 
 const FaceSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const assetId = location.state?.assetId;
+
+  useEffect(() => {
+    // Force immediate refetch using centralized utility
+    const refetchIdentity = async () => {
+      console.log('[FaceSuccess] Force refetching all identity queries...');
+      await refetchUserIdentity(queryClient);
+      console.log('[FaceSuccess] All identity queries refetched');
+    };
+    
+    refetchIdentity().catch(err => {
+      console.error('[FaceSuccess] Refetch error (non-critical):', err);
+    });
+  }, [queryClient]);
 
   return (
     <div className="min-h-screen bg-background p-6 flex items-center justify-center">
