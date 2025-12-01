@@ -1,10 +1,28 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, UserPlus, Filter, Download } from "lucide-react";
+import { Users, UserPlus, Filter, Download, Mail, MessageSquare, Pencil, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Audience() {
+  const { data: contacts, isLoading } = useQuery({
+    queryKey: ["contacts"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-7xl mx-auto p-6 space-y-6">
@@ -55,13 +73,67 @@ export default function Audience() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No contacts yet. Start by adding your first contact!</p>
-                  <Button className="mt-4" asChild>
-                    <Link to="/contacts">Go to Contacts</Link>
-                  </Button>
-                </div>
+                {isLoading ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    Loading contacts...
+                  </div>
+                ) : contacts && contacts.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="p-4 text-left">Name</th>
+                          <th className="p-4 text-left">Email</th>
+                          <th className="p-4 text-left">Phone</th>
+                          <th className="p-4 text-left">Company</th>
+                          <th className="p-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {contacts.map((contact) => (
+                          <tr key={contact.id} className="border-b hover:bg-muted/50">
+                            <td className="p-4 font-medium">{contact.name}</td>
+                            <td className="p-4">{contact.email}</td>
+                            <td className="p-4">{contact.phone || "-"}</td>
+                            <td className="p-4">{contact.company || "-"}</td>
+                            <td className="p-4">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  asChild
+                                  title="Send Email"
+                                >
+                                  <Link to="/contacts">
+                                    <Mail className="w-4 h-4" />
+                                  </Link>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  asChild
+                                  title="View Details"
+                                >
+                                  <Link to="/contacts">
+                                    <Pencil className="w-4 h-4" />
+                                  </Link>
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No contacts yet. Start by adding your first contact!</p>
+                    <Button className="mt-4" asChild>
+                      <Link to="/contacts">Go to Contacts</Link>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
