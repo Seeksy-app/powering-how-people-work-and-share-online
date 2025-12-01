@@ -12997,6 +12997,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_campaign_stat: {
+        Args: { p_campaign_id: string; p_field: string }
+        Returns: undefined
+      }
       increment_usage: {
         Args: { _feature_type: string; _increment?: number; _user_id: string }
         Returns: undefined
