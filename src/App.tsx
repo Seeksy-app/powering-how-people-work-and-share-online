@@ -307,6 +307,10 @@ import AdvertiserReports from "./pages/advertiser/AdvertiserReports";
 import AdvertiserBilling from "./pages/advertiser/AdvertiserBilling";
 import AdvertiserIntegrations from "./pages/advertiser/AdvertiserIntegrations";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import MyDay from "./pages/MyDay";
+import Audience from "./pages/Audience";
+import ContentHub from "./pages/ContentHub";
+import MonetizationHub from "./pages/MonetizationHub";
 import EpisodeDetails from "./pages/episodes/EpisodeDetails";
 import NewEpisodeFromStudio from "./pages/podcasts/NewEpisodeFromStudio";
 import NewEpisode from "./pages/podcasts/NewEpisode";
@@ -425,6 +429,14 @@ const AppContent = () => {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              
+              {/* My Day OS Routes */}
+              <Route path="/my-day" element={<MyDay />} />
+              <Route path="/inbox" element={<EmailHome />} />
+              <Route path="/audience" element={<Audience />} />
+              <Route path="/content" element={<ContentHub />} />
+              <Route path="/monetization" element={<MonetizationHub />} />
+              
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/comparison" element={<Comparison />} />
               <Route path="/credits" element={<Credits />} />
