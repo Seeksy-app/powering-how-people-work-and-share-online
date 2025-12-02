@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Play, Mic, Video, Radio, Upload, Wand2, 
-  Clock, Scissors, Users, ArrowRight, 
-  FolderOpen, FileText, Settings, MoreHorizontal
+  Play, Mic, Video, Upload, Wand2, 
+  Clock, Scissors, ArrowRight, 
+  FolderOpen, FileText, Settings
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { RecordingTypeSelector } from "@/components/studio/hub/RecordingTypeSelector";
@@ -20,7 +20,7 @@ export default function StudioHubPremium() {
     queryKey: ["studio-hub-stats"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return { sessions: 0, clips: 0, guests: 0 };
+      if (!user) return { sessions: 0, clips: 0 };
 
       const [sessionsResult, clipsResult] = await Promise.all([
         supabase.from("studio_sessions")
@@ -34,7 +34,6 @@ export default function StudioHubPremium() {
       return {
         sessions: sessionsResult.count || 0,
         clips: clipsResult.count || 0,
-        guests: 0
       };
     },
   });
@@ -57,16 +56,14 @@ export default function StudioHubPremium() {
   });
 
   const quickActions = [
-    { icon: Mic, label: "Audio Podcast", color: "bg-purple-500", path: "/studio/audio" },
-    { icon: Video, label: "Video Podcast", color: "bg-blue-500", path: "/studio/video" },
-    { icon: Radio, label: "Video Recording", color: "bg-emerald-500", path: "/studio/creator" },
-    { icon: Upload, label: "Upload Media", color: "bg-amber-500", path: "/media/library?upload=true" },
-    { icon: Wand2, label: "AI Clip Generator", color: "bg-pink-500", path: "/studio/ai-clips" },
+    { icon: Mic, label: "Audio Recording", color: "bg-violet-500", path: "/studio/audio" },
+    { icon: Video, label: "Video Recording", color: "bg-blue-500", path: "/studio/video" },
+    { icon: Upload, label: "Upload Media", color: "bg-amber-500", path: "/studio/media?upload=true" },
+    { icon: Wand2, label: "Generate Clips", color: "bg-pink-500", path: "/studio/clips" },
   ];
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Recording Type Selector Modal */}
       <RecordingTypeSelector 
         open={showRecordingSelector} 
         onOpenChange={setShowRecordingSelector} 
@@ -89,7 +86,7 @@ export default function StudioHubPremium() {
           </Button>
         </div>
 
-        {/* Stats Row - Minimal */}
+        {/* Stats Row */}
         <div className="flex items-center gap-8 mb-10 text-sm">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
@@ -109,21 +106,12 @@ export default function StudioHubPremium() {
               <p className="text-muted-foreground text-xs">Auto Clips</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-              <Users className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="font-medium">{stats?.guests || 0}</p>
-              <p className="text-muted-foreground text-xs">Guests</p>
-            </div>
-          </div>
         </div>
 
         {/* Quick Actions */}
         <div className="mb-10">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             {quickActions.map((action) => (
               <button
                 key={action.label}
@@ -141,7 +129,7 @@ export default function StudioHubPremium() {
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-3 gap-6">
-          {/* Recent Sessions - Takes 2 columns */}
+          {/* Recent Sessions */}
           <div className="col-span-2">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Recent Sessions</h2>
@@ -154,7 +142,7 @@ export default function StudioHubPremium() {
                 recentSessions.map((session: any) => (
                   <div
                     key={session.id}
-                    onClick={() => navigate(`/studio/post-session/${session.id}`)}
+                    onClick={() => navigate(`/studio/session/${session.id}`)}
                     className="flex items-center justify-between p-4 hover:bg-accent/50 cursor-pointer transition-colors"
                   >
                     <div className="flex items-center gap-3">
@@ -196,13 +184,13 @@ export default function StudioHubPremium() {
             </div>
           </div>
 
-          {/* Studio Navigation */}
+          {/* Studio Hub Navigation */}
           <div>
             <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Studio Hub</h2>
             <div className="border border-border rounded-xl divide-y divide-border bg-card">
               {[
                 { icon: Scissors, label: "Clips & Highlights", path: "/studio/clips", desc: "AI-generated clips" },
-                { icon: FolderOpen, label: "Media Library", path: "/media/library", desc: "All your recordings" },
+                { icon: FolderOpen, label: "Media Library", path: "/studio/media", desc: "All your recordings" },
                 { icon: FileText, label: "Templates", path: "/studio/templates", desc: "Scripts & ad reads" },
                 { icon: Settings, label: "Studio Settings", path: "/studio/settings", desc: "Preferences" },
               ].map((item) => (

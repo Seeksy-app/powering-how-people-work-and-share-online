@@ -622,35 +622,18 @@ const AppContent = () => {
               <Route path="/meetings/edit/:id" element={<EditMeeting />} />
               <Route path="/meeting-rsvp" element={<MeetingRSVP />} />
               
-              {/* Master Studio Routes */}
-              <Route path="/studio-old" element={<MasterStudio />} />
-              <Route path="/studio/video" element={<VideoStudio />} />
-              <Route path="/studio/solo" element={<VideoStudio />} />
-              <Route path="/studio/live" element={<LiveStudio />} />
-              
-              {/* New Premium Studio Hub */}
+              {/* Studio Hub */}
               <Route path="/studio" element={<StudioHubPremium />} />
-              <Route path="/studio/hub" element={<StudioHubPremium />} />
-              <Route path="/studio/ai-clips" element={<AIClipGeneratorPremium />} />
+              <Route path="/studio/audio" element={<AudioStudioPremium />} />
+              <Route path="/studio/video" element={<VideoStudioPremium />} />
+              <Route path="/studio/clips" element={<StudioClips />} />
+              <Route path="/studio/ai-clips" element={<StudioClips />} />
               <Route path="/studio/media" element={<MediaLibraryHub />} />
               <Route path="/studio/templates" element={<StudioTemplatesPage />} />
-              
-              {/* Legacy Studio Routes */}
-              <Route path="/studio/home-legacy" element={<StudioHome />} />
-              <Route path="/studio/recording/new" element={<StudioRecordingNew />} />
-              <Route path="/studio/post-session/:sessionId" element={<StudioPostSession />} />
-              <Route path="/studio/recordings" element={<StudioRecordings />} />
-              <Route path="/studio/clips" element={<StudioClips />} />
-              <Route path="/studio/ads" element={<StudioAds />} />
-              <Route path="/studio/guests" element={<StudioGuests />} />
               <Route path="/studio/settings" element={<StudioSettings />} />
-              <Route path="/studio/live/new" element={<StudioLiveNew />} />
-              
-              {/* Premium Studio Modes */}
-              <Route path="/studio/audio-premium" element={<AudioStudioPremium />} />
-              <Route path="/studio/video-premium" element={<VideoStudioPremium />} />
-              <Route path="/studio/creator-studio" element={<VideoStudioPremium />} />
-              <Route path="/studio/voice-studio" element={<AudioStudioPremium />} />
+              <Route path="/studio/recordings" element={<StudioRecordings />} />
+              <Route path="/studio/session/:sessionId" element={<StudioPostSession />} />
+              <Route path="/studio/live" element={<LiveStudio />} />
               
             <Route path="/events" element={<Events />} />
             <Route path="/signup-sheets" element={<SignupSheets />} />
