@@ -101,17 +101,27 @@ const ImportPodcast = () => {
       if (podcastError) throw podcastError;
 
       // Create episodes (limited to selected number of most recent episodes)
-      const episodesToImport = parsedData.episodes.slice(0, episodeLimit);
+      // Filter out episodes without audio URLs first
+      const episodesWithAudio = parsedData.episodes.filter((ep: any) => 
+        ep.audioUrl && ep.audioUrl.trim() !== ''
+      );
+      
+      const episodesToImport = episodesWithAudio.slice(0, episodeLimit);
+      
+      if (episodesToImport.length === 0) {
+        throw new Error("No valid episodes with audio URLs found in RSS feed");
+      }
+      
       const episodesData = episodesToImport.map((ep: any) => ({
         podcast_id: podcast.id,
         title: ep.title,
         description: ep.description,
-        audio_url: ep.audio_url,
-        file_size_bytes: ep.file_size_bytes,
-        duration_seconds: ep.duration_seconds,
-        publish_date: ep.publish_date || new Date().toISOString(),
-        episode_number: ep.episode_number,
-        season_number: ep.season_number,
+        audio_url: ep.audioUrl,
+        file_size_bytes: ep.fileSizeBytes,
+        duration_seconds: ep.durationSeconds,
+        publish_date: ep.pubDate || new Date().toISOString(),
+        episode_number: ep.episodeNumber,
+        season_number: ep.seasonNumber,
         is_published: true,
         source: "rss",
         guid: ep.guid,
@@ -127,7 +137,12 @@ const ImportPodcast = () => {
       if (episodesError) throw episodesError;
 
       const skippedCount = parsedData.episodes.length - episodesToImport.length;
-      if (skippedCount > 0) {
+      const invalidCount = parsedData.episodes.length - episodesWithAudio.length;
+      
+      if (invalidCount > 0) {
+        toast.info(`${invalidCount} episodes skipped (no audio URL)`);
+      }
+      if (skippedCount > invalidCount) {
         toast.success(`Imported ${episodesToImport.length} episodes. ${skippedCount} older episodes skipped.`);
       }
 
