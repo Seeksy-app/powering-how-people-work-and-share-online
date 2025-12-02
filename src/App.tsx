@@ -319,6 +319,11 @@ import MyDay from "./pages/MyDay";
 import Audience from "./pages/Audience";
 import ContentHub from "./pages/ContentHub";
 import MonetizationHub from "./pages/MonetizationHub";
+import MetaIntegration from "./pages/integrations/MetaIntegration";
+import CreatorHub from "./pages/CreatorHub";
+import AgencyHub from "./pages/AgencyHub";
+import MyPageStreaming from "./pages/MyPageStreaming";
+import PodcastDashboard from "./pages/PodcastDashboard";
 import Alerts from "./pages/Alerts";
 import BackgroundRemover from "./pages/BackgroundRemover";
 import EpisodeDetails from "./pages/episodes/EpisodeDetails";
@@ -435,6 +440,14 @@ const AppContent = () => {
               <Route path="/signup-select" element={<SignupSelect />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/seekies" element={<Apps />} />
+              
+              {/* Integrations */}
+              <Route path="/integrations/meta" element={<MetaIntegration />} />
+              
+              {/* Creator & Agency Hubs */}
+              <Route path="/creator-hub" element={<CreatorHub />} />
+              <Route path="/agency" element={<AgencyHub />} />
+              <Route path="/mypage" element={<MyPageStreaming />} />
               
               {/* My Day OS Routes */}
               <Route path="/my-day" element={<MyDay />} />
@@ -612,6 +625,7 @@ const AppContent = () => {
               <Route path="/podcasts/create" element={<CreatePodcast />} />
               <Route path="/podcasts/import" element={<ImportPodcast />} />
               <Route path="/podcasts/:podcastId" element={<PodcastDetail />} />
+              <Route path="/podcasts/:podcastId/dashboard" element={<PodcastDashboard />} />
               <Route path="/podcasts/:podcastId/edit" element={<EditPodcast />} />
               <Route path="/podcasts/:podcastId/upload" element={<UploadEpisode />} />
               <Route path="/podcasts/:podcastId/stats" element={<PodcastStats />} />
