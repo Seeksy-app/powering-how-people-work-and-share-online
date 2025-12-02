@@ -29,32 +29,45 @@ serve(async (req) => {
     let userId: string | null = null;
     let profileId: string | null = null;
     let isCronJob = false;
+    let isServiceRoleCall = false;
 
-    // Check if this is a cron job (no auth header) or user request
+    // Check if this is a cron job (no auth header), service role call, or user request
     const authHeader = req.headers.get('Authorization');
+    
+    // Parse body first to check for user_id (from callback)
+    let bodyData: any = {};
+    try {
+      bodyData = await req.json();
+      profileId = bodyData.profile_id || null;
+    } catch {
+      // No body provided
+    }
     
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
-      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
-      if (authError || !user) {
-        throw new Error('Unauthorized');
-      }
-      userId = user.id;
-
-      // Get optional profile_id from body
-      try {
-        const body = await req.json();
-        profileId = body.profile_id || null;
-      } catch {
-        // No body provided
+      // Check if this is a service role key call (from internal functions like meta-callback)
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (token === serviceRoleKey) {
+        // Service role call - trust the user_id from body
+        isServiceRoleCall = true;
+        userId = bodyData.user_id || null;
+        console.log('Service role call detected, user_id from body:', userId);
+      } else {
+        // User JWT - validate it
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        
+        if (authError || !user) {
+          throw new Error('Unauthorized');
+        }
+        userId = user.id;
       }
     } else {
       // Cron job - sync all profiles
       isCronJob = true;
     }
 
-    console.log(`Meta sync started - User: ${userId}, Profile: ${profileId}, Cron: ${isCronJob}`);
+    console.log(`Meta sync started - User: ${userId}, Profile: ${profileId}, Cron: ${isCronJob}, ServiceRole: ${isServiceRoleCall}`);
 
     // Get profiles to sync
     let profilesQuery = supabase

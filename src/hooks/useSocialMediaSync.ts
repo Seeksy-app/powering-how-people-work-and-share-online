@@ -73,9 +73,13 @@ export function useSocialProfiles() {
       const { data, error } = await supabase
         .from('social_media_profiles')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('connected_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching social profiles:', error);
+        throw error;
+      }
+      console.log('Fetched social profiles:', data?.length || 0, 'profiles');
       return data as unknown as SocialProfile[];
     },
   });
