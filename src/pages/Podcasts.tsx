@@ -121,8 +121,10 @@ const Podcasts = () => {
           <div className="flex gap-2">
             <ImportRSSButton 
               onImportComplete={(podcastId) => {
+                console.log("Import complete, podcast ID:", podcastId);
                 queryClient.invalidateQueries({ queryKey: ["podcasts"] });
-                navigate(`/podcasts/${podcastId}`);
+                // Navigate to content hub to avoid timing issues
+                navigate("/content-and-media#podcasts");
               }} 
             />
             <Button onClick={() => navigate("/podcasts/create")}>
