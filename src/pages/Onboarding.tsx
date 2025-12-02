@@ -5,113 +5,35 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { OnboardingQuestion } from "@/components/onboarding/OnboardingQuestion";
-import { DashboardPreview } from "@/components/onboarding/DashboardPreview";
-import { 
-  ONBOARDING_QUESTIONS, 
-  OnboardingAnswers,
-  creatorTypeOptions,
-  primaryGoalOptions,
-  toolsOptions,
-  experienceLevelOptions,
-  monetizationStatusOptions
-} from "@/config/onboardingQuestions";
-import { generateRecommendations, getDashboardPreview, RecommendedModuleBundle } from "@/lib/onboardingRecommendations";
+import { PERSONA_OPTIONS, PersonaType, getPersonaConfig } from "@/config/personaConfig";
 import {
-  Sparkles, ArrowRight, ArrowLeft, Check, Mic, Building2, Calendar,
-  Users, Star, Instagram, Youtube, Music, Facebook, Globe, Rocket,
-  Headphones, Video, DollarSign, ShoppingBag, Trophy, Ticket, Eye
+  Sparkles, ArrowRight, ArrowLeft, Check, Trophy
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-const TOTAL_STEPS = 8; // Welcome + 5 questions + Recommendations + Dashboard Preview
-
-// Step 2: User Type Options (kept for backward compat, use new config)
-const userTypeOptions = creatorTypeOptions;
-
-// Step 3: Goals Options
-const goalOptions = [
-  { id: "social_analytics", label: "Connect social media & analytics", icon: <Instagram className="h-4 w-4" /> },
-  { id: "grow_audience", label: "Grow my audience", icon: <Rocket className="h-4 w-4" /> },
-  { id: "podcasting", label: "Host podcasts/videos", icon: <Mic className="h-4 w-4" /> },
-  { id: "marketing", label: "Manage marketing (email/SMS)", icon: <Sparkles className="h-4 w-4" /> },
-  { id: "scheduling", label: "Run events & scheduling", icon: <Calendar className="h-4 w-4" /> },
-  { id: "monetization", label: "Monetize my influence", icon: <DollarSign className="h-4 w-4" /> },
-];
-
-// Step 4: Platform Options
-const platformOptions = [
-  { id: "instagram", label: "IG", icon: <Instagram className="h-4 w-4" /> },
-  { id: "youtube", label: "YT", icon: <Youtube className="h-4 w-4" /> },
-  { id: "tiktok", label: "TikTok", icon: <Video className="h-4 w-4" /> },
-  { id: "facebook", label: "FB", icon: <Facebook className="h-4 w-4" /> },
-  { id: "spotify_podcast", label: "Spotify", icon: <Music className="h-4 w-4" /> },
-  { id: "apple_podcast", label: "Apple Podcasts", icon: <Headphones className="h-4 w-4" /> },
-  { id: "website", label: "Website", icon: <Globe className="h-4 w-4" /> },
-  { id: "starting_fresh", label: "None yet", icon: <Sparkles className="h-4 w-4" /> },
-];
-
-// Step 5: Content Type Options
-const contentTypeOptions = [
-  { id: "podcasting", label: "Podcast", icon: <Headphones className="h-4 w-4" /> },
-  { id: "video", label: "Video", icon: <Video className="h-4 w-4" /> },
-  { id: "lifestyle", label: "Creator/Lifestyle", icon: <Star className="h-4 w-4" /> },
-  { id: "educational", label: "Education", icon: <Sparkles className="h-4 w-4" /> },
-  { id: "brand", label: "Brand/Corporate", icon: <Building2 className="h-4 w-4" /> },
-];
-
-// Step 6: Monetization Options
-const monetizationOptions = [
-  { id: "brand_partnerships", label: "Brand deals", icon: <Star className="h-4 w-4" /> },
-  { id: "podcast_sponsorship", label: "Sponsorship (Podcast/Video)", icon: <Mic className="h-4 w-4" /> },
-  { id: "digital_products", label: "Digital products", icon: <ShoppingBag className="h-4 w-4" /> },
-  { id: "ticket_sales", label: "Events/Tickets", icon: <Ticket className="h-4 w-4" /> },
-  { id: "not_monetizing", label: "Growing audience only", icon: <Rocket className="h-4 w-4" /> },
-];
+const TOTAL_STEPS = 4; // Welcome + Persona Selection + Recommendations + Confirmation
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [completing, setCompleting] = useState(false);
-
-  // Form state
-  const [userType, setUserType] = useState<string>("");
-  const [goals, setGoals] = useState<string[]>([]);
-  const [platforms, setPlatforms] = useState<string[]>([]);
-  const [contentType, setContentType] = useState<string>("");
-  const [monetization, setMonetization] = useState<string>("");
-
-  // Generated recommendations
-  const [recommendations, setRecommendations] = useState<RecommendedModuleBundle | null>(null);
+  const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
 
   const progress = (step / TOTAL_STEPS) * 100;
+  const personaConfig = selectedPersona ? getPersonaConfig(selectedPersona) : null;
 
   const canProceed = () => {
     switch (step) {
-      case 1: return true; // Welcome screen
-      case 2: return !!userType;
-      case 3: return goals.length > 0;
-      case 4: return platforms.length > 0;
-      case 5: return !!contentType;
-      case 6: return !!monetization;
+      case 1: return true;
+      case 2: return !!selectedPersona;
+      case 3: return true;
       default: return true;
     }
   };
 
   const handleNext = () => {
-    if (step === 6) {
-      // Generate recommendations using new engine
-      const answers: OnboardingAnswers = {
-        creatorType: userType,
-        primaryGoal: goals[0] || "",
-        tools: [], // Will be auto-determined
-        experience: "intermediate",
-        monetization: monetization,
-      };
-      const recs = generateRecommendations(answers);
-      setRecommendations(recs);
-    }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
   };
 
@@ -120,40 +42,39 @@ export default function Onboarding() {
   };
 
   const handleComplete = async () => {
+    if (!selectedPersona) return;
+    
     setCompleting(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const moduleIds = recommendations?.modules.map(m => m.id) || [];
+      const config = getPersonaConfig(selectedPersona);
 
-      // Save onboarding data
+      // Save to user_preferences
       await supabase.from("user_preferences").upsert({
         user_id: user.id,
         onboarding_completed: true,
-        user_type: userType,
+        user_type: selectedPersona,
         my_page_enabled: true,
-        pinned_modules: recommendations?.modules.filter(m => m.priority === "core").map(m => m.id) || [],
+        pinned_modules: config.defaultWidgets,
       }, { onConflict: "user_id" });
 
-      localStorage.setItem("show_welcome_spin", "true");
-      localStorage.setItem("activated_modules", JSON.stringify(moduleIds));
+      // Update profile with onboarding data
+      await supabase.from("profiles").update({
+        onboarding_completed: true,
+        onboarding_data: {
+          personaType: selectedPersona,
+          completedAt: new Date().toISOString(),
+          checklistStatus: {},
+        }
+      }).eq("id", user.id);
 
+      localStorage.setItem("show_welcome_spin", "true");
       toast.success("Your workspace is ready!");
 
-      // Route based on user type
-      const routes: Record<string, string> = {
-        creator: "/dashboard",
-        influencer: "/dashboard",
-        business: "/dashboard",
-        entrepreneur: "/dashboard",
-        event_host: "/events",
-        agency: "/agency",
-        podcaster: "/podcasts",
-        speaker: "/dashboard",
-        brand: "/dashboard",
-      };
-      navigate(routes[userType] || "/dashboard");
+      // Route to dashboard
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Failed to complete setup");
@@ -195,71 +116,147 @@ export default function Onboarding() {
     </div>
   );
 
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return renderWelcomeScreen();
-      case 2:
-        return (
-          <OnboardingQuestion
-            question="Which best describes you?"
-            options={userTypeOptions}
-            selected={userType}
-            onChange={(v) => setUserType(v as string)}
-            columns={1}
-          />
-        );
-      case 3:
-        return (
-          <OnboardingQuestion
-            question="Choose your goals:"
-            description="Select all that apply"
-            options={goalOptions}
-            selected={goals}
-            onChange={(v) => setGoals(v as string[])}
-            multiSelect
-            columns={1}
-          />
-        );
-      case 4:
-        return (
-          <OnboardingQuestion
-            question="Which platforms do you use?"
-            options={platformOptions}
-            selected={platforms}
-            onChange={(v) => setPlatforms(v as string[])}
-            multiSelect
-            columns={2}
-          />
-        );
-      case 5:
-        return (
-          <OnboardingQuestion
-            question="Your content is mainly:"
-            options={contentTypeOptions}
-            selected={contentType}
-            onChange={(v) => setContentType(v as string)}
-            columns={1}
-          />
-        );
-      case 6:
-        return (
-          <OnboardingQuestion
-            question="How do you want to make money?"
-            options={monetizationOptions}
-            selected={monetization}
-            onChange={(v) => setMonetization(v as string)}
-            columns={1}
-          />
-        );
-      case 7:
-        return renderStarterStack();
-      default:
-        return null;
-    }
+  const renderPersonaSelection = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-4">
+        <h2 className="text-2xl font-bold mb-2">Which best describes you?</h2>
+        <p className="text-muted-foreground">We'll customize your dashboard based on your needs.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3">
+        {PERSONA_OPTIONS.map((option, index) => {
+          const Icon = option.icon;
+          const isSelected = selectedPersona === option.id;
+          
+          return (
+            <motion.div
+              key={option.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <button
+                type="button"
+                onClick={() => setSelectedPersona(option.id as PersonaType)}
+                className={cn(
+                  "w-full p-4 rounded-xl border-2 transition-all text-left",
+                  "hover:shadow-md hover:border-primary/50",
+                  isSelected
+                    ? "border-primary bg-primary/5 shadow-md"
+                    : "border-border bg-card"
+                )}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "p-3 rounded-xl bg-gradient-to-br text-white",
+                    option.gradient
+                  )}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold">{option.label}</p>
+                    <p className="text-sm text-muted-foreground">{option.description}</p>
+                  </div>
+                  {isSelected && (
+                    <div className="p-1.5 rounded-full bg-primary">
+                      <Check className="h-4 w-4 text-primary-foreground" />
+                    </div>
+                  )}
+                </div>
+              </button>
+            </motion.div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderRecommendations = () => {
+    if (!personaConfig) return null;
+
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-6">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", delay: 0.1 }}
+            className={cn(
+              "inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gradient-to-br text-white mb-4",
+              personaConfig.gradient
+            )}
+          >
+            <personaConfig.icon className="h-8 w-8" />
+          </motion.div>
+          <h2 className="text-2xl font-bold mb-2">Your {personaConfig.label} Setup</h2>
+          <p className="text-muted-foreground">Here's what we'll set up for you</p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-3">Dashboard Widgets</p>
+            <div className="flex flex-wrap gap-2">
+              {personaConfig.defaultWidgets.slice(0, 5).map((widgetId) => (
+                <Badge key={widgetId} variant="secondary" className="capitalize">
+                  {widgetId.replace(/-/g, " ")}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-3">Quick Navigation</p>
+            <div className="grid grid-cols-2 gap-2">
+              {personaConfig.navHighlights.slice(0, 4).map((nav, i) => {
+                const NavIcon = nav.icon;
+                return (
+                  <motion.div
+                    key={nav.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-muted/50"
+                  >
+                    <NavIcon className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">{nav.label}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm font-medium text-muted-foreground mb-3">Setup Checklist</p>
+            <div className="space-y-2">
+              {personaConfig.checklist.slice(0, 3).map((item, i) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center gap-3 p-2 rounded-lg bg-muted/30"
+                >
+                  <div className="p-1 rounded-full bg-primary/10">
+                    <Check className="h-3 w-3 text-primary" />
+                  </div>
+                  <span className="text-sm">{item.label}</span>
+                </motion.div>
+              ))}
+              {personaConfig.checklist.length > 3 && (
+                <p className="text-xs text-muted-foreground pl-8">
+                  +{personaConfig.checklist.length - 3} more tasks
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  const renderStarterStack = () => {
+  const renderConfirmation = () => {
+    if (!personaConfig) return null;
+
     return (
       <div className="space-y-6">
         <div className="text-center mb-6">
@@ -271,38 +268,40 @@ export default function Onboarding() {
           >
             <Trophy className="h-8 w-8 text-primary" />
           </motion.div>
-          <h2 className="text-2xl font-bold mb-2">Your personalized Seeksy setup is ready!</h2>
+          <h2 className="text-2xl font-bold mb-2">You're all set!</h2>
+          <p className="text-muted-foreground">
+            Your {personaConfig.label} workspace is ready to go.
+          </p>
         </div>
 
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-muted-foreground mb-3">Recommended Tools:</p>
-          <div className="space-y-2">
-            {(recommendations?.modules || []).map((module, i) => (
-              <motion.div
-                key={module.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border"
-              >
-                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
-                  <Check className="h-4 w-4 text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium">{module.name}</p>
-                  <p className="text-sm text-muted-foreground">{module.description}</p>
-                </div>
-                {module.priority === "core" && (
-                  <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">
-                    Core
-                  </Badge>
-                )}
-              </motion.div>
-            ))}
+        <div className="p-4 rounded-xl bg-gradient-to-r from-primary/10 to-transparent border border-primary/20">
+          <div className="flex items-start gap-3">
+            <Sparkles className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="font-medium text-sm">Pro Tip</p>
+              <p className="text-sm text-muted-foreground">
+                You can customize your dashboard anytime by clicking the "Customize" button.
+              </p>
+            </div>
           </div>
         </div>
       </div>
     );
+  };
+
+  const renderStep = () => {
+    switch (step) {
+      case 1:
+        return renderWelcomeScreen();
+      case 2:
+        return renderPersonaSelection();
+      case 3:
+        return renderRecommendations();
+      case 4:
+        return renderConfirmation();
+      default:
+        return null;
+    }
   };
 
   return (
@@ -312,14 +311,12 @@ export default function Onboarding() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-lg"
       >
-        {/* Progress Bar - hide on welcome screen */}
         {step > 1 && (
           <div className="mb-6">
             <Progress value={progress} className="h-1.5" />
           </div>
         )}
 
-        {/* Main Card */}
         <Card className="border-border/50 shadow-lg">
           <CardContent className="p-6 sm:p-8">
             <AnimatePresence mode="wait">
@@ -334,7 +331,6 @@ export default function Onboarding() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Navigation */}
             <div className="flex justify-between items-center mt-8 pt-6 border-t">
               <div>
                 {step > 1 && step < TOTAL_STEPS ? (
@@ -372,7 +368,7 @@ export default function Onboarding() {
                     ) : (
                       <>
                         <Sparkles className="h-4 w-4" />
-                        Activate My Tools
+                        Go to Dashboard
                       </>
                     )}
                   </Button>
