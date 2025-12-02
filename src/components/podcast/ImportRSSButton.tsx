@@ -82,6 +82,7 @@ export function ImportRSSButton({ onImportComplete }: ImportRSSButtonProps) {
         .from("podcasts")
         .insert({
           user_id: user.id,
+          owner_id: user.id,
           title: data.podcast.title,
           description: data.podcast.description || "",
           cover_image_url: data.podcast.imageUrl || null,
@@ -94,6 +95,7 @@ export function ImportRSSButton({ onImportComplete }: ImportRSSButtonProps) {
           source: "rss",
           source_url: rssUrl.trim(),
           rss_feed_url: rssUrl.trim(),
+          is_published: true,
         })
         .select()
         .single();
@@ -122,8 +124,9 @@ export function ImportRSSButton({ onImportComplete }: ImportRSSButtonProps) {
           episode_number: ep.episodeNumber || null,
           season_number: ep.seasonNumber || null,
           source: "rss",
+          source_url: rssUrl.trim(),
           guid: ep.guid || null,
-          is_published: true, // RSS episodes are already published
+          is_published: true,
         }));
 
         const { error: episodesError } = await supabase
@@ -145,13 +148,18 @@ export function ImportRSSButton({ onImportComplete }: ImportRSSButtonProps) {
         description: `Imported "${data.podcast.title}" with ${data.episodes?.length || 0} episodes`,
       });
 
+      console.log("Imported podcast ID:", podcastData.id);
+      
       setTimeout(() => {
-        onImportComplete?.(podcastData.id);
         setOpen(false);
         setRssUrl("");
         setImportStatus("idle");
         setImportResult(null);
-      }, 2000);
+        // Navigate to content hub with small delay to ensure transaction completes
+        if (onImportComplete) {
+          setTimeout(() => onImportComplete(podcastData.id), 300);
+        }
+      }, 1500);
     } catch (error: any) {
       console.error("RSS Import error:", error);
       setImportStatus("error");
