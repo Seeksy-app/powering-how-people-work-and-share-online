@@ -158,7 +158,7 @@ serve(async (req) => {
     
     console.log('Long-lived token obtained, expires in:', expiresIn, 'seconds');
 
-    // Store in database
+    // Store in social_media_accounts (legacy table)
     const { data: socialAccount, error: insertError } = await supabase
       .from('social_media_accounts')
       .upsert({
@@ -181,6 +181,31 @@ serve(async (req) => {
       throw insertError;
     }
 
+    // Also create/update social_media_profiles for new social graph sync system
+    const { data: socialProfile, error: profileError } = await supabase
+      .from('social_media_profiles')
+      .upsert({
+        user_id: user.id,
+        platform,
+        platform_user_id: platformUserId,
+        username: platformUsername,
+        profile_picture: accountMetadata?.profile_picture_url || null,
+        account_type: isBusinessAccount ? 'business' : 'personal',
+        access_token: longLivedToken,
+        token_expires_at: expiresAt,
+        connected_at: new Date().toISOString(),
+        sync_status: 'pending',
+      }, {
+        onConflict: 'user_id,platform,platform_user_id'
+      })
+      .select()
+      .single();
+
+    if (profileError) {
+      console.error('Social profile insert error:', profileError);
+      // Don't fail if social_media_profiles insert fails - legacy table is primary
+    }
+
     console.log(`${platform} account connected for user ${user.id}: @${platformUsername}`);
 
     return new Response(
@@ -190,7 +215,8 @@ serve(async (req) => {
           platform,
           username: platformUsername,
           is_business_account: isBusinessAccount,
-        }
+        },
+        profile_id: socialProfile?.id || null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

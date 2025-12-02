@@ -86,6 +86,7 @@ import PodcastDetail from "./pages/PodcastDetail";
 import EditPodcast from "./pages/EditPodcast";
 import ImportPodcast from "./pages/ImportPodcast";
 import UploadEpisode from "./pages/UploadEpisode";
+import SocialAnalytics from "./pages/SocialAnalytics";
 import RSSMigrationPage from "./pages/RSSMigrationPage";
 import PaidAdsTerms from "./pages/legal/PaidAdsTerms";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
@@ -788,6 +789,7 @@ const AppContent = () => {
           <Route path="/media/library" element={<MediaVault />} />
           <Route path="/media-library-legacy" element={<MediaLibrary />} />
           <Route path="/clips" element={<ClipsLibrary />} />
+          <Route path="/social-analytics" element={<SocialAnalytics />} />
           <Route path="/update-media-durations" element={<UpdateMediaDurations />} />
           <Route path="/post-production-studio" element={<PostProductionStudio />} />
           <Route path="/create-clips" element={<CreateClips />} />

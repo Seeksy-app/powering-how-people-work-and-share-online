@@ -195,3 +195,24 @@ verify_jwt = true
 
 [functions.scribe-agent]
 verify_jwt = true
+
+[functions.meta-sync-social-data]
+verify_jwt = true
+
+[functions.meta-auth]
+verify_jwt = true
+
+[functions.meta-callback]
+verify_jwt = false
+
+[functions.meta-connect-account]
+verify_jwt = true
+
+[functions.meta-refresh-token]
+verify_jwt = true
+
+[functions.meta-fetch-insights]
+verify_jwt = true
+
+[functions.meta-sync-impressions]
+verify_jwt = true

@@ -11492,6 +11492,62 @@ export type Database = {
         }
         Relationships: []
       }
+      social_insights_snapshots: {
+        Row: {
+          accounts_engaged: number | null
+          created_at: string | null
+          email_contacts: number | null
+          engagement_rate: number | null
+          follower_count: number | null
+          id: string
+          impressions: number | null
+          profile_id: string
+          profile_views: number | null
+          reach: number | null
+          snapshot_date: string
+          total_interactions: number | null
+          website_clicks: number | null
+        }
+        Insert: {
+          accounts_engaged?: number | null
+          created_at?: string | null
+          email_contacts?: number | null
+          engagement_rate?: number | null
+          follower_count?: number | null
+          id?: string
+          impressions?: number | null
+          profile_id: string
+          profile_views?: number | null
+          reach?: number | null
+          snapshot_date?: string
+          total_interactions?: number | null
+          website_clicks?: number | null
+        }
+        Update: {
+          accounts_engaged?: number | null
+          created_at?: string | null
+          email_contacts?: number | null
+          engagement_rate?: number | null
+          follower_count?: number | null
+          id?: string
+          impressions?: number | null
+          profile_id?: string
+          profile_views?: number | null
+          reach?: number | null
+          snapshot_date?: string
+          total_interactions?: number | null
+          website_clicks?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_insights_snapshots_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "social_media_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_links: {
         Row: {
           created_at: string | null
@@ -11583,6 +11639,181 @@ export type Database = {
           platform_username?: string | null
           profile_url?: string | null
           refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      social_media_comments: {
+        Row: {
+          comment_id: string
+          created_at: string | null
+          id: string
+          like_count: number | null
+          post_id: string
+          text: string | null
+          timestamp: string | null
+          username: string | null
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string | null
+          id?: string
+          like_count?: number | null
+          post_id: string
+          text?: string | null
+          timestamp?: string | null
+          username?: string | null
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string | null
+          id?: string
+          like_count?: number | null
+          post_id?: string
+          text?: string | null
+          timestamp?: string | null
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_media_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_media_posts: {
+        Row: {
+          caption: string | null
+          comment_count: number | null
+          created_at: string | null
+          engagement_rate: number | null
+          id: string
+          impressions: number | null
+          like_count: number | null
+          media_type: string | null
+          media_url: string | null
+          permalink: string | null
+          post_id: string
+          profile_id: string
+          reach: number | null
+          saved: number | null
+          shares: number | null
+          thumbnail_url: string | null
+          timestamp: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          caption?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          like_count?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          permalink?: string | null
+          post_id: string
+          profile_id: string
+          reach?: number | null
+          saved?: number | null
+          shares?: number | null
+          thumbnail_url?: string | null
+          timestamp?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          caption?: string | null
+          comment_count?: number | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          like_count?: number | null
+          media_type?: string | null
+          media_url?: string | null
+          permalink?: string | null
+          post_id?: string
+          profile_id?: string
+          reach?: number | null
+          saved?: number | null
+          shares?: number | null
+          thumbnail_url?: string | null
+          timestamp?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_media_posts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "social_media_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_media_profiles: {
+        Row: {
+          access_token: string | null
+          account_type: string | null
+          biography: string | null
+          connected_at: string | null
+          followers_count: number | null
+          follows_count: number | null
+          id: string
+          last_sync_at: string | null
+          media_count: number | null
+          platform: string
+          platform_user_id: string | null
+          profile_picture: string | null
+          sync_error: string | null
+          sync_status: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          account_type?: string | null
+          biography?: string | null
+          connected_at?: string | null
+          followers_count?: number | null
+          follows_count?: number | null
+          id?: string
+          last_sync_at?: string | null
+          media_count?: number | null
+          platform?: string
+          platform_user_id?: string | null
+          profile_picture?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          account_type?: string | null
+          biography?: string | null
+          connected_at?: string | null
+          followers_count?: number | null
+          follows_count?: number | null
+          id?: string
+          last_sync_at?: string | null
+          media_count?: number | null
+          platform?: string
+          platform_user_id?: string | null
+          profile_picture?: string | null
+          sync_error?: string | null
+          sync_status?: string | null
           token_expires_at?: string | null
           updated_at?: string | null
           user_id?: string
