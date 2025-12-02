@@ -2,12 +2,32 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Mic, MicOff, Video, VideoOff, Settings, 
-  ChevronDown, Copy, Users
+  ChevronDown, Copy, Users, Volume2, Monitor,
+  Sparkles, Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+interface MediaDevice {
+  deviceId: string;
+  label: string;
+}
 
 interface VideoPreJoinScreenProps {
   sessionTitle: string;
@@ -26,18 +46,91 @@ export function VideoPreJoinScreen({
 }: VideoPreJoinScreenProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  
+  // Form state
   const [name, setName] = useState(hostName);
   const [title, setTitle] = useState("");
+  
+  // Device state
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  
+  // Device lists
+  const [microphones, setMicrophones] = useState<MediaDevice[]>([]);
+  const [cameras, setCameras] = useState<MediaDevice[]>([]);
+  const [speakers, setSpeakers] = useState<MediaDevice[]>([]);
+  
+  // Selected devices
+  const [selectedMic, setSelectedMic] = useState<string>("");
+  const [selectedCamera, setSelectedCamera] = useState<string>("");
+  const [selectedSpeaker, setSelectedSpeaker] = useState<string>("");
+  const [resolution, setResolution] = useState<string>("720p");
+  
+  // Enhancements
+  const [noiseReduction, setNoiseReduction] = useState(true);
+  const [backgroundBlur, setBackgroundBlur] = useState(false);
+  const [echoCancellation, setEchoCancellation] = useState(true);
 
+  // Load devices
+  useEffect(() => {
+    async function loadDevices() {
+      try {
+        // Request permissions first
+        await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+        
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        
+        const mics = devices
+          .filter(d => d.kind === "audioinput")
+          .map(d => ({ deviceId: d.deviceId, label: d.label || `Microphone ${d.deviceId.slice(0, 4)}` }));
+        
+        const cams = devices
+          .filter(d => d.kind === "videoinput")
+          .map(d => ({ deviceId: d.deviceId, label: d.label || `Camera ${d.deviceId.slice(0, 4)}` }));
+        
+        const spkrs = devices
+          .filter(d => d.kind === "audiooutput")
+          .map(d => ({ deviceId: d.deviceId, label: d.label || `Speaker ${d.deviceId.slice(0, 4)}` }));
+        
+        setMicrophones(mics);
+        setCameras(cams);
+        setSpeakers(spkrs);
+        
+        if (mics.length > 0) setSelectedMic(mics[0].deviceId);
+        if (cams.length > 0) setSelectedCamera(cams[0].deviceId);
+        if (spkrs.length > 0) setSelectedSpeaker(spkrs[0].deviceId);
+      } catch (err) {
+        console.error("Error loading devices:", err);
+      }
+    }
+    
+    loadDevices();
+  }, []);
+
+  // Start camera preview
   useEffect(() => {
     async function startCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      
+      if (isVideoOff) {
+        setStream(null);
+        return;
+      }
+      
       try {
-        const newStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: 1280, height: 720 },
-          audio: true,
-        });
+        const constraints: MediaStreamConstraints = {
+          video: selectedCamera ? {
+            deviceId: selectedCamera,
+            width: resolution === "1080p" ? 1920 : 1280,
+            height: resolution === "1080p" ? 1080 : 720,
+          } : true,
+          audio: selectedMic ? { deviceId: selectedMic } : true,
+        };
+        
+        const newStream = await navigator.mediaDevices.getUserMedia(constraints);
         setStream(newStream);
         if (videoRef.current) {
           videoRef.current.srcObject = newStream;
@@ -54,7 +147,7 @@ export function VideoPreJoinScreen({
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [selectedCamera, selectedMic, resolution, isVideoOff]);
 
   const handleCopyInviteLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -66,6 +159,22 @@ export function VideoPreJoinScreen({
       stream.getTracks().forEach(track => track.stop());
     }
     onEnterStudio(name, title);
+  };
+
+  const handleTestSpeaker = () => {
+    const audioContext = new AudioContext();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = 440;
+    gainNode.gain.value = 0.1;
+    
+    oscillator.start();
+    setTimeout(() => oscillator.stop(), 500);
+    toast.success("Speaker test played!");
   };
 
   return (
@@ -124,7 +233,7 @@ export function VideoPreJoinScreen({
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">{name.charAt(0)}</span>
+                  <span className="text-white font-bold text-2xl">{name.charAt(0) || "?"}</span>
                 </div>
               </div>
             )}
@@ -143,7 +252,7 @@ export function VideoPreJoinScreen({
 
           {/* Device Controls */}
           <div className="flex items-center justify-center gap-2 mb-6">
-            {/* Mic Toggle */}
+            {/* Mic Toggle with Dropdown */}
             <div className="flex items-center">
               <Button
                 variant="ghost"
@@ -156,19 +265,26 @@ export function VideoPreJoinScreen({
               >
                 {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "h-10 w-6 rounded-full rounded-l-none border-l border-white",
-                  isMuted ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-700"
-                )}
-              >
-                <ChevronDown className="w-3 h-3" />
-              </Button>
+              <Select value={selectedMic} onValueChange={setSelectedMic}>
+                <SelectTrigger 
+                  className={cn(
+                    "h-10 w-8 rounded-full rounded-l-none border-l border-white p-0 justify-center",
+                    isMuted ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-700"
+                  )}
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </SelectTrigger>
+                <SelectContent>
+                  {microphones.map(mic => (
+                    <SelectItem key={mic.deviceId} value={mic.deviceId}>
+                      {mic.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Camera Toggle */}
+            {/* Camera Toggle with Dropdown */}
             <div className="flex items-center">
               <Button
                 variant="ghost"
@@ -181,23 +297,31 @@ export function VideoPreJoinScreen({
               >
                 {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "h-10 w-6 rounded-full rounded-l-none border-l border-white",
-                  isVideoOff ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-700"
-                )}
-              >
-                <ChevronDown className="w-3 h-3" />
-              </Button>
+              <Select value={selectedCamera} onValueChange={setSelectedCamera}>
+                <SelectTrigger 
+                  className={cn(
+                    "h-10 w-8 rounded-full rounded-l-none border-l border-white p-0 justify-center",
+                    isVideoOff ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-700"
+                  )}
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </SelectTrigger>
+                <SelectContent>
+                  {cameras.map(cam => (
+                    <SelectItem key={cam.deviceId} value={cam.deviceId}>
+                      {cam.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Settings */}
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 rounded-full bg-gray-100 text-gray-700"
+              onClick={() => setShowSettings(true)}
+              className="h-10 w-10 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
             >
               <Settings className="w-5 h-5" />
             </Button>
@@ -228,6 +352,7 @@ export function VideoPreJoinScreen({
           {/* Enter Studio Button */}
           <Button
             onClick={handleEnter}
+            disabled={!name.trim()}
             className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-base"
           >
             Enter Studio
@@ -240,6 +365,107 @@ export function VideoPreJoinScreen({
           </p>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="sm:max-w-[500px] bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900">Studio Settings</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Resolution */}
+            <div className="space-y-2">
+              <Label className="text-gray-700 flex items-center gap-2">
+                <Monitor className="w-4 h-4" /> Video Resolution
+              </Label>
+              <Select value={resolution} onValueChange={setResolution}>
+                <SelectTrigger className="bg-white border-gray-200">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="720p">720p HD</SelectItem>
+                  <SelectItem value="1080p">1080p Full HD</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Speaker */}
+            <div className="space-y-2">
+              <Label className="text-gray-700 flex items-center gap-2">
+                <Volume2 className="w-4 h-4" /> Speaker
+              </Label>
+              <div className="flex gap-2">
+                <Select value={selectedSpeaker} onValueChange={setSelectedSpeaker}>
+                  <SelectTrigger className="flex-1 bg-white border-gray-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {speakers.map(spkr => (
+                      <SelectItem key={spkr.deviceId} value={spkr.deviceId}>
+                        {spkr.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleTestSpeaker}
+                  className="border-gray-200"
+                >
+                  Test
+                </Button>
+              </div>
+            </div>
+
+            {/* Audio Enhancements */}
+            <div className="space-y-3">
+              <Label className="text-gray-700">Audio Enhancements</Label>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">Noise Reduction</span>
+                </div>
+                <Switch 
+                  checked={noiseReduction} 
+                  onCheckedChange={setNoiseReduction}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">Echo Cancellation</span>
+                </div>
+                <Switch 
+                  checked={echoCancellation} 
+                  onCheckedChange={setEchoCancellation}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border border-gray-100">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm text-gray-700">Background Blur</span>
+                </div>
+                <Switch 
+                  checked={backgroundBlur} 
+                  onCheckedChange={setBackgroundBlur}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button onClick={() => setShowSettings(false)}>
+              <Check className="w-4 h-4 mr-2" />
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
