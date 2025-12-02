@@ -56,6 +56,20 @@ export const NAVIGATION_CONFIG: {
           "roles": ["creator", "influencer", "agency", "advertiser", "admin"]
         },
         {
+          "id": "creator_hub",
+          "label": "Creator Hub",
+          "icon": "sparkles",
+          "path": "/creator-hub",
+          "roles": ["creator", "influencer"]
+        },
+        {
+          "id": "agency_hub",
+          "label": "Agency Hub",
+          "icon": "briefcase",
+          "path": "/agency",
+          "roles": ["agency", "admin"]
+        },
+        {
           "id": "seekies",
           "label": "Seekies & Tools",
           "icon": "grid-3x3",
@@ -140,6 +154,13 @@ export const NAVIGATION_CONFIG: {
           "icon": "scissors",
           "path": "/clips",
           "roles": ["creator", "influencer", "agency", "admin"]
+        },
+        {
+          "id": "mypage_streaming",
+          "label": "My Page Streaming",
+          "icon": "radio",
+          "path": "/mypage",
+          "roles": ["creator", "influencer"]
         }
       ]
     },

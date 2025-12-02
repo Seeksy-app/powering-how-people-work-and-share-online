@@ -8526,6 +8526,178 @@ export type Database = {
           },
         ]
       }
+      meta_audience_demographics: {
+        Row: {
+          age_range: string | null
+          city: string | null
+          country: string | null
+          created_at: string | null
+          gender: string | null
+          id: string
+          integration_id: string
+          percentage: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          age_range?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          gender?: string | null
+          id?: string
+          integration_id: string
+          percentage?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          age_range?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string | null
+          gender?: string | null
+          id?: string
+          integration_id?: string
+          percentage?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_audience_demographics_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "meta_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_integrations: {
+        Row: {
+          access_token: string | null
+          created_at: string | null
+          engagement_rate: number | null
+          followers_count: number | null
+          following_count: number | null
+          id: string
+          is_active: boolean | null
+          last_synced_at: string | null
+          platform: string
+          platform_user_id: string
+          posts_count: number | null
+          profile_url: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_synced_at?: string | null
+          platform: string
+          platform_user_id: string
+          posts_count?: number | null
+          profile_url?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          followers_count?: number | null
+          following_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_synced_at?: string | null
+          platform?: string
+          platform_user_id?: string
+          posts_count?: number | null
+          profile_url?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      meta_post_metrics: {
+        Row: {
+          caption: string | null
+          comments_count: number | null
+          created_at: string | null
+          engagement_rate: number | null
+          id: string
+          impressions: number | null
+          integration_id: string
+          likes_count: number | null
+          media_url: string | null
+          post_id: string
+          post_type: string | null
+          post_url: string | null
+          published_at: string | null
+          reach: number | null
+          saves_count: number | null
+          shares_count: number | null
+          thumbnail_url: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          integration_id: string
+          likes_count?: number | null
+          media_url?: string | null
+          post_id: string
+          post_type?: string | null
+          post_url?: string | null
+          published_at?: string | null
+          reach?: number | null
+          saves_count?: number | null
+          shares_count?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          caption?: string | null
+          comments_count?: number | null
+          created_at?: string | null
+          engagement_rate?: number | null
+          id?: string
+          impressions?: number | null
+          integration_id?: string
+          likes_count?: number | null
+          media_url?: string | null
+          post_id?: string
+          post_type?: string | null
+          post_url?: string | null
+          published_at?: string | null
+          reach?: number | null
+          saves_count?: number | null
+          shares_count?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_post_metrics_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "meta_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       microsoft_connections: {
         Row: {
           access_token: string
