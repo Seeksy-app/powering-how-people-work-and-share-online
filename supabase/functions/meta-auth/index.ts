@@ -40,15 +40,13 @@ Deno.serve(async (req) => {
       throw new Error('META_APP_ID not configured');
     }
 
-    // Required permissions for Instagram Business AND Facebook Pages
-    // Note: read_insights and pages_read_user_content are deprecated/invalid
-    // Use pages_read_engagement for page metrics and instagram_manage_insights for IG
+    // Required permissions for Facebook Pages only
+    // Note: instagram_manage_insights and instagram_basic are causing scope errors
+    // Using minimal Facebook Page scopes for now
     const scopes = [
       'public_profile',
       'pages_show_list',
       'pages_read_engagement',
-      'instagram_basic',
-      'instagram_manage_insights',
       'business_management',
     ].join(',');
 
