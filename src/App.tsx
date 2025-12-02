@@ -434,6 +434,7 @@ const AppContent = () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/signup-select" element={<SignupSelect />} />
               <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/seekies" element={<Apps />} />
               
               {/* My Day OS Routes */}
               <Route path="/my-day" element={<MyDay />} />
