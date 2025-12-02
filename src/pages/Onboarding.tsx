@@ -10,67 +10,60 @@ import { generateStarterStack, RecommendedModule } from "@/components/onboarding
 import {
   Sparkles, ArrowRight, ArrowLeft, Check, Mic, Building2, Calendar,
   Users, Star, Instagram, Youtube, Music, Facebook, Globe, Rocket,
-  BookOpen, Gamepad2, Heart, Briefcase, Headphones, Video, CalendarDays,
-  Building, DollarSign, ShoppingBag, Trophy, UsersRound, Zap
+  Headphones, Video, DollarSign, ShoppingBag, Trophy, Ticket
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
-const TOTAL_STEPS = 6; // 5 questions + 1 results
+const TOTAL_STEPS = 7;
 
-// Step 1: User Type Options
+// Step 2: User Type Options
 const userTypeOptions = [
-  { id: "creator", label: "Creator", description: "Influencer / Podcaster / Content Creator", icon: <Star className="h-5 w-5" /> },
-  { id: "business", label: "Business or Brand", description: "Company or brand presence", icon: <Building2 className="h-5 w-5" /> },
-  { id: "event_host", label: "Event Host / Venue", description: "Host events and bookings", icon: <Calendar className="h-5 w-5" /> },
-  { id: "agency", label: "Agency / Manager", description: "Manage creators or clients", icon: <Users className="h-5 w-5" /> },
-  { id: "podcaster", label: "Podcaster", description: "Focused on podcasting", icon: <Mic className="h-5 w-5" /> },
+  { id: "creator", label: "Creator / Influencer", icon: <Star className="h-5 w-5" /> },
+  { id: "podcaster", label: "Podcaster", icon: <Mic className="h-5 w-5" /> },
+  { id: "business", label: "Brand / Business", icon: <Building2 className="h-5 w-5" /> },
+  { id: "agency", label: "Agency / Manager", icon: <Users className="h-5 w-5" /> },
+  { id: "event_host", label: "Event Host", icon: <Calendar className="h-5 w-5" /> },
 ];
 
-// Step 2: Goals Options
+// Step 3: Goals Options
 const goalOptions = [
-  { id: "social_analytics", label: "Connect & analyze my social media", icon: <Instagram className="h-4 w-4" /> },
+  { id: "social_analytics", label: "Connect social media & analytics", icon: <Instagram className="h-4 w-4" /> },
   { id: "grow_audience", label: "Grow my audience", icon: <Rocket className="h-4 w-4" /> },
-  { id: "scheduling", label: "Schedule meetings & events", icon: <CalendarDays className="h-4 w-4" /> },
-  { id: "marketing", label: "Manage email/SMS marketing", icon: <Zap className="h-4 w-4" /> },
-  { id: "podcasting", label: "Host/record podcasts or videos", icon: <Mic className="h-4 w-4" /> },
-  { id: "public_page", label: "Build a personal/public page", icon: <Globe className="h-4 w-4" /> },
+  { id: "podcasting", label: "Host podcasts/videos", icon: <Mic className="h-4 w-4" /> },
+  { id: "marketing", label: "Manage marketing (email/SMS)", icon: <Sparkles className="h-4 w-4" /> },
+  { id: "scheduling", label: "Run events & scheduling", icon: <Calendar className="h-4 w-4" /> },
   { id: "monetization", label: "Monetize my influence", icon: <DollarSign className="h-4 w-4" /> },
-  { id: "manage_clients", label: "Manage clients or creator teams", icon: <UsersRound className="h-4 w-4" /> },
 ];
 
-// Step 3: Platform Options
+// Step 4: Platform Options
 const platformOptions = [
-  { id: "instagram", label: "Instagram", icon: <Instagram className="h-4 w-4" /> },
-  { id: "youtube", label: "YouTube", icon: <Youtube className="h-4 w-4" /> },
+  { id: "instagram", label: "IG", icon: <Instagram className="h-4 w-4" /> },
+  { id: "youtube", label: "YT", icon: <Youtube className="h-4 w-4" /> },
   { id: "tiktok", label: "TikTok", icon: <Video className="h-4 w-4" /> },
-  { id: "facebook", label: "Facebook Page", icon: <Facebook className="h-4 w-4" /> },
-  { id: "spotify_podcast", label: "Spotify Podcast", icon: <Music className="h-4 w-4" /> },
-  { id: "apple_podcast", label: "Apple Podcast", icon: <Headphones className="h-4 w-4" /> },
+  { id: "facebook", label: "FB", icon: <Facebook className="h-4 w-4" /> },
+  { id: "spotify_podcast", label: "Spotify", icon: <Music className="h-4 w-4" /> },
+  { id: "apple_podcast", label: "Apple Podcasts", icon: <Headphones className="h-4 w-4" /> },
   { id: "website", label: "Website", icon: <Globe className="h-4 w-4" /> },
-  { id: "starting_fresh", label: "I'm starting from scratch", icon: <Sparkles className="h-4 w-4" /> },
+  { id: "starting_fresh", label: "None yet", icon: <Sparkles className="h-4 w-4" /> },
 ];
 
-// Step 4: Content Focus Options
-const contentFocusOptions = [
-  { id: "educational", label: "Educational", description: "Tutorials, courses, how-tos", icon: <BookOpen className="h-4 w-4" /> },
-  { id: "entertainment", label: "Entertainment", description: "Fun, engaging content", icon: <Gamepad2 className="h-4 w-4" /> },
-  { id: "lifestyle", label: "Lifestyle / Personal", description: "Day-to-day, vlogs", icon: <Heart className="h-4 w-4" /> },
-  { id: "business", label: "Business / Professional", description: "B2B, corporate content", icon: <Briefcase className="h-4 w-4" /> },
-  { id: "podcasting", label: "Podcasting", description: "Audio-first content", icon: <Headphones className="h-4 w-4" /> },
-  { id: "video", label: "Video-first creator", description: "YouTube, streaming", icon: <Video className="h-4 w-4" /> },
-  { id: "events", label: "Events / Workshops", description: "Live sessions, webinars", icon: <CalendarDays className="h-4 w-4" /> },
-  { id: "brand", label: "Brand or Corporate", description: "Company communications", icon: <Building className="h-4 w-4" /> },
+// Step 5: Content Type Options
+const contentTypeOptions = [
+  { id: "podcasting", label: "Podcast", icon: <Headphones className="h-4 w-4" /> },
+  { id: "video", label: "Video", icon: <Video className="h-4 w-4" /> },
+  { id: "lifestyle", label: "Creator/Lifestyle", icon: <Star className="h-4 w-4" /> },
+  { id: "educational", label: "Education", icon: <Sparkles className="h-4 w-4" /> },
+  { id: "brand", label: "Brand/Corporate", icon: <Building2 className="h-4 w-4" /> },
 ];
 
-// Step 5: Monetization Options
+// Step 6: Monetization Options
 const monetizationOptions = [
-  { id: "brand_partnerships", label: "Brand partnerships", description: "Sponsorships and collaborations", icon: <Star className="h-4 w-4" /> },
-  { id: "digital_products", label: "Sell digital products", description: "Courses, downloads, merch", icon: <ShoppingBag className="h-4 w-4" /> },
-  { id: "podcast_sponsorship", label: "Podcast audience & sponsorship", description: "Grow and monetize podcast", icon: <Mic className="h-4 w-4" /> },
-  { id: "ticket_sales", label: "Sell tickets/events", description: "Paid events and workshops", icon: <CalendarDays className="h-4 w-4" /> },
-  { id: "subscribers", label: "Build subscribers/fans", description: "Memberships, subscriptions", icon: <UsersRound className="h-4 w-4" /> },
-  { id: "not_monetizing", label: "Not monetizing yet", description: "Just getting started", icon: <Rocket className="h-4 w-4" /> },
+  { id: "brand_partnerships", label: "Brand deals", icon: <Star className="h-4 w-4" /> },
+  { id: "podcast_sponsorship", label: "Sponsorship (Podcast/Video)", icon: <Mic className="h-4 w-4" /> },
+  { id: "digital_products", label: "Digital products", icon: <ShoppingBag className="h-4 w-4" /> },
+  { id: "ticket_sales", label: "Events/Tickets", icon: <Ticket className="h-4 w-4" /> },
+  { id: "not_monetizing", label: "Growing audience only", icon: <Rocket className="h-4 w-4" /> },
 ];
 
 export default function Onboarding() {
@@ -82,7 +75,7 @@ export default function Onboarding() {
   const [userType, setUserType] = useState<string>("");
   const [goals, setGoals] = useState<string[]>([]);
   const [platforms, setPlatforms] = useState<string[]>([]);
-  const [contentFocus, setContentFocus] = useState<string[]>([]);
+  const [contentType, setContentType] = useState<string>("");
   const [monetization, setMonetization] = useState<string>("");
 
   // Generated recommendations
@@ -92,19 +85,20 @@ export default function Onboarding() {
 
   const canProceed = () => {
     switch (step) {
-      case 1: return !!userType;
-      case 2: return goals.length > 0;
-      case 3: return platforms.length > 0;
-      case 4: return contentFocus.length > 0;
-      case 5: return !!monetization;
+      case 1: return true; // Welcome screen
+      case 2: return !!userType;
+      case 3: return goals.length > 0;
+      case 4: return platforms.length > 0;
+      case 5: return !!contentType;
+      case 6: return !!monetization;
       default: return true;
     }
   };
 
   const handleNext = () => {
-    if (step === 5) {
+    if (step === 6) {
       // Generate starter stack
-      const stack = generateStarterStack(userType, goals, platforms, contentFocus, monetization);
+      const stack = generateStarterStack(userType, goals, platforms, [contentType], monetization);
       setStarterStack(stack);
     }
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
@@ -132,7 +126,7 @@ export default function Onboarding() {
       localStorage.setItem("show_welcome_spin", "true");
       localStorage.setItem("activated_modules", JSON.stringify(starterStack.map(m => m.id)));
 
-      toast.success("Your workspace is ready! 🎉");
+      toast.success("Your workspace is ready!");
 
       // Route based on user type
       const routes: Record<string, string> = {
@@ -155,36 +149,65 @@ export default function Onboarding() {
     navigate("/dashboard");
   };
 
+  const renderWelcomeScreen = () => (
+    <div className="text-center py-8">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ type: "spring", delay: 0.1 }}
+        className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6"
+      >
+        <Sparkles className="h-10 w-10 text-primary" />
+      </motion.div>
+      <motion.h1
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="text-3xl font-bold mb-3"
+      >
+        Welcome to Seeksy!
+      </motion.h1>
+      <motion.p
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="text-muted-foreground text-lg"
+      >
+        Let's personalize your workspace.
+      </motion.p>
+    </div>
+  );
+
   const renderStep = () => {
     switch (step) {
       case 1:
-        return (
-          <OnboardingQuestion
-            question="What best describes you?"
-            description="This helps us personalize your Seeksy experience"
-            options={userTypeOptions}
-            selected={userType}
-            onChange={(v) => setUserType(v as string)}
-            columns={2}
-          />
-        );
+        return renderWelcomeScreen();
       case 2:
         return (
           <OnboardingQuestion
-            question="What do you want to do on Seeksy?"
-            description="Select everything that applies to you"
-            options={goalOptions}
-            selected={goals}
-            onChange={(v) => setGoals(v as string[])}
-            multiSelect
-            columns={2}
+            question="Which best describes you?"
+            options={userTypeOptions}
+            selected={userType}
+            onChange={(v) => setUserType(v as string)}
+            columns={1}
           />
         );
       case 3:
         return (
           <OnboardingQuestion
+            question="Choose your goals:"
+            description="Select all that apply"
+            options={goalOptions}
+            selected={goals}
+            onChange={(v) => setGoals(v as string[])}
+            multiSelect
+            columns={1}
+          />
+        );
+      case 4:
+        return (
+          <OnboardingQuestion
             question="Which platforms do you use?"
-            description="We'll help you connect and analyze"
             options={platformOptions}
             selected={platforms}
             onChange={(v) => setPlatforms(v as string[])}
@@ -192,30 +215,27 @@ export default function Onboarding() {
             columns={2}
           />
         );
-      case 4:
-        return (
-          <OnboardingQuestion
-            question="What's your content focus?"
-            description="Choose 1-2 primary areas"
-            options={contentFocusOptions}
-            selected={contentFocus}
-            onChange={(v) => setContentFocus(v as string[])}
-            multiSelect
-            columns={2}
-          />
-        );
       case 5:
         return (
           <OnboardingQuestion
-            question="What are your monetization goals?"
-            description="We'll recommend the right tools"
-            options={monetizationOptions}
-            selected={monetization}
-            onChange={(v) => setMonetization(v as string)}
-            columns={2}
+            question="Your content is mainly:"
+            options={contentTypeOptions}
+            selected={contentType}
+            onChange={(v) => setContentType(v as string)}
+            columns={1}
           />
         );
       case 6:
+        return (
+          <OnboardingQuestion
+            question="How do you want to make money?"
+            options={monetizationOptions}
+            selected={monetization}
+            onChange={(v) => setMonetization(v as string)}
+            columns={1}
+          />
+        );
+      case 7:
         return renderStarterStack();
       default:
         return null;
@@ -223,13 +243,9 @@ export default function Onboarding() {
   };
 
   const renderStarterStack = () => {
-    const coreModules = starterStack.filter((m) => m.priority === "core");
-    const recommendedModules = starterStack.filter((m) => m.priority === "recommended");
-    const optionalModules = starterStack.filter((m) => m.priority === "optional");
-
     return (
       <div className="space-y-6">
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -238,96 +254,36 @@ export default function Onboarding() {
           >
             <Trophy className="h-8 w-8 text-primary" />
           </motion.div>
-          <h2 className="text-2xl font-bold mb-2">Your Starter Stack is Ready!</h2>
-          <p className="text-muted-foreground">
-            Based on your answers, we've selected {starterStack.length} modules for you
-          </p>
+          <h2 className="text-2xl font-bold mb-2">Your personalized Seeksy setup is ready!</h2>
         </div>
 
-        {/* Core Modules */}
-        {coreModules.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                Core
-              </Badge>
-              <span className="text-sm text-muted-foreground">Essential for your workflow</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {coreModules.map((module, i) => (
-                <motion.div
-                  key={module.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20"
-                >
-                  <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm">{module.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{module.description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-muted-foreground mb-3">Recommended Tools:</p>
+          <div className="space-y-2">
+            {starterStack.map((module, i) => (
+              <motion.div
+                key={module.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+                  <Check className="h-4 w-4 text-primary" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{module.name}</p>
+                  <p className="text-sm text-muted-foreground">{module.description}</p>
+                </div>
+                {module.priority === "core" && (
+                  <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">
+                    Core
+                  </Badge>
+                )}
+              </motion.div>
+            ))}
           </div>
-        )}
-
-        {/* Recommended Modules */}
-        {recommendedModules.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20">
-                Recommended
-              </Badge>
-              <span className="text-sm text-muted-foreground">Boost your productivity</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {recommendedModules.map((module, i) => (
-                <motion.div
-                  key={module.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 + i * 0.05 }}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/5 border border-blue-500/20"
-                >
-                  <Check className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm">{module.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{module.description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Optional Modules */}
-        {optionalModules.length > 0 && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">Optional</Badge>
-              <span className="text-sm text-muted-foreground">Explore when you're ready</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {optionalModules.map((module, i) => (
-                <motion.div
-                  key={module.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + i * 0.05 }}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border"
-                >
-                  <Check className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm">{module.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{module.description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     );
   };
@@ -337,29 +293,14 @@ export default function Onboarding() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-2xl"
+        className="w-full max-w-lg"
       >
-        {/* Header */}
-        <div className="text-center mb-6">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.1, type: "spring" }}
-            className="inline-flex items-center gap-2 mb-2"
-          >
-            <Sparkles className="h-6 w-6 text-primary" />
-            <span className="text-lg font-semibold text-primary">Seeksy</span>
-          </motion.div>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Step {step} of {TOTAL_STEPS}</span>
-            <span>{Math.round(progress)}% complete</span>
+        {/* Progress Bar - hide on welcome screen */}
+        {step > 1 && (
+          <div className="mb-6">
+            <Progress value={progress} className="h-1.5" />
           </div>
-          <Progress value={progress} className="h-2" />
-        </div>
+        )}
 
         {/* Main Card */}
         <Card className="border-border/50 shadow-lg">
@@ -379,20 +320,25 @@ export default function Onboarding() {
             {/* Navigation */}
             <div className="flex justify-between items-center mt-8 pt-6 border-t">
               <div>
-                {step > 1 ? (
+                {step > 1 && step < TOTAL_STEPS ? (
                   <Button variant="ghost" onClick={handleBack}>
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Back
                   </Button>
-                ) : (
+                ) : step === 1 ? (
                   <Button variant="ghost" onClick={handleSkip}>
                     Skip for now
                   </Button>
-                )}
+                ) : null}
               </div>
 
               <div>
-                {step < TOTAL_STEPS ? (
+                {step === 1 ? (
+                  <Button onClick={handleNext} size="lg">
+                    Get Started
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                ) : step < TOTAL_STEPS ? (
                   <Button onClick={handleNext} disabled={!canProceed()}>
                     Continue
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -401,6 +347,7 @@ export default function Onboarding() {
                   <Button
                     onClick={handleComplete}
                     disabled={completing}
+                    size="lg"
                     className="gap-2"
                   >
                     {completing ? (
