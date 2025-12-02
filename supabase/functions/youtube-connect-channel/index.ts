@@ -12,6 +12,7 @@ serve(async (req) => {
   }
 
   try {
+    console.log('[youtube-connect-channel] Starting request...');
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
@@ -40,14 +41,17 @@ serve(async (req) => {
     const body = await req.json();
     const { session_id, channel_id } = body;
 
+    console.log('[youtube-connect-channel] Request body:', { session_id, channel_id });
+
     if (!session_id || !channel_id) {
+      console.error('[youtube-connect-channel] Missing required fields:', { session_id, channel_id });
       return new Response(
         JSON.stringify({ error: 'Missing session_id or channel_id' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Connecting channel:', channel_id, 'for session:', session_id);
+    console.log('[youtube-connect-channel] Connecting channel:', channel_id, 'for session:', session_id);
 
     // Fetch the session
     const { data: session, error: sessionError } = await supabase
@@ -58,12 +62,22 @@ serve(async (req) => {
       .single();
 
     if (sessionError || !session) {
-      console.error('Session not found:', sessionError);
+      console.error('[youtube-connect-channel] Session not found:', sessionError);
       return new Response(
-        JSON.stringify({ error: 'Session not found or expired' }),
+        JSON.stringify({ error: 'Session not found or expired', details: sessionError?.message }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('[youtube-connect-channel] Session found:', {
+      id: session.id,
+      user_id: session.user_id,
+      channels_count: (session.channels as unknown[])?.length,
+      has_access_token: !!session.access_token,
+      has_refresh_token: !!session.refresh_token,
+      created_at: session.created_at,
+      used_at: session.used_at,
+    });
 
     // Check if session is already used
     if (session.used_at) {
@@ -93,13 +107,18 @@ serve(async (req) => {
 
     const selectedChannel = channels.find(c => c.id === channel_id);
     if (!selectedChannel) {
+      console.error('[youtube-connect-channel] Channel not found in session. Available channels:', channels.map(c => c.id));
       return new Response(
         JSON.stringify({ error: 'Channel not found in session' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Selected channel:', selectedChannel.title);
+    console.log('[youtube-connect-channel] Selected channel:', {
+      id: selectedChannel.id,
+      title: selectedChannel.title,
+      subscriberCount: selectedChannel.subscriberCount,
+    });
 
     // Check if profile already exists for this channel
     const { data: existingProfile } = await supabase
@@ -126,6 +145,12 @@ serve(async (req) => {
       sync_status: 'pending',
     };
 
+    console.log('[youtube-connect-channel] Profile data to save:', {
+      ...profileData,
+      access_token: profileData.access_token ? '[REDACTED]' : null,
+      refresh_token: profileData.refresh_token ? '[REDACTED]' : null,
+    });
+
     let savedProfile;
     if (existingProfile) {
       console.log('Updating existing YouTube profile:', existingProfile.id);
@@ -137,12 +162,19 @@ serve(async (req) => {
         .single();
 
       if (updateError) {
-        console.error('Failed to update profile:', updateError);
+        console.error('[youtube-connect-channel] Failed to update profile:', {
+          error: updateError,
+          code: updateError.code,
+          message: updateError.message,
+          details: updateError.details,
+          hint: updateError.hint,
+        });
         return new Response(
-          JSON.stringify({ error: 'Failed to update profile' }),
+          JSON.stringify({ error: 'Failed to update profile', details: updateError.message }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      console.log('[youtube-connect-channel] Profile updated successfully:', data?.id);
       savedProfile = data;
     } else {
       // Remove any existing YouTube profile for this user (different channel)
@@ -160,12 +192,19 @@ serve(async (req) => {
         .single();
 
       if (insertError) {
-        console.error('Failed to insert profile:', insertError);
+        console.error('[youtube-connect-channel] Failed to insert profile:', {
+          error: insertError,
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+        });
         return new Response(
-          JSON.stringify({ error: 'Failed to save profile' }),
+          JSON.stringify({ error: 'Failed to save profile', details: insertError.message }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
+      console.log('[youtube-connect-channel] Profile inserted successfully:', data?.id);
       savedProfile = data;
     }
 

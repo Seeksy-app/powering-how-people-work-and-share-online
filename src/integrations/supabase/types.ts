@@ -11953,6 +11953,7 @@ export type Database = {
           platform: string
           platform_user_id: string | null
           profile_picture: string | null
+          refresh_token: string | null
           sync_error: string | null
           sync_status: string | null
           token_expires_at: string | null
@@ -11976,6 +11977,7 @@ export type Database = {
           platform?: string
           platform_user_id?: string | null
           profile_picture?: string | null
+          refresh_token?: string | null
           sync_error?: string | null
           sync_status?: string | null
           token_expires_at?: string | null
@@ -11999,6 +12001,7 @@ export type Database = {
           platform?: string
           platform_user_id?: string | null
           profile_picture?: string | null
+          refresh_token?: string | null
           sync_error?: string | null
           sync_status?: string | null
           token_expires_at?: string | null
