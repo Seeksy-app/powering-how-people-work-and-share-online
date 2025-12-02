@@ -258,6 +258,7 @@ import VoiceTag from "./pages/VoiceTag";
 import VoiceTagAdmin from "./pages/VoiceTagAdmin";
 import ScreenshotGenerator from "./pages/admin/ScreenshotGenerator";
 import DemoVideos from "./pages/DemoVideos";
+import MarketingGTMPlan from "./pages/MarketingGTMPlan";
 import RevenueReports from "./pages/admin/RevenueReports";
 import Billing from "./pages/admin/Billing";
 import Payments from "./pages/admin/Payments";
@@ -646,7 +647,8 @@ const AppContent = () => {
               <Route path="/admin/keys-vault" element={<KeysVault />} />
               <Route path="/admin/personas" element={<PersonaManagement />} />
             <Route path="/admin/screenshot-generator" element={<ScreenshotGenerator />} />
-            <Route path="/demo-videos" element={<DemoVideos />} />
+          <Route path="/demo-videos" element={<DemoVideos />} />
+          <Route path="/marketing-gtm" element={<MarketingGTMPlan />} />
             <Route path="/admin/hero-generator" element={<HeroImageGeneratorPage />} />
             <Route path="/admin/mascot-generator" element={<MascotGeneratorPage />} />
             <Route path="/admin/email-templates" element={<AdminEmailTemplates />} />

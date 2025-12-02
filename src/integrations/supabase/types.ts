@@ -6532,6 +6532,171 @@ export type Database = {
         }
         Relationships: []
       }
+      gtm_channels: {
+        Row: {
+          channel_name: string
+          conversion_rate: number | null
+          cost_efficiency: string
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          reach_potential: number
+        }
+        Insert: {
+          channel_name: string
+          conversion_rate?: number | null
+          cost_efficiency: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          reach_potential: number
+        }
+        Update: {
+          channel_name?: string
+          conversion_rate?: number | null
+          cost_efficiency?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          reach_potential?: number
+        }
+        Relationships: []
+      }
+      gtm_geographic_data: {
+        Row: {
+          created_at: string | null
+          creator_count: number
+          display_order: number | null
+          id: string
+          market_value: number | null
+          state_code: string
+          state_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          creator_count: number
+          display_order?: number | null
+          id?: string
+          market_value?: number | null
+          state_code: string
+          state_name: string
+        }
+        Update: {
+          created_at?: string | null
+          creator_count?: number
+          display_order?: number | null
+          id?: string
+          market_value?: number | null
+          state_code?: string
+          state_name?: string
+        }
+        Relationships: []
+      }
+      gtm_market_metrics: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          metric_name: string
+          metric_type: string
+          metric_value: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          metric_name: string
+          metric_type: string
+          metric_value: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          metric_name?: string
+          metric_type?: string
+          metric_value?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      gtm_market_segments: {
+        Row: {
+          avg_value: number | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          market_size: number
+          potential_rating: string
+          segment_name: string
+        }
+        Insert: {
+          avg_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          market_size: number
+          potential_rating: string
+          segment_name: string
+        }
+        Update: {
+          avg_value?: number | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          market_size?: number
+          potential_rating?: string
+          segment_name?: string
+        }
+        Relationships: []
+      }
+      gtm_phases: {
+        Row: {
+          color_code: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          phase_name: string
+          phase_number: number
+          strategies: Json
+          timeline: string
+        }
+        Insert: {
+          color_code: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          phase_name: string
+          phase_number: number
+          strategies: Json
+          timeline: string
+        }
+        Update: {
+          color_code?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          phase_name?: string
+          phase_number?: number
+          strategies?: Json
+          timeline?: string
+        }
+        Relationships: []
+      }
       guest_appearances: {
         Row: {
           created_at: string | null
