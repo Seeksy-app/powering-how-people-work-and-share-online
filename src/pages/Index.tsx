@@ -4,10 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { CookieConsent } from "@/components/CookieConsent";
 import { HeroSection } from "@/components/homepage/HeroSection";
-import { ValuePropositionGrid } from "@/components/homepage/ValuePropositionGrid";
 import { AudienceCards } from "@/components/homepage/AudienceCards";
 import { FeatureSections } from "@/components/homepage/FeatureSections";
-import { SocialProofSection } from "@/components/homepage/SocialProofSection";
+import { TestimonialsSection } from "@/components/homepage/TestimonialsSection";
+import { CreatorShowcase } from "@/components/homepage/CreatorShowcase";
+import { TrustMetrics } from "@/components/homepage/TrustMetrics";
+import { FAQSection } from "@/components/homepage/FAQSection";
 import { CTASection } from "@/components/homepage/CTASection";
 import { FooterSection } from "@/components/homepage/FooterSection";
 
@@ -58,10 +60,12 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <main>
         <HeroSection />
-        <ValuePropositionGrid />
+        <TrustMetrics />
         <AudienceCards />
         <FeatureSections />
-        <SocialProofSection />
+        <TestimonialsSection />
+        <CreatorShowcase />
+        <FAQSection />
         <CTASection />
         <FooterSection />
       </main>
