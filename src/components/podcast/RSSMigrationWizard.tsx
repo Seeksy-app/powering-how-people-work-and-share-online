@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,13 @@ export function RSSMigrationWizard({ userId, podcastId }: RSSMigrationWizardProp
       return data;
     },
   });
+
+  // Pre-populate old RSS URL if podcast was imported via RSS
+  useEffect(() => {
+    if (podcast?.rss_feed_url && !oldRssUrl) {
+      setOldRssUrl(podcast.rss_feed_url);
+    }
+  }, [podcast?.rss_feed_url]);
 
   // Auto-generate new RSS URL from podcast title
   const generateSlug = (title: string) => {
