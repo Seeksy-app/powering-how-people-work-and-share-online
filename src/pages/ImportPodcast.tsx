@@ -138,14 +138,22 @@ const ImportPodcast = () => {
         guid: ep.guid,
       }));
 
-      const { error: episodesError } = await supabase
-        .from("episodes")
-        .upsert(episodesData, { 
-          onConflict: 'guid',
-          ignoreDuplicates: false 
-        });
+      // Wrap episode insertion in try-catch for rollback
+      try {
+        const { error: episodesError } = await supabase
+          .from("episodes")
+          .upsert(episodesData, { 
+            onConflict: 'guid',
+            ignoreDuplicates: false 
+          });
 
-      if (episodesError) throw episodesError;
+        if (episodesError) throw episodesError;
+      } catch (episodeError: any) {
+        // Rollback: Delete the podcast if episode creation fails
+        console.error("Episode creation failed, rolling back podcast:", episodeError);
+        await supabase.from("podcasts").delete().eq("id", podcast.id);
+        throw new Error(episodeError.message || "Failed to import episodes");
+      }
 
       const skippedCount = parsedData.episodes.length - episodesToImport.length;
       const invalidCount = parsedData.episodes.length - episodesWithAudio.length;

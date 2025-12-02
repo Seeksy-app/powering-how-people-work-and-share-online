@@ -136,7 +136,8 @@ export function ImportRSSButton({ onImportComplete }: ImportRSSButtonProps) {
       if (podcastError) throw podcastError;
 
       // Create episodes with upsert to prevent duplicates on re-import
-      if (data.episodes && data.episodes.length > 0) {
+      try {
+        if (data.episodes && data.episodes.length > 0) {
         // Filter out episodes without audio URLs
         const validEpisodes = data.episodes.filter((ep: any) => 
           ep.audioUrl && ep.audioUrl.trim() !== ''
@@ -162,17 +163,23 @@ export function ImportRSSButton({ onImportComplete }: ImportRSSButtonProps) {
           is_published: true,
         }));
 
-        const { error: episodesError } = await supabase
-          .from("episodes")
-          .upsert(episodeInserts, { 
-            onConflict: 'guid',
-            ignoreDuplicates: false 
-          });
+          const { error: episodesError } = await supabase
+            .from("episodes")
+            .upsert(episodeInserts, { 
+              onConflict: 'guid',
+              ignoreDuplicates: false 
+            });
 
-        if (episodesError) {
-          console.error("Error inserting episodes:", episodesError);
-          throw episodesError;
+          if (episodesError) {
+            console.error("Error inserting episodes:", episodesError);
+            throw episodesError;
+          }
         }
+      } catch (episodeError: any) {
+        // Rollback: Delete the podcast if episode creation fails
+        console.error("Episode creation failed, rolling back podcast:", episodeError);
+        await supabase.from("podcasts").delete().eq("id", podcastData.id);
+        throw new Error(episodeError.message || "Failed to import episodes");
       }
 
       setImportStatus("success");
