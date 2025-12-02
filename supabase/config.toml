@@ -1,5 +1,14 @@
 project_id = "taxqcioheqdqtlmjeaht"
 
+[functions.youtube-auth]
+verify_jwt = true
+
+[functions.youtube-callback]
+verify_jwt = false
+
+[functions.sync-youtube-channel-data]
+verify_jwt = true
+
 [functions.podcast-rss]
 verify_jwt = false
 
