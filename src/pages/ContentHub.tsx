@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Video, Mic, FileText, Scissors, FolderOpen, Plus } from "lucide-react";
+import { Video, Mic, FileText, Scissors, FolderOpen, Plus, Radio, Upload, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function ContentHub() {
@@ -127,17 +127,63 @@ export default function ContentHub() {
           <TabsContent value="podcasts" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Podcast Episodes</CardTitle>
+                <CardTitle>Podcast Management</CardTitle>
                 <CardDescription>
-                  Manage your podcast episodes and RSS feeds
+                  Create, import, and manage your podcast episodes and RSS feeds
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>Podcast management coming soon</p>
-                  <Button className="mt-4" variant="outline" asChild>
-                    <Link to="/podcasts">View Podcasts</Link>
-                  </Button>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Create New Podcast */}
+                  <Link to="/podcasts/create">
+                    <Card className="hover:border-primary transition-colors cursor-pointer h-full">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Radio className="h-5 w-5 text-primary" />
+                          Create Podcast
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          Start a new podcast from scratch
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+
+                  {/* Import from RSS */}
+                  <Link to="/podcasts">
+                    <Card className="hover:border-primary transition-colors cursor-pointer h-full">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <Upload className="h-5 w-5 text-primary" />
+                          Import from RSS
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          Import existing podcast from RSS feed
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+
+                  {/* View All Podcasts */}
+                  <Link to="/podcasts">
+                    <Card className="hover:border-primary transition-colors cursor-pointer h-full">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-base flex items-center gap-2">
+                          <FolderOpen className="h-5 w-5 text-primary" />
+                          View All Podcasts
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                          Browse and manage existing podcasts
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
