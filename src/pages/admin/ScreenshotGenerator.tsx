@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,19 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Camera, Download, Loader2, CheckCircle, Trash2, Upload, FolderPlus, Folder } from "lucide-react";
+import { Camera, Loader2, CheckCircle, Trash2, Folder, Globe, Download, ExternalLink } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { captureScreenshot, fetchScreenshots, deleteScreenshot } from "@/lib/screenshot/captureScreenshot";
 
 interface Screenshot {
-  pageName: string;
+  id: string;
+  page_name: string;
+  url: string;
   category: string;
-  fileName: string;
-  imageUrl: string;
-  status: 'pending' | 'generating' | 'complete' | 'error';
-  path?: string;
+  screenshot_path: string;
+  public_url: string;
+  created_at: string;
   selected?: boolean;
 }
 
@@ -28,188 +29,156 @@ const SCREENSHOT_CATEGORIES = [
   { value: "onboarding", label: "Onboarding Flows" },
   { value: "creator-tools", label: "Creator Tools" },
   { value: "advertiser-tools", label: "Advertiser Tools" },
-  { value: "b-roll", label: "B-roll Assets" },
 ];
 
 const PRESET_PAGES = [
   // External Pages
-  { name: "Homepage", category: "external", description: "Landing page with hero section, features overview, call-to-action buttons, and navigation menu" },
-  { name: "Meet Your Guide", category: "external", description: "Persona cards showcasing AI guides with video previews and descriptions" },
-  { name: "Personas Page", category: "external", description: "Grid of AI persona cards with names, roles, and interactive elements" },
-  { name: "Pricing Page", category: "external", description: "Pricing tiers comparison with features list and purchase buttons" },
-  { name: "Signup Page", category: "external", description: "User registration form with email, password fields and social login options" },
+  { name: "Homepage", url: "https://seeksy.io", category: "external", description: "Landing page with hero section, features overview, call-to-action buttons, and navigation menu" },
+  { name: "Pricing Page", url: "https://seeksy.io/pricing", category: "external", description: "Pricing tiers comparison with features list and purchase buttons" },
+  { name: "Signup Page", url: "https://seeksy.io/auth", category: "external", description: "User registration form with email, password fields and social login options" },
   
   // Internal Pages
-  { name: "Creator Dashboard", category: "internal", description: "Analytics dashboard with charts showing views, revenue, engagement metrics, and recent activity" },
-  { name: "Advertiser Dashboard", category: "advertiser-tools", description: "Campaign performance dashboard with impression stats, budget tracking, and active campaigns list" },
-  { name: "Studio Page", category: "creator-tools", description: "Live streaming interface with video preview, broadcast controls, chat panel, and branding overlays" },
-  { name: "Media Library", category: "creator-tools", description: "Grid of video thumbnails with upload button, search bar, and filtering options" },
-  { name: "Podcast Manager", category: "creator-tools", description: "List of podcast episodes with status badges, publish dates, and edit buttons" },
-  { name: "Episode Upload", category: "creator-tools", description: "File upload interface with drag-drop zone, episode metadata fields, and publish settings" },
-  { name: "Event Scheduling", category: "creator-tools", description: "Calendar interface with event creation form and upcoming events list" },
-  { name: "My Page Editor", category: "creator-tools", description: "Customization interface with color pickers, module toggles, and live preview panel" },
-  { name: "Settings Page", category: "internal", description: "User settings with tabs for profile, notifications, billing, and integrations" },
-  { name: "Admin Console", category: "internal", description: "Admin dashboard with user management, system status, and analytics overview" },
+  { name: "Creator Dashboard", url: "https://seeksy.io/dashboard", category: "internal", description: "Analytics dashboard with charts showing views, revenue, engagement metrics, and recent activity" },
+  { name: "Admin Console", url: "https://seeksy.io/admin", category: "internal", description: "Admin dashboard with user management, system status, and analytics overview" },
+  
+  // Creator Tools
+  { name: "Media Library", url: "https://seeksy.io/media-vault", category: "creator-tools", description: "Grid of video thumbnails with upload button, search bar, and filtering options" },
+  { name: "Podcast Manager", url: "https://seeksy.io/podcasts", category: "creator-tools", description: "List of podcast episodes with status badges, publish dates, and edit buttons" },
+  { name: "Studio Page", url: "https://seeksy.io/studio", category: "creator-tools", description: "Live streaming interface with video preview, broadcast controls, chat panel, and branding overlays" },
+  { name: "My Page Editor", url: "https://seeksy.io/my-page-settings", category: "creator-tools", description: "Customization interface with color pickers, module toggles, and live preview panel" },
+  
+  // Advertiser Tools
+  { name: "Advertiser Dashboard", url: "https://seeksy.io/advertiser", category: "advertiser-tools", description: "Campaign performance dashboard with impression stats, budget tracking, and active campaigns list" },
   
   // Onboarding
-  { name: "Creator Onboarding Step 1", category: "onboarding", description: "Welcome screen with user type selection and getting started guide" },
-  { name: "Creator Onboarding Step 2", category: "onboarding", description: "Profile setup with avatar upload and bio entry fields" },
-  { name: "Advertiser Onboarding Step 1", category: "onboarding", description: "Business information form with company details and campaign goals" },
-  { name: "Advertiser Onboarding Step 2", category: "onboarding", description: "Budget setup and targeting preferences configuration" },
+  { name: "Onboarding Step 1", url: "https://seeksy.io/onboarding", category: "onboarding", description: "Welcome screen with user type selection and getting started guide" },
 ];
 
 export default function ScreenshotGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [screenshots, setScreenshots] = useState<Screenshot[]>([]);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [customPageName, setCustomPageName] = useState("");
+  const [customUrl, setCustomUrl] = useState("");
   const [customDescription, setCustomDescription] = useState("");
-  const [customCategory, setCustomCategory] = useState("internal");
+  const [customCategory, setCustomCategory] = useState<'advertiser-tools' | 'creator-tools' | 'internal' | 'external' | 'onboarding'>("internal");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedScreenshots, setSelectedScreenshots] = useState<Set<string>>(new Set());
 
-  // Fetch existing screenshots from storage
-  const { data: existingScreenshots, isLoading: isLoadingScreenshots } = useQuery({
-    queryKey: ['ui-screenshots'],
-    queryFn: async () => {
-      const { data, error } = await supabase.storage
-        .from('ui-screenshots')
-        .list('', { limit: 1000 });
+  // Fetch existing screenshots from database
+  const { data: screenshots = [], isLoading } = useQuery({
+    queryKey: ['ui-screenshots', selectedCategory],
+    queryFn: () => fetchScreenshots(selectedCategory),
+  });
 
-      if (error) throw error;
-
-      const screenshotsWithUrls = await Promise.all(
-        data.map(async (file) => {
-          const { data: urlData } = supabase.storage
-            .from('ui-screenshots')
-            .getPublicUrl(file.name);
-
-          return {
-            pageName: file.name.replace(/_/g, ' ').replace(/\.[^.]+$/, ''),
-            category: 'existing',
-            fileName: file.name,
-            imageUrl: urlData.publicUrl,
-            status: 'complete' as const,
-            path: file.name,
-            selected: false,
-          };
-        })
-      );
-
-      return screenshotsWithUrls;
+  // Single screenshot mutation
+  const captureMutation = useMutation({
+    mutationFn: async (params: { url: string; pageName: string; category: typeof customCategory; description?: string }) => {
+      return captureScreenshot(params);
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Screenshot Captured",
+        description: `${data.page_name} screenshot has been created successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['ui-screenshots'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Capture Failed",
+        description: error.message || "Failed to capture screenshot",
+      });
     },
   });
 
-  useEffect(() => {
-    if (existingScreenshots) {
-      setScreenshots(prev => {
-        const newScreenshots = existingScreenshots.filter(
-          existing => !prev.some(s => s.fileName === existing.fileName)
-        );
-        return [...prev, ...newScreenshots];
-      });
-    }
-  }, [existingScreenshots]);
-
-  const generateScreenshot = async (pageName: string, description: string, category: string) => {
-    const fileName = pageName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    
-    const screenshot: Screenshot = {
-      pageName,
-      category,
-      fileName,
-      imageUrl: '',
-      status: 'generating'
-    };
-
-    setScreenshots(prev => [...prev, screenshot]);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-screenshot', {
-        body: {
-          pageName,
-          pageDescription: description,
-          category,
-          fileName
-        }
-      });
-
-      if (error) throw error;
-
-      setScreenshots(prev => prev.map(s => 
-        s.fileName === fileName 
-          ? { ...s, imageUrl: data.imageUrl, status: 'complete' }
-          : s
-      ));
-
-      toast({
-        title: "Screenshot Generated",
-        description: `${pageName} screenshot has been created successfully.`,
-      });
-
-    } catch (error: any) {
-      console.error("Error generating screenshot:", error);
-      setScreenshots(prev => prev.map(s => 
-        s.fileName === fileName 
-          ? { ...s, status: 'error' }
-          : s
-      ));
-      
-      toast({
-        variant: "destructive",
-        title: "Generation Failed",
-        description: error.message || "Failed to generate screenshot",
-      });
-    }
-  };
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (screenshot: Screenshot) => {
+      return deleteScreenshot(screenshot.id, screenshot.screenshot_path);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ui-screenshots'] });
+    },
+  });
 
   const generateAllPresets = async () => {
-    setIsGenerating(true);
-    
+    toast({
+      title: "Batch Generation Started",
+      description: `Generating ${PRESET_PAGES.length} screenshots...`,
+    });
+
+    let successCount = 0;
+    let failCount = 0;
+
     for (const preset of PRESET_PAGES) {
-      await generateScreenshot(preset.name, preset.description, preset.category);
-      // Add small delay between requests to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      try {
+        await captureScreenshot({
+          url: preset.url,
+          pageName: preset.name,
+          category: preset.category as typeof customCategory,
+          description: preset.description,
+        });
+        successCount++;
+        // Add delay between requests to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error(`Failed to capture ${preset.name}:`, error);
+        failCount++;
+      }
     }
-    
-    setIsGenerating(false);
-    
+
+    queryClient.invalidateQueries({ queryKey: ['ui-screenshots'] });
+
     toast({
       title: "Batch Generation Complete",
-      description: `Generated ${PRESET_PAGES.length} screenshots successfully.`,
+      description: `Generated ${successCount} screenshots successfully. ${failCount > 0 ? `${failCount} failed.` : ''}`,
     });
   };
 
   const generateCustom = async () => {
-    if (!customPageName || !customDescription) {
+    if (!customPageName || !customUrl) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please provide both page name and description.",
+        description: "Please provide both page name and URL.",
       });
       return;
     }
 
-    await generateScreenshot(customPageName, customDescription, customCategory);
+    captureMutation.mutate({
+      url: customUrl,
+      pageName: customPageName,
+      category: customCategory,
+      description: customDescription || undefined,
+    });
+
     setCustomPageName("");
+    setCustomUrl("");
     setCustomDescription("");
   };
 
   const handleSelectAll = (checked: boolean) => {
-    setScreenshots(prev => prev.map(s => ({ ...s, selected: checked })));
+    if (checked) {
+      setSelectedScreenshots(new Set(screenshots.map(s => s.id)));
+    } else {
+      setSelectedScreenshots(new Set());
+    }
   };
 
-  const handleSelectScreenshot = (fileName: string, checked: boolean) => {
-    setScreenshots(prev => prev.map(s => 
-      s.fileName === fileName ? { ...s, selected: checked } : s
-    ));
+  const handleSelectScreenshot = (id: string, checked: boolean) => {
+    const newSelected = new Set(selectedScreenshots);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedScreenshots(newSelected);
   };
 
-  const deleteSelectedScreenshots = async () => {
-    const selected = screenshots.filter(s => s.selected);
+  const deleteSelected = async () => {
+    const toDelete = screenshots.filter(s => selectedScreenshots.has(s.id));
     
-    if (selected.length === 0) {
+    if (toDelete.length === 0) {
       toast({
         title: "No Selection",
         description: "Please select screenshots to delete",
@@ -218,143 +187,67 @@ export default function ScreenshotGenerator() {
       return;
     }
 
-    setIsDeleting(true);
+    toast({
+      title: "Deleting...",
+      description: `Removing ${toDelete.length} screenshot(s)...`,
+    });
 
-    try {
-      const filesToDelete = selected
-        .filter(s => s.path)
-        .map(s => s.path as string);
-
-      if (filesToDelete.length > 0) {
-        const { error } = await supabase.storage
-          .from('ui-screenshots')
-          .remove(filesToDelete);
-
-        if (error) throw error;
-      }
-
-      setScreenshots(prev => prev.filter(s => !s.selected));
-      queryClient.invalidateQueries({ queryKey: ['ui-screenshots'] });
-
-      toast({
-        title: "Deleted",
-        description: `${selected.length} screenshot(s) deleted successfully`,
-      });
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast({
-        title: "Delete Failed",
-        description: error instanceof Error ? error.message : "Failed to delete screenshots",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    for (const file of Array.from(files)) {
+    let successCount = 0;
+    for (const screenshot of toDelete) {
       try {
-        const fileName = `uploaded_${Date.now()}_${file.name}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('ui-screenshots')
-          .upload(fileName, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from('ui-screenshots')
-          .getPublicUrl(fileName);
-
-        setScreenshots(prev => [...prev, {
-          pageName: file.name,
-          category: customCategory,
-          fileName,
-          imageUrl: urlData.publicUrl,
-          status: 'complete',
-          path: fileName,
-          selected: false,
-        }]);
-
-        toast({
-          title: "Uploaded",
-          description: `${file.name} uploaded successfully`,
-        });
+        await deleteMutation.mutateAsync(screenshot);
+        successCount++;
       } catch (error) {
-        console.error("Upload error:", error);
-        toast({
-          title: "Upload Failed",
-          description: `Failed to upload ${file.name}`,
-          variant: "destructive",
-        });
+        console.error(`Failed to delete ${screenshot.page_name}:`, error);
       }
     }
 
-    queryClient.invalidateQueries({ queryKey: ['ui-screenshots'] });
+    setSelectedScreenshots(new Set());
+
+    toast({
+      title: "Deleted",
+      description: `${successCount} screenshot(s) deleted successfully`,
+    });
   };
 
-  const filteredScreenshots = selectedCategory === 'all' 
-    ? screenshots 
-    : screenshots.filter(s => s.category === selectedCategory);
-
-  const selectedCount = screenshots.filter(s => s.selected).length;
+  const filteredScreenshots = screenshots;
+  const selectedCount = selectedScreenshots.size;
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Platform Screenshot Generator</h1>
+          <h1 className="text-3xl font-bold">Page Scraper + Screenshot System</h1>
           <p className="text-muted-foreground mt-2">
-            Generate, upload, and organize screenshots for tutorials and documentation
+            Capture live screenshots from any URL using ScreenshotOne API
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => document.getElementById('screenshot-upload')?.click()}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Upload Screenshots
-          </Button>
-          <input
-            id="screenshot-upload"
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={handleFileUpload}
-          />
-          <Button 
-            size="lg" 
-            onClick={generateAllPresets}
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating All...
-              </>
-            ) : (
-              <>
-                <Camera className="mr-2 h-4 w-4" />
-                Generate All Presets ({PRESET_PAGES.length})
-              </>
-            )}
-          </Button>
-        </div>
+        <Button 
+          size="lg" 
+          onClick={generateAllPresets}
+          disabled={captureMutation.isPending}
+        >
+          {captureMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Camera className="mr-2 h-4 w-4" />
+              Generate All Presets ({PRESET_PAGES.length})
+            </>
+          )}
+        </Button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Custom Screenshot Generator */}
+        {/* Custom Screenshot Capture */}
         <Card>
           <CardHeader>
-            <CardTitle>Custom Screenshot</CardTitle>
+            <CardTitle>Capture Custom Screenshot</CardTitle>
             <CardDescription>
-              Generate a screenshot for any page with custom description
+              Enter any live URL to capture a screenshot
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -369,8 +262,19 @@ export default function ScreenshotGenerator() {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="url">Live URL</Label>
+              <Input
+                id="url"
+                type="url"
+                placeholder="e.g., https://seeksy.io/dashboard"
+                value={customUrl}
+                onChange={(e) => setCustomUrl(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select value={customCategory} onValueChange={setCustomCategory}>
+              <Select value={customCategory} onValueChange={(v) => setCustomCategory(v as typeof customCategory)}>
                 <SelectTrigger id="category">
                   <SelectValue />
                 </SelectTrigger>
@@ -385,19 +289,23 @@ export default function ScreenshotGenerator() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Page Description</Label>
+              <Label htmlFor="description">Description (Optional)</Label>
               <Textarea
                 id="description"
-                placeholder="Describe the page layout, key elements, and content..."
+                placeholder="Describe the page content and purpose..."
                 value={customDescription}
                 onChange={(e) => setCustomDescription(e.target.value)}
-                rows={5}
+                rows={3}
               />
             </div>
 
-            <Button onClick={generateCustom} className="w-full">
+            <Button 
+              onClick={generateCustom} 
+              className="w-full"
+              disabled={captureMutation.isPending}
+            >
               <Camera className="mr-2 h-4 w-4" />
-              Generate Screenshot
+              Capture Screenshot
             </Button>
           </CardContent>
         </Card>
@@ -407,28 +315,41 @@ export default function ScreenshotGenerator() {
           <CardHeader>
             <CardTitle>Preset Pages ({PRESET_PAGES.length})</CardTitle>
             <CardDescription>
-              Pre-configured screenshots for common platform pages
+              Pre-configured URLs for common platform pages
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[400px] pr-4">
+            <ScrollArea className="h-[420px] pr-4">
               <div className="space-y-2">
                 {PRESET_PAGES.map((preset, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
                   >
-                    <div className="flex-1">
-                      <p className="font-medium">{preset.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {SCREENSHOT_CATEGORIES.find(c => c.value === preset.category)?.label}
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{preset.name}</p>
+                        <a 
+                          href={preset.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-muted-foreground hover:text-primary"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{preset.url}</p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => generateScreenshot(preset.name, preset.description, preset.category)}
-                      disabled={isGenerating}
+                      onClick={() => captureMutation.mutate({
+                        url: preset.url,
+                        pageName: preset.name,
+                        category: preset.category as typeof customCategory,
+                        description: preset.description,
+                      })}
+                      disabled={captureMutation.isPending}
                     >
                       <Camera className="h-4 w-4" />
                     </Button>
@@ -440,121 +361,125 @@ export default function ScreenshotGenerator() {
         </Card>
       </div>
 
-      {/* Generated Screenshots Grid */}
-      {screenshots.length > 0 && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Screenshots Library ({filteredScreenshots.length})</CardTitle>
-                <CardDescription>
-                  All screenshots are stored in Supabase Storage under "ui-screenshots" bucket
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-[180px]">
-                    <Folder className="mr-2 h-4 w-4" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {SCREENSHOT_CATEGORIES.map(cat => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedCount > 0 && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={deleteSelectedScreenshots}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Deleting...
-                      </>
-                    ) : (
-                      <>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete Selected ({selectedCount})
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
+      {/* Screenshots Library */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Screenshots Library ({filteredScreenshots.length})</CardTitle>
+              <CardDescription>
+                All screenshots stored in Supabase (ui-screenshots bucket + database)
+              </CardDescription>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
-              <Checkbox
-                id="select-all"
-                checked={screenshots.length > 0 && screenshots.every(s => s.selected)}
-                onCheckedChange={handleSelectAll}
-              />
-              <Label htmlFor="select-all" className="cursor-pointer">
-                Select All ({filteredScreenshots.length} screenshots)
-              </Label>
+            <div className="flex items-center gap-2">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[180px]">
+                  <Folder className="mr-2 h-4 w-4" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {SCREENSHOT_CATEGORIES.map(cat => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedCount > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={deleteSelected}
+                  disabled={deleteMutation.isPending}
+                >
+                  {deleteMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete Selected ({selectedCount})
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
-            <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredScreenshots.map((screenshot, index) => (
-                <div key={index} className="border rounded-lg overflow-hidden relative group">
-                  <div className="absolute top-2 left-2 z-10">
-                    <Checkbox
-                      checked={screenshot.selected || false}
-                      onCheckedChange={(checked) => 
-                        handleSelectScreenshot(screenshot.fileName, checked as boolean)
-                      }
-                      className="bg-background"
-                    />
-                  </div>
-                  <div className="aspect-video bg-muted flex items-center justify-center relative">
-                    {screenshot.status === 'generating' && (
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    )}
-                    {screenshot.status === 'complete' && screenshot.imageUrl && (
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredScreenshots.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Camera className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No screenshots yet</p>
+              <p className="text-sm text-muted-foreground">Capture your first screenshot above</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                <Checkbox
+                  id="select-all"
+                  checked={selectedCount > 0 && selectedCount === filteredScreenshots.length}
+                  onCheckedChange={handleSelectAll}
+                />
+                <Label htmlFor="select-all" className="cursor-pointer">
+                  Select All ({filteredScreenshots.length} screenshots)
+                </Label>
+              </div>
+              <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredScreenshots.map((screenshot) => (
+                  <div key={screenshot.id} className="border rounded-lg overflow-hidden relative group">
+                    <div className="absolute top-2 left-2 z-10">
+                      <Checkbox
+                        checked={selectedScreenshots.has(screenshot.id)}
+                        onCheckedChange={(checked) => 
+                          handleSelectScreenshot(screenshot.id, checked as boolean)
+                        }
+                        className="bg-background"
+                      />
+                    </div>
+                    <div className="aspect-video bg-muted flex items-center justify-center relative">
                       <img 
-                        src={screenshot.imageUrl} 
-                        alt={screenshot.pageName}
+                        src={screenshot.public_url} 
+                        alt={screenshot.page_name}
                         className="w-full h-full object-cover"
                       />
-                    )}
-                    {screenshot.status === 'error' && (
-                      <p className="text-destructive text-sm">Failed</p>
-                    )}
-                    {screenshot.status === 'complete' && (
                       <div className="absolute top-2 right-2">
                         <CheckCircle className="h-5 w-5 text-green-500" />
                       </div>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="font-medium text-sm truncate">{screenshot.pageName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {SCREENSHOT_CATEGORIES.find(c => c.value === screenshot.category)?.label}
-                    </p>
-                    {screenshot.status === 'complete' && (
+                    </div>
+                    <div className="p-3">
+                      <p className="font-medium text-sm truncate">{screenshot.page_name}</p>
+                      <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                        <Globe className="h-3 w-3" />
+                        {screenshot.url}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {SCREENSHOT_CATEGORIES.find(c => c.value === screenshot.category)?.label}
+                      </p>
                       <Button
                         size="sm"
                         variant="outline"
                         className="w-full mt-2"
-                        onClick={() => window.open(screenshot.imageUrl, '_blank')}
+                        onClick={() => window.open(screenshot.public_url, '_blank')}
                       >
                         <Download className="h-3 w-3 mr-1" />
-                        View
+                        View Full Size
                       </Button>
-                    )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -12168,6 +12168,39 @@ export type Database = {
         }
         Relationships: []
       }
+      ui_screenshots: {
+        Row: {
+          category: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          metadata: Json | null
+          page_name: string
+          screenshot_path: string
+          url: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          page_name: string
+          screenshot_path: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          page_name?: string
+          screenshot_path?: string
+          url?: string
+        }
+        Relationships: []
+      }
       upload_failure_logs: {
         Row: {
           created_at: string | null
