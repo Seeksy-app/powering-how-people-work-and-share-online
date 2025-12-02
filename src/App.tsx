@@ -363,6 +363,7 @@ import BusinessToolsLanding from "./pages/business-tools/BusinessToolsLanding";
 import GTMBuilderList from "./pages/business-tools/GTMBuilderList";
 import GTMOnboardingWizard from "./pages/business-tools/GTMOnboardingWizard";
 import GTMWorkspace from "./pages/business-tools/GTMWorkspace";
+import PersonaDashboardPage from "./pages/PersonaDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -559,7 +560,8 @@ const AppContent = () => {
               <Route path="/terms" element={<Terms />} />
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/security" element={<Security />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<PersonaDashboardPage />} />
+          <Route path="/dashboard-legacy" element={<Dashboard />} />
           <Route path="/dashboard-v2" element={<DashboardV2 />} />
           <Route path="/dashboard/onboarding" element={<DashboardOnboarding />} />
               <Route path="/email-history" element={<CommunicationHistory />} />
