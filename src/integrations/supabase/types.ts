@@ -5787,6 +5787,7 @@ export type Database = {
           publish_date: string
           season_number: number | null
           source: string | null
+          source_url: string | null
           title: string
           transcript: string | null
           updated_at: string
@@ -5809,6 +5810,7 @@ export type Database = {
           publish_date?: string
           season_number?: number | null
           source?: string | null
+          source_url?: string | null
           title: string
           transcript?: string | null
           updated_at?: string
@@ -5831,6 +5833,7 @@ export type Database = {
           publish_date?: string
           season_number?: number | null
           source?: string | null
+          source_url?: string | null
           title?: string
           transcript?: string | null
           updated_at?: string
