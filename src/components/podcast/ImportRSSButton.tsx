@@ -82,7 +82,6 @@ export function ImportRSSButton({ onImportComplete }: ImportRSSButtonProps) {
         .from("podcasts")
         .insert({
           user_id: user.id,
-          owner_id: user.id,
           title: data.podcast.title,
           description: data.podcast.description || "",
           cover_image_url: data.podcast.imageUrl || null,

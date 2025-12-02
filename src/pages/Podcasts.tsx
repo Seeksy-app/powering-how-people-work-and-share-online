@@ -32,6 +32,9 @@ const Podcasts = () => {
     queryKey: ["podcasts", user?.id],
     queryFn: async () => {
       if (!user) return [];
+      
+      console.log("📊 Fetching podcasts for user:", user.id);
+      
       const { data, error } = await supabase
         .from("podcasts")
         .select(`
@@ -40,6 +43,12 @@ const Podcasts = () => {
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
+      
+      console.log("📊 Podcasts query result:", { 
+        count: data?.length, 
+        error,
+        podcasts: data?.map(p => ({ id: p.id, title: p.title, user_id: p.user_id }))
+      });
       
       if (error) throw error;
       return data;
