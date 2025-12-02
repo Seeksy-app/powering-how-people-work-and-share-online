@@ -28,12 +28,14 @@ import { DirectoriesTab } from "@/components/podcast/DirectoriesTab";
 import { RSSMigrationTab } from "@/components/podcast/RSSMigrationTab";
 
 const PodcastDetail = () => {
-  const { id } = useParams();
+  const { podcastId: id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [isDeleting, setIsDeleting] = useState(false);
+
+  console.log("🔍 PodcastDetail - Route param podcastId:", id);
 
   const { data: user } = useQuery({
     queryKey: ["user"],
@@ -46,13 +48,33 @@ const PodcastDetail = () => {
   const { data: podcast, isLoading } = useQuery({
     queryKey: ["podcast", id],
     queryFn: async () => {
+      console.log("🔍 PodcastDetail - Fetching podcast with ID:", id);
+      console.log("🔍 PodcastDetail - Current user:", user?.id);
+      
       const { data, error } = await supabase
         .from("podcasts")
         .select("*")
         .eq("id", id)
         .maybeSingle();
       
-      if (error) throw error;
+      console.log("🔍 PodcastDetail - Query result:", { data, error });
+      
+      if (error) {
+        console.error("🔍 PodcastDetail - Query error:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.warn("🔍 PodcastDetail - No podcast found for ID:", id);
+      } else {
+        console.log("🔍 PodcastDetail - Podcast found:", {
+          id: data.id,
+          title: data.title,
+          user_id: data.user_id,
+          matchesCurrentUser: data.user_id === user?.id
+        });
+      }
+      
       return data;
     },
   });
@@ -112,8 +134,15 @@ const PodcastDetail = () => {
   if (!podcast) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center space-y-4">
           <p className="text-muted-foreground mb-4">Podcast not found</p>
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>Podcast ID: {id}</p>
+            <p>Your User ID: {user?.id}</p>
+            <p className="text-destructive">
+              This usually means the podcast doesn't exist or you don't have access to it.
+            </p>
+          </div>
           <Button onClick={() => navigate("/podcasts")}>Back to Podcasts</Button>
         </div>
       </div>
