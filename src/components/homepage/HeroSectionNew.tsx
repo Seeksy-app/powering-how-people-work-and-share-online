@@ -162,7 +162,7 @@ export function HeroSectionNew() {
                 className="group relative rounded-2xl overflow-hidden border border-border/50 bg-card shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 {/* Image */}
-                <div className="relative h-40 overflow-hidden">
+                <div className="relative h-52 md:h-56 overflow-hidden">
                   <img 
                     src={item.image} 
                     alt={item.label}
@@ -171,8 +171,8 @@ export function HeroSectionNew() {
                   <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
                 </div>
                 {/* Content */}
-                <div className="relative p-4 -mt-8">
-                  <h3 className="font-bold text-lg mb-1">{item.label}</h3>
+                <div className="relative p-5 -mt-10">
+                  <h3 className="font-bold text-xl mb-1">{item.label}</h3>
                   <p className="text-sm text-muted-foreground">{item.desc}</p>
                 </div>
               </motion.div>
