@@ -51,6 +51,10 @@ export default function VideoStudio() {
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   
+  // AI Features
+  const [realtimeAIClips, setRealtimeAIClips] = useState(false);
+  const [aiCameraFocus, setAiCameraFocus] = useState(false);
+  
   // Scenes
   const [scenes, setScenes] = useState<Scene[]>(defaultScenes);
   const [activeSceneId, setActiveSceneId] = useState("welcome");
@@ -135,11 +139,16 @@ export default function VideoStudio() {
     toast.info("Schedule feature coming soon!");
   };
 
-  const handleAddScene = () => {
+  const handleAddScene = (type?: "camera" | "media" | "countdown") => {
+    const layoutMap: Record<string, SceneLayout> = {
+      camera: "host-only",
+      media: "media" as SceneLayout,
+      countdown: "countdown" as SceneLayout,
+    };
     const newScene: Scene = {
       id: `scene-${Date.now()}`,
-      name: `Scene ${scenes.length + 1}`,
-      layout: "host-only",
+      name: type === "countdown" ? "Countdown" : type === "media" ? "Media" : `Scene ${scenes.length + 1}`,
+      layout: layoutMap[type || "camera"] || "host-only",
     };
     setScenes([...scenes, newScene]);
     setActiveSceneId(newScene.id);
@@ -236,6 +245,26 @@ export default function VideoStudio() {
   // Main studio phase
   return (
     <div className="h-screen bg-[#0d0f12] flex flex-col overflow-hidden">
+      {/* AI Toggles Bar */}
+      <div className="h-10 bg-[#15171a] border-b border-white/10 px-4 flex items-center gap-6">
+        <div className="flex items-center gap-2">
+          <Switch 
+            checked={realtimeAIClips} 
+            onCheckedChange={setRealtimeAIClips}
+            className="scale-75 data-[state=checked]:bg-pink-500"
+          />
+          <span className="text-xs text-white/70">Capture Realtime AI Clips</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch 
+            checked={aiCameraFocus} 
+            onCheckedChange={setAiCameraFocus}
+            className="scale-75 data-[state=checked]:bg-blue-500"
+          />
+          <span className="text-xs text-white/70">AI Camera Focus</span>
+        </div>
+      </div>
+
       {/* Header */}
       <VideoStudioHeader
         sessionTitle={sessionTitle}
