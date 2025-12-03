@@ -11425,6 +11425,38 @@ export type Database = {
         }
         Relationships: []
       }
+      session_destinations: {
+        Row: {
+          created_at: string
+          destination_id: string
+          enabled: boolean | null
+          id: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          destination_id: string
+          enabled?: boolean | null
+          id?: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          destination_id?: string
+          enabled?: boolean | null
+          id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_destinations_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "streaming_destinations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shows: {
         Row: {
           average_listens: number | null
@@ -12324,6 +12356,48 @@ export type Database = {
           viewer_ip_hash?: string
           viewer_location?: Json | null
           watch_duration_seconds?: number | null
+        }
+        Relationships: []
+      }
+      streaming_destinations: {
+        Row: {
+          access_token_encrypted: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_active_default: boolean | null
+          last_used_at: string | null
+          platform_meta: Json | null
+          provider: string
+          refresh_token_encrypted: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          is_active_default?: boolean | null
+          last_used_at?: string | null
+          platform_meta?: Json | null
+          provider: string
+          refresh_token_encrypted?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_active_default?: boolean | null
+          last_used_at?: string | null
+          platform_meta?: Json | null
+          provider?: string
+          refresh_token_encrypted?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
