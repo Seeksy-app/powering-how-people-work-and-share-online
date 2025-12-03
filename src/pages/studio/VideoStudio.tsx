@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { VideoStudioHeader, StudioMode } from "@/components/studio/video/VideoStudioHeader";
 import { VideoStudioScenesResizable, SceneLayout, Scene, SceneType } from "@/components/studio/video/VideoStudioScenesResizable";
 import { VideoStudioCanvas } from "@/components/studio/video/VideoStudioCanvas";
@@ -10,6 +10,7 @@ import { VideoStudioToolbarEnhanced, ToolbarTab } from "@/components/studio/vide
 import { HostToolsBar } from "@/components/studio/video/HostToolsBar";
 import { VideoPreJoinScreen } from "@/components/studio/video/VideoPreJoinScreen";
 import { VideoStudioLoadingScreen } from "@/components/studio/video/VideoStudioLoadingScreen";
+import { LayoutTemplatesBar, LayoutTemplate } from "@/components/studio/video/LayoutTemplatesBar";
 
 // Drawers
 import { GraphicsDrawer } from "@/components/studio/video/drawers/GraphicsDrawer";
@@ -63,6 +64,24 @@ export default function VideoStudio() {
   const [scenes, setScenes] = useState<Scene[]>(defaultScenes);
   const [activeSceneId, setActiveSceneId] = useState("welcome");
   const [currentLayout, setCurrentLayout] = useState<string>("host-only");
+  const [currentLayoutTemplate, setCurrentLayoutTemplate] = useState<LayoutTemplate>("fullscreen");
+
+  // Fetch streaming destinations for channel count
+  const { data: destinations = [] } = useQuery({
+    queryKey: ["streaming-destinations-count"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      const { data } = await supabase
+        .from("streaming_destinations")
+        .select("id, is_active_default")
+        .eq("user_id", user.id);
+      return data || [];
+    },
+  });
+  
+  const channelCount = destinations.length;
+  const activeChannelCount = destinations.filter((d: any) => d.is_active_default).length;
   
   // Toolbar & Drawers
   const [activeToolbarTab, setActiveToolbarTab] = useState<ToolbarTab | null>(null);
@@ -378,11 +397,14 @@ export default function VideoStudio() {
         onStopSession={handleStopSession}
         onChannels={handleChannels}
         onSchedule={handleSchedule}
-        onEditTitle={() => {
-          const newTitle = prompt("Enter session title:", sessionTitle);
-          if (newTitle) setSessionTitle(newTitle);
-        }}
+        onEditTitle={() => {}}
         recordingTime={recordingTime}
+        channelCount={channelCount}
+        activeChannelCount={activeChannelCount}
+        realtimeAIClips={realtimeAIClips}
+        onRealtimeAIClipsChange={setRealtimeAIClips}
+        aiCameraFocus={aiCameraFocus}
+        onAiCameraFocusChange={setAiCameraFocus}
       />
 
       {/* Main Content */}
@@ -417,25 +439,22 @@ export default function VideoStudio() {
             onAddAdMarker={handleAddAdMarker}
           />
 
-          {/* AI Toggles - Below Host Tools */}
-          <div className="flex items-center justify-center gap-6 py-2 bg-[#15171a] border-t border-white/10">
-            <div className="flex items-center gap-2">
-              <Switch 
-                checked={realtimeAIClips} 
-                onCheckedChange={setRealtimeAIClips}
-                className="scale-75 data-[state=checked]:bg-pink-500"
-              />
-              <span className="text-xs text-white/70">Capture Realtime AI Clips</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch 
-                checked={aiCameraFocus} 
-                onCheckedChange={setAiCameraFocus}
-                className="scale-75 data-[state=checked]:bg-blue-500"
-              />
-              <span className="text-xs text-white/70">AI Camera Focus</span>
-            </div>
-          </div>
+          {/* Layout Templates Bar */}
+          <LayoutTemplatesBar
+            currentLayout={currentLayoutTemplate}
+            onLayoutChange={(layout) => {
+              setCurrentLayoutTemplate(layout);
+              // Map layout template to scene layout
+              if (layout === "fullscreen") setCurrentLayout("host-only");
+              else if (layout === "side-by-side") setCurrentLayout("side-by-side");
+              else if (layout.includes("pip")) setCurrentLayout("host-guest");
+              else if (layout === "grid-2x2") setCurrentLayout("grid");
+              else if (layout === "presentation") setCurrentLayout("screen-share");
+              else if (layout === "speaker-focus") setCurrentLayout("speaker");
+              else if (layout === "gallery") setCurrentLayout("grid");
+            }}
+            sceneType={scenes.find(s => s.id === activeSceneId)?.sceneType}
+          />
 
           {/* Script Drawer */}
           <ScriptDrawer
