@@ -303,7 +303,7 @@ export default function Onboarding() {
                 type="button"
                 onClick={() => setSelectedPersona(option.id as PersonaType)}
                 className={cn(
-                  "w-full p-4 rounded-xl border-2 transition-all text-center relative overflow-hidden group h-[130px] flex flex-col items-center justify-center",
+                  "w-full p-4 rounded-xl border-2 transition-all text-center relative overflow-hidden group min-h-[150px] flex flex-col items-center justify-start pt-5",
                   "hover:shadow-lg hover:border-primary/50 hover:-translate-y-0.5",
                   isSelected
                     ? "border-primary bg-primary/5 shadow-lg ring-2 ring-primary/20"
@@ -321,13 +321,13 @@ export default function Onboarding() {
                 )}
                 
                 <div className={cn(
-                  "p-2.5 rounded-xl bg-gradient-to-br text-white shadow-md mb-2",
+                  "p-2.5 rounded-xl bg-gradient-to-br text-white shadow-md mb-3",
                   option.gradient
                 )}>
                   <Icon className="h-5 w-5" />
                 </div>
-                <p className="font-semibold text-sm">{option.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 px-1">{option.description}</p>
+                <p className="font-semibold text-sm mb-1">{option.label}</p>
+                <p className="text-[13px] leading-snug text-muted-foreground px-1">{option.description}</p>
               </button>
             </motion.div>
           );

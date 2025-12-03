@@ -19,6 +19,7 @@ export default function UniversalDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [firstName, setFirstName] = useState("");
   const [personaType, setPersonaType] = useState<PersonaType | null>(null);
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [addWidgetsOpen, setAddWidgetsOpen] = useState(false);
   
@@ -77,10 +78,10 @@ export default function UniversalDashboard() {
       setFirstName(nameParts[0]);
     }
 
-    // Load persona type from user_preferences
+    // Load persona type and selected modules from user_preferences
     const { data: prefs } = await supabase
       .from("user_preferences")
-      .select("user_type")
+      .select("user_type, pinned_modules")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -98,6 +99,11 @@ export default function UniversalDashboard() {
         brand: "brand",
       };
       setPersonaType(typeMapping[prefs.user_type] || null);
+    }
+
+    // Load selected modules from onboarding
+    if (prefs?.pinned_modules && Array.isArray(prefs.pinned_modules)) {
+      setSelectedModules(prefs.pinned_modules as string[]);
     }
 
     setLoading(false);
@@ -171,7 +177,7 @@ export default function UniversalDashboard() {
         <QuickActionsRow />
 
         {/* Role-Based Widgets */}
-        <RoleBasedWidgets personaType={personaType} />
+        <RoleBasedWidgets personaType={personaType} selectedModules={selectedModules} />
 
         {/* Identity & Additional Widgets */}
         <div className="grid md:grid-cols-3 gap-4">
