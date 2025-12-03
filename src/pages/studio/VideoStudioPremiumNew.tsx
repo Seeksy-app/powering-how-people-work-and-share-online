@@ -62,6 +62,11 @@ export default function VideoStudioPremiumNew() {
   const [activeLayout, setActiveLayout] = useState<SceneLayout>("side-by-side");
   const [markers, setMarkers] = useState<{id: string; time: number; label: string}[]>([]);
   const [rightTab, setRightTab] = useState("scripts");
+  const [scenes, setScenes] = useState([
+    { id: "1", name: "Opening", layout: "side-by-side" },
+    { id: "2", name: "Interview", layout: "speaker-focus" },
+  ]);
+  const [activeSceneId, setActiveSceneId] = useState("1");
   const [autoClips, setAutoClips] = useState(0);
   
   // Branding overlays
@@ -768,6 +773,33 @@ export default function VideoStudioPremiumNew() {
             </TabsContent>
           </Tabs>
         </aside>
+      </div>
+
+      {/* Scenes Strip at Bottom */}
+      <div className="h-20 border-t border-white/10 bg-black/40 flex items-center px-4 gap-3 overflow-x-auto shrink-0">
+        <button
+          onClick={() => setScenes(prev => [...prev, { id: `s-${Date.now()}`, name: `Scene ${prev.length + 1}`, layout: "side-by-side" }])}
+          className="h-14 w-14 shrink-0 rounded-lg border-2 border-dashed border-white/20 hover:border-white/40 hover:bg-white/5 flex flex-col items-center justify-center gap-1"
+        >
+          <span className="text-xl text-white/50">+</span>
+          <span className="text-[10px] text-white/50">Add</span>
+        </button>
+        {scenes.map((scene, index) => (
+          <button
+            key={scene.id}
+            onClick={() => setActiveSceneId(scene.id)}
+            className={cn(
+              "relative h-14 w-24 shrink-0 rounded-lg overflow-hidden border-2 transition-all flex items-center justify-center",
+              activeSceneId === scene.id
+                ? "border-blue-500 shadow-lg shadow-blue-500/30 bg-blue-500/20"
+                : "border-white/20 hover:border-white/40 bg-white/5"
+            )}
+          >
+            <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-[10px] font-bold text-white">{index + 1}</span>
+            <span className="text-xs text-white/80">{scene.name}</span>
+          </button>
+        ))}
+        <span className="ml-auto text-xs text-white/40">{scenes.length} scenes • Click to switch</span>
       </div>
 
       {/* Saving Overlay */}
