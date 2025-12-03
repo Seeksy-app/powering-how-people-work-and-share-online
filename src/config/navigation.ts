@@ -352,7 +352,7 @@ export const NAVIGATION_CONFIG: {
           "id": "admin_demo_recorder",
           "label": "Demo Video Recorder",
           "icon": "video",
-          "path": "/admin/demo-recorder",
+          "path": "/admin/screen-capture",
           "roles": ["admin", "super_admin"]
         },
         {
