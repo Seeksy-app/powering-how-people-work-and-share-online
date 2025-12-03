@@ -136,6 +136,7 @@ import StudioSettings from "./pages/studio/StudioSettings";
 import StudioLiveNew from "./pages/studio/StudioLiveNew";
 import StudioHubPremium from "./pages/studio/StudioHubPremium";
 import AIClipGeneratorPremium from "./pages/studio/AIClipGeneratorPremium";
+import AIClipGeneratorFull from "./pages/studio/AIClipGeneratorFull";
 import MediaLibraryHub from "./pages/studio/MediaLibraryHub";
 import StudioTemplatesPage from "./pages/studio/StudioTemplates";
 import AudioStudioPremium from "./pages/studio/AudioStudioPremiumNew";
@@ -630,8 +631,9 @@ const AppContent = () => {
               <Route path="/studio" element={<StudioHubPremium />} />
               <Route path="/studio/audio" element={<AudioStudioPremium />} />
               <Route path="/studio/video" element={<VideoStudioPremium />} />
-              <Route path="/studio/clips" element={<StudioClips />} />
-              <Route path="/studio/ai-clips" element={<StudioClips />} />
+              <Route path="/studio/clips" element={<AIClipGeneratorFull />} />
+              <Route path="/studio/ai-clips" element={<AIClipGeneratorFull />} />
+              <Route path="/studio/ai-production" element={<AIClipGeneratorFull />} />
               <Route path="/studio/media" element={<MediaLibraryHub />} />
               <Route path="/studio/templates" element={<StudioTemplatesPage />} />
               <Route path="/studio/settings" element={<StudioSettings />} />
