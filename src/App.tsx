@@ -271,6 +271,7 @@ import VoiceCertification from "./pages/VoiceCertification";
 import VoiceTag from "./pages/VoiceTag";
 import VoiceTagAdmin from "./pages/VoiceTagAdmin";
 import ScreenshotGenerator from "./pages/admin/ScreenshotGenerator";
+import ScreenCapture from "./pages/admin/ScreenCapture";
 import DemoVideos from "./pages/DemoVideos";
 import MarketingGTMPlan from "./pages/MarketingGTMPlan";
 import RevenueReports from "./pages/admin/RevenueReports";
@@ -714,6 +715,7 @@ const AppContent = () => {
               <Route path="/admin/keys-vault" element={<KeysVault />} />
               <Route path="/admin/personas" element={<PersonaManagement />} />
             <Route path="/admin/screenshot-generator" element={<ScreenshotGenerator />} />
+              <Route path="/admin/screen-capture" element={<ScreenCapture />} />
           <Route path="/demo-videos" element={<DemoVideos />} />
           <Route path="/marketing-gtm" element={<MarketingGTMPlan />} />
             <Route path="/admin/hero-generator" element={<HeroImageGeneratorPage />} />
