@@ -444,10 +444,11 @@ const AppContent = () => {
     }
   };
 
-  // Always show unified sidebar except for special routes
+  // Always show unified sidebar except for special routes (studio, broadcast)
   const shouldShowSidebar = user && 
-                             location.pathname !== '/broadcast/session/:id' && 
-                             !location.pathname.includes('/broadcast/session/');
+                             !location.pathname.includes('/broadcast/session/') &&
+                             !location.pathname.startsWith('/studio/video') &&
+                             !location.pathname.startsWith('/studio/audio');
 
   return (
     <RoleProvider>
@@ -459,8 +460,8 @@ const AppContent = () => {
           {shouldShowSidebar && <RoleBasedSidebar user={user} />}
         
         <div className="flex-1 flex flex-col">
-          {/* TopNavBar on all authenticated pages */}
-          {user && <TopNavBar />}
+          {/* TopNavBar on all authenticated pages except studio */}
+          {user && !location.pathname.startsWith('/studio/video') && !location.pathname.startsWith('/studio/audio') && <TopNavBar />}
           
           {/* Board View Banner for super admins in preview mode */}
           <BoardViewBanner />
