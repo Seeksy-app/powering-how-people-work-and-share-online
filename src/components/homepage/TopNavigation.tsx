@@ -1,92 +1,40 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronDown, Mic, Video, Radio, Wand2, Calendar, Users, BarChart3, TrendingUp, Activity, FileText, DollarSign, Briefcase, ShieldCheck, AudioWaveform, Scan, Link2, BookOpen, Headphones, HelpCircle, GraduationCap, FileCode, Newspaper, Sparkles } from "lucide-react";
+import { 
+  Menu, X, ChevronDown, Video, Scissors, Podcast, Calendar, 
+  Users, MessageSquare, Ticket, DollarSign, ShieldCheck, Link2, Sparkles 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const megaMenuData = {
-  features: {
-    label: "Features",
-    sections: [
-      {
-        title: "Studio",
-        items: [
-          { label: "AI Master Suite", href: "/studio", icon: Wand2, description: "Complete AI-powered production" },
-          { label: "HD Video Studio", href: "/studio/video-premium", icon: Video, description: "Multi-camera video recording" },
-          { label: "Audio Podcast Studio", href: "/studio/audio-premium", icon: Mic, description: "Professional audio recording" },
-          { label: "Live Streaming", href: "/studio/live", icon: Radio, description: "Stream to multiple platforms" },
-        ]
-      },
-      {
-        title: "Booking",
-        items: [
-          { label: "Meeting Types", href: "/meetings", icon: Calendar, description: "Custom booking pages" },
-          { label: "Podcast Guest Booking", href: "/meetings/podcast", icon: Users, description: "Guest scheduling made easy" },
-          { label: "Events", href: "/events", icon: Users, description: "Host and manage events" },
-        ]
-      },
-      {
-        title: "Analytics",
-        items: [
-          { label: "Social Analytics", href: "/social-analytics", icon: BarChart3, description: "Track your growth" },
-          { label: "Growth Insights", href: "/analytics", icon: TrendingUp, description: "AI-powered recommendations" },
-          { label: "Media Performance", href: "/analytics/media", icon: Activity, description: "Content analytics" },
-        ]
-      },
-      {
-        title: "Media Kit",
-        items: [
-          { label: "Auto Media Kit", href: "/media-kit", icon: FileText, description: "Generate professional kits" },
-          { label: "Creator Valuation", href: "/social-analytics#valuation", icon: DollarSign, description: "Know your worth" },
-          { label: "Brand Portfolio", href: "/portfolio", icon: Briefcase, description: "Showcase your work" },
-        ]
-      },
-      {
-        title: "Identity",
-        items: [
-          { label: "Voice Verification", href: "/identity", icon: AudioWaveform, description: "Verify your voice" },
-          { label: "Face Verification", href: "/identity", icon: Scan, description: "Facial recognition" },
-          { label: "On-Chain Identity", href: "/identity", icon: Link2, description: "Blockchain-backed proof" },
-          { label: "Rights Dashboard", href: "/identity", icon: ShieldCheck, description: "Manage usage rights" },
-        ]
-      },
-    ]
-  },
-  resources: {
-    label: "Resources",
-    items: [
-      { label: "Blog", href: "/blog", icon: Newspaper },
-      { label: "Podcast", href: "/podcast", icon: Headphones },
-      { label: "Help Center", href: "/help", icon: HelpCircle },
-      { label: "Tutorials", href: "/tutorials", icon: GraduationCap },
-      { label: "API Docs", href: "/docs", icon: FileCode },
-      { label: "Release Notes", href: "/changelog", icon: BookOpen },
-    ]
-  }
-};
+const featureItems = [
+  { label: "Media AI Studio", href: "/studio", icon: Video, description: "Professional AI-powered recording" },
+  { label: "AI Clips Generator", href: "/studio/clips", icon: Scissors, description: "Auto-extract viral clips" },
+  { label: "Podcast Hosting", href: "/podcasts", icon: Podcast, description: "Host & distribute your show" },
+  { label: "Meetings & Scheduling", href: "/meetings", icon: Calendar, description: "Book guests & consultations" },
+  { label: "CRM + Messaging", href: "/contacts", icon: Users, description: "Manage contacts & outreach" },
+  { label: "Events & Ticketing", href: "/events", icon: Ticket, description: "Host events & sell tickets" },
+  { label: "Awards & Programs", href: "/awards", icon: MessageSquare, description: "Run recognition programs" },
+  { label: "Monetization Tools", href: "/monetization", icon: DollarSign, description: "Ads, sponsors & revenue" },
+  { label: "Identity Verification", href: "/identity", icon: ShieldCheck, description: "Blockchain-backed proof" },
+  { label: "My Page (Link-in-bio)", href: "/my-page", icon: Link2, description: "Your creator profile" },
+];
 
 const simpleLinks = [
   { label: "Pricing", href: "/pricing" },
-  { label: "Integrations", href: "/integrations" },
+  { label: "Apps & Tools", href: "/apps-and-tools" },
   { label: "About", href: "/about" },
 ];
 
 export function TopNavigation() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [featuresOpen, setFeaturesOpen] = useState(false);
 
   const handleNavigation = (href: string) => {
-    if (href.startsWith("#")) {
-      const element = document.querySelector(href);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    } else {
-      navigate(href);
-    }
+    navigate(href);
     setMobileMenuOpen(false);
-    setActiveMenu(null);
+    setFeaturesOpen(false);
   };
 
   return (
@@ -103,45 +51,36 @@ export function TopNavigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
-            {/* Features Mega Menu */}
+            {/* Features Dropdown */}
             <div
               className="relative"
-              onMouseEnter={() => setActiveMenu("features")}
-              onMouseLeave={() => setActiveMenu(null)}
+              onMouseEnter={() => setFeaturesOpen(true)}
+              onMouseLeave={() => setFeaturesOpen(false)}
             >
               <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-colors rounded-lg hover:bg-white/5">
                 Features
-                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", activeMenu === "features" && "rotate-180")} />
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", featuresOpen && "rotate-180")} />
               </button>
               
-              {activeMenu === "features" && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 pt-2 w-[900px] z-[100]">
-                  <div className="bg-slate-900 border border-white/10 rounded-2xl shadow-2xl shadow-black/50 p-6 grid grid-cols-5 gap-6 backdrop-blur-none">
-                    {megaMenuData.features.sections.map((section) => (
-                      <div key={section.title}>
-                        <h3 className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">
-                          {section.title}
-                        </h3>
-                        <div className="space-y-1">
-                          {section.items.map((item) => (
-                            <button
-                              key={item.label}
-                              onClick={() => handleNavigation(item.href)}
-                              className="w-full text-left p-2 rounded-lg hover:bg-white/5 transition-colors group"
-                            >
-                              <div className="flex items-center gap-2">
-                                <item.icon className="h-4 w-4 text-amber-400/70 group-hover:text-amber-400 transition-colors" />
-                                <span className="text-sm text-white/80 group-hover:text-white transition-colors">
-                                  {item.label}
-                                </span>
-                              </div>
-                              <p className="text-xs text-white/40 mt-0.5 ml-6">
-                                {item.description}
-                              </p>
-                            </button>
-                          ))}
+              {featuresOpen && (
+                <div className="absolute top-full left-0 pt-2 w-[320px] z-[100]">
+                  <div className="bg-slate-900 border border-white/10 rounded-xl shadow-2xl shadow-black/50 p-2">
+                    {featureItems.map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={() => handleNavigation(item.href)}
+                        className="w-full flex items-start gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors group text-left"
+                      >
+                        <item.icon className="h-4 w-4 mt-0.5 text-amber-400/70 group-hover:text-amber-400 transition-colors flex-shrink-0" />
+                        <div>
+                          <span className="text-sm text-white/90 group-hover:text-white transition-colors block">
+                            {item.label}
+                          </span>
+                          <span className="text-xs text-white/40 block">
+                            {item.description}
+                          </span>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -158,37 +97,6 @@ export function TopNavigation() {
                 {link.label}
               </button>
             ))}
-
-            {/* Resources Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => setActiveMenu("resources")}
-              onMouseLeave={() => setActiveMenu(null)}
-            >
-              <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white/80 hover:text-white transition-colors rounded-lg hover:bg-white/5">
-                Resources
-                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", activeMenu === "resources" && "rotate-180")} />
-              </button>
-              
-              {activeMenu === "resources" && (
-                <div className="absolute top-full right-0 pt-2 w-[220px] z-[100]">
-                  <div className="bg-slate-900 border border-white/10 rounded-xl shadow-2xl shadow-black/50 p-2 backdrop-blur-none">
-                    {megaMenuData.resources.items.map((item) => (
-                      <button
-                        key={item.label}
-                        onClick={() => handleNavigation(item.href)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors group"
-                      >
-                        <item.icon className="h-4 w-4 text-white/40 group-hover:text-amber-400 transition-colors" />
-                        <span className="text-sm text-white/70 group-hover:text-white transition-colors">
-                          {item.label}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Desktop CTA */}
@@ -223,26 +131,24 @@ export function TopNavigation() {
           mobileMenuOpen ? "max-h-[600px] pb-6" : "max-h-0"
         )}>
           <div className="flex flex-col gap-1 pt-4 border-t border-white/10">
-            {/* Mobile Features */}
+            {/* Mobile Features Section */}
             <div className="px-4 py-2">
               <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">Features</span>
             </div>
-            {megaMenuData.features.sections.map((section) => (
-              <div key={section.title} className="px-4 py-2">
-                <span className="text-xs text-white/30">{section.title}</span>
-                {section.items.slice(0, 2).map((item) => (
-                  <button
-                    key={item.label}
-                    onClick={() => handleNavigation(item.href)}
-                    className="w-full text-left px-2 py-2 text-sm text-white/70 hover:text-white"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+            {featureItems.slice(0, 5).map((item) => (
+              <button
+                key={item.label}
+                onClick={() => handleNavigation(item.href)}
+                className="w-full text-left px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              >
+                {item.label}
+              </button>
             ))}
             
             {/* Mobile Simple Links */}
+            <div className="px-4 py-2 mt-2">
+              <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">More</span>
+            </div>
             {simpleLinks.map((link) => (
               <button
                 key={link.label}

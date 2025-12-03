@@ -69,6 +69,8 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Cookies from "./pages/Cookies";
 import SecurityPublic from "./pages/SecurityPublic";
+import About from "./pages/marketing/About";
+import AppsAndTools from "./pages/marketing/AppsAndTools";
 import AdminSecurityOverview from "./pages/admin/AdminSecurityOverview";
 import AdminLegal from "./pages/AdminLegal";
 import Settings from "./pages/Settings";
@@ -580,6 +582,8 @@ const AppContent = () => {
               <Route path="/terms" element={<Terms />} />
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/security" element={<SecurityPublic />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/apps-and-tools" element={<AppsAndTools />} />
           <Route path="/dashboard" element={<UniversalDashboard />} />
           <Route path="/dashboard-legacy" element={<Dashboard />} />
           <Route path="/dashboard-v2" element={<DashboardV2 />} />
