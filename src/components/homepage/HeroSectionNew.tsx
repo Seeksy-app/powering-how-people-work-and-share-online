@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Play, Link2, Calendar, Mic, Video } from "lucide-react";
 import { motion } from "framer-motion";
 
-// Hero card images
-import heroPeopleImg from "@/assets/homepage/hero-people.png";
-import heroConversationsImg from "@/assets/homepage/hero-conversations.png";
-import heroContentImg from "@/assets/homepage/hero-content.png";
-import heroCommunityImg from "@/assets/homepage/hero-community.png";
+// Hero card images - original human photos
+import heroPeopleImg from "@/assets/homepage/hero-people.jpg";
+import heroConversationsImg from "@/assets/homepage/hero-conversations.jpg";
+import heroContentImg from "@/assets/homepage/hero-content.jpg";
+import heroCommunityImg from "@/assets/homepage/hero-community.jpg";
 
 const connectionTypes = [
   { icon: Link2, label: "Social" },
