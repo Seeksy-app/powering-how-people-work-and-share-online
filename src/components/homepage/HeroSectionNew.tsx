@@ -1,12 +1,7 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, Users2, Play, Link2, Calendar, Mic, Video } from "lucide-react";
+import { ArrowRight, Sparkles, Play, Link2, Calendar, Mic, Video } from "lucide-react";
 import { motion } from "framer-motion";
-import heroPeople from "@/assets/homepage/hero-people.jpg";
-import heroConversations from "@/assets/homepage/hero-conversations.jpg";
-import heroContent from "@/assets/homepage/hero-content.jpg";
-import heroCommunity from "@/assets/homepage/hero-community.jpg";
 
 const connectionTypes = [
   { icon: Link2, label: "Social" },
@@ -20,26 +15,11 @@ export function HeroSectionNew() {
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-b from-background via-background to-muted/30">
-      {/* Animated gradient orbs */}
-      <div className="absolute inset-0 overflow-hidden">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3]
-          }}
-          transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px]" 
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            opacity: [0.2, 0.4, 0.2]
-          }}
-          transition={{ duration: 10, repeat: Infinity }}
-          className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px]" 
-        />
+      {/* Static gradient orbs - no infinite animations */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] opacity-40" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] opacity-30" />
       </div>
-
 
       <div className="container relative z-10 mx-auto px-4 py-20 pt-32">
         <div className="max-w-4xl mx-auto text-center">
@@ -88,16 +68,13 @@ export function HeroSectionNew() {
             className="flex flex-wrap justify-center gap-3 mb-10"
           >
             {connectionTypes.map((type, index) => (
-              <motion.div
+              <div
                 key={type.label}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 + index * 0.05 }}
                 className="flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border/50 text-sm"
               >
                 <type.icon className="h-4 w-4 text-primary" />
                 <span className="font-medium">{type.label}</span>
-              </motion.div>
+              </div>
             ))}
           </motion.div>
 
@@ -139,7 +116,7 @@ export function HeroSectionNew() {
           </motion.p>
         </div>
 
-        {/* Visual Elements - Feature cards with images */}
+        {/* Visual Elements - Feature cards with lazy loaded images */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -148,10 +125,10 @@ export function HeroSectionNew() {
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "People", desc: "Connect & collaborate", image: heroPeople },
-              { label: "Conversations", desc: "Meetings & podcasts", image: heroConversations },
-              { label: "Content", desc: "Create & share", image: heroContent },
-              { label: "Community", desc: "Grow together", image: heroCommunity },
+              { label: "People", desc: "Connect & collaborate" },
+              { label: "Conversations", desc: "Meetings & podcasts" },
+              { label: "Content", desc: "Create & share" },
+              { label: "Community", desc: "Grow together" },
             ].map((item, index) => (
               <motion.div
                 key={item.label}
@@ -161,13 +138,8 @@ export function HeroSectionNew() {
                 whileHover={{ y: -8, scale: 1.02 }}
                 className="group relative rounded-2xl overflow-hidden border border-border/50 bg-card shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                {/* Image */}
-                <div className="relative h-52 md:h-56 overflow-hidden">
-                  <img 
-                    src={item.image} 
-                    alt={item.label}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
+                {/* Gradient placeholder instead of heavy images */}
+                <div className="relative h-52 md:h-56 overflow-hidden bg-gradient-to-br from-primary/20 via-purple-500/10 to-muted">
                   <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
                 </div>
                 {/* Content */}
