@@ -81,12 +81,10 @@ const stylePresets: StylePreset[] = [
   { id: "reaction", name: "Reaction Style", description: "PiP with facial focus", icon: Heart, layout: "pip-corner", captionStyle: "emoji-react", defaultRatio: "9:16", musicEnabled: true },
 ];
 
+// Layout presets (simplified - no PiP controls in toolbar)
 const layoutPresets = [
   { id: "full", name: "Full Screen", icon: Maximize2 },
-  { id: "pip-top-right", name: "PiP Top Right", icon: PictureInPicture },
-  { id: "pip-bottom-right", name: "PiP Bottom Right", icon: PictureInPicture },
   { id: "split-horizontal", name: "Side by Side", icon: LayoutGrid },
-  { id: "split-vertical", name: "Stacked", icon: LayoutGrid },
 ];
 
 const captionThemes = [
@@ -569,32 +567,25 @@ export default function AIClipGeneratorFull() {
 
         {/* Center Panel - Video Editor Canvas */}
         <div className="flex-1 flex flex-col">
-          {/* Layout Controls Bar */}
-          <div className="px-4 py-2 border-b border-border flex items-center gap-2 bg-muted/30">
-            <span className="text-xs text-muted-foreground mr-2">Layout:</span>
-            {layoutPresets.map((layout) => (
-              <Button
-                key={layout.id}
-                variant={selectedLayout === layout.id ? "default" : "outline"}
-                size="sm"
-                className="h-7 px-2"
-                onClick={() => setSelectedLayout(layout.id)}
-              >
-                <layout.icon className="w-3.5 h-3.5 mr-1" />
-                <span className="text-xs">{layout.name}</span>
-              </Button>
-            ))}
-            <div className="ml-auto flex items-center gap-2">
+          {/* Aspect Ratio Controls Bar - Simplified */}
+          <div className="px-4 py-2 border-b border-border flex items-center justify-between bg-muted/30">
+            <span className="text-sm font-medium text-foreground">Preview</span>
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground mr-2">Format:</span>
               {aspectRatios.map((ratio) => (
                 <Button
                   key={ratio.id}
-                  variant={selectedRatio === ratio.id ? "secondary" : "ghost"}
+                  variant={selectedRatio === ratio.id ? "default" : "outline"}
                   size="sm"
-                  className="h-7 px-2"
+                  className={cn(
+                    "h-8 px-3 gap-1.5",
+                    selectedRatio === ratio.id && "bg-primary text-primary-foreground"
+                  )}
                   onClick={() => setSelectedRatio(ratio.id)}
                 >
-                  <ratio.icon className="w-3.5 h-3.5 mr-1" />
-                  <span className="text-xs">{ratio.label}</span>
+                  <ratio.icon className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium">{ratio.label}</span>
+                  <span className="text-[10px] opacity-70">{ratio.description}</span>
                 </Button>
               ))}
             </div>
