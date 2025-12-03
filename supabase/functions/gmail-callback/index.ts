@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encryptToken } from "../_shared/token-encryption.ts";
 
 serve(async (req) => {
   try {
@@ -62,6 +63,14 @@ serve(async (req) => {
 
     const expiryDate = new Date(Date.now() + (tokens.expires_in * 1000));
 
+    // Encrypt tokens before storing
+    const encryptedAccessToken = await encryptToken(tokens.access_token);
+    const encryptedRefreshToken = tokens.refresh_token 
+      ? await encryptToken(tokens.refresh_token) 
+      : null;
+    
+    console.log('Tokens encrypted successfully');
+
     // Check if this email account already exists for this user
     const { data: existing } = await supabaseAdmin
       .from('email_accounts')
@@ -75,8 +84,8 @@ serve(async (req) => {
       const { error: updateError } = await supabaseAdmin
         .from('email_accounts')
         .update({
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
+          access_token: encryptedAccessToken,
+          refresh_token: encryptedRefreshToken,
           token_expires_at: expiryDate.toISOString(),
           is_active: true,
           connected_at: new Date().toISOString(),
@@ -101,8 +110,8 @@ serve(async (req) => {
           email_address: email,
           provider: 'gmail',
           display_name: userInfo.name || email,
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
+          access_token: encryptedAccessToken,
+          refresh_token: encryptedRefreshToken,
           token_expires_at: expiryDate.toISOString(),
           is_active: true,
           is_default: isFirstAccount, // First account becomes default
@@ -112,7 +121,7 @@ serve(async (req) => {
       if (insertError) throw insertError;
     }
 
-    console.log('Successfully stored Gmail account for user:', state);
+    console.log('Successfully stored encrypted Gmail account for user:', state);
 
     // Redirect to seeksy.io/email-settings
     return new Response(null, {

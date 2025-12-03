@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sanitizeEmailHtml } from "@/lib/sanitizeHtml";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -352,7 +353,7 @@ export default function EmailTemplates() {
               >
                 {(selectedTemplate as any)?.renderedHtml ? (
                   <div
-                    dangerouslySetInnerHTML={{ __html: (selectedTemplate as any).renderedHtml }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml((selectedTemplate as any).renderedHtml) }}
                     className="max-w-full"
                   />
                 ) : (
