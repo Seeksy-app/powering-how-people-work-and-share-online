@@ -40,12 +40,23 @@ export function CreditsBadge() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Stub: Default to 4 credits to show low state
-      // TODO: Load from billing table when implemented
-      setCredits(4);
+      // Fetch real credits from user_credits table
+      const { data: creditData, error } = await supabase
+        .from("user_credits")
+        .select("balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error fetching credits:", error);
+        setCredits(0);
+        return;
+      }
+
+      setCredits(creditData?.balance ?? 0);
     } catch (error) {
       console.error("Error loading credits:", error);
-      setCredits(4);
+      setCredits(0);
     }
   };
 
