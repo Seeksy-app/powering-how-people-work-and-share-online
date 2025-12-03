@@ -1,0 +1,404 @@
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Video, 
+  Play, 
+  Square, 
+  ExternalLink, 
+  Download, 
+  FolderOpen, 
+  Clock,
+  Loader2,
+  CheckCircle,
+  Monitor
+} from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useScreenCapture, ScreenCapturePreset, CapturedRecording } from "@/hooks/useScreenCapture";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+
+const CAPTURE_PRESETS: ScreenCapturePreset[] = [
+  {
+    id: "home-hero",
+    name: "Seeksy Home – Your Seeksy Workspace",
+    shortName: "home-hero",
+    sceneNumber: 1,
+    targetUrl: "/",
+    recommendedDuration: 10,
+    description: "Hero section + module cards. Slowly scroll over the hero area.",
+  },
+  {
+    id: "creator-dashboard",
+    name: "Creator / Investor Dashboard",
+    shortName: "creator-dashboard",
+    sceneNumber: 2,
+    targetUrl: "/dashboard",
+    recommendedDuration: 15,
+    description: "Main dashboard with widgets. Hover over Identity Verification, AI Clips, etc.",
+  },
+  {
+    id: "ai-studio",
+    name: "AI Production Studio / AI Clips",
+    shortName: "ai-studio",
+    sceneNumber: 3,
+    targetUrl: "/studio/clips",
+    recommendedDuration: 15,
+    description: "Show timeline, transcript, caption styles, Export & Save buttons.",
+  },
+  {
+    id: "events-awards",
+    name: "Events & Awards Module",
+    shortName: "events-awards",
+    sceneNumber: 4,
+    targetUrl: "/events",
+    recommendedDuration: 15,
+    description: "Event list, registration details, awards categories.",
+  },
+  {
+    id: "meetings-mia",
+    name: "Meetings / Scheduling (Mia)",
+    shortName: "meetings-mia",
+    sceneNumber: 5,
+    targetUrl: "/meetings",
+    recommendedDuration: 15,
+    description: "Meeting types, booking links, Mia assistant.",
+  },
+  {
+    id: "cfo-board",
+    name: "CFO / Investor Board View",
+    shortName: "cfo-board",
+    sceneNumber: 6,
+    targetUrl: "/cfo-dashboard",
+    recommendedDuration: 15,
+    description: "Key Success Metrics, Performance Insights tiles & charts.",
+  },
+  {
+    id: "credits-pricing",
+    name: "Credits & Pricing",
+    shortName: "credits-pricing",
+    sceneNumber: 7,
+    targetUrl: "/settings/billing",
+    recommendedDuration: 10,
+    description: "Credit packages, what you can do with credits.",
+  },
+];
+
+export default function ScreenCapture() {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const {
+    isRecording,
+    isProcessing,
+    recordingDuration,
+    currentPresetId,
+    startCapture,
+    stopCapture,
+    cancelCapture,
+  } = useScreenCapture();
+
+  const [recordings, setRecordings] = useState<CapturedRecording[]>([]);
+  const [activePreset, setActivePreset] = useState<ScreenCapturePreset | null>(null);
+
+  const handleStartCapture = async (preset: ScreenCapturePreset) => {
+    setActivePreset(preset);
+    await startCapture(preset);
+  };
+
+  const handleStopCapture = async () => {
+    if (!activePreset) return;
+    
+    const recording = await stopCapture(activePreset);
+    if (recording) {
+      setRecordings(prev => [recording, ...prev]);
+    }
+    setActivePreset(null);
+  };
+
+  const handleOpenPage = (url: string) => {
+    window.open(url, '_blank');
+  };
+
+  const handleDownload = async (recording: CapturedRecording) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('media-vault')
+        .download(recording.storagePath);
+      
+      if (error) throw error;
+      
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = recording.fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Download Failed",
+        description: "Could not download the recording.",
+      });
+    }
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <Monitor className="h-8 w-8 text-primary" />
+            Screen Capture for Demo Videos
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Record silent screen captures of Seeksy pages for HeyGen investor videos
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => navigate('/media/library')}>
+          <FolderOpen className="mr-2 h-4 w-4" />
+          Open Media Library
+        </Button>
+      </div>
+
+      {/* Recording Status */}
+      {(isRecording || isProcessing) && (
+        <Card className="border-primary bg-primary/5">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {isRecording && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                      </span>
+                      <span className="font-semibold text-destructive">Recording</span>
+                    </div>
+                    <Badge variant="secondary" className="text-lg px-3 py-1">
+                      <Clock className="mr-2 h-4 w-4" />
+                      {formatDuration(recordingDuration)}
+                    </Badge>
+                    <span className="text-muted-foreground">
+                      {activePreset?.name}
+                    </span>
+                  </>
+                )}
+                {isProcessing && (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Processing and saving recording...</span>
+                  </div>
+                )}
+              </div>
+              {isRecording && (
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={cancelCapture}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={handleStopCapture}>
+                    <Square className="mr-2 h-4 w-4" />
+                    Stop Recording
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Capture Presets */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Capture Presets ({CAPTURE_PRESETS.length} Scenes)</CardTitle>
+            <CardDescription>
+              Pre-configured scenes for the investor demo video. Click Start to begin recording.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[500px] pr-4">
+              <div className="space-y-3">
+                {CAPTURE_PRESETS.map((preset) => {
+                  const isActive = currentPresetId === preset.id;
+                  const hasRecording = recordings.some(r => r.presetId === preset.id);
+                  
+                  return (
+                    <div
+                      key={preset.id}
+                      className={`p-4 border rounded-lg transition-colors ${
+                        isActive ? 'border-primary bg-primary/5' : 'hover:bg-accent'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline" className="text-xs">
+                              Scene {preset.sceneNumber}
+                            </Badge>
+                            <h3 className="font-semibold">{preset.name}</h3>
+                            {hasRecording && (
+                              <CheckCircle className="h-4 w-4 text-green-500" />
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">
+                            {preset.description}
+                          </p>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              ~{preset.recommendedDuration}s recommended
+                            </span>
+                            <code className="bg-muted px-2 py-0.5 rounded">
+                              {preset.targetUrl}
+                            </code>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenPage(preset.targetUrl)}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          {isActive && isRecording ? (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={handleStopCapture}
+                              disabled={isProcessing}
+                            >
+                              <Square className="mr-1 h-4 w-4" />
+                              Stop
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => handleStartCapture(preset)}
+                              disabled={isRecording || isProcessing}
+                            >
+                              <Play className="mr-1 h-4 w-4" />
+                              Start
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Recent Recordings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Video className="h-5 w-5" />
+              Recent Recordings
+            </CardTitle>
+            <CardDescription>
+              Recordings from this session. All saved to Media Library with "demo-video" tag.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {recordings.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Video className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No recordings yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Start capturing scenes above
+                </p>
+              </div>
+            ) : (
+              <ScrollArea className="h-[420px]">
+                <div className="space-y-3">
+                  {recordings.map((recording) => {
+                    const preset = CAPTURE_PRESETS.find(p => p.id === recording.presetId);
+                    return (
+                      <div
+                        key={recording.id}
+                        className="p-3 border rounded-lg space-y-2"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-sm">
+                              Scene {preset?.sceneNumber}: {preset?.shortName}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDuration(recording.duration)} • {new Date(recording.createdAt).toLocaleTimeString()}
+                            </p>
+                          </div>
+                          <Badge variant="secondary">
+                            <CheckCircle className="mr-1 h-3 w-3" />
+                            Saved
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => handleDownload(recording)}
+                          >
+                            <Download className="mr-1 h-3 w-3" />
+                            Download
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => navigate('/media/library')}
+                          >
+                            <FolderOpen className="mr-1 h-3 w-3" />
+                            Library
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Instructions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>How to Use</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+            <li>Click <strong>Open (↗)</strong> to open the target page in a new tab</li>
+            <li>Click <strong>Start</strong> on a preset to begin recording</li>
+            <li>Your browser will ask you to choose what to share — select the <strong>tab</strong> with Seeksy</li>
+            <li>Perform your demo actions (scroll slowly, hover over elements)</li>
+            <li>Click <strong>Stop Recording</strong> when done</li>
+            <li>The video is automatically saved to Media Library with the "demo-video" tag</li>
+            <li>Use <strong>Download</strong> to get the MP4 directly, or find it in Media Library</li>
+          </ol>
+          <div className="p-3 bg-muted rounded-lg text-sm">
+            <strong>Tip:</strong> For best results, record at 1080p resolution. Hide browser dev tools and 
+            any UI elements you don't want in the video. The recording captures only what you share — 
+            no browser chrome or address bar.
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
