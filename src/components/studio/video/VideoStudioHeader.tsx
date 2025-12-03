@@ -29,16 +29,20 @@ export function VideoStudioHeader({
   onEditTitle,
 }: VideoStudioHeaderProps) {
   return (
-    <header className="h-12 bg-[#1a1d21] border-b border-white/10 px-4 flex items-center justify-between shrink-0">
-      <div className="flex items-center gap-3">
+    <header className="h-14 bg-[#1a1d21] border-b border-white/10 px-4 flex items-center justify-between shrink-0">
+      <div className="flex items-center gap-4">
+        {/* Exit Studio Button - Clear and prominent */}
         <Button 
-          variant="ghost" 
-          size="icon" 
+          variant="outline" 
+          size="sm" 
           onClick={onBack} 
-          className="text-white/60 hover:text-white hover:bg-white/10 h-8 w-8"
+          className="border-white/20 text-white hover:bg-white/10 hover:text-white gap-2 font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
+          Exit Studio
         </Button>
+        
+        <div className="h-6 w-px bg-white/20" />
         
         <div className="flex items-center gap-2">
           <span className="text-white text-sm font-medium truncate max-w-[200px]">
