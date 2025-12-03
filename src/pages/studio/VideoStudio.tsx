@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { VideoStudioHeader, StudioMode } from "@/components/studio/video/VideoStudioHeader";
-import { VideoStudioScenesResizable, SceneLayout, Scene } from "@/components/studio/video/VideoStudioScenesResizable";
+import { VideoStudioScenesResizable, SceneLayout, Scene, SceneType } from "@/components/studio/video/VideoStudioScenesResizable";
 import { VideoStudioCanvas } from "@/components/studio/video/VideoStudioCanvas";
 import type { SceneLayout as CanvasSceneLayout } from "@/components/studio/video/VideoStudioScenes";
 import { VideoStudioControlsEnhanced } from "@/components/studio/video/VideoStudioControlsEnhanced";
@@ -32,9 +32,8 @@ type StudioPhase = "loading" | "prejoin" | "studio";
 type HostDrawer = "script" | "clip" | "ad" | null;
 
 const defaultScenes: Scene[] = [
-  { id: "welcome", name: "Welcome", layout: "host-only" },
-  { id: "demo", name: "Demo", layout: "side-by-side" },
-  { id: "interview", name: "Interview", layout: "host-guest" },
+  { id: "welcome", name: "Welcome", layout: "host-only", sceneType: "camera" },
+  { id: "demo", name: "Demo", layout: "side-by-side", sceneType: "camera" },
 ];
 
 export default function VideoStudio() {
@@ -245,19 +244,36 @@ export default function VideoStudio() {
     toast.info("Schedule feature coming soon!");
   };
 
-  const handleAddScene = (type?: "camera" | "media" | "countdown") => {
-    const layoutMap: Record<string, SceneLayout> = {
+  const handleAddScene = (type?: SceneType) => {
+    const layoutMap: Record<SceneType, SceneLayout> = {
       camera: "host-only",
-      media: "media" as SceneLayout,
-      countdown: "countdown" as SceneLayout,
+      media: "media",
+      countdown: "countdown",
     };
+    const nameMap: Record<SceneType, string> = {
+      camera: `Scene ${scenes.length + 1}`,
+      media: "Media",
+      countdown: "Countdown",
+    };
+    const sceneType = type || "camera";
     const newScene: Scene = {
       id: `scene-${Date.now()}`,
-      name: type === "countdown" ? "Countdown" : type === "media" ? "Media" : `Scene ${scenes.length + 1}`,
-      layout: layoutMap[type || "camera"] || "host-only",
+      name: nameMap[sceneType],
+      layout: layoutMap[sceneType],
+      sceneType: sceneType,
     };
     setScenes([...scenes, newScene]);
     setActiveSceneId(newScene.id);
+  };
+
+  const handleRenameScene = (sceneId: string, newName: string) => {
+    setScenes(scenes.map(s => 
+      s.id === sceneId ? { ...s, name: newName } : s
+    ));
+  };
+
+  const handleReorderScenes = (newScenes: Scene[]) => {
+    setScenes(newScenes);
   };
 
   const handleSceneMenu = (id: string) => {
@@ -379,6 +395,8 @@ export default function VideoStudio() {
           onAddScene={handleAddScene}
           onSceneMenu={handleSceneMenu}
           onDeleteScene={handleDeleteScene}
+          onRenameScene={handleRenameScene}
+          onReorderScenes={handleReorderScenes}
         />
 
         {/* Center - Canvas + Controls */}
