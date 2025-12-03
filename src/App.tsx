@@ -90,8 +90,7 @@ import AgencyDiscovery from "./pages/AgencyDiscovery";
 import RSSMigrationPage from "./pages/RSSMigrationPage";
 import PaidAdsTerms from "./pages/legal/PaidAdsTerms";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
-import { useHolidaySettings } from "./hooks/useHolidaySettings";
-import { HolidayWelcomeModal, SantaAssistantButton, Snowfall } from "./components/holiday";
+// Holiday features completely disabled - removed all imports
 import { CommandPaletteProvider } from "./components/command/CommandPaletteProvider";
 import { AIAssistantProvider } from "./components/ai/AIAssistantProvider";
 import { CommandPalette } from "./components/command/CommandPalette";
@@ -379,10 +378,7 @@ import UniversalDashboard from "./pages/UniversalDashboard";
 
 const queryClient = new QueryClient();
 
-const HolidayFeatures = () => {
-  // Holiday features disabled per user request
-  return null;
-};
+// Holiday features completely removed
 
 const AppContent = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -883,9 +879,8 @@ const AppContent = () => {
             </RouteTransition>
           </main>
         </div>
-        {/* Floating chatbot removed - Ask Spark available in sidebar navigation */}
+        {/* Floating chatbot and holiday features completely removed */}
         
-        <HolidayFeatures />
         <CommandPalette />
         <AIAssistantPanel />
         </div>
