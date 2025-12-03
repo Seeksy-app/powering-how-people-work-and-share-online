@@ -1,17 +1,17 @@
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Video, Scissors, Mic, Rss, Radio, Users, 
   MessageSquare, Calendar, Link2, DollarSign,
-  BarChart3, Shield, ArrowRight, Sparkles
+  BarChart3, Shield, Sparkles, Trophy, Ticket
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { PersonaType } from "@/config/personaConfig";
 
 interface WidgetConfig {
   id: string;
+  moduleId: string; // Maps to onboarding module IDs
   title: string;
   description: string;
   icon: any;
@@ -20,58 +20,70 @@ interface WidgetConfig {
   badge?: string;
 }
 
-const widgetsByRole: Record<string, WidgetConfig[]> = {
-  creator: [
-    { id: "media", title: "Media Hub", description: "Upload and manage your content", icon: Video, path: "/media/library", color: "from-blue-500 to-cyan-500" },
-    { id: "clips", title: "AI Clips", description: "Generate viral clips automatically", icon: Scissors, path: "/studio/clips", color: "from-purple-500 to-pink-500", badge: "AI" },
-    { id: "studio", title: "Studio", description: "Record videos & podcasts", icon: Mic, path: "/studio", color: "from-amber-500 to-orange-500" },
-    { id: "analytics", title: "Analytics", description: "Track your growth", icon: BarChart3, path: "/social-analytics", color: "from-emerald-500 to-teal-500" },
-  ],
-  influencer: [
-    { id: "social", title: "Social Hub", description: "Connect & sync your accounts", icon: Link2, path: "/integrations", color: "from-pink-500 to-rose-500" },
-    { id: "links", title: "My Page", description: "Your link-in-bio", icon: Users, path: "/profile/edit", color: "from-violet-500 to-purple-500" },
-    { id: "monetize", title: "Monetization", description: "Earn from your content", icon: DollarSign, path: "/monetization", color: "from-amber-500 to-yellow-500" },
-    { id: "clips", title: "AI Clips", description: "Auto-generate content", icon: Scissors, path: "/studio/clips", color: "from-blue-500 to-cyan-500", badge: "AI" },
-  ],
-  podcaster: [
-    { id: "studio", title: "Podcast Studio", description: "Record your show", icon: Mic, path: "/studio/audio", color: "from-amber-500 to-orange-500" },
-    { id: "rss", title: "RSS & Distribution", description: "Manage your feed", icon: Rss, path: "/podcasts", color: "from-emerald-500 to-green-500" },
-    { id: "episodes", title: "Episodes", description: "Publish & manage", icon: Radio, path: "/podcasts", color: "from-purple-500 to-violet-500" },
-    { id: "clips", title: "AI Clips", description: "Create audiograms", icon: Scissors, path: "/studio/clips", color: "from-blue-500 to-cyan-500", badge: "AI" },
-  ],
-  business: [
-    { id: "meetings", title: "Meetings", description: "Schedule & host calls", icon: Calendar, path: "/meetings", color: "from-blue-500 to-indigo-500" },
-    { id: "crm", title: "CRM Lite", description: "Manage your contacts", icon: Users, path: "/contacts", color: "from-emerald-500 to-teal-500" },
-    { id: "automations", title: "Automations", description: "Workflows & triggers", icon: Sparkles, path: "/automations", color: "from-purple-500 to-pink-500", badge: "Pro" },
-    { id: "communications", title: "Email & SMS", description: "Reach your audience", icon: MessageSquare, path: "/communications", color: "from-amber-500 to-orange-500" },
-  ],
-  default: [
-    { id: "studio", title: "Studio", description: "Record content", icon: Video, path: "/studio", color: "from-amber-500 to-orange-500" },
-    { id: "media", title: "Media Library", description: "Your files", icon: Video, path: "/media/library", color: "from-blue-500 to-cyan-500" },
-    { id: "clips", title: "AI Clips", description: "Generate clips", icon: Scissors, path: "/studio/clips", color: "from-purple-500 to-pink-500", badge: "AI" },
-    { id: "identity", title: "Identity", description: "Voice & face verification", icon: Shield, path: "/identity", color: "from-emerald-500 to-teal-500" },
-  ],
+// All available widgets mapped to module IDs from onboarding
+const ALL_WIDGETS: WidgetConfig[] = [
+  { id: "media", moduleId: "media-studio", title: "Media AI Studio", description: "Record & edit video with AI", icon: Video, path: "/studio", color: "from-blue-500 to-cyan-500" },
+  { id: "clips", moduleId: "ai-clips", title: "AI Clips", description: "Auto-generate viral clips", icon: Scissors, path: "/studio/clips", color: "from-purple-500 to-pink-500", badge: "AI" },
+  { id: "podcast", moduleId: "podcast-hosting", title: "Podcast & RSS", description: "Distribute your podcast", icon: Rss, path: "/podcasts", color: "from-amber-500 to-orange-500" },
+  { id: "mypage", moduleId: "my-page", title: "My Page", description: "Your link-in-bio", icon: Link2, path: "/profile/edit", color: "from-violet-500 to-purple-500" },
+  { id: "meetings", moduleId: "meetings", title: "Meetings", description: "Book calls & appointments", icon: Calendar, path: "/meetings", color: "from-emerald-500 to-teal-500" },
+  { id: "events", moduleId: "events", title: "Events & Ticketing", description: "Sell tickets to events", icon: Ticket, path: "/events", color: "from-rose-500 to-pink-500" },
+  { id: "crm", moduleId: "crm", title: "CRM Lite", description: "Manage contacts & sponsors", icon: Users, path: "/contacts", color: "from-sky-500 to-blue-500" },
+  { id: "communications", moduleId: "communications", title: "Email & SMS", description: "Reach your audience", icon: MessageSquare, path: "/communications", color: "from-indigo-500 to-violet-500" },
+  { id: "monetization", moduleId: "monetization", title: "Monetization", description: "Track revenue & deals", icon: DollarSign, path: "/monetization", color: "from-amber-500 to-yellow-500" },
+  { id: "analytics", moduleId: "analytics", title: "Analytics", description: "Track your growth", icon: BarChart3, path: "/social-analytics", color: "from-green-500 to-emerald-500" },
+  { id: "awards", moduleId: "awards", title: "Awards", description: "Run contests & voting", icon: Trophy, path: "/awards", color: "from-orange-500 to-red-500" },
+  { id: "identity", moduleId: "identity", title: "Identity", description: "Voice & face verification", icon: Shield, path: "/identity", color: "from-slate-500 to-gray-600" },
+  { id: "social", moduleId: "social-hub", title: "Social Hub", description: "Connect & sync accounts", icon: Link2, path: "/integrations", color: "from-pink-500 to-rose-500" },
+];
+
+// Default widgets by role (fallback when no modules selected)
+const defaultWidgetsByRole: Record<string, string[]> = {
+  creator: ["media-studio", "ai-clips", "my-page", "analytics"],
+  influencer: ["my-page", "ai-clips", "monetization", "analytics"],
+  podcaster: ["media-studio", "podcast-hosting", "ai-clips", "analytics"],
+  speaker: ["events", "meetings", "my-page", "crm"],
+  eventHost: ["events", "meetings", "crm", "communications"],
+  entrepreneur: ["crm", "communications", "meetings", "analytics"],
+  brand: ["crm", "communications", "meetings", "analytics"],
+  agency: ["crm", "analytics", "communications", "monetization"],
+  default: ["media-studio", "my-page", "ai-clips", "identity"],
 };
 
 interface RoleBasedWidgetsProps {
   personaType?: PersonaType | null;
+  selectedModules?: string[];
   showDemoWidgets?: boolean;
 }
 
-export function RoleBasedWidgets({ personaType, showDemoWidgets = false }: RoleBasedWidgetsProps) {
+export function RoleBasedWidgets({ personaType, selectedModules, showDemoWidgets = false }: RoleBasedWidgetsProps) {
   const navigate = useNavigate();
   
-  // Map persona type to widget role
-  const roleKey = personaType === "influencer" ? "influencer" 
-    : personaType === "podcaster" ? "podcaster"
-    : personaType === "entrepreneur" ? "business"
-    : personaType === "agency" ? "business"
-    : personaType === "brand" ? "business"
-    : personaType === "speaker" ? "creator"
-    : personaType === "eventHost" ? "business"
-    : "default";
+  // Determine which modules to show
+  let moduleIds: string[] = [];
   
-  const widgets = widgetsByRole[roleKey] || widgetsByRole.default;
+  if (selectedModules && selectedModules.length > 0) {
+    // Use the modules selected during onboarding
+    moduleIds = selectedModules;
+  } else {
+    // Fallback to role-based defaults
+    const roleKey = personaType || "default";
+    moduleIds = defaultWidgetsByRole[roleKey] || defaultWidgetsByRole.default;
+  }
+  
+  // Get widgets that match the selected module IDs (max 4 for the grid)
+  const widgets = moduleIds
+    .map(moduleId => ALL_WIDGETS.find(w => w.moduleId === moduleId))
+    .filter((w): w is WidgetConfig => w !== undefined)
+    .slice(0, 4);
+  
+  // If we don't have 4 widgets, fill with defaults
+  if (widgets.length < 4) {
+    const missingCount = 4 - widgets.length;
+    const existingIds = widgets.map(w => w.moduleId);
+    const defaults = ALL_WIDGETS.filter(w => !existingIds.includes(w.moduleId)).slice(0, missingCount);
+    widgets.push(...defaults);
+  }
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
