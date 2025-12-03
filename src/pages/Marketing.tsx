@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sanitizeEmailHtml } from "@/lib/sanitizeHtml";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -878,10 +879,10 @@ const Marketing = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {folderTemplates.map((savedTemplate) => (
                             <Card key={savedTemplate.id} className="overflow-hidden">
-                              <div className="aspect-video bg-muted relative overflow-hidden">
+                        <div className="aspect-video bg-muted relative overflow-hidden">
                                 <div 
                                   className="scale-[0.3] origin-top-left w-[333%] h-[333%]"
-                                  dangerouslySetInnerHTML={{ __html: savedTemplate.customized_html }}
+                                  dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(savedTemplate.customized_html) }}
                                 />
                               </div>
                               <div className="p-3">
@@ -925,7 +926,7 @@ const Marketing = () => {
                         <div className="aspect-video bg-muted relative overflow-hidden">
                           <div 
                             className="scale-[0.3] origin-top-left w-[333%] h-[333%]"
-                            dangerouslySetInnerHTML={{ __html: savedTemplate.customized_html }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(savedTemplate.customized_html) }}
                           />
                         </div>
                         <div className="p-3">
@@ -1011,7 +1012,7 @@ const Marketing = () => {
                       >
                         <div 
                           className="bg-white"
-                          dangerouslySetInnerHTML={{ __html: template.previewHtml.replace(/\{\{[^}]+\}\}/g, (match) => {
+                          dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(template.previewHtml.replace(/\{\{[^}]+\}\}/g, (match) => {
                             const placeholders: Record<string, string> = {
                               '{{company.LOGO}}': 'Your Company',
                               '{{contact.FIRSTNAME}}': 'John',
@@ -1024,7 +1025,7 @@ const Marketing = () => {
                               '{{params.DISCOUNT_CODE}}': 'SAVE20'
                             };
                             return placeholders[match] || 'Sample Text';
-                          }) }} 
+                          })) }} 
                         />
                       </div>
                       {template.isPremium && (

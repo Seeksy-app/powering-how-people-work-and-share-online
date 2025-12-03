@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sanitizeEmailHtml } from "@/lib/sanitizeHtml";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -210,7 +211,7 @@ export const EmailTemplateCustomizer = ({ open, onOpenChange, template }: EmailT
                 <div className="p-8 bg-gradient-to-br from-muted/30 to-background">
                   <div 
                     className="mx-auto bg-white rounded-lg shadow-xl"
-                    dangerouslySetInnerHTML={{ __html: getPreviewHtml() }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(getPreviewHtml()) }}
                   />
                 </div>
               </ScrollArea>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sanitizeEmailHtml } from "@/lib/sanitizeHtml";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -276,7 +277,7 @@ export const EmailTemplateFullScreenEditor = ({ open, onOpenChange, template }: 
               <TabsContent value="visual" className="flex-1 p-4 overflow-auto">
                 <div className={`mx-auto bg-white shadow-lg ${previewMode === 'mobile' ? 'max-w-sm' : 'max-w-3xl'}`}>
                   <div 
-                    dangerouslySetInnerHTML={{ __html: editedHtml }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(editedHtml) }}
                     className="email-preview"
                   />
                 </div>

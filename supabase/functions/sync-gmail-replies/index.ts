@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { decryptToken } from "../_shared/token-encryption.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,7 +58,10 @@ serve(async (req) => {
     let newRepliesAdded = 0;
 
     for (const account of emailAccounts) {
-      console.log(`[sync-gmail-replies] Syncing account: ${account.email}`);
+      console.log(`[sync-gmail-replies] Syncing account: ${account.email_address}`);
+
+      // Decrypt access token before using
+      const accessToken = await decryptToken(account.access_token);
 
       // Get sent emails from this user that have a resend_email_id (meaning they were sent from Seeksy)
       const { data: sentEmails, error: sentError } = await supabaseClient
@@ -93,12 +97,12 @@ serve(async (req) => {
 
           // Query Gmail API for replies
           // We search for emails that reference this message ID in their In-Reply-To or References headers
-          const searchQuery = `to:${account.email} subject:"${sentEmail.subject}"`;
+          const searchQuery = `to:${account.email_address} subject:"${sentEmail.subject}"`;
           const gmailSearchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(searchQuery)}`;
 
           const searchResponse = await fetch(gmailSearchUrl, {
             headers: {
-              'Authorization': `Bearer ${account.access_token}`,
+              'Authorization': `Bearer ${accessToken}`,
             },
           });
 
@@ -118,7 +122,7 @@ serve(async (req) => {
             const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}?format=full`;
             const messageResponse = await fetch(messageUrl, {
               headers: {
-                'Authorization': `Bearer ${account.access_token}`,
+                'Authorization': `Bearer ${accessToken}`,
               },
             });
 
