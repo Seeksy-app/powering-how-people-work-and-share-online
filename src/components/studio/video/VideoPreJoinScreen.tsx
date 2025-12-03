@@ -19,7 +19,7 @@ import {
 import { 
   Mic, MicOff, Video, VideoOff, Settings, 
   ChevronDown, Copy, Users, Volume2, Monitor,
-  Sparkles, Check
+  Sparkles, Check, Headphones
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -54,6 +54,7 @@ export function VideoPreJoinScreen({
   // Device state
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isAudioOnly, setIsAudioOnly] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   
   // Device lists
@@ -72,11 +73,13 @@ export function VideoPreJoinScreen({
   const [backgroundBlur, setBackgroundBlur] = useState(false);
   const [echoCancellation, setEchoCancellation] = useState(true);
 
+  // Mic/Camera test status
+  const [micLevel, setMicLevel] = useState(0);
+
   // Load devices
   useEffect(() => {
     async function loadDevices() {
       try {
-        // Request permissions first
         await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
         
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -115,7 +118,7 @@ export function VideoPreJoinScreen({
         stream.getTracks().forEach(track => track.stop());
       }
       
-      if (isVideoOff) {
+      if (isVideoOff || isAudioOnly) {
         setStream(null);
         return;
       }
@@ -147,7 +150,7 @@ export function VideoPreJoinScreen({
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [selectedCamera, selectedMic, resolution, isVideoOff]);
+  }, [selectedCamera, selectedMic, resolution, isVideoOff, isAudioOnly]);
 
   const handleCopyInviteLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -203,11 +206,15 @@ export function VideoPreJoinScreen({
           <h1 className="text-3xl font-bold text-white">
             {sessionTitle}
           </h1>
+          
+          <p className="text-white/60 text-lg italic">
+            "Seeking a new way to connect."
+          </p>
 
           <Button
             variant="outline"
             onClick={handleCopyInviteLink}
-            className="border-white/20 text-white hover:bg-white/10 gap-2"
+            className="border-white/20 text-white hover:bg-white/10 gap-2 rounded-lg"
           >
             <Users className="w-4 h-4" />
             Copy Invite Link
@@ -222,7 +229,7 @@ export function VideoPreJoinScreen({
 
           {/* Video Preview */}
           <div className="aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-orange-900/80 to-red-900/80 relative mb-4">
-            {!isVideoOff && stream ? (
+            {!isVideoOff && !isAudioOnly && stream ? (
               <video
                 ref={videoRef}
                 autoPlay
@@ -232,16 +239,35 @@ export function VideoPreJoinScreen({
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center">
-                  <span className="text-white font-bold text-2xl">{name.charAt(0) || "?"}</span>
-                </div>
+                {isAudioOnly ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-400 to-purple-500 flex items-center justify-center">
+                      <Headphones className="w-10 h-10 text-white" />
+                    </div>
+                    <span className="text-white/70 text-sm">Audio Only Mode</span>
+                  </div>
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center">
+                    <span className="text-white font-bold text-2xl">{name.charAt(0) || "?"}</span>
+                  </div>
+                )}
               </div>
             )}
             
-            {/* Edit Button */}
-            <button className="absolute top-1/2 right-4 -translate-y-1/2 px-3 py-1.5 bg-black/50 rounded-lg text-white text-xs font-medium hover:bg-black/70 transition-colors">
-              EDIT
-            </button>
+            {/* Mic indicator */}
+            {!isMuted && (
+              <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/50 rounded-full px-2 py-1">
+                <Mic className="w-3 h-3 text-green-400" />
+                <div className="flex gap-0.5">
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className={cn(
+                      "w-1 h-2 rounded-full transition-all",
+                      micLevel > i * 25 ? "bg-green-400" : "bg-white/30"
+                    )} />
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Name/Title Overlay */}
             <div className="absolute bottom-3 left-3">
@@ -251,7 +277,7 @@ export function VideoPreJoinScreen({
           </div>
 
           {/* Device Controls */}
-          <div className="flex items-center justify-center gap-2 mb-6">
+          <div className="flex items-center justify-center gap-2 mb-4">
             {/* Mic Toggle with Dropdown */}
             <div className="flex items-center">
               <Button
@@ -290,18 +316,19 @@ export function VideoPreJoinScreen({
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsVideoOff(!isVideoOff)}
+                disabled={isAudioOnly}
                 className={cn(
                   "h-10 w-10 rounded-full rounded-r-none",
-                  isVideoOff ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-700"
+                  isVideoOff || isAudioOnly ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-700"
                 )}
               >
-                {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
+                {isVideoOff || isAudioOnly ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
               </Button>
-              <Select value={selectedCamera} onValueChange={setSelectedCamera}>
+              <Select value={selectedCamera} onValueChange={setSelectedCamera} disabled={isAudioOnly}>
                 <SelectTrigger 
                   className={cn(
                     "h-10 w-8 rounded-full rounded-l-none border-l border-white p-0 justify-center",
-                    isVideoOff ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-700"
+                    isVideoOff || isAudioOnly ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-700"
                   )}
                 >
                   <ChevronDown className="w-3 h-3" />
@@ -325,6 +352,16 @@ export function VideoPreJoinScreen({
             >
               <Settings className="w-5 h-5" />
             </Button>
+          </div>
+
+          {/* Audio Only Toggle */}
+          <div className="flex items-center justify-center gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
+            <Headphones className="w-4 h-4 text-gray-500" />
+            <span className="text-sm text-gray-700">Audio Only</span>
+            <Switch
+              checked={isAudioOnly}
+              onCheckedChange={setIsAudioOnly}
+            />
           </div>
 
           {/* Name & Title Inputs */}
@@ -353,16 +390,10 @@ export function VideoPreJoinScreen({
           <Button
             onClick={handleEnter}
             disabled={!name.trim()}
-            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-base"
+            className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-base rounded-lg"
           >
             Enter Studio
           </Button>
-
-          {/* Login Info */}
-          <p className="text-center text-gray-500 text-sm mt-4">
-            You're logged in as <span className="text-gray-700 font-medium">user@seeksy.io</span>.{" "}
-            <button className="text-gray-700 underline hover:text-gray-900">Log out</button>
-          </p>
         </div>
       </div>
 

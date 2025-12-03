@@ -5,17 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Play, Mic, Video, Upload, Wand2, 
+  Play, Video, Upload, Wand2, 
   Clock, Scissors, ArrowRight, 
   FolderOpen, FileText, Settings,
-  History, Calendar, HardDrive, Radio
+  History, Calendar, HardDrive
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { RecordingTypeSelector } from "@/components/studio/hub/RecordingTypeSelector";
 
 export default function StudioHubPremium() {
   const navigate = useNavigate();
-  const [showRecordingSelector, setShowRecordingSelector] = useState(false);
 
   const { data: stats } = useQuery({
     queryKey: ["studio-hub-stats"],
@@ -57,19 +55,22 @@ export default function StudioHubPremium() {
   });
 
   const quickActions = [
-    { icon: Mic, label: "Audio Recording", color: "bg-violet-500", path: "/studio/audio" },
-    { icon: Video, label: "Video Recording", color: "bg-blue-500", path: "/studio/video" },
+    { icon: Play, label: "Create New Studio", color: "bg-primary", path: "/studio/video" },
     { icon: Upload, label: "Upload Media", color: "bg-amber-500", path: "/studio/media?upload=true" },
     { icon: Wand2, label: "Generate Clips", color: "bg-pink-500", path: "/studio/clips" },
   ];
 
+  const hubMenuItems = [
+    { icon: History, label: "Past Streams", path: "/studio/past-streams", desc: "View recordings" },
+    { icon: Calendar, label: "Scheduled Streams", path: "/studio/scheduled", desc: "Upcoming streams" },
+    { icon: HardDrive, label: "Storage", path: "/studio/storage", desc: "All assets & files" },
+    { icon: Scissors, label: "Clips & Highlights", path: "/studio/clips", desc: "AI-generated clips" },
+    { icon: FolderOpen, label: "Media Library", path: "/studio/media", desc: "All your recordings" },
+    { icon: FileText, label: "Templates", path: "/studio/templates", desc: "Scripts & ad reads" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
-      <RecordingTypeSelector 
-        open={showRecordingSelector} 
-        onOpenChange={setShowRecordingSelector} 
-      />
-
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
@@ -77,34 +78,11 @@ export default function StudioHubPremium() {
             <h1 className="text-3xl font-semibold text-foreground">Studio</h1>
             <p className="text-muted-foreground mt-1">Professional content creation suite</p>
           </div>
-          <Button 
-            size="lg" 
-            className="gap-2 h-12 px-6 bg-primary hover:bg-primary/90 shadow-lg"
-            onClick={() => setShowRecordingSelector(true)}
-          >
-            <Play className="w-4 h-4" />
-            Start Recording
-          </Button>
-        </div>
-
-        {/* Stats Row */}
-        <div className="flex items-center gap-8 mb-10 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-              <Mic className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="font-medium">{stats?.sessions || 0}</p>
-              <p className="text-muted-foreground text-xs">Sessions</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-              <Scissors className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="font-medium">{stats?.clips || 0}</p>
-              <p className="text-muted-foreground text-xs">Auto Clips</p>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="font-medium">{stats?.sessions || 0}</span> Sessions
+              <span className="mx-2">•</span>
+              <span className="font-medium">{stats?.clips || 0}</span> Auto Clips
             </div>
           </div>
         </div>
@@ -112,18 +90,16 @@ export default function StudioHubPremium() {
         {/* Quick Actions */}
         <div className="mb-10">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="flex items-center gap-3">
             {quickActions.map((action) => (
-              <button
+              <Button
                 key={action.label}
                 onClick={() => navigate(action.path)}
-                className="flex flex-col items-center gap-3 p-5 rounded-xl border border-border bg-card hover:bg-accent/50 hover:border-primary/30 transition-all group"
+                className={`h-12 px-6 gap-2 ${action.color === 'bg-primary' ? 'bg-primary hover:bg-primary/90' : `${action.color} hover:opacity-90`} text-white`}
               >
-                <div className={`w-11 h-11 rounded-xl ${action.color} flex items-center justify-center group-hover:scale-105 transition-transform`}>
-                  <action.icon className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-sm font-medium text-foreground">{action.label}</span>
-              </button>
+                <action.icon className="w-4 h-4" />
+                {action.label}
+              </Button>
             ))}
           </div>
         </div>
@@ -148,7 +124,7 @@ export default function StudioHubPremium() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Mic className="w-5 h-5 text-primary" />
+                        <Video className="w-5 h-5 text-primary" />
                       </div>
                       <div>
                         <p className="font-medium text-sm">{session.room_name || "Untitled Session"}</p>
@@ -173,12 +149,12 @@ export default function StudioHubPremium() {
               ) : (
                 <div className="p-12 text-center">
                   <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
-                    <Mic className="w-6 h-6 text-muted-foreground" />
+                    <Video className="w-6 h-6 text-muted-foreground" />
                   </div>
-                  <p className="font-medium text-sm mb-1">No recordings yet</p>
-                  <p className="text-xs text-muted-foreground mb-4">Start your first session to see it here</p>
-                  <Button size="sm" onClick={() => setShowRecordingSelector(true)}>
-                    <Play className="w-3 h-3 mr-1" /> Start Recording
+                  <p className="font-medium text-sm mb-1">No sessions yet</p>
+                  <p className="text-xs text-muted-foreground mb-4">Start your first studio session to see it here</p>
+                  <Button size="sm" onClick={() => navigate("/studio/video")}>
+                    <Play className="w-3 h-3 mr-1" /> Create New Studio
                   </Button>
                 </div>
               )}
@@ -187,17 +163,9 @@ export default function StudioHubPremium() {
 
           {/* Studio Hub Navigation */}
           <div>
-            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Studio Hub</h2>
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Studio Hub Menu</h2>
             <div className="border border-border rounded-xl divide-y divide-border bg-card">
-              {[
-                { icon: History, label: "Past Streams", path: "/studio/past-streams", desc: "View recordings" },
-                { icon: Calendar, label: "Scheduled", path: "/studio/scheduled", desc: "Upcoming streams" },
-                { icon: HardDrive, label: "Storage", path: "/studio/storage", desc: "All assets & files" },
-                { icon: Scissors, label: "Clips & Highlights", path: "/studio/clips", desc: "AI-generated clips" },
-                { icon: FolderOpen, label: "Media Library", path: "/studio/media", desc: "All your recordings" },
-                { icon: FileText, label: "Templates", path: "/studio/templates", desc: "Scripts & ad reads" },
-                { icon: Settings, label: "Studio Settings", path: "/studio/settings", desc: "Preferences" },
-              ].map((item) => (
+              {hubMenuItems.map((item) => (
                 <button
                   key={item.label}
                   onClick={() => navigate(item.path)}
