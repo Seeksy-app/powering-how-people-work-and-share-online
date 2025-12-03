@@ -25,6 +25,7 @@ import { ScriptDrawer } from "@/components/studio/video/drawers/ScriptDrawer";
 import { InviteGuestModal } from "@/components/studio/video/modals/InviteGuestModal";
 import { SettingsModal } from "@/components/studio/video/modals/SettingsModal";
 import { ChannelsModal } from "@/components/studio/video/modals/ChannelsModal";
+import { AddMediaModal } from "@/components/studio/video/modals/AddMediaModal";
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -91,6 +92,7 @@ export default function VideoStudio() {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showChannelsModal, setShowChannelsModal] = useState(false);
+  const [showAddMediaModal, setShowAddMediaModal] = useState(false);
 
   // Markers
   const [markers, setMarkers] = useState<Array<{ type: string; time: number }>>([]);
@@ -485,7 +487,7 @@ export default function VideoStudio() {
             }}
             onScreenShare={handleScreenShare}
             onInviteGuest={() => setShowInviteModal(true)}
-            onAddSource={() => toast.info("Add source menu")}
+            onAddSource={() => setShowAddMediaModal(true)}
             onSettings={() => setShowSettingsModal(true)}
             onLayoutChange={(layout) => setCurrentLayout(layout)}
             onEndSession={handleEndSession}
@@ -539,6 +541,20 @@ export default function VideoStudio() {
       <ChannelsModal
         isOpen={showChannelsModal}
         onClose={() => setShowChannelsModal(false)}
+      />
+      <AddMediaModal
+        isOpen={showAddMediaModal}
+        onClose={() => setShowAddMediaModal(false)}
+        onSelectMedia={(media) => {
+          if (media.type === "screen") {
+            handleScreenShare();
+          } else if (media.type === "camera") {
+            toast.success("Extra camera added");
+          } else if (media.url) {
+            toast.success(`Added ${media.name || "media"} to scene`);
+          }
+          setShowAddMediaModal(false);
+        }}
       />
     </div>
   );
