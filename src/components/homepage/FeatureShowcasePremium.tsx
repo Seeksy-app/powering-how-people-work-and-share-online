@@ -60,7 +60,7 @@ function MockUI({ type, image }: { type: Feature["mockType"]; image?: string }) 
       <div className="relative">
         {image && (
           <div className="absolute inset-0 opacity-20 rounded-xl overflow-hidden">
-            <img src={image} alt="" className="w-full h-full object-cover" />
+            <img src={image} alt="" className="w-full h-full object-cover" loading="lazy" />
           </div>
         )}
         <div className="relative p-6 space-y-4">
@@ -73,20 +73,18 @@ function MockUI({ type, image }: { type: Feature["mockType"]; image?: string }) 
               <div className="h-3 w-24 bg-white/10 rounded mt-2" />
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center animate-pulse shadow-lg shadow-red-500/50">
+              <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/50">
                 <div className="w-4 h-4 bg-white rounded-full" />
               </div>
             </div>
           </div>
-          <div className="h-28 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-0.5 overflow-hidden backdrop-blur-sm">
-            {Array.from({ length: 60 }).map((_, i) => (
+          <div className="h-28 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-1 overflow-hidden backdrop-blur-sm">
+            {/* Reduced to 20 static bars for performance */}
+            {Array.from({ length: 20 }).map((_, i) => (
               <div 
                 key={i} 
-                className="w-1 bg-gradient-to-t from-brand-gold to-brand-orange rounded-full animate-pulse"
-                style={{ 
-                  height: `${20 + Math.random() * 60}%`,
-                  animationDelay: `${i * 0.02}s`
-                }}
+                className="w-1.5 bg-gradient-to-t from-brand-gold to-brand-orange rounded-full"
+                style={{ height: `${25 + (i % 5) * 15}%` }}
               />
             ))}
           </div>
@@ -200,7 +198,7 @@ function MockUI({ type, image }: { type: Feature["mockType"]; image?: string }) 
       <div className="relative">
         {image && (
           <div className="absolute inset-0 opacity-30 rounded-xl overflow-hidden">
-            <img src={image} alt="" className="w-full h-full object-cover" />
+            <img src={image} alt="" className="w-full h-full object-cover" loading="lazy" />
           </div>
         )}
         <div className="relative p-6 space-y-4 backdrop-blur-sm">
@@ -223,14 +221,12 @@ function MockUI({ type, image }: { type: Feature["mockType"]; image?: string }) 
             ))}
           </div>
           <div className="h-36 bg-white/10 rounded-xl border border-white/20 p-4 flex items-end gap-1 backdrop-blur-sm">
+            {/* Static bars for performance */}
             {Array.from({ length: 12 }).map((_, i) => (
-              <motion.div 
+              <div 
                 key={i}
-                initial={{ height: 0 }}
-                whileInView={{ height: `${30 + Math.random() * 70}%` }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className="flex-1 bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t cursor-pointer hover:from-blue-400 hover:to-cyan-300 transition-colors"
+                className="flex-1 bg-gradient-to-t from-blue-500 to-cyan-400 rounded-t"
+                style={{ height: `${35 + (i % 4) * 18}%` }}
               />
             ))}
           </div>
@@ -248,7 +244,7 @@ function MockUI({ type, image }: { type: Feature["mockType"]; image?: string }) 
       <div className="relative">
         {image && (
           <div className="absolute inset-0 opacity-20 rounded-xl overflow-hidden">
-            <img src={image} alt="" className="w-full h-full object-cover" />
+            <img src={image} alt="" className="w-full h-full object-cover" loading="lazy" />
           </div>
         )}
         <div className="relative p-6 space-y-4">
