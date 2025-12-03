@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Users2, Play, Link2, Calendar, Mic, Video } from "lucide-react";
 import { motion } from "framer-motion";
+import heroPeople from "@/assets/homepage/hero-people.jpg";
+import heroConversations from "@/assets/homepage/hero-conversations.jpg";
+import heroContent from "@/assets/homepage/hero-content.jpg";
+import heroCommunity from "@/assets/homepage/hero-community.jpg";
 
 const connectionTypes = [
   { icon: Link2, label: "Social" },
@@ -135,7 +139,7 @@ export function HeroSectionNew() {
           </motion.p>
         </div>
 
-        {/* Visual Elements - Floating cards */}
+        {/* Visual Elements - Feature cards with images */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -144,20 +148,33 @@ export function HeroSectionNew() {
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { label: "People", desc: "Connect & collaborate", color: "from-blue-500/20 to-cyan-500/20" },
-              { label: "Conversations", desc: "Meetings & podcasts", color: "from-purple-500/20 to-pink-500/20" },
-              { label: "Content", desc: "Create & share", color: "from-amber-500/20 to-orange-500/20" },
-              { label: "Community", desc: "Grow together", color: "from-emerald-500/20 to-teal-500/20" },
+              { label: "People", desc: "Connect & collaborate", image: heroPeople },
+              { label: "Conversations", desc: "Meetings & podcasts", image: heroConversations },
+              { label: "Content", desc: "Create & share", image: heroContent },
+              { label: "Community", desc: "Grow together", image: heroCommunity },
             ].map((item, index) => (
               <motion.div
                 key={item.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 + index * 0.1 }}
-                className={`p-6 rounded-2xl border border-border/50 bg-gradient-to-br ${item.color} backdrop-blur-sm text-center`}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className="group relative rounded-2xl overflow-hidden border border-border/50 bg-card shadow-lg hover:shadow-xl transition-all duration-300"
               >
-                <h3 className="font-semibold text-lg mb-1">{item.label}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
+                {/* Image */}
+                <div className="relative h-40 overflow-hidden">
+                  <img 
+                    src={item.image} 
+                    alt={item.label}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+                </div>
+                {/* Content */}
+                <div className="relative p-4 -mt-8">
+                  <h3 className="font-bold text-lg mb-1">{item.label}</h3>
+                  <p className="text-sm text-muted-foreground">{item.desc}</p>
+                </div>
               </motion.div>
             ))}
           </div>
