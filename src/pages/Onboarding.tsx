@@ -5,21 +5,56 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import { PERSONA_OPTIONS, PersonaType, getPersonaConfig } from "@/config/personaConfig";
 import {
-  Sparkles, ArrowRight, ArrowLeft, Check, Trophy
+  Sparkles, ArrowRight, ArrowLeft, Check, Trophy,
+  Mic, Video, Users, Share2, MessageSquare, BarChart3
 } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-const TOTAL_STEPS = 4; // Welcome + Persona Selection + Recommendations + Confirmation
+const TOTAL_STEPS = 5; // Welcome + Persona Selection + Questions + Recommendations + Confirmation
+
+// Questions for Step 3
+const GOALS = [
+  { id: "grow-audience", label: "Grow my audience", icon: Users },
+  { id: "create-content", label: "Create better content", icon: Video },
+  { id: "monetize", label: "Monetize my work", icon: BarChart3 },
+  { id: "book-meetings", label: "Book meetings & calls", icon: MessageSquare },
+  { id: "host-events", label: "Host events", icon: Share2 },
+  { id: "manage-contacts", label: "Manage contacts & CRM", icon: Users },
+];
+
+const CURRENT_TOOLS = [
+  { id: "zoom", label: "Zoom / Google Meet" },
+  { id: "calendly", label: "Calendly / Cal.com" },
+  { id: "riverside", label: "Riverside / Streamyard" },
+  { id: "mailchimp", label: "Mailchimp / ConvertKit" },
+  { id: "hubspot", label: "HubSpot / Salesforce" },
+  { id: "canva", label: "Canva / CapCut" },
+  { id: "none", label: "None / Just starting" },
+];
+
+const PUBLISH_PLATFORMS = [
+  { id: "youtube", label: "YouTube" },
+  { id: "tiktok", label: "TikTok" },
+  { id: "instagram", label: "Instagram" },
+  { id: "spotify", label: "Spotify / Apple Podcasts" },
+  { id: "linkedin", label: "LinkedIn" },
+  { id: "twitter", label: "X / Twitter" },
+  { id: "website", label: "My own website" },
+];
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [completing, setCompleting] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<PersonaType | null>(null);
+  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+  const [selectedTools, setSelectedTools] = useState<string[]>([]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 
   const progress = (step / TOTAL_STEPS) * 100;
   const personaConfig = selectedPersona ? getPersonaConfig(selectedPersona) : null;
@@ -28,7 +63,8 @@ export default function Onboarding() {
     switch (step) {
       case 1: return true;
       case 2: return !!selectedPersona;
-      case 3: return true;
+      case 3: return selectedGoals.length > 0;
+      case 4: return true;
       default: return true;
     }
   };
@@ -39,6 +75,24 @@ export default function Onboarding() {
 
   const handleBack = () => {
     setStep((s) => Math.max(s - 1, 1));
+  };
+
+  const toggleGoal = (id: string) => {
+    setSelectedGoals(prev => 
+      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
+    );
+  };
+
+  const toggleTool = (id: string) => {
+    setSelectedTools(prev => 
+      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+    );
+  };
+
+  const togglePlatform = (id: string) => {
+    setSelectedPlatforms(prev => 
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    );
   };
 
   const handleComplete = async () => {
@@ -65,6 +119,9 @@ export default function Onboarding() {
         onboarding_completed: true,
         onboarding_data: {
           personaType: selectedPersona,
+          goals: selectedGoals,
+          currentTools: selectedTools,
+          publishPlatforms: selectedPlatforms,
           completedAt: new Date().toISOString(),
           checklistStatus: {},
         }
@@ -255,6 +312,97 @@ export default function Onboarding() {
     );
   };
 
+  // NEW: Questions step (Step 3)
+  const renderQuestions = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold mb-2">Help us personalize your experience</h2>
+        <p className="text-muted-foreground">Answer a few quick questions so we can tailor Seeksy to your needs.</p>
+      </div>
+
+      {/* Goals */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-muted-foreground">What are you trying to achieve?</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {GOALS.map((goal, i) => {
+            const Icon = goal.icon;
+            const isSelected = selectedGoals.includes(goal.id);
+            return (
+              <motion.button
+                key={goal.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                type="button"
+                onClick={() => toggleGoal(goal.id)}
+                className={cn(
+                  "flex items-center gap-2 p-3 rounded-lg border-2 transition-all text-left",
+                  isSelected 
+                    ? "border-primary bg-primary/10" 
+                    : "border-border hover:border-primary/50 bg-card"
+                )}
+              >
+                <Checkbox checked={isSelected} className="pointer-events-none" />
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">{goal.label}</span>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Current Tools */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-muted-foreground">What tools do you use today?</h3>
+        <div className="flex flex-wrap gap-2">
+          {CURRENT_TOOLS.map((tool) => {
+            const isSelected = selectedTools.includes(tool.id);
+            return (
+              <button
+                key={tool.id}
+                type="button"
+                onClick={() => toggleTool(tool.id)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-sm border transition-all",
+                  isSelected 
+                    ? "border-primary bg-primary/10 text-foreground" 
+                    : "border-border hover:border-primary/50 text-muted-foreground"
+                )}
+              >
+                {tool.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Publish Platforms */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-muted-foreground">Where will you publish content?</h3>
+        <div className="flex flex-wrap gap-2">
+          {PUBLISH_PLATFORMS.map((platform) => {
+            const isSelected = selectedPlatforms.includes(platform.id);
+            return (
+              <button
+                key={platform.id}
+                type="button"
+                onClick={() => togglePlatform(platform.id)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-sm border transition-all",
+                  isSelected 
+                    ? "border-primary bg-primary/10 text-foreground" 
+                    : "border-border hover:border-primary/50 text-muted-foreground"
+                )}
+              >
+                {platform.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+
   const renderConfirmation = () => {
     if (!personaConfig) return null;
 
@@ -297,11 +445,23 @@ export default function Onboarding() {
       case 2:
         return renderPersonaSelection();
       case 3:
-        return renderRecommendations();
+        return renderQuestions();
       case 4:
+        return renderRecommendations();
+      case 5:
         return renderConfirmation();
       default:
         return null;
+    }
+  };
+
+  const getStepLabel = () => {
+    switch (step) {
+      case 2: return "Select your focus";
+      case 3: return "Tell us more";
+      case 4: return "Review setup";
+      case 5: return "Get started";
+      default: return "";
     }
   };
 
@@ -317,9 +477,7 @@ export default function Onboarding() {
           <div className="mb-6 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Step {step} of {TOTAL_STEPS}</span>
-              <span className="text-primary font-medium">
-                {step === 2 ? "Select your focus" : step === 3 ? "Review setup" : "Get started"}
-              </span>
+              <span className="text-primary font-medium">{getStepLabel()}</span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
