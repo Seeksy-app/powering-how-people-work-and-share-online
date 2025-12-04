@@ -144,10 +144,12 @@ const ICON_MAP: Record<string, any> = {
   'studio': Video,
   'podcasts': Podcast,
   'media': FolderOpen,
+  'monetization': DollarSign,
   'brand_campaigns': Megaphone,
   'revenue_tracking': DollarSign,
   'content_library': Library,
   'social_analytics': BarChart2,
+  'email': Mail,
   'seekies': Grid3x3,
   'settings': Settings,
   // Legacy icon names
@@ -357,24 +359,24 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
                     >
                       <SidebarMenuItem>
                         <CollapsibleTrigger asChild>
-                          <SidebarMenuButton className="w-full flex items-center gap-3 transition-all duration-150 cursor-pointer hover:bg-muted/50">
-                            <Icon className="h-4 w-4 shrink-0" />
-                            <span className="flex items-center gap-2 flex-1">
+                          <SidebarMenuButton className="w-full flex items-center gap-3 transition-all duration-150 cursor-pointer hover:bg-white/10 text-white">
+                            <Icon className="h-4 w-4 shrink-0 text-white" />
+                            <span className="flex items-center gap-2 flex-1 text-white">
                               <span className="truncate">{item.label}</span>
                               {isPinned && <span className="pinned-star text-amber-400 text-xs">★</span>}
                             </span>
-                            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`} />
+                            <ChevronDown className={`h-4 w-4 text-white transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`} />
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <SidebarMenu className="ml-4 mt-1 space-y-0.5 border-l border-border/30 pl-2">
+                          <SidebarMenu className="ml-4 mt-1 space-y-0.5 border-l border-white/20 pl-2">
                             {visibleSubItems.map((subItem) => (
                               <SidebarMenuItem key={subItem.id}>
                                 <SidebarMenuButton asChild>
                                   <NavLink
                                     to={subItem.path}
-                                    className="flex items-center gap-2 transition-all duration-150 text-sm py-1.5"
-                                    activeClassName="nav-active"
+                                    className="flex items-center gap-2 transition-all duration-150 text-sm py-1.5 text-white/80 hover:text-white"
+                                    activeClassName="nav-active text-white"
                                   >
                                     <span className="truncate">{subItem.label}</span>
                                   </NavLink>
@@ -394,12 +396,12 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
                     <SidebarMenuButton asChild tooltip={collapsed ? item.label : undefined}>
                       <NavLink
                         to={item.path}
-                        className="flex items-center gap-3 transition-all duration-150"
+                        className="flex items-center gap-3 transition-all duration-150 text-white hover:bg-white/10"
                         activeClassName="nav-active"
                       >
-                        <Icon className="h-4 w-4 shrink-0" />
+                        <Icon className="h-4 w-4 shrink-0 text-white" />
                         {!collapsed && (
-                          <span className="flex items-center gap-2 flex-1">
+                          <span className="flex items-center gap-2 flex-1 text-white">
                             <span className="truncate">{item.label}</span>
                             {isPinned && <span className="pinned-star text-amber-400 text-xs">★</span>}
                           </span>
