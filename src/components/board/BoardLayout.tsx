@@ -39,14 +39,14 @@ export function BoardLayout({ children }: BoardLayoutProps) {
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
                   key={location.pathname}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ 
-                    duration: 0.2, 
-                    ease: [0.4, 0, 0.2, 1]
+                    duration: 0.15, 
+                    ease: 'easeInOut'
                   }}
-                  className="max-w-7xl mx-auto px-6 lg:px-8 py-6 pb-16"
+                  className="max-w-7xl mx-auto px-6 lg:px-8 py-6 pb-16 min-h-full"
                 >
                   {children}
                 </motion.div>

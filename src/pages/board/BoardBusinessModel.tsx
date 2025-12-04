@@ -78,10 +78,34 @@ const revenueStreams = [
 ];
 
 const subscriptionTiers = [
-  { name: 'Free', price: '50 credits', features: ['Basic studio', 'Up to 3 episodes', 'Community support'] },
-  { name: 'Pro', price: '500 credits/mo', features: ['Unlimited episodes', 'AI clips (50/mo)', 'Analytics dashboard', 'RSS hosting'] },
-  { name: 'Business', price: '1,500 credits/mo', features: ['Everything in Pro', 'Team members', 'White-label options', 'Priority support'] },
-  { name: 'Enterprise', price: 'Custom', features: ['API access', 'Custom integrations', 'Dedicated account manager', 'SLA guarantee'] },
+  { 
+    name: 'Free', 
+    price: '50 credits', 
+    priceSubtext: 'one-time',
+    highlight: false,
+    features: ['Basic studio access', 'Up to 3 episodes', '1 podcast show', 'Community support', 'Basic analytics'] 
+  },
+  { 
+    name: 'Pro', 
+    price: '500 credits/mo', 
+    priceSubtext: '$19/month',
+    highlight: true,
+    features: ['Unlimited episodes', 'AI clips (50/mo)', 'Advanced analytics', 'RSS hosting included', 'Priority email support', 'Custom branding'] 
+  },
+  { 
+    name: 'Business', 
+    price: '1,500 credits/mo', 
+    priceSubtext: '$49/month',
+    highlight: false,
+    features: ['Everything in Pro', 'Team members (up to 5)', 'White-label options', 'API access', 'Dedicated support', 'Custom integrations'] 
+  },
+  { 
+    name: 'Enterprise', 
+    price: 'Custom', 
+    priceSubtext: 'Contact sales',
+    highlight: false,
+    features: ['Unlimited everything', 'Unlimited team members', 'Dedicated account manager', 'SLA guarantee', 'Custom contracts', 'On-premise options'] 
+  },
 ];
 
 export default function BoardBusinessModel() {
@@ -133,9 +157,11 @@ export default function BoardBusinessModel() {
                         </div>
                         <div>
                           <CardTitle className="text-base">{stream.title}</CardTitle>
-                          <p className="text-lg font-bold text-emerald-600">
-                            {isDemo ? stream.demoRevenue : stream.realRevenue}
-                          </p>
+                          {isDemo ? (
+                            <p className="text-lg font-bold text-emerald-600">{stream.demoRevenue}</p>
+                          ) : (
+                            <p className="text-sm text-slate-400 italic">No real data</p>
+                          )}
                         </div>
                       </div>
                     </CardHeader>
@@ -164,15 +190,30 @@ export default function BoardBusinessModel() {
             </h2>
             <div className="grid md:grid-cols-4 gap-4">
               {subscriptionTiers.map((tier) => (
-                <Card key={tier.name} className="bg-white border-slate-200 shadow-sm">
-                  <CardContent className="p-5">
-                    <h3 className="font-semibold text-slate-900 mb-1">{tier.name}</h3>
-                    <p className="text-2xl font-bold text-blue-600 mb-4">{tier.price}</p>
-                    <ul className="text-sm text-slate-600 space-y-2">
+                <Card 
+                  key={tier.name} 
+                  className={`bg-white shadow-sm relative ${
+                    tier.highlight 
+                      ? 'border-2 border-blue-500 ring-2 ring-blue-100' 
+                      : 'border-slate-200'
+                  }`}
+                >
+                  {tier.highlight && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <span className="bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                        Most Popular
+                      </span>
+                    </div>
+                  )}
+                  <CardContent className="p-5 pt-6">
+                    <h3 className="font-bold text-slate-900 text-lg mb-1">{tier.name}</h3>
+                    <p className="text-2xl font-bold text-blue-600">{tier.price}</p>
+                    <p className="text-xs text-slate-500 mb-4">{tier.priceSubtext}</p>
+                    <ul className="text-sm text-slate-600 space-y-2.5">
                       {tier.features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-2">
-                          <span className="text-emerald-500 mt-0.5">✓</span>
-                          {feature}
+                          <span className="text-emerald-500 mt-0.5 font-bold">✓</span>
+                          <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -194,20 +235,38 @@ export default function BoardBusinessModel() {
                   <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl relative">
                     <DataModeBadge className="absolute top-2 right-2" />
                     <p className="text-sm text-slate-500 mb-1">Year 1 Revenue</p>
-                    <p className="text-3xl font-bold text-slate-900">{isDemo ? '$535K' : '—'}</p>
-                    <p className="text-sm text-emerald-600 font-medium">+420% YoY</p>
+                    {isDemo ? (
+                      <>
+                        <p className="text-3xl font-bold text-slate-900">$535K</p>
+                        <p className="text-sm text-emerald-600 font-medium">+420% YoY</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-slate-400 italic mt-2">No real data connected</p>
+                    )}
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl relative">
                     <DataModeBadge className="absolute top-2 right-2" />
                     <p className="text-sm text-slate-500 mb-1">Year 2 Revenue</p>
-                    <p className="text-3xl font-bold text-slate-900">{isDemo ? '$3.1M' : '—'}</p>
-                    <p className="text-sm text-emerald-600 font-medium">+480% YoY</p>
+                    {isDemo ? (
+                      <>
+                        <p className="text-3xl font-bold text-slate-900">$3.1M</p>
+                        <p className="text-sm text-emerald-600 font-medium">+480% YoY</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-slate-400 italic mt-2">No real data connected</p>
+                    )}
                   </div>
                   <div className="text-center p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl relative">
                     <DataModeBadge className="absolute top-2 right-2" />
                     <p className="text-sm text-slate-500 mb-1">Year 3 Revenue</p>
-                    <p className="text-3xl font-bold text-slate-900">{isDemo ? '$9.9M' : '—'}</p>
-                    <p className="text-sm text-emerald-600 font-medium">+219% YoY</p>
+                    {isDemo ? (
+                      <>
+                        <p className="text-3xl font-bold text-slate-900">$9.9M</p>
+                        <p className="text-sm text-emerald-600 font-medium">+219% YoY</p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-slate-400 italic mt-2">No real data connected</p>
+                    )}
                   </div>
                 </div>
                 <div className="mt-6 p-4 bg-slate-50 rounded-xl">
