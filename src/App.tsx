@@ -421,6 +421,7 @@ import BoardMemberManagement from "./pages/admin/BoardMemberManagement";
 import { BoardGuard } from "./components/board/BoardGuard";
 import { BoardViewBanner } from "./components/board/BoardViewBanner";
 import RDIntelligenceFeeds from "./pages/admin/RDIntelligenceFeeds";
+import AgentTrainingDashboard from "./pages/admin/AgentTrainingDashboard";
 import Permissions from "./pages/admin/Permissions";
 import Webhooks from "./pages/admin/Webhooks";
 import Logs from "./pages/admin/Logs";
@@ -916,6 +917,7 @@ const AppContent = () => {
           
           {/* R&D Intelligence */}
           <Route path="/admin/rd-feeds" element={<RDIntelligenceFeeds />} />
+          <Route path="/admin/agent-training" element={<AgentTrainingDashboard />} />
           
           {/* Support Desk CRM */}
           <Route path="/admin/support-desk" element={<SupportDeskCRM />} />
