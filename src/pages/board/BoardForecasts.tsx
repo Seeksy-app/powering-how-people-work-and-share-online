@@ -67,7 +67,7 @@ export default function BoardForecasts() {
       <div className="max-w-6xl mx-auto">
         <Button
           variant="ghost"
-          className="text-slate-400 hover:text-white mb-6"
+          className="text-slate-500 hover:text-slate-700 mb-6 -ml-2"
           onClick={() => navigate('/board')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -76,12 +76,12 @@ export default function BoardForecasts() {
 
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md">
               <TrendingUp className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">3-Year AI Forecasts</h1>
-              <p className="text-slate-400">AI-generated financial projections</p>
+              <h1 className="text-3xl font-bold text-slate-900">3-Year AI Forecasts</h1>
+              <p className="text-slate-500">AI-generated financial projections</p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-slate-400">
@@ -93,46 +93,47 @@ export default function BoardForecasts() {
         {/* Summary Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {summaryMetrics.map((metric, i) => (
-            <Card key={i} className="bg-slate-800/50 border-slate-700">
+            <Card key={i} className="bg-white border-slate-200 shadow-sm">
               <CardContent className="p-4">
-                <p className="text-sm text-slate-400 mb-1">{metric.label}</p>
-                <p className="text-2xl font-bold text-white">{metric.value}</p>
-                <p className="text-xs text-emerald-400">{metric.change}</p>
+                <p className="text-sm text-slate-500 mb-1">{metric.label}</p>
+                <p className="text-2xl font-bold text-slate-900">{metric.value}</p>
+                <p className="text-xs text-emerald-600 font-medium">{metric.change}</p>
               </CardContent>
             </Card>
           ))}
         </div>
 
         <Tabs defaultValue="revenue" className="space-y-6">
-          <TabsList className="bg-slate-800 border-slate-700">
-            <TabsTrigger value="revenue" className="data-[state=active]:bg-slate-700">
+          <TabsList className="bg-slate-100 border border-slate-200">
+            <TabsTrigger value="revenue" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
               Revenue Projections
             </TabsTrigger>
-            <TabsTrigger value="costs" className="data-[state=active]:bg-slate-700">
+            <TabsTrigger value="costs" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
               Cost Structure
             </TabsTrigger>
-            <TabsTrigger value="cashflow" className="data-[state=active]:bg-slate-700">
+            <TabsTrigger value="cashflow" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
               Cash Flow
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="revenue">
-            <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white">Revenue & Profit Projections</CardTitle>
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-100">
+                <CardTitle className="text-slate-900">Revenue & Profit Projections</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={revenueData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-                      <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={formatCurrency} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                      <YAxis stroke="#64748b" fontSize={12} tickFormatter={formatCurrency} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#1e293b',
-                          border: '1px solid #334155',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e2e8f0',
                           borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                         }}
                         formatter={(value: number) => formatCurrency(value)}
                       />
@@ -161,22 +162,23 @@ export default function BoardForecasts() {
           </TabsContent>
 
           <TabsContent value="costs">
-            <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white">Revenue vs Costs</CardTitle>
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-100">
+                <CardTitle className="text-slate-900">Revenue vs Costs</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={revenueData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} />
-                      <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={formatCurrency} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
+                      <YAxis stroke="#64748b" fontSize={12} tickFormatter={formatCurrency} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#1e293b',
-                          border: '1px solid #334155',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e2e8f0',
                           borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                         }}
                         formatter={(value: number) => formatCurrency(value)}
                       />
@@ -191,22 +193,23 @@ export default function BoardForecasts() {
           </TabsContent>
 
           <TabsContent value="cashflow">
-            <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader>
-                <CardTitle className="text-white">Quarterly Cash Flow</CardTitle>
+            <Card className="bg-white border-slate-200 shadow-sm">
+              <CardHeader className="border-b border-slate-100">
+                <CardTitle className="text-slate-900">Quarterly Cash Flow</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="h-[400px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={cashFlowData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                      <XAxis dataKey="quarter" stroke="#94a3b8" fontSize={12} />
-                      <YAxis stroke="#94a3b8" fontSize={12} tickFormatter={formatCurrency} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="quarter" stroke="#64748b" fontSize={12} />
+                      <YAxis stroke="#64748b" fontSize={12} tickFormatter={formatCurrency} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#1e293b',
-                          border: '1px solid #334155',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #e2e8f0',
                           borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
                         }}
                         formatter={(value: number) => formatCurrency(value)}
                       />
