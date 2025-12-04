@@ -1205,6 +1205,60 @@ export type Database = {
         }
         Relationships: []
       }
+      advertiser_funding_transactions: {
+        Row: {
+          advertiser_id: string
+          amount: number
+          balance_after: number | null
+          created_at: string
+          description: string | null
+          id: string
+          source: string | null
+          stripe_payment_intent_id: string | null
+          type: string
+          wallet_id: string | null
+        }
+        Insert: {
+          advertiser_id: string
+          amount: number
+          balance_after?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          source?: string | null
+          stripe_payment_intent_id?: string | null
+          type: string
+          wallet_id?: string | null
+        }
+        Update: {
+          advertiser_id?: string
+          amount?: number
+          balance_after?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          source?: string | null
+          stripe_payment_intent_id?: string | null
+          type?: string
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertiser_funding_transactions_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: false
+            referencedRelation: "advertisers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "advertiser_funding_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "advertiser_wallet"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       advertiser_preferences: {
         Row: {
           advertiser_id: string
@@ -1373,6 +1427,53 @@ export type Database = {
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      advertiser_wallet: {
+        Row: {
+          advertiser_id: string
+          auto_fund_amount: number | null
+          auto_fund_enabled: boolean | null
+          auto_fund_threshold: number | null
+          balance: number
+          created_at: string
+          currency: string | null
+          id: string
+          last_funded_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          advertiser_id: string
+          auto_fund_amount?: number | null
+          auto_fund_enabled?: boolean | null
+          auto_fund_threshold?: number | null
+          balance?: number
+          created_at?: string
+          currency?: string | null
+          id?: string
+          last_funded_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          advertiser_id?: string
+          auto_fund_amount?: number | null
+          auto_fund_enabled?: boolean | null
+          auto_fund_threshold?: number | null
+          balance?: number
+          created_at?: string
+          currency?: string | null
+          id?: string
+          last_funded_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertiser_wallet_advertiser_id_fkey"
+            columns: ["advertiser_id"]
+            isOneToOne: true
+            referencedRelation: "advertisers"
             referencedColumns: ["id"]
           },
         ]
@@ -3644,6 +3745,60 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_creator_matches: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          creator_id: string
+          id: string
+          invited_at: string | null
+          is_ai_recommended: boolean | null
+          match_reasons: Json | null
+          match_score: number | null
+          responded_at: string | null
+          status: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          creator_id: string
+          id?: string
+          invited_at?: string | null
+          is_ai_recommended?: boolean | null
+          match_reasons?: Json | null
+          match_score?: number | null
+          responded_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          creator_id?: string
+          id?: string
+          invited_at?: string | null
+          is_ai_recommended?: boolean | null
+          match_reasons?: Json | null
+          match_score?: number | null
+          responded_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_creator_matches_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_creator_matches_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_inventory_links: {
         Row: {
           agreed_cpm: number | null
@@ -3695,6 +3850,59 @@ export type Database = {
             columns: ["inventory_slot_id"]
             isOneToOne: false
             referencedRelation: "inventory_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaign_metrics: {
+        Row: {
+          campaign_id: string
+          clicks: number | null
+          conversions: number | null
+          cpa: number | null
+          cpm: number | null
+          created_at: string
+          ctr: number | null
+          date: string
+          id: string
+          impressions: number | null
+          spend: number | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          clicks?: number | null
+          conversions?: number | null
+          cpa?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          id?: string
+          impressions?: number | null
+          spend?: number | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          clicks?: number | null
+          conversions?: number | null
+          cpa?: number | null
+          cpm?: number | null
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          id?: string
+          impressions?: number | null
+          spend?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_metrics_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
             referencedColumns: ["id"]
           },
         ]
@@ -5296,6 +5504,65 @@ export type Database = {
           },
         ]
       }
+      creator_deliverables: {
+        Row: {
+          approved_at: string | null
+          created_at: string
+          duration_seconds: number | null
+          feedback: string | null
+          file_size_bytes: number | null
+          id: string
+          metadata: Json | null
+          opportunity_id: string
+          preview_url: string | null
+          status: string | null
+          storage_url: string | null
+          submitted_at: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          feedback?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          metadata?: Json | null
+          opportunity_id: string
+          preview_url?: string | null
+          status?: string | null
+          storage_url?: string | null
+          submitted_at?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          feedback?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          metadata?: Json | null
+          opportunity_id?: string
+          preview_url?: string | null
+          status?: string | null
+          storage_url?: string | null
+          submitted_at?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_deliverables_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "creator_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       creator_earnings: {
         Row: {
           campaign_id: string
@@ -5378,6 +5645,185 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      creator_market_profiles: {
+        Row: {
+          audience_demographics: Json | null
+          avg_cpm: number | null
+          categories: string[] | null
+          completed_campaigns: number | null
+          created_at: string
+          creator_id: string
+          engagement_score: number | null
+          id: string
+          performance_rating: number | null
+          total_earnings: number | null
+          updated_at: string
+          veteran_market_focus: boolean | null
+        }
+        Insert: {
+          audience_demographics?: Json | null
+          avg_cpm?: number | null
+          categories?: string[] | null
+          completed_campaigns?: number | null
+          created_at?: string
+          creator_id: string
+          engagement_score?: number | null
+          id?: string
+          performance_rating?: number | null
+          total_earnings?: number | null
+          updated_at?: string
+          veteran_market_focus?: boolean | null
+        }
+        Update: {
+          audience_demographics?: Json | null
+          avg_cpm?: number | null
+          categories?: string[] | null
+          completed_campaigns?: number | null
+          created_at?: string
+          creator_id?: string
+          engagement_score?: number | null
+          id?: string
+          performance_rating?: number | null
+          total_earnings?: number | null
+          updated_at?: string
+          veteran_market_focus?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_market_profiles_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_opportunities: {
+        Row: {
+          accepted_at: string | null
+          approved_at: string | null
+          campaign_id: string | null
+          created_at: string
+          creator_id: string
+          deliverable_type: string | null
+          due_date: string | null
+          id: string
+          notes: string | null
+          offer_amount: number
+          requirements: Json | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          approved_at?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          creator_id: string
+          deliverable_type?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          offer_amount: number
+          requirements?: Json | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          approved_at?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          creator_id?: string
+          deliverable_type?: string | null
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          offer_amount?: number
+          requirements?: Json | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_opportunities_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "ad_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_opportunities_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      creator_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          creator_id: string
+          id: string
+          notes: string | null
+          opportunity_id: string | null
+          paid_at: string | null
+          payout_method: string | null
+          scheduled_date: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          creator_id: string
+          id?: string
+          notes?: string | null
+          opportunity_id?: string | null
+          paid_at?: string | null
+          payout_method?: string | null
+          scheduled_date?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          creator_id?: string
+          id?: string
+          notes?: string | null
+          opportunity_id?: string | null
+          paid_at?: string | null
+          payout_method?: string | null
+          scheduled_date?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "creator_payments_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "creator_payments_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "creator_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       creator_payouts: {
         Row: {
@@ -10766,6 +11212,50 @@ export type Database = {
         }
         Relationships: []
       }
+      monetization_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          metadata: Json | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          metadata?: Json | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          metadata?: Json | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monetization_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       multi_channel_campaigns: {
         Row: {
           advertiser_id: string | null
@@ -11964,6 +12454,60 @@ export type Database = {
           username?: string
         }
         Relationships: []
+      }
+      proof_of_play: {
+        Row: {
+          created_at: string
+          deliverable_id: string
+          id: string
+          metadata: Json | null
+          storage_url: string
+          timestamp: string
+          type: string
+          verified: boolean | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          deliverable_id: string
+          id?: string
+          metadata?: Json | null
+          storage_url: string
+          timestamp?: string
+          type: string
+          verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          deliverable_id?: string
+          id?: string
+          metadata?: Json | null
+          storage_url?: string
+          timestamp?: string
+          type?: string
+          verified?: boolean | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proof_of_play_deliverable_id_fkey"
+            columns: ["deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "creator_deliverables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proof_of_play_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       proposals: {
         Row: {
