@@ -19528,6 +19528,7 @@ export type Database = {
         Args: { _feature_type: string; _user_id: string }
         Returns: number
       }
+      get_current_user_email: { Args: never; Returns: string }
       get_user_hosted_meeting_ids: {
         Args: { _user_id: string }
         Returns: string[]
