@@ -184,7 +184,7 @@ export default function BoardVideos() {
 
   return (
     <BoardLayout>
-      <div className="max-w-[1100px] mx-auto">
+      <div>
         {/* Breadcrumb */}
         <Button
           variant="ghost"

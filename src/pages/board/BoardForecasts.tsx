@@ -64,7 +64,7 @@ export default function BoardForecasts() {
 
   return (
     <BoardLayout>
-      <div className="max-w-6xl mx-auto">
+      <div>
         <Button
           variant="ghost"
           className="text-slate-500 hover:text-slate-700 mb-6 -ml-2"

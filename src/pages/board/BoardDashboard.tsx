@@ -83,11 +83,11 @@ export default function BoardDashboard() {
 
   return (
     <BoardLayout>
-      <div className="max-w-[1180px] mx-auto space-y-8">
+      <div className="space-y-8">
         {/* Hero Section - Light theme, full-width centered */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-blue-50 border border-slate-200 shadow-sm p-8 md:p-12">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100/40 via-transparent to-transparent" />
-          <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <div className="relative z-10 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4 leading-tight">
               A Clear Window Into the Creator & Podcast Business.
             </h1>
@@ -116,8 +116,8 @@ export default function BoardDashboard() {
           </div>
         </div>
 
-        {/* Metrics Grid - 4 columns */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Metrics Grid - 4 equal columns */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {metricsLoading ? (
             Array(4).fill(0).map((_, i) => (
               <Card key={i} className="bg-white border-slate-200 shadow-sm">
