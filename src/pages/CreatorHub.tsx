@@ -191,7 +191,11 @@ export default function CreatorHub() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/settings')}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => window.dispatchEvent(new Event('openNavCustomization'))}
+            >
               <Settings className="h-4 w-4 mr-2" />
               Customize
             </Button>
