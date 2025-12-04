@@ -184,6 +184,45 @@ Return ONLY valid JSON, no markdown.`
         visibility: "internal",
       });
 
+    // Create kb_chunks for semantic search
+    const contentToChunk = transcriptText || videoDescription;
+    if (contentToChunk.length > 0) {
+      const chunkSize = 400; // ~400 words per chunk
+      const words = contentToChunk.split(/\s+/);
+      let chunkIndex = 0;
+      let currentChunk: string[] = [];
+
+      for (const word of words) {
+        currentChunk.push(word);
+        if (currentChunk.length >= chunkSize) {
+          await supabase
+            .from("kb_chunks")
+            .insert({
+              source_item_id: feedItem.id,
+              chunk_text: currentChunk.join(' '),
+              chunk_index: chunkIndex,
+              token_count: Math.ceil(currentChunk.join(' ').length / 4),
+            });
+          currentChunk = [];
+          chunkIndex++;
+        }
+      }
+
+      // Insert remaining chunk
+      if (currentChunk.length > 0) {
+        await supabase
+          .from("kb_chunks")
+          .insert({
+            source_item_id: feedItem.id,
+            chunk_text: currentChunk.join(' '),
+            chunk_index: chunkIndex,
+            token_count: Math.ceil(currentChunk.join(' ').length / 4),
+          });
+      }
+
+      console.log(`[ingest-youtube-rd] Created ${chunkIndex + 1} kb_chunks`);
+    }
+
     // Mark as processed
     await supabase
       .from("rd_feed_items")
