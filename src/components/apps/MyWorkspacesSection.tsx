@@ -6,7 +6,7 @@ import {
   Package, 
   Star, 
   Trash2, 
-  ExternalLink, 
+  Pencil,
   Zap,
   Loader2,
   FolderOpen
@@ -25,9 +25,10 @@ import {
 
 interface MyWorkspacesSectionProps {
   onCreateNew: () => void;
+  onEdit?: (packageId: string) => void;
 }
 
-export function MyWorkspacesSection({ onCreateNew }: MyWorkspacesSectionProps) {
+export function MyWorkspacesSection({ onCreateNew, onEdit }: MyWorkspacesSectionProps) {
   const { 
     packages, 
     isLoading, 
@@ -115,6 +116,17 @@ export function MyWorkspacesSection({ onCreateNew }: MyWorkspacesSectionProps) {
               </div>
 
               <div className="flex items-center gap-2">
+                {onEdit && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 text-xs"
+                    onClick={() => onEdit(pkg.id)}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                )}
                 {!pkg.is_default && (
                   <Button
                     variant="outline"

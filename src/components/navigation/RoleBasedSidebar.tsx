@@ -148,8 +148,7 @@ const ICON_MAP: Record<string, any> = {
   'revenue_tracking': DollarSign,
   'content_library': Library,
   'social_analytics': BarChart2,
-  'seekies': Hexagon,
-  'apps': Grid3x3,
+  'seekies': Grid3x3,
   'settings': Settings,
   // Legacy icon names
   home: LayoutDashboard,
@@ -339,6 +338,57 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
               {userNavItems.map((item) => {
                 const Icon = ICON_MAP[item.id] || ICON_MAP[item.path?.replace('/', '')] || LayoutDashboard;
                 const isPinned = navConfig.pinned.includes(item.id);
+                const hasSubItems = item.subItems && item.subItems.length > 0;
+                
+                // Items with sub-items render as collapsible
+                if (hasSubItems && !collapsed) {
+                  const isOpen = openGroups[item.id] ?? false;
+                  const subItemConfigs = navConfig.subItems?.[item.id] || [];
+                  const visibleSubItems = item.subItems.filter(sub => {
+                    const config = subItemConfigs.find(c => c.id === sub.id);
+                    return !config || config.visible !== false;
+                  });
+                  
+                  return (
+                    <Collapsible
+                      key={item.id}
+                      open={isOpen}
+                      onOpenChange={() => toggleGroup(item.id)}
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton className="w-full flex items-center gap-3 transition-all duration-150 cursor-pointer hover:bg-muted/50">
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span className="flex items-center gap-2 flex-1">
+                              <span className="truncate">{item.label}</span>
+                              {isPinned && <span className="pinned-star text-amber-400 text-xs">★</span>}
+                            </span>
+                            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`} />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenu className="ml-4 mt-1 space-y-0.5 border-l border-border/30 pl-2">
+                            {visibleSubItems.map((subItem) => (
+                              <SidebarMenuItem key={subItem.id}>
+                                <SidebarMenuButton asChild>
+                                  <NavLink
+                                    to={subItem.path}
+                                    className="flex items-center gap-2 transition-all duration-150 text-sm py-1.5"
+                                    activeClassName="nav-active"
+                                  >
+                                    <span className="truncate">{subItem.label}</span>
+                                  </NavLink>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            ))}
+                          </SidebarMenu>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  );
+                }
+                
+                // Regular items without sub-items
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild tooltip={collapsed ? item.label : undefined}>
