@@ -11341,6 +11341,44 @@ export type Database = {
           },
         ]
       }
+      kb_chunks: {
+        Row: {
+          chunk_index: number
+          chunk_text: string
+          created_at: string
+          embedding_json: string | null
+          id: string
+          source_item_id: string | null
+          token_count: number | null
+        }
+        Insert: {
+          chunk_index?: number
+          chunk_text: string
+          created_at?: string
+          embedding_json?: string | null
+          id?: string
+          source_item_id?: string | null
+          token_count?: number | null
+        }
+        Update: {
+          chunk_index?: number
+          chunk_text?: string
+          created_at?: string
+          embedding_json?: string | null
+          id?: string
+          source_item_id?: string | null
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kb_chunks_source_item_id_fkey"
+            columns: ["source_item_id"]
+            isOneToOne: false
+            referencedRelation: "rd_feed_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       keys_vault: {
         Row: {
           created_at: string | null
@@ -14542,6 +14580,7 @@ export type Database = {
       }
       rd_feed_items: {
         Row: {
+          cleaned_text: string | null
           content_type: string
           created_at: string
           feed_id: string
@@ -14550,10 +14589,12 @@ export type Database = {
           processed: boolean
           published_at: string | null
           raw_content: string | null
+          source_name: string | null
           title: string
           url: string | null
         }
         Insert: {
+          cleaned_text?: string | null
           content_type: string
           created_at?: string
           feed_id: string
@@ -14562,10 +14603,12 @@ export type Database = {
           processed?: boolean
           published_at?: string | null
           raw_content?: string | null
+          source_name?: string | null
           title: string
           url?: string | null
         }
         Update: {
+          cleaned_text?: string | null
           content_type?: string
           created_at?: string
           feed_id?: string
@@ -14574,6 +14617,7 @@ export type Database = {
           processed?: boolean
           published_at?: string | null
           raw_content?: string | null
+          source_name?: string | null
           title?: string
           url?: string | null
         }
@@ -14594,6 +14638,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          last_synced_at: string | null
           rss_url: string
           title: string
           trust_level: string
@@ -14605,6 +14650,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          last_synced_at?: string | null
           rss_url: string
           title: string
           trust_level?: string
@@ -14616,6 +14662,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          last_synced_at?: string | null
           rss_url?: string
           title?: string
           trust_level?: string
@@ -14625,6 +14672,7 @@ export type Database = {
       }
       rd_insights: {
         Row: {
+          confidence_score: number | null
           created_at: string
           embedding_json: string | null
           feed_item_id: string
@@ -14632,10 +14680,12 @@ export type Database = {
           metrics: Json | null
           stance: string | null
           summary: string | null
+          tags: string[] | null
           topics: Json | null
           visibility: string
         }
         Insert: {
+          confidence_score?: number | null
           created_at?: string
           embedding_json?: string | null
           feed_item_id: string
@@ -14643,10 +14693,12 @@ export type Database = {
           metrics?: Json | null
           stance?: string | null
           summary?: string | null
+          tags?: string[] | null
           topics?: Json | null
           visibility?: string
         }
         Update: {
+          confidence_score?: number | null
           created_at?: string
           embedding_json?: string | null
           feed_item_id?: string
@@ -14654,6 +14706,7 @@ export type Database = {
           metrics?: Json | null
           stance?: string | null
           summary?: string | null
+          tags?: string[] | null
           topics?: Json | null
           visibility?: string
         }

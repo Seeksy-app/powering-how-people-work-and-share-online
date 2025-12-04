@@ -255,3 +255,15 @@ verify_jwt = false
 
 [functions.send-lead-magnet]
 verify_jwt = false
+
+[functions.sync-rd-feeds]
+verify_jwt = true
+
+[functions.process-rd-content]
+verify_jwt = true
+
+[functions.ingest-youtube-rd]
+verify_jwt = true
+
+[functions.extract-pdf-text]
+verify_jwt = true
