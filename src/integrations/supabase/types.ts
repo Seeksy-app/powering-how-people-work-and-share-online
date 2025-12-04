@@ -4055,6 +4055,39 @@ export type Database = {
           },
         ]
       }
+      category_tooltips: {
+        Row: {
+          best_for_users: string
+          category_id: string
+          created_at: string | null
+          example_workflows: string | null
+          id: string
+          purpose: string
+          recommended_modules: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          best_for_users: string
+          category_id: string
+          created_at?: string | null
+          example_workflows?: string | null
+          id?: string
+          purpose: string
+          recommended_modules?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          best_for_users?: string
+          category_id?: string
+          created_at?: string | null
+          example_workflows?: string | null
+          id?: string
+          purpose?: string
+          recommended_modules?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ceo_plan: {
         Row: {
           body_html: string
@@ -6352,6 +6385,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      custom_packages: {
+        Row: {
+          created_at: string | null
+          estimated_monthly_credits: number | null
+          id: string
+          modules: Json | null
+          name: string
+          recommended_bundle: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          estimated_monthly_credits?: number | null
+          id?: string
+          modules?: Json | null
+          name: string
+          recommended_bundle?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          estimated_monthly_credits?: number | null
+          id?: string
+          modules?: Json | null
+          name?: string
+          recommended_bundle?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       demo_videos: {
         Row: {
@@ -11163,6 +11229,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      module_tooltips: {
+        Row: {
+          best_for: string
+          created_at: string | null
+          credit_estimate: number | null
+          id: string
+          module_id: string
+          short_description: string
+          unlocks: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          best_for: string
+          created_at?: string | null
+          credit_estimate?: number | null
+          id?: string
+          module_id: string
+          short_description: string
+          unlocks?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          best_for?: string
+          created_at?: string | null
+          credit_estimate?: number | null
+          id?: string
+          module_id?: string
+          short_description?: string
+          unlocks?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       modules: {
         Row: {
