@@ -201,10 +201,13 @@ const AdvertiserDashboardV2 = () => {
           >
             {featuredCreators.map((creator) => (
               <div key={creator.id} className="flex-shrink-0 w-[260px] snap-start">
-                <Card className="p-4 hover:shadow-lg transition-all border">
+                <Card
+                  className="p-4 hover:shadow-lg hover:scale-[1.02] transition-all border cursor-pointer"
+                  onClick={() => navigate(`/advertiser/creators/${creator.id}`)}
+                >
                   <div className="flex items-center gap-3 mb-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={creator.avatarUrl} />
+                    <Avatar className="h-12 w-12 flex-shrink-0">
+                      <AvatarImage src={creator.avatarUrl} className="object-cover" />
                       <AvatarFallback className="bg-[#2C6BED]/10 text-[#2C6BED]">
                         {creator.name.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
@@ -233,14 +236,20 @@ const AdvertiserDashboardV2 = () => {
                       variant="outline"
                       size="sm"
                       className="flex-1 text-xs"
-                      onClick={() => handleViewCreator(creator)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewCreator(creator);
+                      }}
                     >
-                      View Analytics
+                      Quick View
                     </Button>
                     <Button
                       size="sm"
                       className="flex-1 text-xs bg-[#2C6BED] hover:bg-[#2C6BED]/90"
-                      onClick={() => navigate(`/advertiser/campaign-builder-v2?creator=${creator.id}`)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/advertiser/campaign-builder-v2?creator=${creator.id}`);
+                      }}
                     >
                       Invite
                     </Button>
@@ -272,14 +281,18 @@ const AdvertiserDashboardV2 = () => {
             </TableHeader>
             <TableBody>
               {demoCampaignsV2.map((campaign) => (
-                <TableRow key={campaign.id} className="cursor-pointer hover:bg-muted/50">
+                <TableRow
+                  key={campaign.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => navigate(`/advertiser/campaigns/${campaign.id}`)}
+                >
                   <TableCell className="font-medium">{campaign.name}</TableCell>
                   <TableCell>{getStatusBadge(campaign.status)}</TableCell>
                   <TableCell className="text-right">{campaign.impressions.toLocaleString()}</TableCell>
                   <TableCell className="text-right">{campaign.ctr}%</TableCell>
                   <TableCell className="text-right">${campaign.spent.toLocaleString()}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
                       <ExternalLink className="w-4 h-4" />
                     </Button>
                   </TableCell>
@@ -301,12 +314,12 @@ const AdvertiserDashboardV2 = () => {
               {recommendedCreators.map((creator) => (
                 <div
                   key={creator.id}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
-                  onClick={() => handleViewCreator(creator)}
+                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 hover:shadow-sm cursor-pointer transition-all"
+                  onClick={() => navigate(`/advertiser/creators/${creator.id}`)}
                 >
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={creator.avatarUrl} />
+                    <Avatar className="h-10 w-10 flex-shrink-0">
+                      <AvatarImage src={creator.avatarUrl} className="object-cover" />
                       <AvatarFallback className="bg-[#2C6BED]/10 text-[#2C6BED] text-sm">
                         {creator.name.slice(0, 2).toUpperCase()}
                       </AvatarFallback>
@@ -337,7 +350,11 @@ const AdvertiserDashboardV2 = () => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               {recentAds.map((ad) => (
-                <Card key={ad.id} className="overflow-hidden border hover:shadow-md transition-all cursor-pointer">
+                <Card
+                  key={ad.id}
+                  className="overflow-hidden border hover:shadow-md hover:scale-[1.02] transition-all cursor-pointer"
+                  onClick={() => navigate(`/advertiser/ads/${ad.id}`)}
+                >
                   <div className="relative aspect-video bg-slate-100">
                     <img src={ad.thumbnailUrl} alt={ad.title} className="w-full h-full object-cover" />
                     {ad.type === "video" && (
@@ -359,7 +376,7 @@ const AdvertiserDashboardV2 = () => {
                   </div>
                   <div className="p-3">
                     <p className="text-sm font-medium truncate">{ad.title}</p>
-                    <p className="text-xs text-muted-foreground">{ad.metrics.ctr}% CTR</p>
+                    <p className="text-xs text-muted-foreground">{ad.metrics?.ctr || 0}% CTR</p>
                   </div>
                 </Card>
               ))}

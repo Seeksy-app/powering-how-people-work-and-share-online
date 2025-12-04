@@ -758,3 +758,83 @@ export const demoChartDataV2 = {
     { name: "Podcast", value: 2370 },
   ],
 };
+
+// Analytics Data V2 for Performance & Reports
+export const demoAnalyticsV2 = {
+  summary: {
+    impressionsMTD: 1850000,
+    impressionsTrend: 14.2,
+    spendMTD: 27420,
+    spendTrend: 8.5,
+    avgCPM: 14.82,
+    clicksMTD: 64750,
+    avgCTR: 3.5,
+    activeCampaigns: 2,
+    totalCampaigns: 5,
+  },
+  impressionsOverTime: [
+    { date: "Nov 1", impressions: 42000 },
+    { date: "Nov 3", impressions: 48000 },
+    { date: "Nov 5", impressions: 58000 },
+    { date: "Nov 7", impressions: 52000 },
+    { date: "Nov 9", impressions: 65000 },
+    { date: "Nov 11", impressions: 72000 },
+    { date: "Nov 13", impressions: 68000 },
+    { date: "Nov 15", impressions: 85000 },
+    { date: "Nov 17", impressions: 92000 },
+    { date: "Nov 19", impressions: 88000 },
+    { date: "Nov 21", impressions: 102000 },
+    { date: "Nov 23", impressions: 115000 },
+    { date: "Nov 25", impressions: 125000 },
+    { date: "Nov 27", impressions: 138000 },
+    { date: "Nov 29", impressions: 145000 },
+    { date: "Dec 1", impressions: 158000 },
+    { date: "Dec 3", impressions: 165000 },
+  ],
+  spendVsBudget: [
+    { campaign: "Q4 Holiday Push", spent: 18420, budget: 25000 },
+    { campaign: "Tech Product Launch", spent: 8750, budget: 15000 },
+    { campaign: "Brand Awareness Q3", spent: 19850, budget: 20000 },
+  ],
+  channelPerformance: [
+    { channel: "Podcast Ads", impressions: 450, ctr: 2.1, cpm: 28.5 },
+    { channel: "Video Pre-roll", impressions: 680, ctr: 3.8, cpm: 18.2 },
+    { channel: "Social", impressions: 520, ctr: 4.2, cpm: 12.5 },
+    { channel: "Display", impressions: 320, ctr: 1.5, cpm: 8.0 },
+  ],
+  spendByChannel: [
+    { name: "Video", value: 12850 },
+    { name: "Social", value: 8420 },
+    { name: "Podcast", value: 4150 },
+    { name: "Display", value: 2000 },
+  ],
+};
+
+// Billing Demo Data
+export const demoBillingV2 = {
+  balance: 15420.50,
+  creditLimit: 50000,
+  nextInvoiceDate: "2025-01-01",
+  lastPaymentDate: "2024-12-01",
+  lastPaymentAmount: 12500,
+  invoices: [
+    { id: "inv-001", date: "2024-12-01", amount: 12500, status: "paid" as const, description: "November 2024 Ad Spend" },
+    { id: "inv-002", date: "2024-11-01", amount: 9850, status: "paid" as const, description: "October 2024 Ad Spend" },
+    { id: "inv-003", date: "2024-10-01", amount: 15200, status: "paid" as const, description: "September 2024 Ad Spend" },
+    { id: "inv-004", date: "2025-01-01", amount: 14200, status: "pending" as const, description: "December 2024 Ad Spend (Est.)" },
+  ],
+  paymentMethods: [
+    { id: "pm-001", type: "card" as const, last4: "4242", brand: "Visa", expiry: "12/26", isDefault: true },
+    { id: "pm-002", type: "card" as const, last4: "8888", brand: "Mastercard", expiry: "06/25", isDefault: false },
+  ],
+};
+
+// Integrations Demo Data
+export const demoIntegrationsV2 = [
+  { id: "int-001", name: "Meta Pixel", icon: "📘", status: "connected" as const, lastSync: "2 hours ago", description: "Track conversions from Facebook & Instagram ads" },
+  { id: "int-002", name: "TikTok Ads", icon: "🎵", status: "connected" as const, lastSync: "1 hour ago", description: "Sync TikTok ad campaigns and analytics" },
+  { id: "int-003", name: "Google Analytics", icon: "📊", status: "not_connected" as const, lastSync: null, description: "Import Google Analytics data for attribution" },
+  { id: "int-004", name: "Shopify", icon: "🛒", status: "not_connected" as const, lastSync: null, description: "Track e-commerce conversions and ROAS" },
+  { id: "int-005", name: "HubSpot CRM", icon: "🟠", status: "connected" as const, lastSync: "30 minutes ago", description: "Sync leads and customer data" },
+  { id: "int-006", name: "Slack", icon: "💬", status: "connected" as const, lastSync: "Just now", description: "Get campaign alerts in Slack channels" },
+];
