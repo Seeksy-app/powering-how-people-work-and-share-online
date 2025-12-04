@@ -287,7 +287,15 @@ export default function CreatorHub() {
               <div className="text-center py-8 text-muted-foreground">
                 <Grid3x3 className="h-10 w-10 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">No tools activated yet</p>
-                <p className="text-xs mt-1">Browse Apps & Tools to activate your first module</p>
+                <p className="text-xs mt-1 mb-4">Browse Apps & Tools to activate your first module</p>
+                <div className="flex items-center justify-center gap-2">
+                  <Button variant="outline" size="sm" onClick={() => navigate('/apps')}>
+                    Browse Apps & Tools
+                  </Button>
+                  <Button variant="default" size="sm" onClick={() => navigate('/apps')}>
+                    + Build a Custom Workspace
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
