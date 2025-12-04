@@ -42,6 +42,8 @@ import EditMeeting from "./pages/EditMeeting";
 import Meetings from "./pages/Meetings";
 import MeetNow from "./pages/MeetNow";
 import MeetingStudio from "./pages/MeetingStudio";
+import SimpleMeetingStudio from "./pages/SimpleMeetingStudio";
+import MeetingDetails from "./pages/MeetingDetails";
 import MeetingRSVP from "./pages/MeetingRSVP";
 import MeetingsDashboard from "./pages/creator/MeetingsDashboard";
 import PublicBookingPage from "./pages/public/PublicBookingPage";
@@ -673,6 +675,8 @@ const AppContent = () => {
               <Route path="/meetings" element={<Meetings />} />
               <Route path="/meetings/now" element={<MeetNow />} />
               <Route path="/meeting-studio/:id" element={<MeetingStudio />} />
+              <Route path="/meetings/studio/:id" element={<SimpleMeetingStudio />} />
+              <Route path="/meetings/:id" element={<MeetingDetails />} />
               <Route path="/meetings/create" element={<CreateMeeting />} />
               <Route path="/meetings/edit/:id" element={<EditMeeting />} />
               <Route path="/meeting-rsvp" element={<MeetingRSVP />} />

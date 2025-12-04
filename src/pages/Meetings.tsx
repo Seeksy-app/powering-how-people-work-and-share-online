@@ -173,7 +173,10 @@ const Meetings = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-primary hover:underline cursor-pointer">
+                        <span 
+                          className="font-medium text-primary hover:underline cursor-pointer"
+                          onClick={() => navigate(`/meetings/${meeting.id}`)}
+                        >
                           {meeting.title}
                         </span>
                         {meeting.description && (
