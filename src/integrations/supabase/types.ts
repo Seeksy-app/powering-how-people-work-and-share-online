@@ -12300,6 +12300,82 @@ export type Database = {
           },
         ]
       }
+      meeting_chat: {
+        Row: {
+          created_at: string | null
+          id: string
+          meeting_id: string
+          message: string
+          sender_email: string | null
+          sender_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          meeting_id: string
+          message: string
+          sender_email?: string | null
+          sender_name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          meeting_id?: string
+          message?: string
+          sender_email?: string | null
+          sender_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_chat_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_files: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          meeting_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          meeting_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          meeting_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_files_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meeting_intelligence: {
         Row: {
           action_items: Json | null
@@ -12447,6 +12523,8 @@ export type Database = {
       }
       meetings: {
         Row: {
+          agenda: string | null
+          chat_enabled: boolean | null
           created_at: string | null
           description: string | null
           end_time: string
@@ -12454,6 +12532,7 @@ export type Database = {
           location_details: string | null
           location_type: Database["public"]["Enums"]["location_type"]
           meeting_type_id: string | null
+          notes: string | null
           recording_duration: number | null
           recording_size: number | null
           recording_url: string | null
@@ -12465,6 +12544,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          agenda?: string | null
+          chat_enabled?: boolean | null
           created_at?: string | null
           description?: string | null
           end_time: string
@@ -12472,6 +12553,7 @@ export type Database = {
           location_details?: string | null
           location_type: Database["public"]["Enums"]["location_type"]
           meeting_type_id?: string | null
+          notes?: string | null
           recording_duration?: number | null
           recording_size?: number | null
           recording_url?: string | null
@@ -12483,6 +12565,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          agenda?: string | null
+          chat_enabled?: boolean | null
           created_at?: string | null
           description?: string | null
           end_time?: string
@@ -12490,6 +12574,7 @@ export type Database = {
           location_details?: string | null
           location_type?: Database["public"]["Enums"]["location_type"]
           meeting_type_id?: string | null
+          notes?: string | null
           recording_duration?: number | null
           recording_size?: number | null
           recording_url?: string | null
@@ -18107,6 +18192,7 @@ export type Database = {
           created_at: string | null
           dismissed_dependency_warnings: string[] | null
           id: string
+          meeting_studio_preference: string | null
           meetings_enabled: boolean | null
           module_advertiser_enabled: boolean | null
           module_agency_enabled: boolean | null
@@ -18157,6 +18243,7 @@ export type Database = {
           created_at?: string | null
           dismissed_dependency_warnings?: string[] | null
           id?: string
+          meeting_studio_preference?: string | null
           meetings_enabled?: boolean | null
           module_advertiser_enabled?: boolean | null
           module_agency_enabled?: boolean | null
@@ -18207,6 +18294,7 @@ export type Database = {
           created_at?: string | null
           dismissed_dependency_warnings?: string[] | null
           id?: string
+          meeting_studio_preference?: string | null
           meetings_enabled?: boolean | null
           module_advertiser_enabled?: boolean | null
           module_agency_enabled?: boolean | null
@@ -19431,6 +19519,10 @@ export type Database = {
         Args: { _feature_type: string; _user_id: string }
         Returns: number
       }
+      get_user_hosted_meeting_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: {
@@ -19458,6 +19550,10 @@ export type Database = {
         Returns: undefined
       }
       is_adm: { Args: never; Returns: boolean }
+      is_meeting_host: {
+        Args: { _meeting_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_team_owner: {
         Args: { _team_id: string; _user_id: string }
         Returns: boolean
