@@ -64,6 +64,12 @@ const businessItems = [
     path: '/board/gtm',
   },
   {
+    id: 'ceo-plan',
+    label: 'CEO Operating Plan',
+    icon: FileText,
+    path: '/board/ceo-plan',
+  },
+  {
     id: 'forecasts',
     label: '3-Year Forecasts',
     icon: TrendingUp,
@@ -86,24 +92,16 @@ const businessItems = [
 // R&D & Intelligence section
 const rdItems = [
   {
-    id: 'rd-feeds',
-    label: 'R&D Intelligence Feeds',
+    id: 'rd-research',
+    label: 'R&D Research',
     icon: Database,
-    path: '/board/rd-feeds',
-    disabled: true,
+    path: '/board/research',
   },
   {
     id: 'cfo-assumptions',
     label: 'CFO Assumptions',
     icon: Settings,
     path: '/board/cfo-assumptions',
-    disabled: true,
-  },
-  {
-    id: 'demo-toggle',
-    label: 'Demo Data Toggle',
-    icon: Sparkles,
-    path: '/board/demo',
     disabled: true,
   },
 ];

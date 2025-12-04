@@ -3791,6 +3791,36 @@ export type Database = {
           },
         ]
       }
+      ceo_plan: {
+        Row: {
+          body_html: string
+          created_at: string
+          created_by: string | null
+          id: string
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          body_html: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          body_html?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       checklist_instances: {
         Row: {
           assigned_to: string | null
@@ -12195,6 +12225,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rd_intel_documents: {
+        Row: {
+          category_tags: string[] | null
+          created_at: string
+          full_text: string | null
+          id: string
+          insights_json: Json | null
+          publish_date: string | null
+          source: string
+          summary: string | null
+          title: string
+          type: string
+          updated_at: string
+          url: string | null
+          use_in_board_insights: boolean | null
+          use_in_gtm_insights: boolean | null
+        }
+        Insert: {
+          category_tags?: string[] | null
+          created_at?: string
+          full_text?: string | null
+          id?: string
+          insights_json?: Json | null
+          publish_date?: string | null
+          source: string
+          summary?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          url?: string | null
+          use_in_board_insights?: boolean | null
+          use_in_gtm_insights?: boolean | null
+        }
+        Update: {
+          category_tags?: string[] | null
+          created_at?: string
+          full_text?: string | null
+          id?: string
+          insights_json?: Json | null
+          publish_date?: string | null
+          source?: string
+          summary?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          url?: string | null
+          use_in_board_insights?: boolean | null
+          use_in_gtm_insights?: boolean | null
+        }
+        Relationships: []
       }
       rd_transcripts: {
         Row: {
