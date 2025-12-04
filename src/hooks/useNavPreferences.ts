@@ -40,8 +40,8 @@ const DEFAULT_NAV_CONFIG: NavConfig = {
     'studio',
     'podcasts',
     'media',
-    'brand_campaigns',
-    'revenue_tracking',
+    'monetization',
+    'email',
     'social_analytics',
     'seekies',
     'settings'
@@ -100,8 +100,16 @@ export const NAV_ITEMS: NavItem[] = [
       { id: 'media_blogs', label: 'Blog Posts', path: '/blog' },
     ]
   },
-  { id: 'brand_campaigns', label: 'Brand Campaigns', path: '/creator-campaigns' },
-  { id: 'revenue_tracking', label: 'Revenue Tracking', path: '/monetization' },
+  { 
+    id: 'monetization', 
+    label: 'Monetization', 
+    path: '/monetization',
+    subItems: [
+      { id: 'brand_campaigns', label: 'Brand Campaigns', path: '/creator-campaigns' },
+      { id: 'revenue_tracking', label: 'Revenue Tracking', path: '/monetization' },
+    ]
+  },
+  { id: 'email', label: 'Email', path: '/email' },
   { id: 'social_analytics', label: 'Social Analytics', path: '/social-analytics' },
   { id: 'seekies', label: 'Apps & Tools', path: '/apps' },
   { id: 'settings', label: 'Settings', path: '/settings' },
