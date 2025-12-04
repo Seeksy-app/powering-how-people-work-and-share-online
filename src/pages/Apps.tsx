@@ -3,12 +3,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ModuleCard, ModuleCardProps } from "@/components/apps/ModuleCard";
+import { ModulePreviewModal } from "@/components/apps/ModulePreviewModal";
+import { CustomPackageBuilder } from "@/components/apps/CustomPackageBuilder";
+import { CategoryTooltip } from "@/components/apps/CategoryTooltip";
 import { 
   Search, Instagram, BarChart3, Megaphone, DollarSign, TrendingUp, FolderOpen,
   Mic, Podcast, Image, Scissors, Video, Users, PieChart, Target, Mail, 
   Zap, MessageCircle, FormInput, FileText, CheckSquare, Calendar, Vote,
   Trophy, UserPlus, Layout, Shield, Star, Globe, CalendarClock, Grid3X3,
-  ChevronDown, LayoutGrid, List
+  ChevronDown, LayoutGrid, List, Package
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -20,8 +23,9 @@ import {
 
 type ModuleStatus = "active" | "available" | "coming_soon";
 
-interface Module extends Omit<ModuleCardProps, 'onClick' | 'compact'> {
+interface Module extends Omit<ModuleCardProps, 'onClick' | 'compact' | 'onPreview' | 'tooltipData'> {
   category: string;
+  creditEstimate?: number;
 }
 
 interface Category {
@@ -32,6 +36,12 @@ interface Category {
   description: string;
   bgClass: string;
   accentColor: string;
+  tooltipData?: {
+    purpose: string;
+    bestForUsers: string;
+    recommendedModules: string[];
+    exampleWorkflows: string;
+  };
 }
 
 const categories: Category[] = [
@@ -43,7 +53,13 @@ const categories: Category[] = [
     icon: Star, 
     description: "Modules that help creators grow, analyze, or monetize their audience",
     bgClass: "bg-amber-50 dark:bg-amber-950/30 border-amber-200/50 dark:border-amber-800/30",
-    accentColor: "text-amber-600 dark:text-amber-400"
+    accentColor: "text-amber-600 dark:text-amber-400",
+    tooltipData: {
+      purpose: "Tools designed to help creators manage their audience, personal brand, and engagement insights",
+      bestForUsers: "New or growing creators who need analytics, audience syncing, and brand deal management",
+      recommendedModules: ["Social Connect", "Audience Insights", "Brand Campaigns"],
+      exampleWorkflows: "Connect socials → Analyze audience → Apply for brand deals → Track revenue"
+    }
   },
   { 
     id: "media", 
@@ -52,7 +68,13 @@ const categories: Category[] = [
     icon: Video, 
     description: "Create, manage, and publish audio, video, and media",
     bgClass: "bg-violet-50 dark:bg-violet-950/30 border-violet-200/50 dark:border-violet-800/30",
-    accentColor: "text-violet-600 dark:text-violet-400"
+    accentColor: "text-violet-600 dark:text-violet-400",
+    tooltipData: {
+      purpose: "Create, manage, and publish professional audio, video, and media content",
+      bestForUsers: "Podcasters, video creators, and content producers",
+      recommendedModules: ["Studio & Recording", "Podcasts", "Clips & Editing"],
+      exampleWorkflows: "Record in Studio → Edit with AI → Generate clips → Publish to podcast"
+    }
   },
   { 
     id: "marketing", 
@@ -61,7 +83,13 @@ const categories: Category[] = [
     icon: Megaphone, 
     description: "Communication, segmentation, automation, and multi-channel marketing",
     bgClass: "bg-sky-50 dark:bg-sky-950/30 border-sky-200/50 dark:border-sky-800/30",
-    accentColor: "text-sky-600 dark:text-sky-400"
+    accentColor: "text-sky-600 dark:text-sky-400",
+    tooltipData: {
+      purpose: "Communication, segmentation, automation, and multi-channel marketing tools",
+      bestForUsers: "Creators with audiences to nurture and grow",
+      recommendedModules: ["Contacts", "Campaigns", "Automations"],
+      exampleWorkflows: "Import contacts → Create segments → Run campaigns → Track results"
+    }
   },
   { 
     id: "business", 
@@ -70,7 +98,13 @@ const categories: Category[] = [
     icon: CheckSquare, 
     description: "Professional tools for managing clients, projects, tasks, and events",
     bgClass: "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/50 dark:border-emerald-800/30",
-    accentColor: "text-emerald-600 dark:text-emerald-400"
+    accentColor: "text-emerald-600 dark:text-emerald-400",
+    tooltipData: {
+      purpose: "Professional tools for managing clients, projects, tasks, and events",
+      bestForUsers: "Event organizers, speakers, and professional creators",
+      recommendedModules: ["Events", "Proposals", "Tasks"],
+      exampleWorkflows: "Create event → Build proposal → Manage tasks → Track completion"
+    }
   },
   { 
     id: "identity", 
@@ -79,7 +113,13 @@ const categories: Category[] = [
     icon: Shield, 
     description: "Everything related to who you are and how you show up publicly",
     bgClass: "bg-rose-50 dark:bg-rose-950/30 border-rose-200/50 dark:border-rose-800/30",
-    accentColor: "text-rose-600 dark:text-rose-400"
+    accentColor: "text-rose-600 dark:text-rose-400",
+    tooltipData: {
+      purpose: "Everything related to who you are and how you show up publicly",
+      bestForUsers: "Creators building their personal brand",
+      recommendedModules: ["My Page Builder", "Identity & Verification"],
+      exampleWorkflows: "Verify identity → Build My Page → Share link → Track visitors"
+    }
   },
   { 
     id: "integrations", 
@@ -88,7 +128,13 @@ const categories: Category[] = [
     icon: Globe, 
     description: "Platform and third-party data connections",
     bgClass: "bg-cyan-50 dark:bg-cyan-950/30 border-cyan-200/50 dark:border-cyan-800/30",
-    accentColor: "text-cyan-600 dark:text-cyan-400"
+    accentColor: "text-cyan-600 dark:text-cyan-400",
+    tooltipData: {
+      purpose: "Platform and third-party data connections to sync your workflow",
+      bestForUsers: "Tech-savvy creators who use multiple tools",
+      recommendedModules: ["Social Connect", "Calendar Integrations"],
+      exampleWorkflows: "Connect platforms → Sync data → Automate workflows"
+    }
   },
 ];
 
@@ -103,6 +149,7 @@ const modules: Module[] = [
     category: "creator",
     route: "/social-analytics",
     recommendedWith: ["Social Connect"],
+    creditEstimate: 10,
   },
   {
     id: "social-analytics",
@@ -113,6 +160,7 @@ const modules: Module[] = [
     category: "creator",
     route: "/social-analytics",
     recommendedWith: ["Social Connect"],
+    creditEstimate: 10,
   },
   {
     id: "brand-campaigns",
@@ -122,6 +170,7 @@ const modules: Module[] = [
     status: "coming_soon",
     category: "creator",
     recommendedWith: ["Monetization Hub"],
+    creditEstimate: 15,
   },
   {
     id: "revenue-tracking",
@@ -130,6 +179,7 @@ const modules: Module[] = [
     icon: DollarSign,
     status: "coming_soon",
     category: "creator",
+    creditEstimate: 5,
   },
   {
     id: "growth-tools",
@@ -138,6 +188,7 @@ const modules: Module[] = [
     icon: TrendingUp,
     status: "coming_soon",
     category: "creator",
+    creditEstimate: 20,
   },
   {
     id: "content-library",
@@ -146,6 +197,7 @@ const modules: Module[] = [
     icon: FolderOpen,
     status: "coming_soon",
     category: "creator",
+    creditEstimate: 10,
   },
 
   // Media & Content
@@ -158,6 +210,7 @@ const modules: Module[] = [
     category: "media",
     route: "/studio",
     recommendedWith: ["Media Library", "Podcasts"],
+    creditEstimate: 50,
   },
   {
     id: "podcasts",
@@ -168,6 +221,7 @@ const modules: Module[] = [
     category: "media",
     route: "/podcasts",
     recommendedWith: ["Studio & Recording"],
+    creditEstimate: 20,
   },
   {
     id: "media-library",
@@ -177,6 +231,7 @@ const modules: Module[] = [
     status: "active",
     category: "media",
     route: "/media/library",
+    creditEstimate: 10,
   },
   {
     id: "clips-editing",
@@ -187,6 +242,7 @@ const modules: Module[] = [
     category: "media",
     route: "/clips",
     recommendedWith: ["Studio & Recording"],
+    creditEstimate: 30,
   },
   {
     id: "my-page-streaming",
@@ -195,6 +251,7 @@ const modules: Module[] = [
     icon: Video,
     status: "coming_soon",
     category: "media",
+    creditEstimate: 40,
   },
 
   // Marketing & CRM
@@ -207,6 +264,7 @@ const modules: Module[] = [
     category: "marketing",
     route: "/audience",
     recommendedWith: ["Segments", "Campaigns"],
+    creditEstimate: 5,
   },
   {
     id: "segments",
@@ -217,6 +275,7 @@ const modules: Module[] = [
     category: "marketing",
     route: "/marketing/segments",
     recommendedWith: ["Contacts & Audience"],
+    creditEstimate: 5,
   },
   {
     id: "campaigns",
@@ -227,6 +286,7 @@ const modules: Module[] = [
     category: "marketing",
     route: "/marketing/campaigns",
     recommendedWith: ["Email Templates", "Automations"],
+    creditEstimate: 25,
   },
   {
     id: "email-templates",
@@ -236,6 +296,7 @@ const modules: Module[] = [
     status: "active",
     category: "marketing",
     route: "/marketing/templates",
+    creditEstimate: 10,
   },
   {
     id: "automations",
@@ -246,6 +307,7 @@ const modules: Module[] = [
     category: "marketing",
     route: "/marketing/automations",
     recommendedWith: ["Campaigns"],
+    creditEstimate: 15,
   },
   {
     id: "sms",
@@ -255,6 +317,7 @@ const modules: Module[] = [
     status: "active",
     category: "marketing",
     route: "/sms",
+    creditEstimate: 20,
   },
   {
     id: "forms",
@@ -264,6 +327,7 @@ const modules: Module[] = [
     status: "active",
     category: "marketing",
     route: "/forms",
+    creditEstimate: 5,
   },
   {
     id: "qr-codes",
@@ -273,6 +337,7 @@ const modules: Module[] = [
     status: "active",
     category: "marketing",
     route: "/qr-codes",
+    creditEstimate: 5,
   },
 
   // Business Operations
@@ -284,6 +349,7 @@ const modules: Module[] = [
     status: "active",
     category: "business",
     route: "/proposals",
+    creditEstimate: 10,
   },
   {
     id: "tasks",
@@ -293,6 +359,7 @@ const modules: Module[] = [
     status: "active",
     category: "business",
     route: "/tasks",
+    creditEstimate: 5,
   },
   {
     id: "events",
@@ -303,6 +370,7 @@ const modules: Module[] = [
     category: "business",
     route: "/events",
     recommendedWith: ["Forms"],
+    creditEstimate: 15,
   },
   {
     id: "polls",
@@ -312,6 +380,7 @@ const modules: Module[] = [
     status: "active",
     category: "business",
     route: "/polls",
+    creditEstimate: 5,
   },
   {
     id: "awards",
@@ -321,6 +390,7 @@ const modules: Module[] = [
     status: "active",
     category: "business",
     route: "/awards",
+    creditEstimate: 10,
   },
   {
     id: "team",
@@ -330,6 +400,7 @@ const modules: Module[] = [
     status: "active",
     category: "business",
     route: "/team",
+    creditEstimate: 10,
   },
 
   // Identity & Creator Profile
@@ -342,6 +413,7 @@ const modules: Module[] = [
     category: "identity",
     route: "/profile/edit",
     recommendedWith: ["Identity & Verification"],
+    creditEstimate: 5,
   },
   {
     id: "identity-verification",
@@ -352,6 +424,7 @@ const modules: Module[] = [
     category: "identity",
     route: "/identity",
     recommendedWith: ["My Page Builder"],
+    creditEstimate: 20,
   },
   {
     id: "influencer-profile",
@@ -360,9 +433,10 @@ const modules: Module[] = [
     icon: Star,
     status: "coming_soon",
     category: "identity",
+    creditEstimate: 10,
   },
 
-  // Integrations - Social Connect moved here
+  // Integrations
   {
     id: "social-connect",
     name: "Social Connect",
@@ -372,6 +446,7 @@ const modules: Module[] = [
     category: "integrations",
     route: "/integrations",
     recommendedWith: ["Audience Insights", "Social Analytics"],
+    creditEstimate: 5,
   },
   {
     id: "social-integrations",
@@ -381,6 +456,7 @@ const modules: Module[] = [
     status: "active",
     category: "integrations",
     route: "/integrations",
+    creditEstimate: 5,
   },
   {
     id: "analytics-integrations",
@@ -389,6 +465,7 @@ const modules: Module[] = [
     icon: BarChart3,
     status: "coming_soon",
     category: "integrations",
+    creditEstimate: 10,
   },
   {
     id: "calendar-integrations",
@@ -397,6 +474,7 @@ const modules: Module[] = [
     icon: CalendarClock,
     status: "coming_soon",
     category: "integrations",
+    creditEstimate: 5,
   },
 ];
 
@@ -406,6 +484,8 @@ export default function Apps() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [isCompact, setIsCompact] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [showPackageBuilder, setShowPackageBuilder] = useState(false);
+  const [previewModule, setPreviewModule] = useState<Module | null>(null);
 
   const filteredModules = useMemo(() => {
     return modules.filter((module) => {
@@ -459,20 +539,30 @@ export default function Apps() {
 
   const categoryOrder = ["creator", "media", "marketing", "business", "identity", "integrations"];
 
-  const totalActive = filteredModules.filter((m) => m.status === "active").length;
-  const totalComingSoon = filteredModules.filter((m) => m.status === "coming_soon").length;
+  const packageModules = modules.map(m => ({
+    id: m.id,
+    name: m.name,
+    category: m.category,
+    creditEstimate: m.creditEstimate || 10,
+  }));
 
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1.5">
-            Seeksy App Directory
-          </h1>
-          <p className="text-muted-foreground text-sm max-w-xl">
-            All modules, tools, and integrations available in your workspace.
-          </p>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1.5">
+              Seeksy App Directory
+            </h1>
+            <p className="text-muted-foreground text-sm max-w-xl">
+              All modules, tools, and integrations available in your workspace.
+            </p>
+          </div>
+          <Button onClick={() => setShowPackageBuilder(true)} className="gap-2">
+            <Package className="h-4 w-4" />
+            Create Your Own Package
+          </Button>
         </div>
 
         {/* Divider */}
@@ -480,7 +570,6 @@ export default function Apps() {
 
         {/* Search & Controls */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          {/* Search - 20% smaller */}
           <div className="relative flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
@@ -492,7 +581,6 @@ export default function Apps() {
             />
           </div>
 
-          {/* View Toggle */}
           <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-lg">
             <Button
               variant="ghost"
@@ -526,9 +614,6 @@ export default function Apps() {
           <div className="inline-flex items-center p-1 bg-muted/50 rounded-xl border border-border/50">
             {categories.map((category) => {
               const isActive = activeCategory === category.id;
-              const moduleCount = category.id === "all" 
-                ? modules.length 
-                : modules.filter(m => m.category === category.id).length;
               return (
                 <button
                   key={category.id}
@@ -541,32 +626,10 @@ export default function Apps() {
                   )}
                 >
                   <span>{category.shortName}</span>
-                  <span className={cn(
-                    "ml-1.5 text-[10px]",
-                    isActive ? "text-muted-foreground" : "opacity-60"
-                  )}>
-                    {moduleCount}
-                  </span>
                 </button>
               );
             })}
           </div>
-        </div>
-
-        {/* Stats Bar */}
-        <div className="flex flex-wrap items-center gap-4 mb-8 text-xs text-muted-foreground">
-          <span>
-            <strong className="text-foreground">{filteredModules.length}</strong> modules
-          </span>
-          <span className="w-px h-3 bg-border" />
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            {totalActive} active
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" />
-            {totalComingSoon} coming soon
-          </span>
         </div>
 
         {/* Module Grid by Category */}
@@ -593,7 +656,7 @@ export default function Apps() {
                     category.bgClass
                   )}
                 >
-                  {/* Category Header - Sticky */}
+                  {/* Category Header */}
                   <CollapsibleTrigger asChild>
                     <button className="w-full flex items-center justify-between gap-3 group cursor-pointer sticky top-0 bg-inherit z-10 -mt-1 pt-1">
                       <div className="flex items-center gap-3 min-w-0">
@@ -603,12 +666,9 @@ export default function Apps() {
                           <CategoryIcon className={cn("h-5 w-5", category.accentColor)} />
                         </div>
                         <div className="text-left min-w-0">
-                          <div className="flex items-center gap-2.5 flex-wrap">
+                          <CategoryTooltip categoryId={categoryId} fallbackData={category.tooltipData}>
                             <h2 className="text-lg font-semibold">{category.name}</h2>
-                            <Badge variant="secondary" className="text-[10px] font-medium px-2 py-0.5">
-                              {categoryModules.length} modules
-                            </Badge>
-                          </div>
+                          </CategoryTooltip>
                           <p className="text-xs text-muted-foreground hidden sm:block mt-0.5">
                             {category.description}
                           </p>
@@ -628,9 +688,7 @@ export default function Apps() {
                     <div 
                       className={cn(
                         "mt-5 grid gap-3",
-                        isCompact 
-                          ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" 
-                          : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+                        "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
                       )}
                     >
                       {categoryModules.map((module) => (
@@ -639,6 +697,13 @@ export default function Apps() {
                           {...module}
                           compact={isCompact}
                           onClick={() => handleModuleClick(module)}
+                          onPreview={() => setPreviewModule(module)}
+                          tooltipData={{
+                            description: module.description,
+                            bestFor: category.tooltipData?.bestForUsers || "All creators",
+                            unlocks: [],
+                            creditEstimate: module.creditEstimate || 10,
+                          }}
                         />
                       ))}
                     </div>
@@ -670,6 +735,20 @@ export default function Apps() {
           </div>
         )}
       </div>
+
+      {/* Custom Package Builder Modal */}
+      <CustomPackageBuilder
+        open={showPackageBuilder}
+        onOpenChange={setShowPackageBuilder}
+        modules={packageModules}
+      />
+
+      {/* Module Preview Modal */}
+      <ModulePreviewModal
+        open={!!previewModule}
+        onOpenChange={(open) => !open && setPreviewModule(null)}
+        module={previewModule}
+      />
     </div>
   );
 }
