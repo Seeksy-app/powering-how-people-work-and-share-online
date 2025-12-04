@@ -35,14 +35,14 @@ export function BoardLayout({ children }: BoardLayoutProps) {
           {/* Light content area - no left margin or gap */}
           <div className="flex-1 flex flex-col min-w-0 bg-white h-screen overflow-hidden">
             <BoardTopNav />
-            <main className="flex-1 bg-slate-50 overflow-auto">
-              <AnimatePresence mode="wait">
+            <main className="flex-1 bg-slate-50 overflow-auto relative">
+              <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
                   key={location.pathname}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15, ease: 'easeInOut' }}
                   className="max-w-7xl mx-auto px-6 lg:px-8 py-6 pb-16"
                 >
                   {children}
