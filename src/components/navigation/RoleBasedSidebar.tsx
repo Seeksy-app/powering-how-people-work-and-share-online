@@ -131,10 +131,8 @@ const MODULE_ACTIVATION_MAP: Record<string, string> = {
   'meetings': 'meetings',
 };
 
-// Nav items to completely hide
-const HIDDEN_NAV_ITEMS = [
-  'social_analytics',
-];
+// Nav items to completely hide (empty - let user preferences control visibility)
+const HIDDEN_NAV_ITEMS: string[] = [];
 
 // Icon mapping - includes both nav item IDs and icon names
 const ICON_MAP: Record<string, any> = {
@@ -150,13 +148,14 @@ const ICON_MAP: Record<string, any> = {
   'revenue_tracking': DollarSign,
   'content_library': Library,
   'social_analytics': BarChart2,
+  'seekies': Hexagon,
+  'apps': Grid3x3,
   'settings': Settings,
   // Legacy icon names
   home: LayoutDashboard,
   'layout-dashboard': LayoutDashboard,
   user: UserIcon,
   link: Network,
-  apps: Grid3x3,
   'grid-3x3': Grid3x3,
   users: Users,
   history: History,
@@ -251,24 +250,14 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
   }
 
   // Check if a nav item should be visible based on:
-  // 1. nav_config.hidden (user preference)
-  // 2. Module activation state
-  // 3. Role permissions
+  // 1. nav_config.hidden (user preference) - PRIMARY CONTROL
+  // Note: Module activation is handled separately for premium features
   const isNavItemVisibleByNavConfig = (itemId: string): boolean => {
-    // Check if hidden in nav_config
+    // If explicitly hidden in nav_config, don't show
     if (navConfig.hidden.includes(itemId)) {
       return false;
     }
-    
-    // Check module activation requirement
-    const requiredModule = NAV_TO_MODULE_MAP[itemId];
-    if (requiredModule) {
-      // Admin roles see everything
-      if (roles.includes('admin') || roles.includes('super_admin')) return true;
-      // Check if module is activated
-      if (!activatedModuleIds.includes(requiredModule)) return false;
-    }
-    
+    // Otherwise, show the item - let user preferences control visibility
     return true;
   };
 
