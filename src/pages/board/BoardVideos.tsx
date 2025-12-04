@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { BoardLayout } from '@/components/board/BoardLayout';
 import { Card, CardContent } from '@/components/ui/card';
-import { Video, ArrowLeft, Lock, Check, Play, Clock } from 'lucide-react';
+import { Video, ArrowLeft, Lock, Check, Play, Clock, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useVideoProgress, useAllVideoProgress } from '@/hooks/useVideoProgress';
@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 
 interface DemoVideo {
   id: string;
@@ -20,6 +21,53 @@ interface DemoVideo {
   category: string;
 }
 
+// Placeholder videos for layout
+const placeholderVideos: DemoVideo[] = [
+  {
+    id: 'placeholder-1',
+    title: 'Seeksy Overview',
+    description: 'Introduction to the Seeksy platform and mission',
+    video_url: '',
+    thumbnail_url: null,
+    duration_seconds: 192,
+    category: 'Overview',
+  },
+  {
+    id: 'placeholder-2',
+    title: 'Product Tour: Creator Workflow',
+    description: 'Walk through the creator dashboard and tools',
+    video_url: '',
+    thumbnail_url: null,
+    duration_seconds: 285,
+    category: 'Product',
+  },
+  {
+    id: 'placeholder-3',
+    title: 'Financial Model & Projections',
+    description: 'Deep dive into our revenue model and forecasts',
+    video_url: '',
+    thumbnail_url: null,
+    duration_seconds: 330,
+    category: 'Financials',
+  },
+  {
+    id: 'placeholder-4',
+    title: 'Go-to-Market & Ad Revenue Engine',
+    description: 'How we acquire creators and monetize',
+    video_url: '',
+    thumbnail_url: null,
+    duration_seconds: 245,
+    category: 'GTM',
+  },
+];
+
+const categoryColors: Record<string, string> = {
+  Overview: 'bg-blue-100 text-blue-700',
+  Product: 'bg-purple-100 text-purple-700',
+  Financials: 'bg-emerald-100 text-emerald-700',
+  GTM: 'bg-amber-100 text-amber-700',
+};
+
 export default function BoardVideos() {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -28,7 +76,7 @@ export default function BoardVideos() {
   const { allProgress, isVideoUnlocked } = useAllVideoProgress();
 
   // Fetch board-specific videos
-  const { data: videos, isLoading } = useQuery({
+  const { data: dbVideos, isLoading } = useQuery({
     queryKey: ['boardVideos'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -40,6 +88,10 @@ export default function BoardVideos() {
       return data as DemoVideo[];
     },
   });
+
+  // Use database videos if available, otherwise use placeholders
+  const videos = dbVideos && dbVideos.length > 0 ? dbVideos : placeholderVideos;
+  const hasRealVideos = dbVideos && dbVideos.length > 0;
 
   // Video progress for selected video
   const {
@@ -94,8 +146,15 @@ export default function BoardVideos() {
   };
 
   const handleVideoSelect = (video: DemoVideo, index: number) => {
+    // For placeholder videos without URLs, just select them
+    if (!video.video_url) {
+      setSelectedVideo(video);
+      setCurrentTime(0);
+      return;
+    }
+
     // Check if previous video is unlocked (watched 30+ seconds)
-    if (index > 0) {
+    if (index > 0 && hasRealVideos) {
       const prevVideo = videos?.[index - 1];
       if (prevVideo) {
         const prevProgress = allProgress?.find(p => p.video_id === prevVideo.id);
@@ -110,6 +169,7 @@ export default function BoardVideos() {
 
   const getVideoStatus = (videoId: string, index: number) => {
     if (index === 0) return 'unlocked';
+    if (!hasRealVideos) return 'unlocked'; // All placeholders unlocked
     
     // Check if previous video has been watched for 30+ seconds
     const prevVideo = videos?.[index - 1];
@@ -124,31 +184,33 @@ export default function BoardVideos() {
 
   return (
     <BoardLayout>
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-[1100px] mx-auto">
+        {/* Breadcrumb */}
         <Button
           variant="ghost"
-          className="text-slate-400 hover:text-white mb-6"
+          className="text-slate-500 hover:text-slate-700 mb-6 -ml-2"
           onClick={() => navigate('/board')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
         </Button>
 
+        {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-md">
             <Video className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white">Investor Videos</h1>
-            <p className="text-slate-400">Product demos & presentations</p>
+            <h1 className="text-3xl font-bold text-slate-900">Investor Videos</h1>
+            <p className="text-slate-500">Product demos & presentations</p>
           </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Video Player */}
           <div className="lg:col-span-2">
-            <Card className="bg-slate-800/50 border-slate-700 overflow-hidden">
-              <div className="aspect-video bg-black relative">
+            <Card className="bg-white border-slate-200 shadow-sm overflow-hidden">
+              <div className="aspect-video bg-slate-100 relative">
                 {selectedVideo?.video_url ? (
                   <video
                     ref={videoRef}
@@ -159,23 +221,36 @@ export default function BoardVideos() {
                     poster={selectedVideo.thumbnail_url || undefined}
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full text-slate-500">
-                    <Play className="w-16 h-16" />
+                  <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                    <Play className="w-16 h-16 mb-4" />
+                    <p className="text-sm">No video available yet</p>
+                    {selectedVideo && (
+                      <p className="text-xs mt-1 text-slate-300">
+                        {selectedVideo.title}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
-              <CardContent className="p-4">
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {selectedVideo?.title || 'Select a video'}
-                </h3>
-                <p className="text-slate-400 text-sm">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-xl font-semibold text-slate-900">
+                    {selectedVideo?.title || 'Select a video'}
+                  </h3>
+                  {selectedVideo?.category && (
+                    <Badge className={cn('text-xs', categoryColors[selectedVideo.category] || 'bg-slate-100 text-slate-600')}>
+                      {selectedVideo.category}
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-slate-500">
                   {selectedVideo?.description || 'Choose a video from the playlist to begin.'}
                 </p>
                 
-                {/* Progress indicator */}
-                {selectedVideo && (
+                {/* Progress indicator - only show for real videos */}
+                {selectedVideo?.video_url && hasRealVideos && (
                   <div className="mt-4">
-                    <div className="flex items-center justify-between text-sm text-slate-400 mb-2">
+                    <div className="flex items-center justify-between text-sm text-slate-500 mb-2">
                       <span>Watch progress</span>
                       <span>{currentTime >= UNLOCK_THRESHOLD_SECONDS ? 'Next video unlocked!' : `${UNLOCK_THRESHOLD_SECONDS - currentTime}s to unlock next`}</span>
                     </div>
@@ -191,29 +266,24 @@ export default function BoardVideos() {
 
           {/* Playlist */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Playlist</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Playlist</h3>
             <div className="space-y-3">
               {isLoading ? (
                 Array(4).fill(0).map((_, i) => (
-                  <Card key={i} className="bg-slate-800/50 border-slate-700 animate-pulse">
+                  <Card key={i} className="bg-white border-slate-200 animate-pulse">
                     <CardContent className="p-4">
-                      <div className="h-4 bg-slate-700 rounded w-3/4 mb-2" />
-                      <div className="h-3 bg-slate-700 rounded w-1/2" />
+                      <div className="h-4 bg-slate-100 rounded w-3/4 mb-2" />
+                      <div className="h-3 bg-slate-100 rounded w-1/2" />
                     </CardContent>
                   </Card>
                 ))
-              ) : videos?.length === 0 ? (
-                <Card className="bg-slate-800/50 border-slate-700">
-                  <CardContent className="p-6 text-center text-slate-400">
-                    No videos available yet.
-                  </CardContent>
-                </Card>
               ) : (
                 videos?.map((video, index) => {
                   const status = getVideoStatus(video.id, index);
                   const isSelected = selectedVideo?.id === video.id;
                   const videoProgress = allProgress?.find(p => p.video_id === video.id);
-                  const isCompleted = videoProgress && videoProgress.seconds_watched >= UNLOCK_THRESHOLD_SECONDS;
+                  const isCompleted = hasRealVideos && videoProgress && videoProgress.seconds_watched >= UNLOCK_THRESHOLD_SECONDS;
+                  const isPlaceholder = !video.video_url;
 
                   return (
                     <Card
@@ -221,10 +291,10 @@ export default function BoardVideos() {
                       className={cn(
                         'border transition-all cursor-pointer',
                         isSelected
-                          ? 'bg-blue-500/20 border-blue-500'
+                          ? 'bg-blue-50 border-blue-300 shadow-sm'
                           : status === 'locked'
-                          ? 'bg-slate-800/30 border-slate-700 opacity-60 cursor-not-allowed'
-                          : 'bg-slate-800/50 border-slate-700 hover:border-slate-600'
+                          ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                          : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'
                       )}
                       onClick={() => handleVideoSelect(video, index)}
                     >
@@ -233,10 +303,12 @@ export default function BoardVideos() {
                           <div className={cn(
                             'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
                             isCompleted
-                              ? 'bg-emerald-500/20 text-emerald-400'
+                              ? 'bg-emerald-100 text-emerald-600'
                               : status === 'locked'
-                              ? 'bg-slate-700 text-slate-500'
-                              : 'bg-blue-500/20 text-blue-400'
+                              ? 'bg-slate-100 text-slate-400'
+                              : isSelected
+                              ? 'bg-blue-100 text-blue-600'
+                              : 'bg-slate-100 text-slate-500'
                           )}>
                             {isCompleted ? (
                               <Check className="w-4 h-4" />
@@ -247,16 +319,26 @@ export default function BoardVideos() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-white truncate">{video.title}</h4>
-                            <div className="flex items-center gap-2 text-xs text-slate-400 mt-1">
-                              <Clock className="w-3 h-3" />
-                              <span>{formatDuration(video.duration_seconds)}</span>
-                              {videoProgress && (
-                                <span className="text-slate-500">
-                                  • {formatDuration(videoProgress.seconds_watched)} watched
-                                </span>
-                              )}
+                            <h4 className={cn(
+                              'font-medium truncate',
+                              isSelected ? 'text-blue-700' : 'text-slate-900'
+                            )}>
+                              {video.title}
+                            </h4>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center gap-1 text-xs text-slate-400">
+                                <Clock className="w-3 h-3" />
+                                <span>{formatDuration(video.duration_seconds)}</span>
+                              </div>
+                              <Badge className={cn('text-[10px] px-1.5 py-0', categoryColors[video.category] || 'bg-slate-100 text-slate-600')}>
+                                {video.category}
+                              </Badge>
                             </div>
+                            {videoProgress && hasRealVideos && (
+                              <span className="text-xs text-slate-400 mt-1 block">
+                                {formatDuration(videoProgress.seconds_watched)} watched
+                              </span>
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -266,9 +348,26 @@ export default function BoardVideos() {
               )}
             </div>
 
-            <p className="text-xs text-slate-500 mt-4 text-center">
-              Watch at least 30 seconds to unlock the next video
-            </p>
+            {/* Empty state message */}
+            {!hasRealVideos && (
+              <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-sm text-amber-800 font-medium">
+                  No investor videos are available yet.
+                </p>
+                <p className="text-xs text-amber-600 mt-1">
+                  Once videos are published, they'll appear here in the playlist.
+                </p>
+                <p className="text-xs text-slate-500 mt-2 italic">
+                  Admin can manage videos from the internal tools.
+                </p>
+              </div>
+            )}
+
+            {hasRealVideos && (
+              <p className="text-xs text-slate-400 mt-4 text-center">
+                Watch at least 30 seconds to unlock the next video
+              </p>
+            )}
           </div>
         </div>
       </div>

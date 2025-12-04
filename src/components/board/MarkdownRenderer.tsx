@@ -11,28 +11,28 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   const html = useMemo(() => {
     if (!content) return '';
 
-    // Simple markdown to HTML conversion
+    // Simple markdown to HTML conversion - Light theme colors
     let processed = content
       // Headers
-      .replace(/^### (.+)$/gm, '<h3 class="text-xl font-semibold text-white mt-8 mb-4">$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2 class="text-2xl font-bold text-white mt-10 mb-5">$1</h2>')
-      .replace(/^# (.+)$/gm, '<h1 class="text-3xl font-bold text-white mt-12 mb-6">$1</h1>')
+      .replace(/^### (.+)$/gm, '<h3 class="text-xl font-semibold text-slate-900 mt-8 mb-4">$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2 class="text-2xl font-bold text-slate-900 mt-10 mb-5">$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1 class="text-3xl font-bold text-slate-900 mt-12 mb-6">$1</h1>')
       // Bold
-      .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-white">$1</strong>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold text-slate-900">$1</strong>')
       // Italic
-      .replace(/\*(.+?)\*/g, '<em class="italic text-slate-300">$1</em>')
+      .replace(/\*(.+?)\*/g, '<em class="italic text-slate-600">$1</em>')
       // Lists
-      .replace(/^- (.+)$/gm, '<li class="text-slate-300 ml-4 mb-2">$1</li>')
-      .replace(/^(\d+)\. (.+)$/gm, '<li class="text-slate-300 ml-4 mb-2 list-decimal">$2</li>')
+      .replace(/^- (.+)$/gm, '<li class="text-slate-600 ml-4 mb-2">$1</li>')
+      .replace(/^(\d+)\. (.+)$/gm, '<li class="text-slate-600 ml-4 mb-2 list-decimal">$2</li>')
       // Code blocks
-      .replace(/`(.+?)`/g, '<code class="bg-slate-800 px-2 py-1 rounded text-sm text-blue-400">$1</code>')
+      .replace(/`(.+?)`/g, '<code class="bg-slate-100 px-2 py-1 rounded text-sm text-blue-600">$1</code>')
       // Line breaks for paragraphs
-      .replace(/\n\n/g, '</p><p class="text-slate-300 mb-4 leading-relaxed">')
+      .replace(/\n\n/g, '</p><p class="text-slate-600 mb-4 leading-relaxed">')
       // Single line breaks
       .replace(/\n/g, '<br />');
 
     // Wrap in paragraph
-    processed = `<p class="text-slate-300 mb-4 leading-relaxed">${processed}</p>`;
+    processed = `<p class="text-slate-600 mb-4 leading-relaxed">${processed}</p>`;
 
     // Clean up empty paragraphs
     processed = processed.replace(/<p class="[^"]*"><\/p>/g, '');
@@ -47,7 +47,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
 
   return (
     <div
-      className={cn('prose prose-invert max-w-none', className)}
+      className={cn('prose prose-slate max-w-none', className)}
       dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
     />
   );
