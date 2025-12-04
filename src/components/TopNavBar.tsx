@@ -8,12 +8,16 @@ import { BoardViewToggle } from "@/components/board/BoardViewToggle";
 import { Button } from "@/components/ui/button";
 import { LogOut, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 export function TopNavBar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  
+  // Hide credits badge on admin and board routes
+  const hideCredits = location.pathname.startsWith('/admin') || location.pathname.startsWith('/board');
 
   const handleLogout = async () => {
     try {
@@ -53,7 +57,7 @@ export function TopNavBar() {
           <div className="flex items-center gap-2">
             <BoardViewToggle />
             <AccountTypeSwitcher />
-            <CreditsBadge />
+            {!hideCredits && <CreditsBadge />}
             <ThemeToggle />
             <NotificationsBell />
             <Button
