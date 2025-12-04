@@ -41,7 +41,6 @@ const DEFAULT_NAV_CONFIG: NavConfig = {
     'podcasts',
     'media',
     'monetization',
-    'email',
     'social_analytics',
     'seekies',
     'settings'
@@ -109,7 +108,6 @@ export const NAV_ITEMS: NavItem[] = [
       { id: 'revenue_tracking', label: 'Revenue Tracking', path: '/monetization' },
     ]
   },
-  { id: 'email', label: 'Email', path: '/email' },
   { id: 'social_analytics', label: 'Social Analytics', path: '/social-analytics' },
   { id: 'seekies', label: 'Apps & Tools', path: '/apps' },
   { id: 'settings', label: 'Settings', path: '/settings' },
