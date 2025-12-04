@@ -4088,6 +4088,228 @@ export type Database = {
         }
         Relationships: []
       }
+      cco_brand_narratives: {
+        Row: {
+          approved_by: string | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          key_messages: Json | null
+          narrative_type: string
+          published_at: string | null
+          status: string | null
+          target_audience: string | null
+          title: string
+          tone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          approved_by?: string | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          key_messages?: Json | null
+          narrative_type: string
+          published_at?: string | null
+          status?: string | null
+          target_audience?: string | null
+          title: string
+          tone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          approved_by?: string | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          key_messages?: Json | null
+          narrative_type?: string
+          published_at?: string | null
+          status?: string | null
+          target_audience?: string | null
+          title?: string
+          tone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cco_ceo_briefs: {
+        Row: {
+          acknowledged_at: string | null
+          attachments: Json | null
+          brief_date: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_urgent: boolean | null
+          key_risks: Json | null
+          recommended_actions: Json | null
+          sentiment_summary: Json | null
+          stakeholder_impact: Json | null
+          summary: string
+          tone_guidance: string | null
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          attachments?: Json | null
+          brief_date: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_urgent?: boolean | null
+          key_risks?: Json | null
+          recommended_actions?: Json | null
+          sentiment_summary?: Json | null
+          stakeholder_impact?: Json | null
+          summary: string
+          tone_guidance?: string | null
+        }
+        Update: {
+          acknowledged_at?: string | null
+          attachments?: Json | null
+          brief_date?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_urgent?: boolean | null
+          key_risks?: Json | null
+          recommended_actions?: Json | null
+          sentiment_summary?: Json | null
+          stakeholder_impact?: Json | null
+          summary?: string
+          tone_guidance?: string | null
+        }
+        Relationships: []
+      }
+      cco_crisis_events: {
+        Row: {
+          affected_segments: string[] | null
+          affected_users_count: number | null
+          ai_generated_response: string | null
+          channels_notified: string[] | null
+          created_at: string | null
+          created_by: string | null
+          crisis_type: string
+          description: string | null
+          id: string
+          impact_assessment: string | null
+          official_response: string | null
+          post_mortem: string | null
+          resolved_at: string | null
+          risk_score: number | null
+          severity: string | null
+          status: string | null
+          talking_points: Json | null
+          timeline: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          affected_segments?: string[] | null
+          affected_users_count?: number | null
+          ai_generated_response?: string | null
+          channels_notified?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          crisis_type: string
+          description?: string | null
+          id?: string
+          impact_assessment?: string | null
+          official_response?: string | null
+          post_mortem?: string | null
+          resolved_at?: string | null
+          risk_score?: number | null
+          severity?: string | null
+          status?: string | null
+          talking_points?: Json | null
+          timeline?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          affected_segments?: string[] | null
+          affected_users_count?: number | null
+          ai_generated_response?: string | null
+          channels_notified?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          crisis_type?: string
+          description?: string | null
+          id?: string
+          impact_assessment?: string | null
+          official_response?: string | null
+          post_mortem?: string | null
+          resolved_at?: string | null
+          risk_score?: number | null
+          severity?: string | null
+          status?: string | null
+          talking_points?: Json | null
+          timeline?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cco_message_templates: {
+        Row: {
+          approval_required: boolean | null
+          approved_at: string | null
+          approved_by: string | null
+          channels: string[] | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string | null
+          template_type: string
+          tone: string | null
+          updated_at: string | null
+          usage_count: number | null
+          variables: Json | null
+        }
+        Insert: {
+          approval_required?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          channels?: string[] | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject?: string | null
+          template_type: string
+          tone?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          variables?: Json | null
+        }
+        Update: {
+          approval_required?: boolean | null
+          approved_at?: string | null
+          approved_by?: string | null
+          channels?: string[] | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string | null
+          template_type?: string
+          tone?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       ceo_plan: {
         Row: {
           body_html: string
@@ -4115,6 +4337,66 @@ export type Database = {
           title?: string
           updated_at?: string
           version?: number
+        }
+        Relationships: []
+      }
+      ceo_strategic_intent: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          constraints: Json | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          key_metrics: Json | null
+          mission: string
+          objectives: Json | null
+          priorities: Json | null
+          quarterly_goals: Json | null
+          redlines: Json | null
+          target_markets: Json | null
+          updated_at: string | null
+          version: number | null
+          vision: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          constraints?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_metrics?: Json | null
+          mission: string
+          objectives?: Json | null
+          priorities?: Json | null
+          quarterly_goals?: Json | null
+          redlines?: Json | null
+          target_markets?: Json | null
+          updated_at?: string | null
+          version?: number | null
+          vision?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          constraints?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_metrics?: Json | null
+          mission?: string
+          objectives?: Json | null
+          priorities?: Json | null
+          quarterly_goals?: Json | null
+          redlines?: Json | null
+          target_markets?: Json | null
+          updated_at?: string | null
+          version?: number | null
+          vision?: string | null
         }
         Relationships: []
       }
@@ -4784,6 +5066,263 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cmo_action_items: {
+        Row: {
+          assigned_to: string | null
+          category: string | null
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          impact_estimate: string | null
+          priority: string | null
+          related_campaign_id: string | null
+          source: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          impact_estimate?: string | null
+          priority?: string | null
+          related_campaign_id?: string | null
+          source?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          impact_estimate?: string | null
+          priority?: string | null
+          related_campaign_id?: string | null
+          source?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cmo_action_items_related_campaign_id_fkey"
+            columns: ["related_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "cmo_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cmo_campaigns: {
+        Row: {
+          actual_cac: number | null
+          actual_conversions: number | null
+          alignment_explanation: string | null
+          budget: number | null
+          campaign_type: string | null
+          ceo_intent_alignment_score: number | null
+          channels: string[] | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          roi: number | null
+          spent: number | null
+          start_date: string | null
+          status: string | null
+          target_cac: number | null
+          target_conversions: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_cac?: number | null
+          actual_conversions?: number | null
+          alignment_explanation?: string | null
+          budget?: number | null
+          campaign_type?: string | null
+          ceo_intent_alignment_score?: number | null
+          channels?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          roi?: number | null
+          spent?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_cac?: number | null
+          target_conversions?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_cac?: number | null
+          actual_conversions?: number | null
+          alignment_explanation?: string | null
+          budget?: number | null
+          campaign_type?: string | null
+          ceo_intent_alignment_score?: number | null
+          channels?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          roi?: number | null
+          spent?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_cac?: number | null
+          target_conversions?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cmo_metrics_snapshots: {
+        Row: {
+          active_creator_count: number | null
+          ad_revenue: number | null
+          arr: number | null
+          cac_by_channel: Json | null
+          cac_ltv_ratio: number | null
+          cac_overall: number | null
+          churn_rate: number | null
+          cohort_data: Json | null
+          conversion_rate: number | null
+          created_at: string | null
+          creator_count: number | null
+          funnel_data: Json | null
+          id: string
+          ltv_by_segment: Json | null
+          ltv_overall: number | null
+          metadata: Json | null
+          monthly_burn: number | null
+          mrr: number | null
+          other_revenue: number | null
+          retention_rate: number | null
+          runway_months: number | null
+          snapshot_date: string
+          subscription_revenue: number | null
+        }
+        Insert: {
+          active_creator_count?: number | null
+          ad_revenue?: number | null
+          arr?: number | null
+          cac_by_channel?: Json | null
+          cac_ltv_ratio?: number | null
+          cac_overall?: number | null
+          churn_rate?: number | null
+          cohort_data?: Json | null
+          conversion_rate?: number | null
+          created_at?: string | null
+          creator_count?: number | null
+          funnel_data?: Json | null
+          id?: string
+          ltv_by_segment?: Json | null
+          ltv_overall?: number | null
+          metadata?: Json | null
+          monthly_burn?: number | null
+          mrr?: number | null
+          other_revenue?: number | null
+          retention_rate?: number | null
+          runway_months?: number | null
+          snapshot_date: string
+          subscription_revenue?: number | null
+        }
+        Update: {
+          active_creator_count?: number | null
+          ad_revenue?: number | null
+          arr?: number | null
+          cac_by_channel?: Json | null
+          cac_ltv_ratio?: number | null
+          cac_overall?: number | null
+          churn_rate?: number | null
+          cohort_data?: Json | null
+          conversion_rate?: number | null
+          created_at?: string | null
+          creator_count?: number | null
+          funnel_data?: Json | null
+          id?: string
+          ltv_by_segment?: Json | null
+          ltv_overall?: number | null
+          metadata?: Json | null
+          monthly_burn?: number | null
+          mrr?: number | null
+          other_revenue?: number | null
+          retention_rate?: number | null
+          runway_months?: number | null
+          snapshot_date?: string
+          subscription_revenue?: number | null
+        }
+        Relationships: []
+      }
+      community_sentiment: {
+        Row: {
+          ai_summary: string | null
+          churn_correlation: number | null
+          created_at: string | null
+          id: string
+          negative_count: number | null
+          neutral_count: number | null
+          notable_quotes: Json | null
+          overall_score: number | null
+          positive_count: number | null
+          snapshot_date: string
+          source: string
+          top_issues: Json | null
+          trending_topics: Json | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          churn_correlation?: number | null
+          created_at?: string | null
+          id?: string
+          negative_count?: number | null
+          neutral_count?: number | null
+          notable_quotes?: Json | null
+          overall_score?: number | null
+          positive_count?: number | null
+          snapshot_date: string
+          source: string
+          top_issues?: Json | null
+          trending_topics?: Json | null
+        }
+        Update: {
+          ai_summary?: string | null
+          churn_correlation?: number | null
+          created_at?: string | null
+          id?: string
+          negative_count?: number | null
+          neutral_count?: number | null
+          notable_quotes?: Json | null
+          overall_score?: number | null
+          positive_count?: number | null
+          snapshot_date?: string
+          source?: string
+          top_issues?: Json | null
+          trending_topics?: Json | null
+        }
+        Relationships: []
       }
       connected_channels: {
         Row: {
@@ -6416,6 +6955,57 @@ export type Database = {
           recommended_bundle?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      decision_simulations: {
+        Row: {
+          ai_recommendation: string | null
+          baseline_metrics: Json | null
+          cac_impact: number | null
+          confidence_score: number | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          ltv_impact: number | null
+          name: string
+          revenue_impact: number | null
+          risk_score: number | null
+          scenario_description: string
+          simulated_metrics: Json | null
+          variables: Json | null
+        }
+        Insert: {
+          ai_recommendation?: string | null
+          baseline_metrics?: Json | null
+          cac_impact?: number | null
+          confidence_score?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          ltv_impact?: number | null
+          name: string
+          revenue_impact?: number | null
+          risk_score?: number | null
+          scenario_description: string
+          simulated_metrics?: Json | null
+          variables?: Json | null
+        }
+        Update: {
+          ai_recommendation?: string | null
+          baseline_metrics?: Json | null
+          cac_impact?: number | null
+          confidence_score?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          ltv_impact?: number | null
+          name?: string
+          revenue_impact?: number | null
+          risk_score?: number | null
+          scenario_description?: string
+          simulated_metrics?: Json | null
+          variables?: Json | null
         }
         Relationships: []
       }
@@ -10356,6 +10946,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      market_signals: {
+        Row: {
+          action_taken: string | null
+          ai_analysis: string | null
+          category: string | null
+          created_at: string | null
+          detected_at: string | null
+          id: string
+          impact_score: number | null
+          is_actionable: boolean | null
+          is_read: boolean | null
+          relevance_score: number | null
+          signal_type: string
+          source: string | null
+          source_url: string | null
+          summary: string | null
+          tags: string[] | null
+          title: string
+          urgency: string | null
+        }
+        Insert: {
+          action_taken?: string | null
+          ai_analysis?: string | null
+          category?: string | null
+          created_at?: string | null
+          detected_at?: string | null
+          id?: string
+          impact_score?: number | null
+          is_actionable?: boolean | null
+          is_read?: boolean | null
+          relevance_score?: number | null
+          signal_type: string
+          source?: string | null
+          source_url?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+          urgency?: string | null
+        }
+        Update: {
+          action_taken?: string | null
+          ai_analysis?: string | null
+          category?: string | null
+          created_at?: string | null
+          detected_at?: string | null
+          id?: string
+          impact_score?: number | null
+          is_actionable?: boolean | null
+          is_read?: boolean | null
+          relevance_score?: number | null
+          signal_type?: string
+          source?: string | null
+          source_url?: string | null
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          urgency?: string | null
+        }
+        Relationships: []
       }
       media_ad_slots: {
         Row: {
@@ -15377,6 +16027,54 @@ export type Database = {
         }
         Relationships: []
       }
+      support_automation_rules: {
+        Row: {
+          actions: Json | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          last_run_at: string | null
+          name: string
+          priority: number | null
+          run_count: number | null
+          trigger_conditions: Json | null
+          trigger_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          actions?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_run_at?: string | null
+          name: string
+          priority?: number | null
+          run_count?: number | null
+          trigger_conditions?: Json | null
+          trigger_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          actions?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_run_at?: string | null
+          name?: string
+          priority?: number | null
+          run_count?: number | null
+          trigger_conditions?: Json | null
+          trigger_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       support_chat_participants: {
         Row: {
           account_holder_user_id: string | null
@@ -15400,6 +16098,331 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      support_knowledge_base: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          helpful_count: number | null
+          id: string
+          is_internal: boolean | null
+          is_published: boolean | null
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          updated_by: string | null
+          view_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_internal?: boolean | null
+          is_published?: boolean | null
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          updated_by?: string | null
+          view_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          helpful_count?: number | null
+          id?: string
+          is_internal?: boolean | null
+          is_published?: boolean | null
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      support_saved_replies: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_shared: boolean | null
+          name: string
+          shortcut: string | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_shared?: boolean | null
+          name: string
+          shortcut?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_shared?: boolean | null
+          name?: string
+          shortcut?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      support_ticket_attachments: {
+        Row: {
+          created_at: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          message_id: string | null
+          storage_path: string
+          ticket_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          message_id?: string | null
+          storage_path: string
+          ticket_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          message_id?: string | null
+          storage_path?: string
+          ticket_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "support_ticket_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ticket_attachments_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_ticket_categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      support_ticket_messages: {
+        Row: {
+          ai_suggested_reply: string | null
+          attachments: Json | null
+          created_at: string | null
+          id: string
+          is_internal_note: boolean | null
+          message: string
+          sender_email: string | null
+          sender_id: string | null
+          sender_name: string | null
+          sender_type: string
+          ticket_id: string
+        }
+        Insert: {
+          ai_suggested_reply?: string | null
+          attachments?: Json | null
+          created_at?: string | null
+          id?: string
+          is_internal_note?: boolean | null
+          message: string
+          sender_email?: string | null
+          sender_id?: string | null
+          sender_name?: string | null
+          sender_type?: string
+          ticket_id: string
+        }
+        Update: {
+          ai_suggested_reply?: string | null
+          attachments?: Json | null
+          created_at?: string | null
+          id?: string
+          is_internal_note?: boolean | null
+          message?: string
+          sender_email?: string | null
+          sender_id?: string | null
+          sender_name?: string | null
+          sender_type?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_team: string | null
+          assigned_to: string | null
+          category_id: string | null
+          churn_risk_score: number | null
+          closed_at: string | null
+          created_at: string | null
+          description: string | null
+          escalated_to: string | null
+          escalation_reason: string | null
+          first_response_at: string | null
+          id: string
+          issue_type: string | null
+          metadata: Json | null
+          priority: string | null
+          resolved_at: string | null
+          sentiment_score: number | null
+          severity_score: number | null
+          sla_due_at: string | null
+          source: string | null
+          status: string
+          subject: string
+          tags: string[] | null
+          ticket_number: string
+          updated_at: string | null
+          user_email: string | null
+          user_id: string | null
+          user_name: string | null
+        }
+        Insert: {
+          assigned_team?: string | null
+          assigned_to?: string | null
+          category_id?: string | null
+          churn_risk_score?: number | null
+          closed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          escalated_to?: string | null
+          escalation_reason?: string | null
+          first_response_at?: string | null
+          id?: string
+          issue_type?: string | null
+          metadata?: Json | null
+          priority?: string | null
+          resolved_at?: string | null
+          sentiment_score?: number | null
+          severity_score?: number | null
+          sla_due_at?: string | null
+          source?: string | null
+          status?: string
+          subject: string
+          tags?: string[] | null
+          ticket_number: string
+          updated_at?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Update: {
+          assigned_team?: string | null
+          assigned_to?: string | null
+          category_id?: string | null
+          churn_risk_score?: number | null
+          closed_at?: string | null
+          created_at?: string | null
+          description?: string | null
+          escalated_to?: string | null
+          escalation_reason?: string | null
+          first_response_at?: string | null
+          id?: string
+          issue_type?: string | null
+          metadata?: Json | null
+          priority?: string | null
+          resolved_at?: string | null
+          sentiment_score?: number | null
+          severity_score?: number | null
+          sla_due_at?: string | null
+          source?: string | null
+          status?: string
+          subject?: string
+          tags?: string[] | null
+          ticket_number?: string
+          updated_at?: string | null
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "support_ticket_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tab_views: {
         Row: {
@@ -16336,6 +17359,63 @@ export type Database = {
           timezone?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_support_profiles: {
+        Row: {
+          average_sentiment: number | null
+          billing_issues_count: number | null
+          churn_risk_score: number | null
+          created_at: string | null
+          engagement_score: number | null
+          failed_uploads_count: number | null
+          id: string
+          internal_notes: string | null
+          internal_tags: string[] | null
+          last_login_at: string | null
+          last_ticket_at: string | null
+          lifetime_value: number | null
+          total_tickets: number | null
+          updated_at: string | null
+          user_id: string
+          vip_status: boolean | null
+        }
+        Insert: {
+          average_sentiment?: number | null
+          billing_issues_count?: number | null
+          churn_risk_score?: number | null
+          created_at?: string | null
+          engagement_score?: number | null
+          failed_uploads_count?: number | null
+          id?: string
+          internal_notes?: string | null
+          internal_tags?: string[] | null
+          last_login_at?: string | null
+          last_ticket_at?: string | null
+          lifetime_value?: number | null
+          total_tickets?: number | null
+          updated_at?: string | null
+          user_id: string
+          vip_status?: boolean | null
+        }
+        Update: {
+          average_sentiment?: number | null
+          billing_issues_count?: number | null
+          churn_risk_score?: number | null
+          created_at?: string | null
+          engagement_score?: number | null
+          failed_uploads_count?: number | null
+          id?: string
+          internal_notes?: string | null
+          internal_tags?: string[] | null
+          last_login_at?: string | null
+          last_ticket_at?: string | null
+          lifetime_value?: number | null
+          total_tickets?: number | null
+          updated_at?: string | null
+          user_id?: string
+          vip_status?: boolean | null
         }
         Relationships: []
       }
@@ -17380,6 +18460,7 @@ export type Database = {
       generate_investor_code: { Args: never; Returns: string }
       generate_judge_invite_token: { Args: never; Returns: string }
       generate_rsvp_token: { Args: never; Returns: string }
+      generate_support_ticket_number: { Args: never; Returns: string }
       generate_ticket_number: { Args: never; Returns: string }
       get_current_usage: {
         Args: { _feature_type: string; _user_id: string }
