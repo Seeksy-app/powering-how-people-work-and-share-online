@@ -187,16 +187,16 @@ export function BoardSidebar() {
           onClick={() => handleNavigation(item)}
           data-tour={item.id === 'dashboard' ? 'nav-dashboard' : item.id === 'swot' ? 'nav-swot' : undefined}
           className={cn(
-            'w-full flex items-center gap-2 px-3 py-1 rounded-md transition-all duration-200',
+            'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md transition-all duration-200',
             'text-slate-300 hover:bg-slate-800/40 hover:text-white',
-            'text-[13px] font-medium',
-            item.isAI && 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/20',
-            isActive && 'bg-blue-500/30 text-blue-200 font-semibold hover:bg-blue-500/40 hover:text-blue-100'
+            'text-sm font-medium',
+            item.isAI && 'text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/20',
+            isActive && 'bg-blue-500/30 text-white font-semibold hover:bg-blue-500/40'
           )}
         >
           <Icon className={cn(
-            "w-3.5 h-3.5 flex-shrink-0",
-            isActive ? "text-blue-300" : item.isAI ? "text-blue-400" : "text-slate-400"
+            "w-4 h-4 flex-shrink-0",
+            isActive ? "text-blue-300" : item.isAI ? "text-yellow-400" : "text-slate-400"
           )} />
           <span className="flex-1 truncate">{item.label}</span>
         </SidebarMenuButton>
@@ -205,11 +205,11 @@ export function BoardSidebar() {
   };
 
   const renderSection = (title: string, items: NavItem[], className?: string) => (
-    <SidebarGroup className={cn("py-1", className)}>
-      <SidebarGroupLabel className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.1em] px-3 mb-0">
+    <SidebarGroup className={cn("py-2", className)}>
+      <SidebarGroupLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-1">
         {title}
       </SidebarGroupLabel>
-      <SidebarMenu className="space-y-0">
+      <SidebarMenu className="space-y-0.5">
         {items.map(renderNavItem)}
       </SidebarMenu>
     </SidebarGroup>
