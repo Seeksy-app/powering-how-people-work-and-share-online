@@ -245,6 +245,121 @@ export const NAVIGATION_CONFIG: {
     },
 
     {
+      "group": "Advertising & Revenue",
+      "description": "Advertising, campaigns, and revenue management",
+      "collapsible": true,
+      "items": [
+        {
+          "id": "admin_advertising",
+          "label": "Advertising Management",
+          "icon": "megaphone",
+          "path": "/admin/advertising",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_rate_desk",
+          "label": "Rate Desk",
+          "icon": "dollar-sign",
+          "path": "/admin/advertising/rate-desk",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_ad_campaigns",
+          "label": "Ad Campaigns",
+          "icon": "radio",
+          "path": "/admin/ad-campaigns",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_ad_analytics",
+          "label": "Ad Analytics",
+          "icon": "trending-up",
+          "path": "/admin/ad-analytics",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_revenue_insights",
+          "label": "Revenue Insights",
+          "icon": "bar-chart-2",
+          "path": "/admin/revenue-insights",
+          "roles": ["admin", "super_admin"]
+        }
+      ]
+    },
+
+    {
+      "group": "Business Operations",
+      "description": "Support, sales, billing, and operations",
+      "collapsible": true,
+      "items": [
+        {
+          "id": "admin_support_desk",
+          "label": "Support Desk",
+          "icon": "headphones",
+          "path": "/admin/support",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_lead_manager",
+          "label": "Lead Manager",
+          "icon": "user-plus",
+          "path": "/admin/sales-leads",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_billing_payments",
+          "label": "Billing & Payments",
+          "icon": "credit-card",
+          "path": "/admin/billing",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_cmo_dashboard",
+          "label": "CMO Command Center",
+          "icon": "target",
+          "path": "/admin/cmo",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_cco_dashboard",
+          "label": "CCO Communications",
+          "icon": "message-circle",
+          "path": "/admin/cco",
+          "roles": ["admin", "super_admin"]
+        }
+      ]
+    },
+
+    {
+      "group": "Financials (CFO)",
+      "description": "Financial planning and analysis",
+      "collapsible": true,
+      "items": [
+        {
+          "id": "admin_cfo_assumptions",
+          "label": "CFO Assumptions",
+          "icon": "sliders",
+          "path": "/cfo-dashboard#assumptions",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_cfo_models",
+          "label": "CFO Models",
+          "icon": "calculator",
+          "path": "/admin/financial-models/combined",
+          "roles": ["admin", "super_admin"]
+        },
+        {
+          "id": "admin_investor_spreadsheets",
+          "label": "Investor Spreadsheets",
+          "icon": "file-spreadsheet",
+          "path": "/admin/investor-spreadsheets",
+          "roles": ["admin", "super_admin"]
+        }
+      ]
+    },
+
+    {
       "group": "User Management",
       "description": "User and identity management",
       "collapsible": true,
@@ -289,145 +404,14 @@ export const NAVIGATION_CONFIG: {
           "label": "Permissions",
           "icon": "shield-check",
           "path": "/admin/permissions",
-          "roles": ["admin", "super_admin"],
-          "description": "Coming soon"
-        }
-      ]
-    },
-
-    {
-      "group": "Advertising & Revenue",
-      "description": "Advertising, campaigns, and revenue management",
-      "collapsible": true,
-      "items": [
-        {
-          "id": "admin_advertising",
-          "label": "Advertising Management",
-          "icon": "megaphone",
-          "path": "/admin/advertising",
           "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_rate_desk",
-          "label": "Rate Desk",
-          "icon": "dollar-sign",
-          "path": "/admin/advertising/rate-desk",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_ad_campaigns",
-          "label": "Ad Campaigns",
-          "icon": "radio",
-          "path": "/admin/ad-campaigns",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_ad_analytics",
-          "label": "Ad Analytics",
-          "icon": "trending-up",
-          "path": "/admin/ad-analytics",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_revenue_insights",
-          "label": "Revenue Insights",
-          "icon": "bar-chart-2",
-          "path": "/admin/revenue-insights",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_cfo_models",
-          "label": "CFO Models",
-          "icon": "calculator",
-          "path": "/admin/financial-models/combined",
-          "roles": ["admin", "super_admin"]
-        }
-      ]
-    },
-
-    {
-      "group": "Business Operations",
-      "description": "Support, sales, and business management",
-      "collapsible": true,
-      "items": [
-        {
-          "id": "admin_support_desk",
-          "label": "Support Desk",
-          "icon": "headphones",
-          "path": "/admin/sales-desk",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_lead_manager",
-          "label": "Lead Manager",
-          "icon": "user-plus",
-          "path": "/admin/sales-leads",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_billing",
-          "label": "Billing",
-          "icon": "credit-card",
-          "path": "/admin/billing",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_payments",
-          "label": "Payments",
-          "icon": "banknote",
-          "path": "/admin/payments",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_investor_spreadsheets",
-          "label": "Investor Spreadsheets",
-          "icon": "file-spreadsheet",
-          "path": "/admin/investor-spreadsheets",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_marketing_gtm",
-          "label": "Marketing & GTM Plan",
-          "icon": "target",
-          "path": "/admin/marketing-gtm",
-          "roles": ["admin", "super_admin"]
-        }
-      ]
-    },
-
-    {
-      "group": "Business Tools",
-      "description": "Strategic planning and business intelligence",
-      "collapsible": true,
-      "items": [
-        {
-          "id": "business_tools_landing",
-          "label": "Business Tools",
-          "icon": "briefcase",
-          "path": "/business-tools",
-          "roles": ["admin", "super_admin", "creator", "agency"]
-        },
-        {
-          "id": "gtm_engine_admin",
-          "label": "GTM Engine",
-          "icon": "rocket",
-          "path": "/business-tools/gtm",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "proposal_builder",
-          "label": "Proposal Builder",
-          "icon": "file-text",
-          "path": "/admin/proposal-builder",
-          "roles": ["admin", "super_admin"],
-          "description": "Coming soon"
         }
       ]
     },
 
     {
       "group": "R&D & Intelligence",
-      "description": "Research, forecasting, and market intelligence",
+      "description": "Research and market intelligence",
       "collapsible": true,
       "items": [
         {
@@ -435,13 +419,6 @@ export const NAVIGATION_CONFIG: {
           "label": "R&D Intelligence Feeds",
           "icon": "rss",
           "path": "/admin/rd-feeds",
-          "roles": ["admin", "super_admin"]
-        },
-        {
-          "id": "admin_cfo_assumptions",
-          "label": "CFO Assumptions",
-          "icon": "sliders",
-          "path": "/cfo-dashboard#assumptions",
           "roles": ["admin", "super_admin"]
         },
         {
