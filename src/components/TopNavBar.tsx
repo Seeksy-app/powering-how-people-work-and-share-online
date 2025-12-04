@@ -1,6 +1,5 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { CreditsBadge } from "@/components/CreditsBadge";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { AccountTypeSwitcher } from "@/components/AccountTypeSwitcher";
@@ -16,9 +15,6 @@ export function TopNavBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  
-  // Hide credits badge on admin, board, and advertiser routes
-  const hideCredits = location.pathname.startsWith('/admin') || location.pathname.startsWith('/board') || location.pathname.startsWith('/advertiser');
 
   const handleLogout = async () => {
     try {
@@ -59,7 +55,6 @@ export function TopNavBar() {
             <StartOnboardingButton />
             <BoardViewToggle />
             <AccountTypeSwitcher />
-            {!hideCredits && <CreditsBadge />}
             <ThemeToggle />
             <NotificationsBell />
             <Button
