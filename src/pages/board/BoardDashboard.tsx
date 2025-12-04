@@ -73,6 +73,8 @@ const defaultMetrics = [
   { id: '4', metric_key: 'growth_rate', metric_label: 'MoM Growth', metric_value: '+18%' },
 ];
 
+const VIDEO_URL = "https://taxqcioheqdqtlmjeaht.supabase.co/storage/v1/object/public/demo-videos/Seeksy_%20Creator's%20Engine.mp4";
+
 export default function BoardDashboard() {
   const navigate = useNavigate();
   const { content, isLoading: contentLoading } = useBoardContent('state-of-company');
@@ -81,50 +83,54 @@ export default function BoardDashboard() {
   // Use database metrics if available, otherwise fallback to defaults
   const metrics = dbMetrics && dbMetrics.length > 0 ? dbMetrics : defaultMetrics;
 
+  const handleStartVideo = () => {
+    navigate('/board/videos');
+  };
+
   return (
     <BoardLayout>
-      <div className="space-y-4">
-        {/* Hero Section - Compact, polished */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-blue-50 border border-slate-200 shadow-sm px-6 py-5 md:px-8 md:py-6">
+      <div className="space-y-5">
+        {/* Hero Section - Compact */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 via-white to-blue-50 border border-slate-200 shadow-sm px-6 py-4 md:px-8 md:py-5">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100/40 via-transparent to-transparent" />
           <div className="relative z-10 text-center">
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 leading-tight">
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900 mb-1.5 leading-tight">
               A Clear Window Into the Creator & Podcast Business.
             </h1>
-            <p className="text-sm md:text-base text-slate-600 mb-4">
+            <p className="text-sm text-slate-600 mb-3">
               Real-time view into our model, go-to-market, and forecasts—powered by internal R&D insights.
             </p>
-            <div className="flex flex-wrap gap-3 justify-center">
+            <div className="flex flex-wrap gap-2.5 justify-center">
               <Button 
-                size="default" 
-                onClick={() => navigate('/board/videos')}
+                size="sm" 
+                onClick={handleStartVideo}
                 className="bg-blue-600 text-white hover:bg-blue-700 gap-2 shadow-md"
               >
-                <Play className="w-4 h-4" />
+                <Play className="w-3.5 h-3.5" />
                 Start with Overview Video
               </Button>
               <Button 
-                size="default" 
+                size="sm" 
                 variant="outline" 
                 onClick={() => navigate('/board/videos')}
                 className="border-slate-300 text-slate-700 hover:bg-slate-50 gap-2"
               >
-                <Wrench className="w-4 h-4" />
+                <Wrench className="w-3.5 h-3.5" />
                 Open Demo & Tools
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Metrics Grid with subtle gradient backdrop */}
-        <div className="bg-gradient-to-b from-slate-50/80 to-white border border-slate-100 rounded-2xl p-4 shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)]">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Metrics Grid with diagonal gradient backdrop */}
+        <div className="bg-gradient-to-br from-slate-100/80 via-white to-blue-50/50 border border-slate-100 rounded-2xl p-4 shadow-[inset_0_1px_3px_rgba(0,0,0,0.04)]">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {metricsLoading ? (
               Array(4).fill(0).map((_, i) => (
-                <Card key={i} className="bg-white border-slate-200 shadow-sm">
-                  <CardContent className="p-5">
+                <Card key={i} className="bg-white border-slate-100 shadow-sm rounded-xl">
+                  <CardContent className="p-4">
                     <Skeleton className="h-4 w-20 mb-2" />
-                    <Skeleton className="h-8 w-24" />
+                    <Skeleton className="h-7 w-24" />
                   </CardContent>
                 </Card>
               ))
@@ -132,13 +138,13 @@ export default function BoardDashboard() {
               metrics?.map((metric) => {
                 const Icon = metricIcons[metric.metric_key] || Activity;
                 return (
-                  <Card key={metric.id} className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-                    <CardContent className="p-5">
+                  <Card key={metric.id} className="bg-white border-slate-100 shadow-sm hover:shadow-md transition-shadow rounded-xl">
+                    <CardContent className="p-4">
                       <div className="flex items-center gap-2 text-slate-500 mb-1">
                         <Icon className="w-4 h-4" />
-                        <span className="text-sm font-medium">{metric.metric_label}</span>
+                        <span className="text-xs font-medium">{metric.metric_label}</span>
                       </div>
-                      <p className="text-2xl font-bold text-slate-900">{metric.metric_value}</p>
+                      <p className="text-xl font-bold text-slate-900">{metric.metric_value}</p>
                     </CardContent>
                   </Card>
                 );
@@ -147,24 +153,24 @@ export default function BoardDashboard() {
           </div>
         </div>
 
-        {/* Quick Links Grid - Moved up */}
-        <div className="mt-3">
-          <h2 className="text-lg font-semibold text-slate-900 mb-3">Quick Access</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+        {/* Quick Links Grid */}
+        <div className="pt-1">
+          <h2 className="text-base font-semibold text-slate-900 mb-2.5">Quick Access</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2.5">
             {quickLinks.map((link) => {
               const Icon = link.icon;
               return (
                 <Card
                   key={link.path}
-                  className="bg-white border-slate-200 hover:border-slate-300 hover:shadow-md transition-all cursor-pointer group"
+                  className="bg-white border-slate-100 hover:border-slate-200 hover:shadow-md transition-all cursor-pointer group rounded-xl"
                   onClick={() => navigate(link.path)}
                 >
-                  <CardContent className="p-4">
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${link.gradient} flex items-center justify-center mb-3`}>
-                      <Icon className="w-5 h-5 text-white" />
+                  <CardContent className="p-3.5">
+                    <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${link.gradient} flex items-center justify-center mb-2.5`}>
+                      <Icon className="w-4 h-4 text-white" />
                     </div>
-                    <h3 className="text-sm font-semibold text-slate-900 mb-1">{link.title}</h3>
-                    <p className="text-xs text-slate-500 mb-2 line-clamp-2">{link.description}</p>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-0.5">{link.title}</h3>
+                    <p className="text-xs text-slate-500 mb-1.5 line-clamp-2">{link.description}</p>
                     <span className="text-xs text-blue-600 group-hover:translate-x-1 transition-transform inline-flex items-center">
                       View <ArrowRight className="w-3 h-3 ml-1" />
                     </span>
@@ -176,13 +182,13 @@ export default function BoardDashboard() {
         </div>
 
         {/* State of the Company */}
-        <Card className="bg-white border-slate-200 shadow-sm">
-          <CardHeader className="border-b border-slate-100 py-4">
+        <Card className="bg-white border-slate-100 shadow-sm rounded-xl">
+          <CardHeader className="border-b border-slate-100 py-3 px-5">
             <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
-              <Activity className="w-5 h-5 text-blue-500" />
+              <Activity className="w-4 h-4 text-blue-500" />
               State of the Company
             </CardTitle>
-            <p className="text-sm text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 mt-0.5">
               A high-level summary of ongoing development, performance, and strategic updates.
             </p>
           </CardHeader>
@@ -200,7 +206,7 @@ export default function BoardDashboard() {
             ) : (
               <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900 mb-2">Current Status</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-1.5">Current Status</h3>
                   <p>
                     Seeksy is in active development with a strong foundation across creator tools, 
                     podcast hosting, and monetization systems. The platform has onboarded early 
@@ -208,8 +214,8 @@ export default function BoardDashboard() {
                   </p>
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900 mb-2">Key Highlights</h3>
-                  <ul className="list-disc list-inside space-y-1 text-slate-600">
+                  <h3 className="text-sm font-semibold text-slate-900 mb-1.5">Key Highlights</h3>
+                  <ul className="list-disc list-inside space-y-0.5 text-slate-600">
                     <li>Voice and Face Identity verification system live on Polygon mainnet</li>
                     <li>AI-powered clip generation and content certification operational</li>
                     <li>Podcast RSS hosting with migration support from major platforms</li>
@@ -218,7 +224,7 @@ export default function BoardDashboard() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900 mb-2">Next Quarter Focus</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 mb-1.5">Next Quarter Focus</h3>
                   <p>
                     Accelerate creator acquisition, launch advertising marketplace, and expand 
                     monetization tools including digital products and paid DMs.

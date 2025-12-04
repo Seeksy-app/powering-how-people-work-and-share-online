@@ -164,15 +164,18 @@ export function BoardSidebar() {
           className={cn(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all',
             isDisabled 
-              ? 'text-slate-400 cursor-not-allowed'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100',
-            isActive && !isDisabled && 'bg-blue-50 text-blue-700 font-medium'
+              ? 'text-slate-500 cursor-not-allowed'
+              : 'text-white hover:bg-slate-800 hover:text-white',
+            isActive && !isDisabled && 'bg-slate-800 text-blue-400 font-medium'
           )}
         >
-          <Icon className="w-4 h-4 flex-shrink-0" />
+          <Icon className={cn(
+            "w-4 h-4 flex-shrink-0",
+            isDisabled ? "text-slate-500" : isActive ? "text-blue-400" : "text-slate-300"
+          )} />
           <span className="flex-1 truncate">{item.label}</span>
           {isDisabled && (
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-slate-100 text-slate-400">
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-slate-700 text-slate-300 border-slate-600">
               Soon
             </Badge>
           )}
@@ -182,15 +185,15 @@ export function BoardSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-slate-200 bg-white">
-      <SidebarHeader className="p-4 border-b border-slate-100">
+    <Sidebar className="border-r border-slate-700 bg-slate-900">
+      <SidebarHeader className="p-4 border-b border-slate-700">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
             <span className="text-white font-bold">S</span>
           </div>
           <div>
-            <h2 className="text-base font-semibold text-slate-900">Seeksy</h2>
-            <p className="text-xs text-slate-500">Board Portal</p>
+            <h2 className="text-base font-semibold text-white">Seeksy</h2>
+            <p className="text-xs text-slate-400">Board Portal</p>
           </div>
         </div>
       </SidebarHeader>
@@ -207,7 +210,7 @@ export function BoardSidebar() {
         </SidebarGroup>
 
         {/* Business Section */}
-        <SidebarGroup className="mt-4">
+        <SidebarGroup className="mt-5">
           <SidebarGroupLabel className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-1">
             Business
           </SidebarGroupLabel>
@@ -217,7 +220,7 @@ export function BoardSidebar() {
         </SidebarGroup>
 
         {/* R&D & Intelligence Section */}
-        <SidebarGroup className="mt-4">
+        <SidebarGroup className="mt-5">
           <SidebarGroupLabel className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-1">
             R&D & Intelligence
           </SidebarGroupLabel>
@@ -227,7 +230,7 @@ export function BoardSidebar() {
         </SidebarGroup>
 
         {/* Coming Soon Section */}
-        <SidebarGroup className="mt-4">
+        <SidebarGroup className="mt-5">
           <SidebarGroupLabel className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-1">
             Coming Soon
           </SidebarGroupLabel>
@@ -237,12 +240,12 @@ export function BoardSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 border-t border-slate-100 space-y-2">
+      <SidebarFooter className="p-3 border-t border-slate-700 space-y-2">
         {canToggleBoardView && isViewingAsBoard && (
           <Button
             variant="outline"
             size="sm"
-            className="w-full justify-start gap-2 text-slate-600 border-slate-200 hover:bg-slate-50"
+            className="w-full justify-start gap-2 text-slate-300 border-slate-600 bg-slate-800 hover:bg-slate-700 hover:text-white"
             onClick={handleExitBoardView}
           >
             <LayoutDashboard className="w-4 h-4" />
@@ -252,7 +255,7 @@ export function BoardSidebar() {
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-2 text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+          className="w-full justify-start gap-2 text-slate-400 hover:text-white hover:bg-slate-800"
           onClick={handleLogout}
         >
           <LogOut className="w-4 h-4" />
