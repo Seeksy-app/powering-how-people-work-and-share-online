@@ -39,10 +39,12 @@ const DEFAULT_NAV_CONFIG: NavConfig = {
     'meetings',
     'studio',
     'podcasts',
+    'media',
     'brand_campaigns',
     'revenue_tracking',
-    'content_library',
     'social_analytics',
+    'seekies',
+    'apps',
     'settings'
   ],
   hidden: [],
@@ -102,6 +104,8 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'brand_campaigns', label: 'Brand Campaigns', path: '/creator-campaigns' },
   { id: 'revenue_tracking', label: 'Revenue Tracking', path: '/monetization' },
   { id: 'social_analytics', label: 'Social Analytics', path: '/social-analytics' },
+  { id: 'seekies', label: 'Seekies & Tools', path: '/seekies' },
+  { id: 'apps', label: 'Apps Directory', path: '/apps' },
   { id: 'settings', label: 'Settings', path: '/settings' },
 ];
 
