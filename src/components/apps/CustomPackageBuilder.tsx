@@ -136,11 +136,15 @@ export function CustomPackageBuilder({ open, onOpenChange, modules }: CustomPack
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['custom-packages'] });
-      toast.success("Custom package saved successfully!");
+      toast.success("Workspace saved!", {
+        description: "You can manage this under My Workspaces in the App Directory.",
+      });
       onOpenChange(false);
       setStep(1);
       setSelectedModules(new Set());
-      navigate('/');
+      setPackageName("My Custom Workspace");
+      setPackageDescription("");
+      setIsDefault(false);
     },
     onError: (error) => {
       toast.error("Failed to save package", { description: error.message });

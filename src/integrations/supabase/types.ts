@@ -7695,31 +7695,40 @@ export type Database = {
       custom_packages: {
         Row: {
           created_at: string | null
+          description: string | null
           estimated_monthly_credits: number | null
           id: string
+          is_default: boolean | null
           modules: Json | null
           name: string
           recommended_bundle: string | null
+          settings: Json | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          description?: string | null
           estimated_monthly_credits?: number | null
           id?: string
+          is_default?: boolean | null
           modules?: Json | null
           name: string
           recommended_bundle?: string | null
+          settings?: Json | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          description?: string | null
           estimated_monthly_credits?: number | null
           id?: string
+          is_default?: boolean | null
           modules?: Json | null
           name?: string
           recommended_bundle?: string | null
+          settings?: Json | null
           updated_at?: string | null
           user_id?: string
         }

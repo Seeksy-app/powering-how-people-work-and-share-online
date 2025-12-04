@@ -6,12 +6,13 @@ import { ModuleCard, ModuleCardProps } from "@/components/apps/ModuleCard";
 import { ModulePreviewModal } from "@/components/apps/ModulePreviewModal";
 import { CustomPackageBuilder } from "@/components/apps/CustomPackageBuilder";
 import { CategoryTooltip } from "@/components/apps/CategoryTooltip";
+import { MyWorkspacesSection } from "@/components/apps/MyWorkspacesSection";
 import { 
   Search, Instagram, BarChart3, Megaphone, DollarSign, TrendingUp, FolderOpen,
   Mic, Podcast, Image, Scissors, Video, Users, PieChart, Target, Mail, 
   Zap, MessageCircle, FormInput, FileText, CheckSquare, Calendar, Vote,
   Trophy, UserPlus, Layout, Shield, Star, Globe, CalendarClock, Grid3X3,
-  ChevronDown, LayoutGrid, List, Package
+  ChevronDown, LayoutGrid, List, Package, Layers
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useModuleActivation } from "@/hooks/useModuleActivation";
+import { useCustomPackages } from "@/hooks/useCustomPackages";
 
 type ModuleStatus = "active" | "available" | "coming_soon";
 
@@ -504,6 +506,7 @@ const modules: Module[] = [
 export default function Apps() {
   const navigate = useNavigate();
   const { activatedModuleIds, isModuleActivated } = useModuleActivation();
+  const { packages } = useCustomPackages();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [isCompact, setIsCompact] = useState(false);
@@ -581,18 +584,16 @@ export default function Apps() {
     <div className="min-h-screen bg-background">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Header */}
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1.5">
-              Seeksy App Directory
-            </h1>
-            <p className="text-muted-foreground text-sm max-w-xl">
-              All modules, tools, and integrations available in your workspace.
-            </p>
-          </div>
+        <div className="mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1.5">
+            Seeksy App Directory
+          </h1>
+          <p className="text-muted-foreground text-sm max-w-xl mb-4">
+            All modules, tools, and integrations available in your workspace.
+          </p>
           <Button onClick={() => setShowPackageBuilder(true)} className="gap-2">
             <Package className="h-4 w-4" />
-            Create Your Own Package
+            Build a Custom Workspace
           </Button>
         </div>
 
@@ -642,7 +643,28 @@ export default function Apps() {
 
         {/* Segmented Control Filter */}
         <div className="mb-6">
-          <div className="inline-flex items-center p-1 bg-muted/50 rounded-xl border border-border/50">
+          <div className="inline-flex items-center p-1 bg-muted/50 rounded-xl border border-border/50 flex-wrap">
+            {/* My Workspaces Tab */}
+            <button
+              onClick={() => setActiveCategory("my-workspaces")}
+              className={cn(
+                "px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center gap-1.5",
+                activeCategory === "my-workspaces"
+                  ? "bg-background text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+              )}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span>My Workspaces</span>
+              {packages.length > 0 && (
+                <Badge variant="secondary" className="text-xs h-5 px-1.5 ml-1">
+                  {packages.length}
+                </Badge>
+              )}
+            </button>
+            
+            <div className="w-px h-6 bg-border mx-1" />
+            
             {categories.map((category) => {
               const isActive = activeCategory === category.id;
               return (
@@ -663,7 +685,13 @@ export default function Apps() {
           </div>
         </div>
 
+        {/* My Workspaces Section */}
+        {activeCategory === "my-workspaces" && (
+          <MyWorkspacesSection onCreateNew={() => setShowPackageBuilder(true)} />
+        )}
+
         {/* Module Grid by Category */}
+        {activeCategory !== "my-workspaces" && (
         <div className="space-y-8">
           {categoryOrder.map((categoryId) => {
             const categoryModules = groupedModules[categoryId];
@@ -745,9 +773,10 @@ export default function Apps() {
             );
           })}
         </div>
+        )}
 
         {/* Empty State */}
-        {filteredModules.length === 0 && (
+        {activeCategory !== "my-workspaces" && filteredModules.length === 0 && (
           <div className="text-center py-16">
             <Search className="h-10 w-10 mx-auto text-muted-foreground/50 mb-4" />
             <h3 className="text-base font-medium mb-1.5">No modules found</h3>
