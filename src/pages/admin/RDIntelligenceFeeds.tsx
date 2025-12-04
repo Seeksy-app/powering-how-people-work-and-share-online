@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Rss, Plus, Trash2, Podcast, FileText, AlertCircle, RefreshCw, Upload, ExternalLink, Loader2, Youtube, Eye, Search, Filter, Clock, Tag } from 'lucide-react';
+import { Rss, Plus, Trash2, Podcast, FileText, AlertCircle, RefreshCw, Upload, ExternalLink, Loader2, Youtube, Eye, Search, Filter, Clock, Tag, RotateCcw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -215,11 +215,32 @@ export default function RDIntelligenceFeeds() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['rdFeedItems'] });
+      queryClient.invalidateQueries({ queryKey: ['rdInsights'] });
+      queryClient.invalidateQueries({ queryKey: ['kbChunksCount'] });
       setIsYoutubeDialogOpen(false);
       setYoutubeUrl('');
       toast.success(data?.message || 'YouTube video ingested');
     },
     onError: (error: any) => toast.error(error.message || 'YouTube ingestion failed'),
+  });
+
+  // Reprocess item mutation
+  const reprocessItemMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const { data, error } = await supabase.functions.invoke('process-rd-content', {
+        body: { itemId, forceReprocess: true },
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['rdFeedItems'] });
+      queryClient.invalidateQueries({ queryKey: ['rdInsights'] });
+      queryClient.invalidateQueries({ queryKey: ['kbChunksCount'] });
+      toast.success(data?.message || 'Item reprocessed');
+    },
+    onError: (error: any) => toast.error(error.message || 'Reprocessing failed'),
   });
 
   // Toggle feed mutation
@@ -509,6 +530,22 @@ export default function RDIntelligenceFeeds() {
                             </div>
 
                             <div className="flex items-center gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  reprocessItemMutation.mutate(item.id);
+                                }}
+                                disabled={reprocessItemMutation.isPending}
+                                title="Reprocess with AI"
+                              >
+                                {reprocessItemMutation.isPending ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="w-4 h-4" />
+                                )}
+                              </Button>
                               <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); handleViewItem(item); }}>
                                 <Eye className="w-4 h-4" />
                               </Button>
@@ -663,7 +700,12 @@ export default function RDIntelligenceFeeds() {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-4">
-            <Input type="file" accept=".pdf" onChange={handlePdfUpload} disabled={uploadingPdf} />
+            <Input 
+              type="file" 
+              accept="application/pdf,.pdf" 
+              onChange={handlePdfUpload} 
+              disabled={uploadingPdf} 
+            />
             {uploadingPdf && <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Uploading and processing...</p>}
           </div>
         </DialogContent>

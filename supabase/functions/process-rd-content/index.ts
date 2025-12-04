@@ -45,23 +45,30 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const { itemId, batchSize = 5 } = await req.json().catch(() => ({}));
+    const { itemId, batchSize = 5, forceReprocess = false } = await req.json().catch(() => ({}));
     
-    console.log("[process-rd-content] Starting processing...", itemId ? `for item ${itemId}` : `batch of ${batchSize}`);
+    console.log("[process-rd-content] Starting processing...", 
+      itemId ? `for item ${itemId}` : `batch of ${batchSize}`,
+      forceReprocess ? "(force reprocess)" : ""
+    );
 
-    // Get unprocessed items
-    let query = supabase
-      .from("rd_feed_items")
-      .select("*")
-      .eq("processed", false)
-      .order("created_at", { ascending: true })
-      .limit(batchSize);
+    // Get items to process
+    let query;
     
     if (itemId) {
+      // Single item processing (can force reprocess)
       query = supabase
         .from("rd_feed_items")
         .select("*")
         .eq("id", itemId);
+    } else {
+      // Batch processing (only unprocessed)
+      query = supabase
+        .from("rd_feed_items")
+        .select("*")
+        .eq("processed", false)
+        .order("created_at", { ascending: true })
+        .limit(batchSize);
     }
 
     const { data: items, error: itemsError } = await query;
@@ -72,7 +79,7 @@ serve(async (req) => {
 
     if (!items || items.length === 0) {
       return new Response(
-        JSON.stringify({ message: "No unprocessed items found", processed: 0 }),
+        JSON.stringify({ message: "No items found to process", processed: 0 }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -82,6 +89,13 @@ serve(async (req) => {
 
     for (const item of items) {
       try {
+        // If force reprocessing, delete existing insights and chunks
+        if (forceReprocess && itemId) {
+          console.log(`[process-rd-content] Force reprocessing: deleting existing data for ${item.id}`);
+          await supabase.from("kb_chunks").delete().eq("source_item_id", item.id);
+          await supabase.from("rd_insights").delete().eq("feed_item_id", item.id);
+        }
+
         const contentToProcess = item.cleaned_text || item.raw_content || item.title;
         
         if (!contentToProcess || contentToProcess.length < 50) {
