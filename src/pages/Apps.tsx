@@ -687,7 +687,13 @@ export default function Apps() {
 
         {/* My Workspaces Section */}
         {activeCategory === "my-workspaces" && (
-          <MyWorkspacesSection onCreateNew={() => setShowPackageBuilder(true)} />
+          <MyWorkspacesSection 
+            onCreateNew={() => setShowPackageBuilder(true)} 
+            onEdit={(packageId) => {
+              // TODO: Implement edit functionality - for now show package builder
+              setShowPackageBuilder(true);
+            }}
+          />
         )}
 
         {/* Module Grid by Category */}
