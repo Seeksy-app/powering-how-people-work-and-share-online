@@ -121,7 +121,7 @@ export default function TicketsInbox() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <div className="border-b border-border bg-background px-6 py-4">
+      <div className="border-b border-border bg-background px-6 py-4 text-left">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-semibold">Ticket Inbox</h1>

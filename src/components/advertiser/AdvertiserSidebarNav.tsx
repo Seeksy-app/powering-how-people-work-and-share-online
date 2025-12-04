@@ -76,6 +76,12 @@ const advertiserNavSections: NavSection[] = [
     ],
   },
   {
+    title: 'Offers',
+    items: [
+      { title: 'Offers & Negotiations', href: '/advertiser/offers', icon: MessageSquare },
+    ],
+  },
+  {
     title: 'Payments & Billing',
     items: [
       { title: 'Billing', href: '/advertiser/billing', icon: CreditCard },
@@ -194,9 +200,10 @@ export function AdvertiserSidebarNav() {
                           asChild
                           isActive={isActive}
                           tooltip={item.title}
+                          className={isActive ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30" : ""}
                         >
                           <Link to={item.href}>
-                            <Icon className="h-4 w-4" />
+                            <Icon className={`h-4 w-4 ${isActive ? "text-yellow-400" : ""}`} />
                             <span>{item.title}</span>
                           </Link>
                         </SidebarMenuButton>

@@ -198,6 +198,10 @@ import TeamChat from "./pages/TeamChat";
 import Team from "./pages/Team";
 import AdminInternalChat from "./pages/AdminInternalChat";
 import SupportChat from "./pages/SupportChat";
+import AdDetailPage from "./pages/advertiser/AdDetailPage";
+import CreatorDetailPage from "./pages/advertiser/CreatorDetailPage";
+import OffersListPage from "./pages/advertiser/OffersListPage";
+import OfferDetailPage from "./pages/advertiser/OfferDetailPage";
 import CFODashboard from "./pages/CFODashboard";
 import CFOCalculators from "./pages/CFOCalculators";
 import ProForma from "./pages/ProForma";
@@ -870,6 +874,11 @@ const AppContent = () => {
               <Route path="/advertiser/ad-library-v2" element={<ProtectedRoute requiredRole="advertiser"><AdLibraryV2 /></ProtectedRoute>} />
               <Route path="/advertiser/marketplace-v2" element={<ProtectedRoute requiredRole="advertiser"><MarketplaceV2 /></ProtectedRoute>} />
               <Route path="/advertiser/campaign-builder-v2" element={<ProtectedRoute requiredRole="advertiser"><CampaignBuilderV2 /></ProtectedRoute>} />
+              <Route path="/advertiser/ad/:id" element={<ProtectedRoute requiredRole="advertiser"><AdDetailPage /></ProtectedRoute>} />
+              <Route path="/advertiser/creators/:id" element={<ProtectedRoute requiredRole="advertiser"><CreatorDetailPage /></ProtectedRoute>} />
+              <Route path="/advertiser/offers" element={<ProtectedRoute requiredRole="advertiser"><OffersListPage /></ProtectedRoute>} />
+              <Route path="/advertiser/offers/:id" element={<ProtectedRoute requiredRole="advertiser"><OfferDetailPage /></ProtectedRoute>} />
+              <Route path="/advertiser/ads" element={<ProtectedRoute requiredRole="advertiser"><AdLibraryV2 /></ProtectedRoute>} />
           <Route path="/admin/system-architecture" element={<SystemArchitecture />} />
           <Route path="/podcast-ads" element={<PodcastAds />} />
           <Route path="/podcast-revenue" element={<PodcastRevenue />} />

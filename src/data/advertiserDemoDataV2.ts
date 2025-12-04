@@ -716,14 +716,14 @@ export const demoCampaignsV2 = [
 
 // Demo Offers V2
 export const demoOffersV2 = [
-  { id: "off-1", creatorName: "Sarah Mitchell", creatorAvatar: demoCreatorsV2[0].avatarUrl, campaignName: "Q4 Holiday Push", budget: 3500, status: "accepted" as const },
-  { id: "off-2", creatorName: "Mike Johnson", creatorAvatar: demoCreatorsV2[1].avatarUrl, campaignName: "Tech Product Launch", budget: 2800, status: "accepted" as const },
-  { id: "off-3", creatorName: "Emma Davis", creatorAvatar: demoCreatorsV2[2].avatarUrl, campaignName: "Q4 Holiday Push", budget: 4200, status: "accepted" as const },
-  { id: "off-4", creatorName: "Lisa Park", creatorAvatar: demoCreatorsV2[4].avatarUrl, campaignName: "Q4 Holiday Push", budget: 2500, status: "pending" as const },
-  { id: "off-5", creatorName: "Jordan Lee", creatorAvatar: demoCreatorsV2[5].avatarUrl, campaignName: "Tech Product Launch", budget: 3200, status: "pending" as const },
-  { id: "off-6", creatorName: "Nina Rodriguez", creatorAvatar: demoCreatorsV2[6].avatarUrl, campaignName: "Beauty Campaign", budget: 1800, status: "sent" as const },
-  { id: "off-7", creatorName: "Chris Taylor", creatorAvatar: demoCreatorsV2[7].avatarUrl, campaignName: "Fitness Challenge", budget: 2100, status: "sent" as const },
-  { id: "off-8", creatorName: "Priya Sharma", creatorAvatar: demoCreatorsV2[8].avatarUrl, campaignName: "Food & Lifestyle", budget: 1500, status: "rejected" as const },
+  { id: "off-1", creatorId: "creator-1", creatorName: "Sarah Mitchell", creatorAvatar: demoCreatorsV2[0].avatarUrl, campaignName: "Q4 Holiday Push", budget: 3500, status: "accepted" as const },
+  { id: "off-2", creatorId: "creator-2", creatorName: "Mike Johnson", creatorAvatar: demoCreatorsV2[1].avatarUrl, campaignName: "Tech Product Launch", budget: 2800, status: "accepted" as const },
+  { id: "off-3", creatorId: "creator-3", creatorName: "Emma Davis", creatorAvatar: demoCreatorsV2[2].avatarUrl, campaignName: "Q4 Holiday Push", budget: 4200, status: "accepted" as const },
+  { id: "off-4", creatorId: "creator-5", creatorName: "Lisa Park", creatorAvatar: demoCreatorsV2[4].avatarUrl, campaignName: "Q4 Holiday Push", budget: 2500, status: "pending" as const },
+  { id: "off-5", creatorId: "creator-6", creatorName: "Jordan Lee", creatorAvatar: demoCreatorsV2[5].avatarUrl, campaignName: "Tech Product Launch", budget: 3200, status: "pending" as const },
+  { id: "off-6", creatorId: "creator-7", creatorName: "Nina Rodriguez", creatorAvatar: demoCreatorsV2[6].avatarUrl, campaignName: "Beauty Campaign", budget: 1800, status: "negotiating" as const },
+  { id: "off-7", creatorId: "creator-8", creatorName: "Chris Taylor", creatorAvatar: demoCreatorsV2[7].avatarUrl, campaignName: "Fitness Challenge", budget: 2100, status: "negotiating" as const },
+  { id: "off-8", creatorId: "creator-9", creatorName: "Priya Sharma", creatorAvatar: demoCreatorsV2[8].avatarUrl, campaignName: "Food & Lifestyle", budget: 1500, status: "rejected" as const },
 ];
 
 // KPI Data
