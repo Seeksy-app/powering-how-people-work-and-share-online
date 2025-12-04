@@ -247,6 +247,14 @@ export const NAVIGATION_CONFIG: {
           "roles": ["admin", "super_admin"]
         },
         {
+          "id": "admin_agent_training",
+          "label": "Agent Training",
+          "icon": "brain",
+          "path": "/admin/agent-training",
+          "roles": ["admin", "super_admin"],
+          "description": "AI agent knowledge health and training"
+        },
+        {
           "id": "admin_market_intelligence",
           "label": "Market Intelligence",
           "icon": "globe",
