@@ -16,16 +16,16 @@ export function HostToolsBar({
   onAddAdMarker,
 }: HostToolsBarProps) {
   return (
-    <div className="absolute bottom-24 right-4 flex items-center gap-2 z-10">
+    <div className="flex items-center justify-center gap-3 py-3 px-4 bg-[#1a1d21]/80 backdrop-blur-sm rounded-xl border border-white/10">
       <Button
         variant="ghost"
         size="sm"
         onClick={onOpenScript}
         className={cn(
-          "h-10 px-4 rounded-lg gap-2 transition-all",
+          "h-11 px-5 rounded-lg gap-2.5 transition-all font-medium",
           activeDrawer === "script"
             ? "bg-blue-500 text-white hover:bg-blue-600"
-            : "bg-white/10 text-white hover:bg-white/20"
+            : "bg-[#2a3441] text-white hover:bg-[#3a4451] border border-white/10"
         )}
       >
         <FileText className="w-4 h-4" />
@@ -36,7 +36,7 @@ export function HostToolsBar({
         variant="ghost"
         size="sm"
         onClick={onAddClipMarker}
-        className="h-10 px-4 rounded-lg gap-2 bg-green-500/20 text-green-400 hover:bg-green-500/30"
+        className="h-11 px-5 rounded-lg gap-2.5 bg-green-600/90 text-white hover:bg-green-600 border border-green-500/30 font-medium"
       >
         <Scissors className="w-4 h-4" />
         Clip Marker
@@ -46,7 +46,7 @@ export function HostToolsBar({
         variant="ghost"
         size="sm"
         onClick={onAddAdMarker}
-        className="h-10 px-4 rounded-lg gap-2 bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
+        className="h-11 px-5 rounded-lg gap-2.5 bg-amber-500/90 text-black hover:bg-amber-500 border border-amber-400/30 font-medium"
       >
         <Tag className="w-4 h-4" />
         Ad Marker
