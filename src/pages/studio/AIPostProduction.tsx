@@ -1,27 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { useVideoProcessing } from "@/hooks/useVideoProcessing";
 import { UploadMediaDialog } from "@/components/media/UploadMediaDialog";
-import { 
-  Wand2, Scissors, ArrowLeft, Clock, FileVideo, 
-  Sparkles, Volume2, Type, Layers, Upload, Check, Loader2, 
-  AlertCircle, Film, Mic, Palette, Sun, X, RefreshCw, Download, Eye,
-  ChevronRight, Zap, RotateCcw, Video, ExternalLink, FileText, Share2, FolderOpen
-} from "lucide-react";
 import { MediaSourceSelector, MediaSource } from "@/components/studio/MediaSourceSelector";
+import { SelectedMediaHeader } from "@/components/studio/SelectedMediaHeader";
+import { ProcessingAnalyticsPanel, DurationComparisonBanner } from "@/components/studio/ProcessingAnalyticsPanel";
+import { CompletionSuccessPage } from "@/components/studio/CompletionSuccessPage";
+import { VideoComparisonModal } from "@/components/studio/VideoComparisonModal";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { 
+  Wand2, ArrowLeft, Clock, FileVideo, 
+  Sparkles, Volume2, Type, Layers, Check, Loader2, 
+  AlertCircle, Film, Mic, Palette, Sun, Zap, RotateCcw, 
+  Video, FolderOpen, Download, RefreshCw
+} from "lucide-react";
 
 interface MediaFile {
   id: string;
@@ -70,6 +70,7 @@ export default function AIPostProduction() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { processVideo, isProcessing } = useVideoProcessing();
+  const processingSectionRef = useRef<HTMLDivElement>(null);
   
   // Wizard step: 1 = Select, 2 = Processing, 3 = Success
   const [wizardStep, setWizardStep] = useState<1 | 2 | 3>(1);
@@ -78,12 +79,16 @@ export default function AIPostProduction() {
   const [showMediaSelector, setShowMediaSelector] = useState(false);
   const [showComparisonModal, setShowComparisonModal] = useState(false);
   const [showUploadDialog, setShowUploadDialog] = useState(false);
-  const [mediaFilter, setMediaFilter] = useState<'all' | 'video' | 'audio'>('all');
+  const [isImporting, setIsImporting] = useState(false);
   
   // Processing state
   const [currentStep, setCurrentStep] = useState(0);
   const [stepProgress, setStepProgress] = useState(0);
   const [processingStatus, setProcessingStatus] = useState('');
+  
+  // Video preview state
+  const [videoError, setVideoError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   // AI Analytics state
   const [aiAnalytics, setAiAnalytics] = useState({
@@ -99,9 +104,6 @@ export default function AIPostProduction() {
     originalDuration: 0,
     finalDuration: 0,
   });
-  
-  // Comparison slider
-  const [comparisonPosition, setComparisonPosition] = useState(50);
 
   // Fetch user's media files
   const { data: mediaFiles, isLoading: loadingMedia } = useQuery({
@@ -270,6 +272,13 @@ export default function AIPostProduction() {
     };
   }, [wizardStep, selectedMedia?.duration_seconds]);
 
+  // Auto-scroll to processing section
+  useEffect(() => {
+    if (wizardStep === 2 && processingSectionRef.current) {
+      processingSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [wizardStep]);
+
   const handleStartProcessing = async () => {
     if (!selectedMedia) {
       toast({
@@ -301,11 +310,6 @@ export default function AIPostProduction() {
       
       await processVideo(selectedMedia.id, 'ai_edit');
       queryClient.invalidateQueries({ queryKey: ['processing-jobs', selectedMedia.id] });
-      
-      // Auto-scroll to processing section
-      setTimeout(() => {
-        document.getElementById('processing-section')?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
     } catch (error) {
       console.error('Processing error:', error);
       setWizardStep(1);
@@ -321,19 +325,6 @@ export default function AIPostProduction() {
       setCurrentStep(0);
       setStepProgress(0);
       setProcessingStatus(PROCESSING_STEPS[0].label + '...');
-      setAiAnalytics({
-        fillerWordsRemoved: 0,
-        pausesRemoved: 0,
-        silencesTrimmed: 0,
-        audioLevelNormalized: 0,
-        noiseReduced: 0,
-        colorGraded: false,
-        chaptersDetected: 0,
-        transcriptWords: 0,
-        totalTimeSaved: 0,
-        originalDuration: selectedMedia.duration_seconds || 300,
-        finalDuration: selectedMedia.duration_seconds || 300,
-      });
       
       await processVideo(selectedMedia.id, job.job_type as any);
       queryClient.invalidateQueries({ queryKey: ['processing-jobs', selectedMedia.id] });
@@ -346,10 +337,8 @@ export default function AIPostProduction() {
   const handleMediaSelect = (media: MediaFile) => {
     setSelectedMedia(media);
     setShowMediaSelector(false);
-    // Auto-scroll to step 2 area
-    setTimeout(() => {
-      document.getElementById('processing-section')?.scrollIntoView({ behavior: 'smooth' });
-    }, 200);
+    setVideoError(false);
+    setRetryCount(0);
   };
 
   const handleChangeMedia = () => {
@@ -357,17 +346,24 @@ export default function AIPostProduction() {
     setWizardStep(1);
     setCurrentStep(0);
     setStepProgress(0);
+    setIsImporting(false);
+  };
+
+  const handleVideoError = () => {
+    if (retryCount < 3) {
+      setRetryCount(prev => prev + 1);
+      setTimeout(() => setVideoError(false), 2000);
+    } else {
+      setVideoError(true);
+    }
   };
 
   const latestFailedJob = processingJobs?.find(j => j.status === 'failed');
   const videoUrl = selectedMedia?.cloudflare_download_url || selectedMedia?.file_url;
   const overallProgress = Math.min(100, Math.round((currentStep / PROCESSING_STEPS.length) * 100 + (stepProgress / PROCESSING_STEPS.length)));
 
-  // Filter media files
-  const filteredMedia = mediaFiles?.filter(f => {
-    if (mediaFilter === 'all') return true;
-    return f.file_type === mediaFilter;
-  });
+  // Check if original preview is available (not for external imports)
+  const hasOriginalPreview = selectedMedia?.source !== 'youtube' && selectedMedia?.source !== 'zoom';
 
   return (
     <div className="min-h-screen bg-background">
@@ -426,10 +422,11 @@ export default function AIPostProduction() {
                   if (media) {
                     handleMediaSelect({ ...media, source } as MediaFile);
                   } else {
+                    setIsImporting(true);
                     queryClient.invalidateQueries({ queryKey: ['media-files-for-processing'] });
                     handleMediaSelect({
                       id: mediaId,
-                      file_name: `Importing from ${source}...`,
+                      file_name: null,
                       file_type: 'video',
                       file_url: null,
                       cloudflare_download_url: null,
@@ -449,33 +446,21 @@ export default function AIPostProduction() {
             </CardContent>
           </Card>
         ) : (
-          /* Collapsed Selection Header */
-          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border mb-6" style={{ borderColor: 'rgba(5,56,119,0.2)' }}>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-8 bg-muted rounded overflow-hidden flex items-center justify-center">
-                {selectedMedia.thumbnail_url ? (
-                  <img src={selectedMedia.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <Video className="h-4 w-4 text-muted-foreground" />
-                )}
-              </div>
-              <div>
-                <p className="font-medium text-sm flex items-center gap-2">
-                  🎥 Selected: {selectedMedia.file_name || 'Untitled'}
-                  {selectedMedia.duration_seconds && (
-                    <span className="text-muted-foreground">({formatDuration(selectedMedia.duration_seconds)})</span>
-                  )}
-                </p>
-              </div>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleChangeMedia}>
-              Change Video
-            </Button>
-          </div>
+          /* Collapsed Selection Header - Sticky */
+          <SelectedMediaHeader
+            fileName={selectedMedia.file_name}
+            thumbnail={selectedMedia.thumbnail_url}
+            duration={selectedMedia.duration_seconds}
+            fileType={selectedMedia.file_type}
+            source={selectedMedia.source}
+            isImporting={isImporting}
+            onChangeMedia={handleChangeMedia}
+            sticky={wizardStep >= 2}
+          />
         )}
 
         {/* ========== STEP 2: PROCESSING ========== */}
-        <div id="processing-section">
+        <div ref={processingSectionRef} className="mt-6">
           {selectedMedia && wizardStep === 1 && (
             <Card className="mb-6">
               <CardContent className="pt-6">
@@ -519,7 +504,7 @@ export default function AIPostProduction() {
                   className="w-full text-white"
                   style={{ background: 'linear-gradient(135deg, #053877 0%, #2C6BED 100%)' }}
                   size="lg"
-                  disabled={isProcessing}
+                  disabled={isProcessing || isImporting}
                   onClick={handleStartProcessing}
                 >
                   <Sparkles className="h-5 w-5 mr-2" />
@@ -548,11 +533,38 @@ export default function AIPostProduction() {
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Video Preview */}
                   <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-                    {videoUrl ? (
-                      <video src={videoUrl} className="w-full h-full object-contain" autoPlay muted loop />
+                    {videoUrl && !videoError ? (
+                      <video 
+                        src={videoUrl} 
+                        className="w-full h-full object-contain" 
+                        autoPlay 
+                        muted 
+                        loop 
+                        onError={handleVideoError}
+                      />
                     ) : (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <FileVideo className="h-16 w-16 text-white/20" />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        {videoError || !videoUrl ? (
+                          <>
+                            <FileVideo className="h-16 w-16 text-white/20 mb-2" />
+                            <p className="text-white/50 text-sm">
+                              {retryCount > 0 && retryCount < 3 ? 'Retrying preview...' : 'Preview not available'}
+                            </p>
+                            {retryCount >= 3 && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="mt-2 text-white/70"
+                                onClick={() => { setRetryCount(0); setVideoError(false); }}
+                              >
+                                <RefreshCw className="h-3 w-3 mr-1" />
+                                Try Again
+                              </Button>
+                            )}
+                          </>
+                        ) : (
+                          <Loader2 className="h-8 w-8 text-white/50 animate-spin" />
+                        )}
                       </div>
                     )}
                     
@@ -616,32 +628,17 @@ export default function AIPostProduction() {
                 </div>
                 
                 {/* AI Processing Analytics - Live */}
-                <div className="mt-6 p-4 bg-muted/50 rounded-xl border">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Sparkles className="h-5 w-5 text-[#2C6BED]" />
-                    <h4 className="font-semibold">AI Processing Analytics</h4>
-                    <Badge variant="outline" className="ml-auto text-xs animate-pulse" style={{ borderColor: '#2C6BED', color: '#2C6BED' }}>Live</Badge>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <AnalyticsCard icon={Mic} label="Filler Words" value={aiAnalytics.fillerWordsRemoved} unit="removed" color="text-orange-500" />
-                    <AnalyticsCard icon={Zap} label="Pauses" value={aiAnalytics.pausesRemoved} unit="trimmed" color="text-yellow-500" />
-                    <AnalyticsCard icon={Volume2} label="Silences" value={aiAnalytics.silencesTrimmed} unit="cut" color="text-blue-500" />
-                    <AnalyticsCard icon={Sun} label="Noise Reduced" value={aiAnalytics.noiseReduced} unit="%" color="text-green-500" />
-                    <AnalyticsCard icon={Clock} label="Time Saved" value={Math.round(aiAnalytics.totalTimeSaved)} unit="sec" color="text-purple-500" />
-                    <AnalyticsCard icon={Layers} label="Chapters" value={aiAnalytics.chaptersDetected} unit="detected" color="text-pink-500" />
-                  </div>
-                  
-                  {/* Duration Comparison */}
-                  {aiAnalytics.totalTimeSaved > 0 && (
-                    <div className="mt-4 p-3 bg-green-50 dark:bg-green-500/10 rounded-lg border border-green-200 dark:border-green-500/20 flex items-center justify-between">
-                      <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                        Original: {formatDuration(aiAnalytics.originalDuration)} → Enhanced: {formatDuration(aiAnalytics.finalDuration)}
-                      </span>
-                      <Badge className="bg-green-500 text-white">
-                        -{Math.round((aiAnalytics.totalTimeSaved / aiAnalytics.originalDuration) * 100)}% shorter
-                      </Badge>
-                    </div>
-                  )}
+                <div className="mt-6">
+                  <ProcessingAnalyticsPanel 
+                    analytics={aiAnalytics} 
+                    isLive={true} 
+                    variant="processing" 
+                  />
+                  <DurationComparisonBanner 
+                    originalDuration={aiAnalytics.originalDuration}
+                    finalDuration={aiAnalytics.finalDuration}
+                    totalTimeSaved={aiAnalytics.totalTimeSaved}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -649,115 +646,13 @@ export default function AIPostProduction() {
 
           {/* ========== STEP 3: SUCCESS ========== */}
           {wizardStep === 3 && selectedMedia && (
-            <div className="space-y-6">
-              {/* Success Banner */}
-              <div className="p-6 rounded-xl text-white" style={{ background: 'linear-gradient(135deg, #053877 0%, #2C6BED 100%)' }}>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                    <Check className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">🎉 Your Video Has Been Successfully Enhanced</h2>
-                    <p className="text-white/80 text-sm">Your enhanced content is ready. Choose what you'd like to do next.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Analytics Summary */}
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-[#2C6BED]" />
-                    Enhancement Summary
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-                    <AnalyticsCard icon={Mic} label="Filler Words" value={aiAnalytics.fillerWordsRemoved} unit="removed" color="text-green-600" bg="bg-green-50" />
-                    <AnalyticsCard icon={Zap} label="Pauses" value={aiAnalytics.pausesRemoved} unit="trimmed" color="text-green-600" bg="bg-green-50" />
-                    <AnalyticsCard icon={Volume2} label="Silences" value={aiAnalytics.silencesTrimmed} unit="cut" color="text-green-600" bg="bg-green-50" />
-                    <AnalyticsCard icon={Sun} label="Noise Reduced" value={aiAnalytics.noiseReduced} unit="%" color="text-blue-600" bg="bg-blue-50" />
-                    <AnalyticsCard icon={Layers} label="Chapters" value={aiAnalytics.chaptersDetected} unit="detected" color="text-blue-600" bg="bg-blue-50" />
-                    <AnalyticsCard icon={Clock} label="Time Saved" value={Math.round(aiAnalytics.totalTimeSaved)} unit="sec" color="text-amber-600" bg="bg-amber-50" />
-                  </div>
-                  
-                  {aiAnalytics.totalTimeSaved > 0 && (
-                    <div className="p-3 bg-green-50 dark:bg-green-500/10 rounded-lg border border-green-200 dark:border-green-500/20 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Check className="h-5 w-5 text-green-600" />
-                        <span className="font-medium text-green-700 dark:text-green-400">
-                          Duration: {formatDuration(aiAnalytics.originalDuration)} → {formatDuration(aiAnalytics.finalDuration)}
-                        </span>
-                      </div>
-                      <Badge className="bg-green-500 text-white">
-                        {Math.round((aiAnalytics.totalTimeSaved / aiAnalytics.originalDuration) * 100)}% improvement
-                      </Badge>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Download Actions */}
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold mb-4">Download Your Files</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <Button variant="outline" className="h-auto py-3 flex-col gap-1">
-                      <Download className="h-5 w-5 text-[#2C6BED]" />
-                      <span className="text-xs">Enhanced Video</span>
-                    </Button>
-                    <Button variant="outline" className="h-auto py-3 flex-col gap-1">
-                      <FileText className="h-5 w-5 text-[#2C6BED]" />
-                      <span className="text-xs">Transcript</span>
-                    </Button>
-                    <Button variant="outline" className="h-auto py-3 flex-col gap-1">
-                      <Layers className="h-5 w-5 text-[#2C6BED]" />
-                      <span className="text-xs">Chapters JSON</span>
-                    </Button>
-                    <Button variant="outline" className="h-auto py-3 flex-col gap-1">
-                      <Type className="h-5 w-5 text-[#2C6BED]" />
-                      <span className="text-xs">SRT Captions</span>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Next Steps */}
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="font-semibold mb-4">Next Steps</h3>
-                  <div className="space-y-3">
-                    <Button 
-                      className="w-full justify-start h-auto py-3 text-white"
-                      style={{ background: 'linear-gradient(135deg, #053877 0%, #2C6BED 100%)' }}
-                      onClick={() => navigate(`/studio/ai-clips?mediaId=${selectedMedia.id}`)}
-                    >
-                      <Scissors className="h-5 w-5 mr-3" />
-                      <div className="text-left">
-                        <div className="font-medium">✂️ Generate AI Clips from This Video</div>
-                        <div className="text-xs text-white/70">Create viral short clips automatically</div>
-                      </div>
-                      <ChevronRight className="h-5 w-5 ml-auto" />
-                    </Button>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button variant="outline" className="justify-start" onClick={() => setShowComparisonModal(true)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Compare Original vs Enhanced
-                      </Button>
-                      <Button variant="outline" className="justify-start" onClick={() => navigate('/studio/media')}>
-                        <FolderOpen className="h-4 w-4 mr-2" />
-                        View in Media Library
-                      </Button>
-                    </div>
-                    
-                    <Button variant="ghost" className="w-full justify-start text-muted-foreground">
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share or Copy Link
-                      <ExternalLink className="h-3 w-3 ml-auto" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <CompletionSuccessPage
+              mediaId={selectedMedia.id}
+              mediaName={selectedMedia.file_name || 'Untitled'}
+              analytics={aiAnalytics}
+              onCompareClick={() => setShowComparisonModal(true)}
+              hasOriginalPreview={hasOriginalPreview}
+            />
           )}
         </div>
 
@@ -784,7 +679,7 @@ export default function AIPostProduction() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => navigate('/studio/media')}>
+                      <Button size="sm" variant="ghost" onClick={() => navigate('/studio/media?folder=ai-enhanced')}>
                         <FolderOpen className="h-4 w-4" />
                       </Button>
                       <Button size="sm" variant="ghost">
@@ -798,154 +693,66 @@ export default function AIPostProduction() {
           </Card>
         )}
 
-        {/* Media Selector Dialog */}
-        <Dialog open={showMediaSelector} onOpenChange={setShowMediaSelector}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
-            <DialogHeader>
-              <DialogTitle>Select Media</DialogTitle>
-              <DialogDescription>Choose a video or audio file to process</DialogDescription>
-            </DialogHeader>
-            <Tabs value={mediaFilter} onValueChange={(v) => setMediaFilter(v as any)} className="flex-1 overflow-hidden flex flex-col">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="all">All ({mediaFiles?.length || 0})</TabsTrigger>
-                <TabsTrigger value="video">Videos ({mediaFiles?.filter(f => f.file_type === 'video').length || 0})</TabsTrigger>
-                <TabsTrigger value="audio">Audio ({mediaFiles?.filter(f => f.file_type === 'audio').length || 0})</TabsTrigger>
-              </TabsList>
-              <ScrollArea className="flex-1 mt-4">
-                {loadingMedia ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                  </div>
-                ) : filteredMedia?.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileVideo className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No media files found</p>
-                    <Button className="mt-4" onClick={() => setShowUploadDialog(true)}>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Media
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2 pr-4">
-                    {filteredMedia?.map((file) => (
-                      <div 
-                        key={file.id}
-                        onClick={() => handleMediaSelect(file)}
-                        className={cn(
-                          "flex items-center gap-4 p-3 rounded-lg border cursor-pointer transition-all hover:bg-muted/50",
-                          selectedMedia?.id === file.id && "ring-2 ring-[#2C6BED] bg-[#2C6BED]/5"
-                        )}
-                      >
-                        <div className="w-20 h-12 bg-muted rounded overflow-hidden flex items-center justify-center shrink-0">
-                          {file.thumbnail_url ? (
-                            <img src={file.thumbnail_url} alt="" className="w-full h-full object-cover" />
-                          ) : file.file_type === 'video' ? (
-                            <Video className="h-6 w-6 text-muted-foreground" />
-                          ) : (
-                            <Volume2 className="h-6 w-6 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{file.file_name || 'Untitled'}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {file.duration_seconds && <span>{formatDuration(file.duration_seconds)}</span>}
-                            {file.source && <Badge variant="outline" className="text-xs">{file.source}</Badge>}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </ScrollArea>
-            </Tabs>
-          </DialogContent>
-        </Dialog>
-
-        {/* Comparison Modal */}
-        <Dialog open={showComparisonModal} onOpenChange={setShowComparisonModal}>
-          <DialogContent className="max-w-4xl p-0 overflow-hidden">
-            <div className="bg-gradient-to-r from-[#053877] to-[#2C6BED] px-6 py-4">
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-white text-lg font-semibold">Compare Original vs Enhanced</DialogTitle>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => setShowComparisonModal(false)}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div className="relative aspect-video bg-black rounded-xl overflow-hidden">
-                <div className="absolute inset-0 flex">
-                  <div className="h-full overflow-hidden relative" style={{ width: `${comparisonPosition}%` }}>
-                    {videoUrl && (
-                      <video src={videoUrl} className="w-full h-full object-cover" style={{ filter: 'brightness(0.9) contrast(0.95)' }} autoPlay muted loop />
-                    )}
-                    <div className="absolute top-3 left-3 bg-black/70 px-3 py-1.5 rounded-lg text-white text-sm font-medium">Original</div>
-                  </div>
-                  
-                  <div className="h-full overflow-hidden relative" style={{ width: `${100 - comparisonPosition}%` }}>
-                    {videoUrl && (
-                      <video src={videoUrl} className="w-full h-full object-cover" style={{ filter: 'brightness(1.1) contrast(1.05) saturate(1.1)' }} autoPlay muted loop />
-                    )}
-                    <div className="absolute top-3 right-3 bg-gradient-to-r from-[#053877] to-[#2C6BED] px-3 py-1.5 rounded-lg text-white text-sm font-medium">Enhanced</div>
-                  </div>
-                </div>
-                
-                <div className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize shadow-lg" style={{ left: `${comparisonPosition}%` }}>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-xl">
-                    <ChevronRight className="h-4 w-4 text-gray-700 -ml-0.5" />
-                    <ChevronRight className="h-4 w-4 text-gray-700 -ml-3 rotate-180" />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="px-4">
-                <Slider value={[comparisonPosition]} onValueChange={([v]) => setComparisonPosition(v)} min={10} max={90} step={1} />
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-
         {/* Upload Dialog */}
         <UploadMediaDialog
           open={showUploadDialog}
           onOpenChange={setShowUploadDialog}
           onUploadComplete={() => {
-            queryClient.invalidateQueries({ queryKey: ['media-files-for-processing'] });
             setShowUploadDialog(false);
+            queryClient.invalidateQueries({ queryKey: ['media-files-for-processing'] });
+            toast({
+              title: "Upload Complete",
+              description: "Select your uploaded file from the Media Library"
+            });
+            setShowMediaSelector(true);
           }}
         />
-      </div>
-    </div>
-  );
-}
 
-// Analytics Card Component
-function AnalyticsCard({ 
-  icon: Icon, 
-  label, 
-  value, 
-  unit, 
-  color,
-  bg = "bg-background"
-}: { 
-  icon: any; 
-  label: string; 
-  value: number; 
-  unit: string; 
-  color: string;
-  bg?: string;
-}) {
-  return (
-    <div className={cn("p-3 rounded-lg border", bg)}>
-      <div className="flex items-center gap-1.5 mb-1">
-        <Icon className={cn("h-3.5 w-3.5", color)} />
-        <span className="text-xs text-muted-foreground">{label}</span>
+        {/* Video Comparison Modal */}
+        <VideoComparisonModal
+          open={showComparisonModal}
+          onOpenChange={setShowComparisonModal}
+          originalUrl={hasOriginalPreview ? videoUrl || null : null}
+          enhancedUrl={videoUrl || null}
+        />
+
+        {/* Media Selector Dialog */}
+        {showMediaSelector && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+            <Card className="w-full max-w-2xl max-h-[80vh] overflow-hidden">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Select from Media Library</h3>
+                  <Button variant="ghost" size="sm" onClick={() => setShowMediaSelector(false)}>
+                    ✕
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[50vh] overflow-y-auto">
+                  {mediaFiles?.filter(f => f.file_type === 'video' || f.file_type === 'audio').map((file) => (
+                    <button
+                      key={file.id}
+                      onClick={() => handleMediaSelect({ ...file, source: 'library' })}
+                      className="text-left p-2 rounded-lg border hover:border-[#2C6BED] hover:bg-[#2C6BED]/5 transition-all"
+                    >
+                      <div className="aspect-video bg-muted rounded mb-2 overflow-hidden flex items-center justify-center">
+                        {file.thumbnail_url ? (
+                          <img src={file.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Video className="h-8 w-8 text-muted-foreground" />
+                        )}
+                      </div>
+                      <p className="text-sm font-medium truncate">{file.file_name || 'Untitled'}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {file.duration_seconds ? formatDuration(file.duration_seconds) : 'Unknown duration'}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
-      <p className={cn("text-xl font-bold", color)}>
-        {value}
-        <span className="text-xs font-normal text-muted-foreground ml-1">{unit}</span>
-      </p>
     </div>
   );
 }
