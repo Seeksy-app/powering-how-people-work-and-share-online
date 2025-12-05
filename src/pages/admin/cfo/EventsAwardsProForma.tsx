@@ -45,7 +45,7 @@ const EventsAwardsProForma = () => {
       pdf.rect(0, 0, 210, 20, "F");
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(16);
-      pdf.text("Seeksy Events & Awards - 3-Year Pro Forma", 10, 13);
+      pdf.text("Seeksy Awards Pro Forma", 10, 13);
       
       pdf.addImage(imgData, "PNG", 0, 25, imgWidth, imgHeight);
       
@@ -108,10 +108,10 @@ const EventsAwardsProForma = () => {
         {/* Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#053877] mb-2">
-            Events & Awards App - 3-Year Pro Forma
+            Awards Pro Forma
           </h1>
           <p className="text-muted-foreground">
-            Financial projections for the Seeksy Events & Awards platform acquisition
+            Financial projections for the Seeksy Events & Awards platform
           </p>
         </div>
 
