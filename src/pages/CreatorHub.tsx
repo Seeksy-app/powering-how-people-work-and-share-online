@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useModuleActivation } from "@/hooks/useModuleActivation";
+import { useState } from "react";
+import { CustomPackageBuilder } from "@/components/apps/CustomPackageBuilder";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -175,6 +177,7 @@ const discoveryModules = [
 
 export default function CreatorHub() {
   const navigate = useNavigate();
+  const [showPackageBuilder, setShowPackageBuilder] = useState(false);
   const { 
     activatedModuleIds, 
     isLoading, 
@@ -183,6 +186,23 @@ export default function CreatorHub() {
     deactivateModule,
     isActivating,
   } = useModuleActivation();
+
+  // Modules for the package builder
+  const packageModules = [
+    { id: 'audience-insights', name: 'Audience Insights', category: 'Creator Tools', creditEstimate: 10 },
+    { id: 'social-analytics', name: 'Social Analytics', category: 'Creator Tools', creditEstimate: 10 },
+    { id: 'brand-campaigns', name: 'Brand Campaigns', category: 'Creator Tools', creditEstimate: 15 },
+    { id: 'revenue-tracking', name: 'Revenue Tracking', category: 'Creator Tools', creditEstimate: 5 },
+    { id: 'growth-tools', name: 'Growth Tools', category: 'Creator Tools', creditEstimate: 20 },
+    { id: 'content-library', name: 'Content Library', category: 'Creator Tools', creditEstimate: 10 },
+    { id: 'studio', name: 'Studio & Recording', category: 'Media & Content', creditEstimate: 50 },
+    { id: 'podcasts', name: 'Podcasts', category: 'Media & Content', creditEstimate: 20 },
+    { id: 'content-library', name: 'Media Library', category: 'Media & Content', creditEstimate: 10 },
+    { id: 'clips', name: 'Clips & Editing', category: 'Media & Content', creditEstimate: 30 },
+    { id: 'my-page-streaming', name: 'My Page Streaming', category: 'Media & Content', creditEstimate: 40 },
+    { id: 'crm', name: 'Contacts & Audience', category: 'Growth & Distribution', creditEstimate: 5 },
+    { id: 'segments', name: 'Segments', category: 'Growth & Distribution', creditEstimate: 5 },
+  ];
 
   // Show ONLY activated modules in the activated section
   const activatedTools = allModules.filter(
@@ -322,7 +342,7 @@ export default function CreatorHub() {
                   <Button variant="outline" size="sm" onClick={() => navigate('/apps')}>
                     Browse Apps & Tools
                   </Button>
-                  <Button variant="default" size="sm" onClick={() => navigate('/apps')}>
+                  <Button variant="default" size="sm" onClick={() => setShowPackageBuilder(true)}>
                     + Build a Custom Workspace
                   </Button>
                 </div>
@@ -446,6 +466,13 @@ export default function CreatorHub() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Custom Package Builder Modal */}
+      <CustomPackageBuilder 
+        open={showPackageBuilder} 
+        onOpenChange={setShowPackageBuilder}
+        modules={packageModules}
+      />
     </div>
   );
 }
