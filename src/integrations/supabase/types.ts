@@ -11806,6 +11806,53 @@ export type Database = {
           },
         ]
       }
+      lead_magnet_analytics: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          ip_hash: string | null
+          lead_magnet_id: string | null
+          referrer: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_hash?: string | null
+          lead_magnet_id?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_hash?: string | null
+          lead_magnet_id?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_magnet_analytics_lead_magnet_id_fkey"
+            columns: ["lead_magnet_id"]
+            isOneToOne: false
+            referencedRelation: "lead_magnets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_magnet_downloads: {
         Row: {
           company: string | null
@@ -11875,6 +11922,8 @@ export type Database = {
         Row: {
           audience_roles: string[] | null
           bullets: string[] | null
+          category: string | null
+          conversion_rate: number | null
           created_at: string
           description: string | null
           download_count: number | null
@@ -11882,12 +11931,17 @@ export type Database = {
           is_active: boolean | null
           slug: string
           storage_path: string
+          tags: string[] | null
+          thumbnail_url: string | null
           title: string
           updated_at: string
+          view_count: number | null
         }
         Insert: {
           audience_roles?: string[] | null
           bullets?: string[] | null
+          category?: string | null
+          conversion_rate?: number | null
           created_at?: string
           description?: string | null
           download_count?: number | null
@@ -11895,12 +11949,17 @@ export type Database = {
           is_active?: boolean | null
           slug: string
           storage_path: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
           title: string
           updated_at?: string
+          view_count?: number | null
         }
         Update: {
           audience_roles?: string[] | null
           bullets?: string[] | null
+          category?: string | null
+          conversion_rate?: number | null
           created_at?: string
           description?: string | null
           download_count?: number | null
@@ -11908,8 +11967,11 @@ export type Database = {
           is_active?: boolean | null
           slug?: string
           storage_path?: string
+          tags?: string[] | null
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
+          view_count?: number | null
         }
         Relationships: []
       }
