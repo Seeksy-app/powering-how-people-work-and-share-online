@@ -432,14 +432,6 @@ export default function VideoStudio() {
             onFullscreen={handleFullscreen}
           />
 
-          {/* Host Tools Bar */}
-          <HostToolsBar
-            activeDrawer={activeHostDrawer}
-            onOpenScript={() => setActiveHostDrawer(activeHostDrawer === "script" ? null : "script")}
-            onAddClipMarker={handleAddClipMarker}
-            onAddAdMarker={handleAddAdMarker}
-          />
-
           {/* Layout Templates Bar */}
           <LayoutTemplatesBar
             currentLayout={currentLayoutTemplate}
@@ -456,6 +448,16 @@ export default function VideoStudio() {
             }}
             sceneType={scenes.find(s => s.id === activeSceneId)?.sceneType}
           />
+
+          {/* Host Tools Bar - Centered below layouts */}
+          <div className="flex justify-center py-3 bg-[#0d0f12] border-t border-white/10">
+            <HostToolsBar
+              activeDrawer={activeHostDrawer}
+              onOpenScript={() => setActiveHostDrawer(activeHostDrawer === "script" ? null : "script")}
+              onAddClipMarker={handleAddClipMarker}
+              onAddAdMarker={handleAddAdMarker}
+            />
+          </div>
 
           {/* Script Drawer */}
           <ScriptDrawer

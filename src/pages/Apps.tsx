@@ -529,11 +529,18 @@ export default function Apps() {
         module.description.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesCategory =
-        activeCategory === "all" || module.category === activeCategory;
+        activeCategory === "all" || 
+        activeCategory === "active" ||
+        module.category === activeCategory;
+
+      // For "active" filter, only show activated modules
+      if (activeCategory === "active") {
+        return matchesSearch && isModuleActivated(module.id);
+      }
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchTerm, activeCategory]);
+  }, [searchTerm, activeCategory, isModuleActivated]);
 
   const groupedModules = useMemo(() => {
     if (activeCategory !== "all") {
@@ -664,6 +671,26 @@ export default function Apps() {
             </button>
             
             <div className="w-px h-6 bg-border mx-1" />
+
+            {/* Active Tab */}
+            <button
+              onClick={() => setActiveCategory("active")}
+              className={cn(
+                "px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-lg transition-all flex items-center gap-1.5",
+                activeCategory === "active"
+                  ? "bg-green-500/10 text-green-600 shadow-sm border border-green-500/20" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+              )}
+            >
+              <span>Active</span>
+              {activatedModuleIds.length > 0 && (
+                <Badge className="text-xs h-5 px-1.5 ml-1 bg-green-500/20 text-green-600 border-0">
+                  {activatedModuleIds.length}
+                </Badge>
+              )}
+            </button>
+            
+            <div className="w-px h-6 bg-border mx-1" />
             
             {categories.map((category) => {
               const isActive = activeCategory === category.id;
@@ -718,8 +745,18 @@ export default function Apps() {
                 <section 
                   className={cn(
                     "rounded-2xl border p-5 sm:p-6 transition-all shadow-sm",
-                    category.bgClass
+                    category.bgClass,
+                    // Darker backgrounds for each section
+                    "bg-opacity-80 dark:bg-opacity-50"
                   )}
+                  style={{
+                    backgroundColor: categoryId === 'creator' ? 'hsl(40 30% 96%)' :
+                                     categoryId === 'media' ? 'hsl(270 30% 96%)' :
+                                     categoryId === 'marketing' ? 'hsl(200 30% 96%)' :
+                                     categoryId === 'business' ? 'hsl(150 30% 96%)' :
+                                     categoryId === 'identity' ? 'hsl(350 30% 96%)' :
+                                     categoryId === 'integrations' ? 'hsl(190 30% 96%)' : undefined
+                  }}
                 >
                   {/* Category Header */}
                   <CollapsibleTrigger asChild>
