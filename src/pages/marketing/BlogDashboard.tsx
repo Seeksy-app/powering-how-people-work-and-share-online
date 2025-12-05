@@ -299,7 +299,7 @@ export default function BlogDashboard() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-lg truncate">{post.title}</h3>
                           {post.has_credential && (
-                            <Shield className="h-4 w-4 text-green-600 flex-shrink-0" title="On-Chain Certified" />
+                            <Shield className="h-4 w-4 text-green-600 flex-shrink-0" />
                           )}
                         </div>
                         {post.excerpt && (
