@@ -45,7 +45,7 @@ export default function AdminMeetingsDashboard() {
             <Link className="h-4 w-4 mr-2" />
             Booking Links
           </Button>
-          <Button onClick={() => navigate("/studio/video")}>
+          <Button onClick={() => navigate("/meetings/now")}>
             <Video className="h-4 w-4 mr-2" />
             Start Meeting
           </Button>
