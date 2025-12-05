@@ -122,6 +122,7 @@ const EventsAwardsProForma = () => {
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="charts">Charts</TabsTrigger>
               <TabsTrigger value="assumptions">Assumptions</TabsTrigger>
+              <TabsTrigger value="summary">Summary</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -189,6 +190,122 @@ const EventsAwardsProForma = () => {
                 assumptions={assumptions} 
                 onUpdate={updateAssumptions}
               />
+            </TabsContent>
+
+            <TabsContent value="summary">
+              <Card className="rounded-lg">
+                <CardHeader>
+                  <CardTitle className="text-xl text-[#053877]">
+                    Events & Awards Platform — Offering Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="max-h-[70vh] overflow-y-auto space-y-8">
+                  <p className="text-muted-foreground leading-relaxed">
+                    The Seeksy Events & Awards Platform is a fully developed, production-ready system designed to power category-based award shows, live competitions, creator recognition programs, and branded event experiences across multiple verticals. Originally built to support the Veteran Podcast Awards, the platform now operates as a scalable SaaS engine capable of hosting unlimited award programs for creators, influencers, industry professionals, or enterprise brands.
+                  </p>
+
+                  {/* What the Platform Includes */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      📌 What the Platform Includes
+                    </h3>
+                    <ul className="space-y-2 text-muted-foreground ml-6">
+                      <li className="list-disc">End-to-end awards infrastructure: nominations, submissions, voting, jury scoring, category management, and automated workflows</li>
+                      <li className="list-disc">Livestream & broadcast integration: Daily.co + Seeksy Studio for real-time shows, interviews, and presentations</li>
+                      <li className="list-disc">Sponsor-ready architecture: persistent logo placements, ad inventory, presenting sponsor modules, and branded content blocks</li>
+                      <li className="list-disc">Creator + audience engagement: user dashboards, notifications, voting experiences, and social amplification tools</li>
+                      <li className="list-disc">Reporting & analytics: engagement tracking, vote counts, category performance, and sponsor impact</li>
+                      <li className="list-disc">Award fulfillment system: winner pages, announcements, certificates, and merch/award ordering</li>
+                      <li className="list-disc">Multichannel distribution: Apple TV, Seeksy mobile apps, web experiences, and the Parade Deck verified creator network</li>
+                    </ul>
+                  </div>
+
+                  {/* Strategic Opportunity */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      📈 Strategic Opportunity for Buyers
+                    </h3>
+                    <p className="text-muted-foreground">
+                      The platform supports high-margin, repeatable annual revenue through:
+                    </p>
+                    <ul className="space-y-2 text-muted-foreground ml-6">
+                      <li className="list-disc">Presenting sponsors</li>
+                      <li className="list-disc">Category sponsorships</li>
+                      <li className="list-disc">Livestream ads</li>
+                      <li className="list-disc">Branded editorial content</li>
+                      <li className="list-disc">Event licensing</li>
+                      <li className="list-disc">Vertical expansions</li>
+                      <li className="list-disc">Cross-platform integrations (MIC, Military Spouse Fest, Task & Purpose, etc.)</li>
+                    </ul>
+                    <p className="text-muted-foreground mt-3">
+                      Under ownership by a strong media group, the Events & Awards Platform becomes a franchise model, allowing rapid cloning of vertical award shows—creator categories, tactical/outdoors, tech innovators, health & wellness, entrepreneurship, and more.
+                    </p>
+                  </div>
+
+                  {/* Financial Outlook */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      💰 Financial Outlook
+                    </h3>
+                    <p className="text-muted-foreground">
+                      3-year projections show:
+                    </p>
+                    <ul className="space-y-2 text-muted-foreground ml-6">
+                      <li className="list-disc">$503K revenue in Year 1 post-acquisition</li>
+                      <li className="list-disc">$1.55M+ revenue by Year 3</li>
+                      <li className="list-disc">EBITDA approaching $1M annually by Year 3</li>
+                      <li className="list-disc">57%+ CAGR</li>
+                      <li className="list-disc">Low operational overhead due to automated workflows and scalable architecture</li>
+                    </ul>
+                    <p className="text-muted-foreground mt-3">
+                      This positions the platform as a high-growth, low-cost, high-repeatability asset inside any media portfolio.
+                    </p>
+                  </div>
+
+                  {/* Why This Platform Is Valuable */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      🔑 Why This Platform Is Valuable
+                    </h3>
+                    <ul className="space-y-2 text-muted-foreground ml-6">
+                      <li className="list-disc">Proven audience and brand traction</li>
+                      <li className="list-disc">Fully built SaaS infrastructure (240+ development hours)</li>
+                      <li className="list-disc">Zero rebuild costs for buyer</li>
+                      <li className="list-disc">Ready for new categories and sponsorship expansion</li>
+                      <li className="list-disc">Seamless integration with Seeksy's creator ecosystem</li>
+                      <li className="list-disc">Designed for recurring annual revenue</li>
+                      <li className="list-disc">Can power entire award franchises across multiple markets</li>
+                    </ul>
+                  </div>
+
+                  {/* Delivered With Acquisition */}
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      📦 Delivered With the Acquisition
+                    </h3>
+                    <ul className="space-y-2 text-muted-foreground ml-6">
+                      <li className="list-disc">Full platform codebase + UI</li>
+                      <li className="list-disc">All award workflows and automations</li>
+                      <li className="list-disc">Creator tools and dashboards</li>
+                      <li className="list-disc">Studio-recording integration (Daily.co / Seeksy Studio)</li>
+                      <li className="list-disc">Sponsorship modules</li>
+                      <li className="list-disc">Event hosting and distribution channels</li>
+                      <li className="list-disc">Analytics + reporting suite</li>
+                      <li className="list-disc">Optional continuity support from Seeksy team</li>
+                    </ul>
+                  </div>
+
+                  {/* Summary */}
+                  <div className="space-y-3 border-t pt-6">
+                    <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                      ✨ Summary
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      The Events & Awards Platform is not just an app—it is a repeatable revenue engine that can power a multi-year, multi-vertical award franchise. Its combination of technology, community reach, sponsorship scalability, and distribution channels makes it a uniquely valuable asset for any company looking to lead within creator, veteran, or industry influencer ecosystems.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         </div>
