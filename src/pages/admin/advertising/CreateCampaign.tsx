@@ -17,6 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, DollarSign } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { demoAdvertisers } from "@/data/salesLeadsDemo";
 
 export default function CreateCampaign() {
   const navigate = useNavigate();
@@ -43,6 +44,10 @@ export default function CreateCampaign() {
         .order("company_name");
 
       if (error) throw error;
+      // Return demo data if no advertisers exist
+      if (!data || data.length === 0) {
+        return demoAdvertisers;
+      }
       return data;
     },
   });
