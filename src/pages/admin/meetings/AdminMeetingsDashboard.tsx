@@ -41,9 +41,13 @@ export default function AdminMeetingsDashboard() {
             <Plus className="h-4 w-4 mr-2" />
             New Meeting Type
           </Button>
-          <Button onClick={() => navigate("/admin/meetings/links")}>
+          <Button variant="outline" onClick={() => navigate("/admin/meetings/links")}>
             <Link className="h-4 w-4 mr-2" />
             Booking Links
+          </Button>
+          <Button onClick={() => navigate("/studio/video")}>
+            <Video className="h-4 w-4 mr-2" />
+            Start Meeting
           </Button>
         </div>
       </div>
