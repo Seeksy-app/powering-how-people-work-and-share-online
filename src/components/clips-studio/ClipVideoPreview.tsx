@@ -92,14 +92,31 @@ export function ClipVideoPreview({ clip, sourceMedia }: ClipVideoPreviewProps) {
 
     if (isPlaying) {
       video.pause();
+      setIsPlaying(false);
     } else {
       if (video.currentTime < clip.start_seconds || video.currentTime >= clip.end_seconds) {
         video.currentTime = clip.start_seconds;
       }
       video.play();
+      setIsPlaying(true);
     }
-    setIsPlaying(!isPlaying);
   };
+
+  // Sync isPlaying state with video events
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    return () => {
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+    };
+  }, []);
 
   const handleSeek = (value: number[]) => {
     const video = videoRef.current;
@@ -128,13 +145,14 @@ export function ClipVideoPreview({ clip, sourceMedia }: ClipVideoPreviewProps) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Smaller phone dimensions that fit better in viewport
   const getPreviewDimensions = () => {
     switch (selectedRatio) {
-      case "9:16": return { width: "280px", height: "498px" };
-      case "1:1": return { width: "360px", height: "360px" };
-      case "16:9": return { width: "560px", height: "315px" };
-      case "4:5": return { width: "320px", height: "400px" };
-      default: return { width: "280px", height: "498px" };
+      case "9:16": return { width: 220, height: 390 };
+      case "1:1": return { width: 280, height: 280 };
+      case "16:9": return { width: 400, height: 225 };
+      case "4:5": return { width: 260, height: 325 };
+      default: return { width: 220, height: 390 };
     }
   };
 
@@ -155,9 +173,10 @@ export function ClipVideoPreview({ clip, sourceMedia }: ClipVideoPreviewProps) {
   const dimensions = getPreviewDimensions();
 
   return (
-    <div className="flex-1 flex flex-col bg-muted/5 overflow-hidden">
-      {/* Preview Area */}
-      <div className="flex-1 flex items-center justify-center p-6">
+    <div className="flex-1 flex items-start justify-center bg-muted/5 overflow-y-auto py-6">
+      {/* Sticky preview container */}
+      <div className="sticky top-6 flex flex-col items-center gap-4">
+        {/* Phone Frame + Video */}
         <motion.div 
           className="relative"
           layout
@@ -165,14 +184,22 @@ export function ClipVideoPreview({ clip, sourceMedia }: ClipVideoPreviewProps) {
         >
           {/* Phone frame for vertical videos */}
           {selectedRatio === "9:16" && (
-            <div className="absolute -inset-3 bg-gradient-to-b from-zinc-700 to-zinc-900 rounded-[3rem] shadow-2xl" />
+            <div 
+              className="absolute bg-gradient-to-b from-zinc-700 to-zinc-900 rounded-[2.5rem] shadow-2xl"
+              style={{
+                top: -10,
+                left: -10,
+                right: -10,
+                bottom: -10,
+              }}
+            />
           )}
           
           {/* Video container */}
           <div 
             className={cn(
               "relative bg-black overflow-hidden shadow-2xl",
-              selectedRatio === "9:16" ? "rounded-[2.5rem]" : "rounded-xl"
+              selectedRatio === "9:16" ? "rounded-[2rem]" : "rounded-xl"
             )}
             style={{ width: dimensions.width, height: dimensions.height }}
           >
@@ -181,18 +208,18 @@ export function ClipVideoPreview({ clip, sourceMedia }: ClipVideoPreviewProps) {
               <div className="w-full h-full flex flex-col">
                 <iframe
                   src={`https://www.youtube.com/embed/${youtubeVideoId}?start=${clip.start_seconds}&end=${clip.end_seconds}&autoplay=0`}
-                  className="w-full flex-1"
+                  className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
                 {/* Overlay info for YouTube */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4">
-                  <div className="flex items-center gap-2 text-white/80 text-xs mb-2">
-                    <Youtube className="h-4 w-4 text-red-500" />
-                    <span>YouTube Source • Clip: {formatTime(clip.start_seconds)} - {formatTime(clip.end_seconds)}</span>
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-3">
+                  <div className="flex items-center gap-2 text-white/80 text-xs mb-1">
+                    <Youtube className="h-3 w-3 text-red-500" />
+                    <span>YouTube • {formatTime(clip.start_seconds)} - {formatTime(clip.end_seconds)}</span>
                   </div>
                   {clip.suggested_caption && (
-                    <p className="text-white text-sm font-medium">{clip.suggested_caption}</p>
+                    <p className="text-white text-xs font-medium line-clamp-2">{clip.suggested_caption}</p>
                   )}
                 </div>
               </div>
@@ -204,13 +231,14 @@ export function ClipVideoPreview({ clip, sourceMedia }: ClipVideoPreviewProps) {
                   className="w-full h-full object-cover"
                   muted={isMuted}
                   playsInline
+                  onClick={togglePlay}
                 />
                 
                 {/* Caption overlay preview */}
                 {clip.suggested_caption && (
-                  <div className="absolute bottom-12 left-4 right-4">
-                    <div className="bg-black/70 backdrop-blur-sm px-4 py-3 rounded-xl">
-                      <p className="text-white text-center text-base font-semibold leading-relaxed">
+                  <div className="absolute bottom-8 left-2 right-2">
+                    <div className="bg-black/70 backdrop-blur-sm px-3 py-2 rounded-lg">
+                      <p className="text-white text-center text-xs font-semibold leading-relaxed line-clamp-3">
                         {clip.suggested_caption}
                       </p>
                     </div>
@@ -223,147 +251,143 @@ export function ClipVideoPreview({ clip, sourceMedia }: ClipVideoPreviewProps) {
                     onClick={togglePlay}
                     className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity hover:bg-black/30"
                   >
-                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <Play className="w-10 h-10 text-white ml-1" fill="white" />
+                    <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                      <Play className="w-7 h-7 text-white ml-0.5" fill="white" />
                     </div>
                   </button>
                 )}
               </>
             ) : (
               // No playable source - show message
-              <div className="w-full h-full flex flex-col items-center justify-center text-center p-6">
-                <AlertCircle className="h-12 w-12 text-yellow-500 mb-4" />
-                <p className="text-white font-medium mb-2">Video source not playable</p>
-                <p className="text-white/60 text-sm">
-                  The original video needs to be downloaded before clips can be rendered.
+              <div className="w-full h-full flex flex-col items-center justify-center text-center p-4">
+                <AlertCircle className="h-10 w-10 text-yellow-500 mb-3" />
+                <p className="text-white font-medium mb-1 text-sm">Video not playable</p>
+                <p className="text-white/60 text-xs">
+                  Download required for rendering.
                 </p>
-                {clip.suggested_caption && (
-                  <div className="mt-6 bg-white/10 rounded-lg px-4 py-3">
-                    <p className="text-white/90 text-sm italic">"{clip.suggested_caption}"</p>
-                  </div>
-                )}
               </div>
             )}
 
             {/* Scene markers - only for playable videos */}
             {hasPlayableVideo && clip.scenes && clip.scenes.length > 0 && (
-              <div className="absolute top-4 right-4 space-y-2">
-                {clip.scenes.slice(0, 3).map((scene, i) => (
+              <div className="absolute top-2 right-2 space-y-1">
+                {clip.scenes.slice(0, 2).map((scene, i) => (
                   <Badge 
                     key={i}
                     className={cn(
-                      "text-xs",
+                      "text-[10px] px-1.5 py-0.5",
                       scene.type === 'hook' && "bg-yellow-500/80 text-black",
                       scene.type === 'key_point' && "bg-blue-500/80 text-white",
                       scene.type === 'cta' && "bg-green-500/80 text-white"
                     )}
                   >
-                    {scene.type === 'hook' ? '⚡ Hook' : 
-                     scene.type === 'key_point' ? '💡 Key Point' : 
-                     scene.type === 'cta' ? '🎯 CTA' : scene.type}
+                    {scene.type === 'hook' ? '⚡' : 
+                     scene.type === 'key_point' ? '💡' : 
+                     scene.type === 'cta' ? '🎯' : scene.type}
                   </Badge>
                 ))}
               </div>
             )}
 
             {/* Preview badge */}
-            <Badge className="absolute top-4 left-4 bg-black/60 text-white border-0 text-xs">
+            <Badge className="absolute top-2 left-2 bg-black/60 text-white border-0 text-[10px] px-1.5 py-0.5">
               PREVIEW
             </Badge>
 
             {/* Time indicator - only for non-YouTube sources */}
-            {!isYouTubeSource && (
-              <div className="absolute top-12 left-4 bg-black/60 px-2 py-1 rounded-lg text-xs text-white font-mono">
+            {!isYouTubeSource && hasPlayableVideo && (
+              <div className="absolute top-8 left-2 bg-black/60 px-1.5 py-0.5 rounded text-[10px] text-white font-mono">
                 {formatTime(currentTime)} / {formatTime(clipDuration)}
               </div>
             )}
           </div>
         </motion.div>
-      </div>
 
-      {/* Controls */}
-      <div className="border-t bg-card/80 backdrop-blur-sm p-4 space-y-4">
-        {/* Playback controls */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={skipBack} className="h-9 w-9">
-              <SkipBack className="h-4 w-4" />
+        {/* Controls - directly under phone */}
+        <div className="w-full max-w-[340px] bg-card/90 backdrop-blur-sm rounded-xl border p-3 space-y-3">
+          {/* Playback controls */}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={skipBack} className="h-8 w-8">
+              <SkipBack className="h-3.5 w-3.5" />
             </Button>
             
             <Button 
               variant="ghost" 
               size="icon" 
               onClick={togglePlay}
-              className="w-12 h-12 rounded-full bg-[#053877] hover:bg-[#053877]/90 text-white"
+              className="w-10 h-10 rounded-full bg-[#F5C242] hover:bg-[#F5C242]/90 text-black"
             >
               {isPlaying ? (
-                <Pause className="h-5 w-5" />
+                <Pause className="h-4 w-4" />
               ) : (
-                <Play className="h-5 w-5 ml-0.5" fill="white" />
+                <Play className="h-4 w-4 ml-0.5" fill="currentColor" />
               )}
             </Button>
             
-            <Button variant="ghost" size="icon" onClick={skipForward} className="h-9 w-9">
-              <SkipForward className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={skipForward} className="h-8 w-8">
+              <SkipForward className="h-3.5 w-3.5" />
             </Button>
+
+            <div className="flex-1 px-1">
+              <Slider 
+                value={[clipDuration > 0 ? (currentTime / clipDuration) * 100 : 0]}
+                max={100}
+                step={0.1}
+                onValueChange={handleSeek}
+                className="cursor-pointer"
+              />
+            </div>
+
+            <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">
+              {formatTime(currentTime)} / {formatTime(clipDuration)}
+            </span>
           </div>
 
-          <div className="flex-1 px-2">
-            <Slider 
-              value={[clipDuration > 0 ? (currentTime / clipDuration) * 100 : 0]}
-              max={100}
-              step={0.1}
-              onValueChange={handleSeek}
-              className="cursor-pointer"
-            />
+          {/* Secondary controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setIsMuted(!isMuted)}
+                className="h-7 w-7"
+              >
+                {isMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setShowTrimHandles(!showTrimHandles)}
+                className={cn("h-7 w-7", showTrimHandles && "bg-muted")}
+              >
+                <Scissors className="h-3.5 w-3.5" />
+              </Button>
+
+              <Button variant="ghost" size="icon" className="h-7 w-7">
+                <Maximize2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
 
-          <span className="text-sm text-muted-foreground font-mono w-28 text-right">
-            {formatTime(currentTime)} / {formatTime(clipDuration)}
-          </span>
-
-          <div className="flex items-center gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setIsMuted(!isMuted)}
-              className="h-9 w-9"
-            >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </Button>
-
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setShowTrimHandles(!showTrimHandles)}
-              className={cn("h-9 w-9", showTrimHandles && "bg-muted")}
-            >
-              <Scissors className="h-4 w-4" />
-            </Button>
-
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <Maximize2 className="h-4 w-4" />
-            </Button>
+          {/* Aspect ratio selector */}
+          <div className="flex items-center justify-center gap-1.5">
+            {aspectRatios.map((ratio) => (
+              <button
+                key={ratio.id}
+                onClick={() => setSelectedRatio(ratio.id)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs",
+                  selectedRatio === ratio.id
+                    ? "bg-[#053877] text-white shadow-lg"
+                    : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                )}
+              >
+                <ratio.icon className="h-3.5 w-3.5" />
+                <span className="font-medium">{ratio.label}</span>
+              </button>
+            ))}
           </div>
-        </div>
-
-        {/* Aspect ratio selector */}
-        <div className="flex items-center justify-center gap-2">
-          {aspectRatios.map((ratio) => (
-            <button
-              key={ratio.id}
-              onClick={() => setSelectedRatio(ratio.id)}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all",
-                selectedRatio === ratio.id
-                  ? "bg-[#053877] text-white shadow-lg"
-                  : "bg-muted hover:bg-muted/80 text-muted-foreground"
-              )}
-            >
-              <ratio.icon className="h-4 w-4" />
-              <span className="text-sm font-medium">{ratio.label}</span>
-            </button>
-          ))}
         </div>
       </div>
     </div>
