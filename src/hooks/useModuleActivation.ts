@@ -5,7 +5,7 @@ import { getAllModulesToActivate } from "@/config/moduleCompanions";
 
 export interface ActivatedModule {
   module_id: string;
-  activated_at: string;
+  granted_at: string;
 }
 
 export function useModuleActivation() {
@@ -32,7 +32,7 @@ export function useModuleActivation() {
       // Map to our interface since types may not be regenerated yet
       return (data || []).map((row: any) => ({
         module_id: row.module_id as string,
-        activated_at: row.activated_at as string,
+        granted_at: row.granted_at as string,
       })) as ActivatedModule[];
     },
   });
@@ -70,7 +70,7 @@ export function useModuleActivation() {
           newModules.map(id => ({
             user_id: user.id,
             module_id: id,
-            activated_at: new Date().toISOString()
+            granted_at: new Date().toISOString()
           })),
           { onConflict: 'user_id,module_id' }
         );

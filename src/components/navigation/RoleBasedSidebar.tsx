@@ -124,6 +124,7 @@ const ICON_MAP: Record<string, any> = {
   'dashboard': LayoutDashboard,
   'creator_hub': Rocket,
   'my_streaming_channel': Radio,
+  'my_workspaces': Package,
   'meetings': Calendar,
   'studio': Video,
   'social_analytics': BarChart2,
@@ -306,8 +307,8 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
                   const isPinned = navConfig.pinned.includes(item.id);
                   const hasSubItems = item.subItems && item.subItems.length > 0;
                   
-                  // Section title items (standalone without sub-items) - styled as headers
-                  const isSectionTitle = ['my_day', 'dashboard', 'settings', 'seekies', 'social_analytics', 'creator_hub'].includes(item.id);
+                  // Section title items (standalone without sub-items) - styled as left-justified headers
+                  const isSectionTitle = ['my_day', 'dashboard', 'settings', 'seekies', 'social_analytics', 'creator_hub', 'my_streaming_channel', 'my_workspaces'].includes(item.id);
                   
                   // Section titles render as left-justified links
                   if (isSectionTitle && !hasSubItems) {
