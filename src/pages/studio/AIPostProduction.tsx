@@ -652,8 +652,8 @@ export default function AIPostProduction() {
 
               <Button 
                 className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
-                disabled={!selectedMedia || isProcessing || isStudioActive}
-                onClick={() => handleStartProcessing('clips')}
+                disabled={!selectedMedia}
+                onClick={() => navigate(`/studio/clips?media=${selectedMedia?.id}`)}
               >
                 <Scissors className="h-4 w-4 mr-2" />
                 Generate AI Clips

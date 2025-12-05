@@ -178,11 +178,12 @@ Video duration: ${duration || 'unknown'} seconds`
       ai_job_id: aiJob.id,
       start_seconds: clip.start_time,
       end_seconds: clip.end_time,
+      duration_seconds: clip.end_time - clip.start_time,
       title: clip.title,
       suggested_caption: clip.hook,
       virality_score: clip.virality_score,
-      storage_path: `${fileUrl}#t=${clip.start_time},${clip.end_time}`, // Placeholder for demo
-      status: 'pending', // Would be 'processing' then 'ready' with FFmpeg
+      storage_path: `${fileUrl}#t=${clip.start_time},${clip.end_time}`,
+      status: 'ready', // Clips are playable via time-fragment URLs immediately
     }));
 
     const { data: insertedClips, error: clipsError } = await supabase
