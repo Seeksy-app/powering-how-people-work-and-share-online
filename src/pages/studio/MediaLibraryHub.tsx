@@ -129,44 +129,72 @@ export default function MediaLibraryHub() {
     return FolderOpen;
   };
 
-  const renderClipCard = (clip: Clip) => (
-    <div
-      key={clip.id}
-      className="group rounded-xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-all cursor-pointer shadow-sm"
-      onClick={() => navigate(`/studio/clips?clipId=${clip.id}`)}
-    >
-      <div className="aspect-[9/16] max-h-48 bg-muted relative flex items-center justify-center">
-        {clip.thumbnail_url ? (
-          <img src={clip.thumbnail_url} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <Scissors className="w-10 h-10 text-muted-foreground/40" />
-        )}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
-          <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-        {clip.status === "processing" && (
-          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
-            <Loader2 className="w-6 h-6 text-primary animate-spin mb-2" />
-            <p className="text-xs text-white/70">Rendering...</p>
-            <Progress value={65} className="w-20 h-1 mt-2" />
+  // Generate thumbnail URL from Cloudflare Stream URL or other video sources
+  const getThumbnailUrl = (thumbnailUrl: string | null, videoUrl: string | null): string | null => {
+    if (thumbnailUrl) return thumbnailUrl;
+    
+    if (!videoUrl) return null;
+    
+    // Extract Cloudflare Stream UID from various URL formats
+    // Format: https://customer-{accountId}.cloudflarestream.com/{uid}/manifest/video.m3u8
+    // Or: https://customer-{accountId}.cloudflarestream.com/{uid}/...
+    const cloudflareMatch = videoUrl.match(/cloudflarestream\.com\/([a-f0-9]+)/i);
+    if (cloudflareMatch) {
+      const uid = cloudflareMatch[1];
+      // Extract account ID from the URL
+      const accountMatch = videoUrl.match(/customer-([a-f0-9]+)\.cloudflarestream/i);
+      if (accountMatch) {
+        return `https://customer-${accountMatch[1]}.cloudflarestream.com/${uid}/thumbnails/thumbnail.jpg`;
+      }
+    }
+    
+    return null;
+  };
+
+  const renderClipCard = (clip: Clip) => {
+    const thumbnailSrc = getThumbnailUrl(clip.thumbnail_url, clip.vertical_url);
+    
+    return (
+      <div
+        key={clip.id}
+        className="group rounded-xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-all cursor-pointer shadow-sm"
+        onClick={() => navigate(`/studio/clips?clipId=${clip.id}`)}
+      >
+        <div className="aspect-[9/16] max-h-48 bg-muted relative flex items-center justify-center">
+          {thumbnailSrc ? (
+            <img src={thumbnailSrc} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <Scissors className="w-10 h-10 text-muted-foreground/40" />
+          )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+            <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
-        )}
-        <Badge className="absolute bottom-2 right-2 text-xs tabular-nums bg-black/60 text-white border-0">
-          {formatDuration(clip.duration_seconds)}
-        </Badge>
+          {clip.status === "processing" && (
+            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+              <Loader2 className="w-6 h-6 text-primary animate-spin mb-2" />
+              <p className="text-xs text-white/70">Rendering...</p>
+              <Progress value={65} className="w-20 h-1 mt-2" />
+            </div>
+          )}
+          <Badge className="absolute bottom-2 right-2 text-xs tabular-nums bg-black/60 text-white border-0">
+            {formatDuration(clip.duration_seconds)}
+          </Badge>
+        </div>
+        <div className="p-3">
+          <p className="font-medium text-sm text-foreground truncate">{clip.title || "Untitled Clip"}</p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+            <Clock className="w-3 h-3" />
+            {formatDistanceToNow(new Date(clip.created_at), { addSuffix: true })}
+          </p>
+        </div>
       </div>
-      <div className="p-3">
-        <p className="font-medium text-sm text-foreground truncate">{clip.title || "Untitled Clip"}</p>
-        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-          <Clock className="w-3 h-3" />
-          {formatDistanceToNow(new Date(clip.created_at), { addSuffix: true })}
-        </p>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderMediaCard = (file: MediaFile) => {
     const FileIcon = getFileIcon(file.file_type);
+    const thumbnailSrc = getThumbnailUrl(file.thumbnail_url, file.cloudflare_download_url);
+    
     return (
       <div
         key={file.id}
@@ -174,8 +202,8 @@ export default function MediaLibraryHub() {
         onClick={() => navigate(`/studio/clips?mediaId=${file.id}`)}
       >
         <div className="aspect-video bg-muted relative flex items-center justify-center">
-          {file.thumbnail_url ? (
-            <img src={file.thumbnail_url} alt="" className="w-full h-full object-cover" />
+          {thumbnailSrc ? (
+            <img src={thumbnailSrc} alt="" className="w-full h-full object-cover" />
           ) : (
             <FileIcon className="w-10 h-10 text-muted-foreground/40" />
           )}
@@ -301,6 +329,11 @@ export default function MediaLibraryHub() {
             {(filteredItems as (MediaFile | Clip)[]).map((item) => {
               const isClip = 'title' in item;
               const FileIcon = isClip ? Scissors : getFileIcon((item as MediaFile).file_type);
+              const videoUrl = isClip ? (item as Clip).vertical_url : (item as MediaFile).cloudflare_download_url;
+              const thumbnailSrc = getThumbnailUrl(
+                isClip ? (item as Clip).thumbnail_url : (item as MediaFile).thumbnail_url,
+                videoUrl
+              );
               
               return (
                 <div
@@ -309,9 +342,9 @@ export default function MediaLibraryHub() {
                   onClick={() => navigate(isClip ? `/studio/clips?clipId=${item.id}` : `/studio/clips?mediaId=${item.id}`)}
                 >
                   <div className="w-16 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                    {(isClip ? (item as Clip).thumbnail_url : (item as MediaFile).thumbnail_url) ? (
+                    {thumbnailSrc ? (
                       <img 
-                        src={isClip ? (item as Clip).thumbnail_url! : (item as MediaFile).thumbnail_url!} 
+                        src={thumbnailSrc} 
                         alt="" 
                         className="w-full h-full object-cover" 
                       />
