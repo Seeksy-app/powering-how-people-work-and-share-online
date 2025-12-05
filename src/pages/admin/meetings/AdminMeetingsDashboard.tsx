@@ -80,7 +80,11 @@ export default function AdminMeetingsDashboard() {
           <CardContent>
             <div className="space-y-4">
               {upcomingMeetings.map((meeting) => (
-                <div key={meeting.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                <div 
+                  key={meeting.id} 
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
+                  onClick={() => navigate(`/studio/meeting/${meeting.id}`)}
+                >
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                       {meeting.type === "Demo" ? <Video className="h-5 w-5 text-primary" /> : <Phone className="h-5 w-5 text-primary" />}
