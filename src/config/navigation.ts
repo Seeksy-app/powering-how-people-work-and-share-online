@@ -231,7 +231,7 @@ export const NAVIGATION_CONFIG: {
         },
         {
           "id": "admin_proforma_events",
-          "label": "3-Year Pro Forma (Events)",
+          "label": "Awards Pro Forma",
           "icon": "trophy",
           "path": "/cfo/proforma/events-awards",
           "roles": ["admin", "super_admin", "cfo", "board_member"]

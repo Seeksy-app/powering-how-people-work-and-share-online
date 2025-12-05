@@ -118,7 +118,7 @@ const financialItems = [
   },
   {
     id: 'proforma-events',
-    label: '3-Year Pro Forma (Events)',
+    label: 'Awards Pro Forma',
     icon: TrendingUp,
     path: '/cfo/proforma/events-awards',
   },
