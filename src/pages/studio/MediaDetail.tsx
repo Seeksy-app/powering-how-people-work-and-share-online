@@ -63,6 +63,18 @@ interface AIJob {
   created_at: string;
 }
 
+interface EnhancedAsset {
+  id: string;
+  source_media_id: string;
+  ai_job_id: string;
+  output_type: string;
+  storage_path: string;
+  duration_seconds: number | null;
+  thumbnail_url: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
 // Publish status type
 type PublishStatus = 'not_published' | 'published_youtube' | 'published_tiktok' | 'published_instagram';
 
@@ -141,6 +153,21 @@ export default function MediaDetail() {
     enabled: !!id,
   });
 
+  // Fetch enhanced assets from AI processing
+  const { data: enhancedAssets, isLoading: loadingEnhanced } = useQuery({
+    queryKey: ["media-enhanced-assets", id],
+    queryFn: async () => {
+      if (!id) return [];
+      const { data } = await supabase
+        .from("ai_edited_assets")
+        .select("*")
+        .eq("source_media_id", id)
+        .order("created_at", { ascending: false });
+      return (data || []) as EnhancedAsset[];
+    },
+    enabled: !!id,
+  });
+
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return "0:00";
     const mins = Math.floor(seconds / 60);
@@ -171,13 +198,20 @@ export default function MediaDetail() {
   const hasAIProcessing = aiJobs && aiJobs.length > 0;
   const completedJobs = aiJobs?.filter(j => j.status === "completed") || [];
   const latestTranscript = transcripts?.[0];
+  
+  // Get enhanced video from AI processing - prioritize over source video
+  const enhancedVideo = enhancedAssets?.find(a => a.output_type === 'enhanced_video' || a.output_type === 'processed');
+  const enhancedVideoUrl = enhancedVideo?.storage_path || null;
+  const enhancedThumbnail = enhancedVideo?.thumbnail_url || null;
+  
+  // Processing state detection
+  const isProcessing = aiJobs?.some(j => j.status === 'pending' || j.status === 'processing') || false;
+  const processingFailed = aiJobs?.some(j => j.status === 'failed') && !enhancedVideo;
 
-  // Generate video URL for playback
-  const isYouTube = media?.source === "youtube";
-  const youTubeEmbedUrl = isYouTube && media?.external_id
-    ? `https://www.youtube.com/embed/${media.external_id}?autoplay=0`
-    : null;
-  const videoUrl = media?.cloudflare_download_url || media?.file_url;
+  // Determine video source priority: Enhanced > Processed > Cloudflare > Original
+  // NEVER show YouTube iframe - always use our enhanced/processed version
+  const primaryVideoUrl = enhancedVideoUrl || media?.cloudflare_download_url || media?.file_url;
+  const primaryThumbnail = enhancedThumbnail || media?.thumbnail_url;
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/studio/media/${id}`;
@@ -186,8 +220,8 @@ export default function MediaDetail() {
   };
 
   const handleDownload = () => {
-    if (videoUrl) {
-      window.open(videoUrl, "_blank");
+    if (primaryVideoUrl) {
+      window.open(primaryVideoUrl, "_blank");
     }
   };
 
@@ -288,25 +322,46 @@ export default function MediaDetail() {
             {/* Video Player */}
             <Card className="overflow-hidden">
               <div className="aspect-video bg-black relative">
-                {isYouTube && youTubeEmbedUrl ? (
-                  <iframe
-                    src={youTubeEmbedUrl}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title="Video preview"
-                  />
-                ) : videoUrl ? (
+                {/* Processing state */}
+                {isProcessing && !primaryVideoUrl ? (
+                  <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-[#053877]/20 to-[#2C6BED]/20">
+                    <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                    <p className="text-white font-medium">Processing your video...</p>
+                    <p className="text-white/60 text-sm mt-1">AI enhancement in progress</p>
+                  </div>
+                ) : processingFailed && !primaryVideoUrl ? (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <AlertCircle className="w-12 h-12 text-destructive mb-4" />
+                    <p className="text-white font-medium">Processing failed</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => navigate(`/studio/ai-post-production?media=${id}`)}
+                    >
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Retry AI Enhancement
+                    </Button>
+                  </div>
+                ) : primaryVideoUrl ? (
                   <video
-                    src={videoUrl}
+                    src={primaryVideoUrl}
                     className="w-full h-full"
                     controls
-                    poster={media.thumbnail_url || undefined}
+                    poster={primaryThumbnail || undefined}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <Video className="w-16 h-16 text-white/20" />
                   </div>
+                )}
+                
+                {/* Enhanced badge overlay */}
+                {enhancedVideo && (
+                  <Badge className="absolute top-3 left-3 bg-green-500 text-white border-0">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Enhanced
+                  </Badge>
                 )}
               </div>
               <CardContent className="p-4">
@@ -727,8 +782,8 @@ export default function MediaDetail() {
         } : media ? {
           id: media.id,
           title: media.file_name || "Untitled",
-          file_url: videoUrl,
-          thumbnail_url: media.thumbnail_url,
+          file_url: primaryVideoUrl,
+          thumbnail_url: primaryThumbnail,
           duration_seconds: media.duration_seconds,
         } : null}
       />
