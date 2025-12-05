@@ -25,6 +25,13 @@ export function MyPagePreview({ theme, mode }: MyPagePreviewProps) {
     ? { backgroundImage: `url(${theme.backgroundImage})`, backgroundSize: "cover" }
     : undefined;
 
+  // Apply font family from theme
+  const fontFamily = theme.titleFont || "Inter";
+  const containerStyle = {
+    ...bgStyle,
+    fontFamily: `${fontFamily}, sans-serif`,
+  };
+
   const cardClasses = cn(
     "transition-all duration-300",
     theme.cardStyle === "round" && "rounded-3xl",
@@ -45,7 +52,7 @@ export function MyPagePreview({ theme, mode }: MyPagePreviewProps) {
   return (
     <div
       className={cn("min-h-full py-12 px-4", bgClass)}
-      style={bgStyle}
+      style={containerStyle}
     >
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Profile Header */}

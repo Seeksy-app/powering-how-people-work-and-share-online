@@ -128,7 +128,7 @@ export const SECTION_TYPE_INFO: Record<SectionType, {
     icon: '🎬',
   },
   stream_channel: {
-    label: 'Stream Channel',
+    label: 'My Streaming Channel',
     description: 'Show your live streams and replays',
     icon: '📺',
   },

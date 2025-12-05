@@ -135,6 +135,7 @@ const ICON_MAP: Record<string, any> = {
   'media_distribution': Play,
   'marketing': Megaphone,
   'settings': Settings,
+  'awards': Award,
   // Legacy icon names
   home: LayoutDashboard,
   'layout-dashboard': LayoutDashboard,
@@ -467,30 +468,6 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
           );
         })}
 
-        {/* Bottom Section - Ask Spark */}
-        <SidebarGroup className="mt-auto mb-4 space-y-2">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {/* Ask Spark */}
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  onClick={() => window.dispatchEvent(new Event('openSparkChat'))}
-                  className="hover:bg-accent/20 cursor-pointer transition-all duration-200 py-3 px-4 rounded-lg relative group"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(74, 144, 255, 0.08) 0%, rgba(74, 144, 255, 0.12) 100%)',
-                    boxShadow: '0 0 20px rgba(74, 144, 255, 0.15)',
-                  }}
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <SparkIcon variant="holiday" size={24} animated />
-                    {!collapsed && <span className="text-base font-semibold text-white flex-1">Ask Spark</span>}
-                  </div>
-                  <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-yellow-400/10 to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );
