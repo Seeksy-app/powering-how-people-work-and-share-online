@@ -299,3 +299,18 @@ verify_jwt = false
 
 [functions.send-meeting-confirmation]
 verify_jwt = false
+
+[functions.import-youtube-video]
+verify_jwt = true
+
+[functions.zoom-list-recordings]
+verify_jwt = true
+
+[functions.import-zoom-recording]
+verify_jwt = true
+
+[functions.riverside-sessions]
+verify_jwt = true
+
+[functions.import-riverside-session]
+verify_jwt = true

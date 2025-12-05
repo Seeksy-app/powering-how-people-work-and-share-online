@@ -12307,6 +12307,8 @@ export type Database = {
           duration_seconds: number | null
           edit_status: string | null
           edit_transcript: Json | null
+          error_message: string | null
+          external_id: string | null
           file_name: string
           file_size_bytes: number | null
           file_type: string
@@ -12314,7 +12316,9 @@ export type Database = {
           folder_id: string | null
           id: string
           original_file_url: string | null
+          original_source_url: string | null
           source: string | null
+          status: string | null
           thumbnail_url: string | null
           updated_at: string | null
           user_id: string
@@ -12330,6 +12334,8 @@ export type Database = {
           duration_seconds?: number | null
           edit_status?: string | null
           edit_transcript?: Json | null
+          error_message?: string | null
+          external_id?: string | null
           file_name: string
           file_size_bytes?: number | null
           file_type: string
@@ -12337,7 +12343,9 @@ export type Database = {
           folder_id?: string | null
           id?: string
           original_file_url?: string | null
+          original_source_url?: string | null
           source?: string | null
+          status?: string | null
           thumbnail_url?: string | null
           updated_at?: string | null
           user_id: string
@@ -12353,6 +12361,8 @@ export type Database = {
           duration_seconds?: number | null
           edit_status?: string | null
           edit_transcript?: Json | null
+          error_message?: string | null
+          external_id?: string | null
           file_name?: string
           file_size_bytes?: number | null
           file_type?: string
@@ -12360,7 +12370,9 @@ export type Database = {
           folder_id?: string | null
           id?: string
           original_file_url?: string | null
+          original_source_url?: string | null
           source?: string | null
+          status?: string | null
           thumbnail_url?: string | null
           updated_at?: string | null
           user_id?: string
