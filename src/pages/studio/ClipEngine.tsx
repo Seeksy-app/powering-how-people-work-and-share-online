@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCredits } from "@/hooks/useCredits";
+import * as tus from "tus-js-client";
 
 // Platform icons for export
 const PlatformIcons = {
@@ -26,6 +27,9 @@ const PlatformIcons = {
   facebook: () => <span className="text-[10px]">📘</span>,
   x: () => <span className="text-[10px]">✖</span>,
 };
+
+// Cloudflare Stream customer subdomain
+const CLOUDFLARE_CUSTOMER_SUBDOMAIN = "customer-typiggwc4l6lm7r2.cloudflarestream.com";
 
 interface Clip {
   id: string;
@@ -64,7 +68,7 @@ interface AIJob {
   processing_time_seconds: number | null;
 }
 
-type Step = "intake" | "processing" | "gallery";
+type Step = "intake" | "uploading" | "processing" | "gallery";
 
 const PROCESSING_STAGES = [
   { key: "init", label: "Initializing...", progress: 5 },
@@ -76,6 +80,16 @@ const PROCESSING_STAGES = [
   { key: "finalize", label: "Finalizing clips...", progress: 95 },
   { key: "complete", label: "Complete!", progress: 100 },
 ];
+
+// Helper to get thumbnail URL with Cloudflare fallback
+const getThumbnailFromMedia = (media: MediaFile | null, timeSeconds = 5): string | null => {
+  if (!media) return null;
+  if (media.thumbnail_url) return media.thumbnail_url;
+  if (media.cloudflare_uid) {
+    return `https://${CLOUDFLARE_CUSTOMER_SUBDOMAIN}/${media.cloudflare_uid}/thumbnails/thumbnail.jpg?time=${timeSeconds}s&width=320`;
+  }
+  return null;
+};
 
 export default function ClipEngine() {
   const navigate = useNavigate();
@@ -96,6 +110,9 @@ export default function ClipEngine() {
   const [error, setError] = useState<string | null>(null);
   const [playingClipId, setPlayingClipId] = useState<string | null>(null);
   const [mediaFilter, setMediaFilter] = useState<"all" | "video" | "audio">("all");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingFileName, setUploadingFileName] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch user credits
   const { data: userCredits } = useQuery({
@@ -113,7 +130,7 @@ export default function ClipEngine() {
   });
 
   // Fetch media library with filters
-  const { data: mediaFiles } = useQuery({
+  const { data: mediaFiles, refetch: refetchMedia } = useQuery({
     queryKey: ["media-files-for-clips", mediaFilter],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -142,7 +159,7 @@ export default function ClipEngine() {
   });
 
   // Fetch selected media
-  const { data: selectedMedia } = useQuery({
+  const { data: selectedMedia, refetch: refetchSelectedMedia } = useQuery({
     queryKey: ["selected-media-clip", selectedMediaId],
     queryFn: async () => {
       if (!selectedMediaId) return null;
@@ -261,22 +278,149 @@ export default function ClipEngine() {
     poll();
   }, [toast, deductCredit, refetchClips]);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    toast({ 
-      title: "Upload to Media Library first", 
-      description: "Please upload your video in Media Library, then select it here.",
-      variant: "destructive"
+  // Upload file to Cloudflare Stream and create media_files record
+  const uploadToMediaLibrary = async (file: File): Promise<string> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Not authenticated");
+
+    setUploadingFileName(file.name);
+    setUploadProgress(0);
+
+    // Get Cloudflare credentials
+    const CF_ACCOUNT_ID = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+    const CF_API_TOKEN = import.meta.env.VITE_CLOUDFLARE_API_TOKEN;
+
+    if (!CF_ACCOUNT_ID || !CF_API_TOKEN) {
+      // Fallback: upload via edge function
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("name", file.name);
+
+      const { data, error } = await supabase.functions.invoke("cloudflare-stream-upload", {
+        body: formData,
+      });
+
+      if (error) throw error;
+      return data.mediaFileId;
+    }
+
+    // TUS upload to Cloudflare Stream
+    const uploadUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/stream`;
+
+    return new Promise((resolve, reject) => {
+      const upload = new tus.Upload(file, {
+        endpoint: uploadUrl,
+        headers: {
+          Authorization: `Bearer ${CF_API_TOKEN}`,
+        },
+        chunkSize: 50 * 1024 * 1024, // 50MB chunks
+        metadata: {
+          name: file.name,
+          filetype: file.type,
+        },
+        onError: (err) => {
+          console.error("Upload error:", err);
+          reject(new Error("Failed to upload video. Please try again."));
+        },
+        onProgress: (bytesUploaded, bytesTotal) => {
+          const percentage = Math.round((bytesUploaded / bytesTotal) * 100);
+          setUploadProgress(percentage);
+        },
+        onSuccess: async () => {
+          try {
+            // Extract UID from upload URL
+            const uploadUrlParts = upload.url?.split("/") || [];
+            const cloudflareUid = uploadUrlParts[uploadUrlParts.length - 1];
+
+            if (!cloudflareUid) {
+              throw new Error("Failed to get video ID from Cloudflare");
+            }
+
+            // Wait for Cloudflare to process the video
+            await new Promise(r => setTimeout(r, 2000));
+
+            const downloadUrl = `https://${CLOUDFLARE_CUSTOMER_SUBDOMAIN}/${cloudflareUid}/downloads/default.mp4`;
+            const thumbnailUrl = `https://${CLOUDFLARE_CUSTOMER_SUBDOMAIN}/${cloudflareUid}/thumbnails/thumbnail.jpg?time=5s&width=320`;
+
+            // Create media_files record
+            const { data: mediaFile, error: insertError } = await supabase
+              .from("media_files")
+              .insert({
+                user_id: user.id,
+                file_name: file.name,
+                file_type: file.type,
+                file_url: downloadUrl,
+                file_size_bytes: file.size,
+                cloudflare_uid: cloudflareUid,
+                cloudflare_download_url: downloadUrl,
+                thumbnail_url: thumbnailUrl,
+              })
+              .select()
+              .single();
+
+            if (insertError) throw insertError;
+
+            resolve(mediaFile.id);
+          } catch (err) {
+            reject(err);
+          }
+        },
+      });
+
+      upload.start();
     });
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("video/") && !file.type.startsWith("audio/")) {
+      toast({ 
+        title: "Invalid file type", 
+        description: "Please upload a video or audio file.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setError(null);
+    setStep("uploading");
+
+    try {
+      const mediaFileId = await uploadToMediaLibrary(file);
+      setSelectedMediaId(mediaFileId);
+      await refetchMedia();
+      await refetchSelectedMedia();
+      setStep("intake");
+      
+      toast({ 
+        title: "Upload complete!", 
+        description: "Your video is ready for clip generation."
+      });
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      setError(err.message || "Failed to upload video");
+      setStep("intake");
+      toast({ 
+        title: "Upload failed", 
+        description: err.message || "Please try again or contact support.",
+        variant: "destructive"
+      });
+    } finally {
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
   const handleYoutubeUrl = () => {
-    if (!youtubeUrl.trim()) return;
+    // YouTube import not yet implemented - show coming soon
     toast({ 
       title: "YouTube import coming soon", 
-      description: "This feature is being developed.",
+      description: "This feature is being developed. For now, please download the video and upload it.",
     });
   };
 
@@ -292,6 +436,17 @@ export default function ClipEngine() {
       return;
     }
 
+    // Validate media has cloudflare_uid or file_url
+    const fileUrl = selectedMedia.cloudflare_download_url || selectedMedia.file_url;
+    if (!fileUrl && !selectedMedia.cloudflare_uid) {
+      toast({ 
+        title: "Video not ready", 
+        description: "This video is still processing. Please wait a moment and try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Check credits
     const estimatedClips = 5;
     const requiredCredits = estimatedClips * 3;
@@ -303,7 +458,6 @@ export default function ClipEngine() {
       });
       navigate("/credits");
       return;
-      return;
     }
 
     setError(null);
@@ -313,22 +467,31 @@ export default function ClipEngine() {
     setProcessingStage(PROCESSING_STAGES[0].label);
 
     try {
-      // Get file URL
-      const fileUrl = selectedMedia.cloudflare_download_url || selectedMedia.file_url;
-      if (!fileUrl) {
-        throw new Error("No video URL available for this media");
+      // Build video URL - prefer Cloudflare download URL
+      let videoUrl = selectedMedia.cloudflare_download_url || selectedMedia.file_url;
+      
+      if (!videoUrl && selectedMedia.cloudflare_uid) {
+        videoUrl = `https://${CLOUDFLARE_CUSTOMER_SUBDOMAIN}/${selectedMedia.cloudflare_uid}/downloads/default.mp4`;
+      }
+
+      if (!videoUrl) {
+        throw new Error("No video URL available. Please re-upload the video.");
       }
 
       // Call the analyze-clips edge function
       const { data, error } = await supabase.functions.invoke("analyze-clips", {
         body: {
           mediaId: selectedMediaId,
-          fileUrl,
+          fileUrl: videoUrl,
           duration: selectedMedia.duration_seconds || 0,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Parse error message if available
+        const errorMessage = error.message || "Clip generation failed";
+        throw new Error(errorMessage);
+      }
       
       if (data.jobId) {
         setCurrentJobId(data.jobId);
@@ -341,11 +504,12 @@ export default function ClipEngine() {
       }
     } catch (err: any) {
       console.error("Error starting clip generation:", err);
-      setError(err.message || "Failed to start clip generation");
+      const errorMessage = err.message || "Failed to start clip generation";
+      setError(errorMessage);
       setStep("intake");
       toast({ 
         title: "Failed to generate clips", 
-        description: err.message,
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -370,25 +534,89 @@ export default function ClipEngine() {
   };
 
   const getPlayableUrl = (clip: Clip) => {
-    // Priority: vertical_url > storage_path > source media with time fragment
+    // Priority: vertical_url > storage_path (if real URL) > source media with time fragment
     if (clip.vertical_url) return clip.vertical_url;
-    if (clip.storage_path && !clip.storage_path.includes("#t=")) return clip.storage_path;
+    
+    // Check if storage_path is a real URL (not just a time fragment reference)
+    if (clip.storage_path && clip.storage_path.startsWith("http") && !clip.storage_path.includes("#t=")) {
+      return clip.storage_path;
+    }
     
     // Fallback to source media with time fragment
     if (selectedMedia) {
-      const baseUrl = selectedMedia.cloudflare_download_url || selectedMedia.file_url;
+      let baseUrl = selectedMedia.cloudflare_download_url || selectedMedia.file_url;
+      
+      if (!baseUrl && selectedMedia.cloudflare_uid) {
+        baseUrl = `https://${CLOUDFLARE_CUSTOMER_SUBDOMAIN}/${selectedMedia.cloudflare_uid}/downloads/default.mp4`;
+      }
+      
       if (baseUrl) {
-        return `${baseUrl}#t=${clip.start_seconds},${clip.end_seconds}`;
+        // Remove any existing fragment and add new one
+        const cleanUrl = baseUrl.split("#")[0];
+        return `${cleanUrl}#t=${clip.start_seconds},${clip.end_seconds}`;
       }
     }
+    
+    // Last fallback: try to extract URL from storage_path
+    if (clip.storage_path && clip.storage_path.startsWith("http")) {
+      return clip.storage_path;
+    }
+    
     return null;
   };
 
-  const getThumbnailUrl = (clip: Clip) => {
+  const getClipThumbnailUrl = (clip: Clip) => {
+    // Use clip's own thumbnail if available
     if (clip.thumbnail_url) return clip.thumbnail_url;
-    if (selectedMedia?.thumbnail_url) return selectedMedia.thumbnail_url;
+    
+    // Fall back to source media thumbnail at clip start time
+    if (selectedMedia) {
+      if (selectedMedia.cloudflare_uid) {
+        const time = Math.floor(clip.start_seconds) || 5;
+        return `https://${CLOUDFLARE_CUSTOMER_SUBDOMAIN}/${selectedMedia.cloudflare_uid}/thumbnails/thumbnail.jpg?time=${time}s&width=320`;
+      }
+      if (selectedMedia.thumbnail_url) return selectedMedia.thumbnail_url;
+    }
+    
     return null;
   };
+
+  // Get thumbnail for selected media preview
+  const selectedMediaThumbnail = getThumbnailFromMedia(selectedMedia);
+
+  // UPLOADING SCREEN
+  if (step === "uploading") {
+    return (
+      <div className="min-h-screen bg-[#0B0F14] text-white flex flex-col">
+        <div className="border-b border-white/10 px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+              <Upload className="w-5 h-5 text-blue-400 animate-pulse" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold">Uploading to Media Library</h1>
+              <p className="text-sm text-white/50">{uploadingFileName}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
+          <div className="w-full max-w-md">
+            <div className="text-center mb-6">
+              <h2 className="text-4xl font-bold mb-2">{uploadProgress}%</h2>
+              <p className="text-white/60">Uploading your video...</p>
+            </div>
+
+            <Progress value={uploadProgress} className="h-3 mb-8" />
+
+            <p className="text-center text-sm text-white/40">
+              Please don't close this page while uploading
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // INTAKE SCREEN
   if (step === "intake") {
@@ -420,7 +648,7 @@ export default function ClipEngine() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-3">Create Viral Clips in One Click</h2>
             <p className="text-white/60 text-lg">
-              Drop a long video, paste a YouTube link, or choose from your recordings
+              Drop a video, or choose from your media library
             </p>
           </div>
 
@@ -447,17 +675,23 @@ export default function ClipEngine() {
           {/* Selected Media Preview */}
           {selectedMedia && (
             <div className="mb-8 p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4">
-              {selectedMedia.thumbnail_url ? (
+              {selectedMediaThumbnail ? (
                 <img 
-                  src={selectedMedia.thumbnail_url} 
+                  src={selectedMediaThumbnail} 
                   alt="" 
-                  className="w-20 h-14 object-cover rounded-lg"
+                  className="w-20 h-14 object-cover rounded-lg bg-white/5"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
-              ) : (
-                <div className="w-20 h-14 bg-white/10 rounded-lg flex items-center justify-center">
-                  <Film className="w-6 h-6 text-white/40" />
-                </div>
-              )}
+              ) : null}
+              <div className={cn(
+                "w-20 h-14 bg-white/10 rounded-lg flex items-center justify-center shrink-0",
+                selectedMediaThumbnail && "hidden"
+              )}>
+                <Film className="w-6 h-6 text-white/40" />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{selectedMedia.file_name || "Untitled"}</p>
                 <p className="text-sm text-white/50">
@@ -481,6 +715,7 @@ export default function ClipEngine() {
             {/* Upload */}
             <label className="group cursor-pointer">
               <input 
+                ref={fileInputRef}
                 type="file" 
                 accept="video/*,audio/*" 
                 className="hidden" 
@@ -491,7 +726,7 @@ export default function ClipEngine() {
                   <Upload className="w-6 h-6 text-white/60 group-hover:text-emerald-400" />
                 </div>
                 <span className="font-medium">Upload Video</span>
-                <span className="text-xs text-white/40">MP4, MOV, MP3</span>
+                <span className="text-xs text-white/40">MP4, MOV, WEBM</span>
               </div>
             </label>
 
@@ -507,18 +742,13 @@ export default function ClipEngine() {
               <span className="text-xs text-white/40">Your recordings</span>
             </button>
 
-            {/* Paste URL */}
-            <div className="h-40 rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-3 p-4">
+            {/* Paste URL - Coming Soon */}
+            <div className="h-40 rounded-xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-3 p-4 opacity-50 cursor-not-allowed">
               <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                <Link2 className="w-6 h-6 text-white/60" />
+                <Link2 className="w-6 h-6 text-white/40" />
               </div>
-              <span className="font-medium">Paste URL</span>
-              <Input
-                placeholder="YouTube link..."
-                value={youtubeUrl}
-                onChange={(e) => setYoutubeUrl(e.target.value)}
-                className="h-8 text-xs bg-white/5 border-white/20 text-white placeholder:text-white/30"
-              />
+              <span className="font-medium text-white/60">Paste URL</span>
+              <Badge variant="secondary" className="text-[10px]">Coming Soon</Badge>
             </div>
           </div>
 
@@ -527,7 +757,7 @@ export default function ClipEngine() {
             <Button 
               size="lg" 
               onClick={handleStartProcessing}
-              disabled={!selectedMediaId && !youtubeUrl}
+              disabled={!selectedMediaId}
               className="gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-8"
             >
               <Sparkles className="w-5 h-5" />
@@ -576,9 +806,7 @@ export default function ClipEngine() {
               <div className="flex-1 overflow-y-auto p-4">
                 <div className="grid grid-cols-2 gap-3">
                   {filteredMedia?.map(media => {
-                    // Generate thumbnail URL from cloudflare_uid if no thumbnail_url
-                    const thumbnailSrc = media.thumbnail_url || 
-                      (media.cloudflare_uid ? `https://customer-typiggwc4l6lm7r2.cloudflarestream.com/${media.cloudflare_uid}/thumbnails/thumbnail.jpg?time=5s&width=320` : null);
+                    const thumbnailSrc = getThumbnailFromMedia(media);
                     
                     return (
                       <button
@@ -598,7 +826,6 @@ export default function ClipEngine() {
                               alt="" 
                               className="w-16 h-12 object-cover rounded-lg bg-white/5"
                               onError={(e) => {
-                                // Fallback to placeholder on error
                                 e.currentTarget.style.display = 'none';
                                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
                               }}
@@ -659,11 +886,14 @@ export default function ClipEngine() {
           {selectedMedia && (
             <div className="mb-8 relative">
               <div className="w-64 h-36 bg-white/5 rounded-xl overflow-hidden border border-white/10">
-                {selectedMedia.thumbnail_url ? (
+                {selectedMediaThumbnail ? (
                   <img 
-                    src={selectedMedia.thumbnail_url} 
+                    src={selectedMediaThumbnail} 
                     alt="" 
                     className="w-full h-full object-cover opacity-60"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -770,83 +1000,90 @@ export default function ClipEngine() {
         <div className="p-6">
           {clips && clips.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {clips.map((clip) => (
-                <div 
-                  key={clip.id} 
-                  className="group bg-white/5 rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all"
-                >
-                  {/* Thumbnail */}
+              {clips.map((clip) => {
+                const clipThumbnail = getClipThumbnailUrl(clip);
+                
+                return (
                   <div 
-                    className="aspect-[9/16] relative cursor-pointer"
-                    onClick={() => setPlayingClipId(clip.id)}
+                    key={clip.id} 
+                    className="group bg-white/5 rounded-xl overflow-hidden border border-white/10 hover:border-white/20 transition-all"
                   >
-                    {getThumbnailUrl(clip) ? (
-                      <img 
-                        src={getThumbnailUrl(clip)!} 
-                        alt={clip.title || "Clip"} 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-emerald-900/30 to-purple-900/30 flex items-center justify-center">
-                        <Film className="w-10 h-10 text-white/30" />
-                      </div>
-                    )}
-                    
-                    {/* Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    
-                    {/* Play Button */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                        <Play className="w-6 h-6 text-white fill-white" />
-                      </div>
-                    </div>
-
-                    {/* Score Badge */}
-                    {clip.virality_score && (
-                      <div className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-emerald-500/90 text-white text-xs font-bold flex items-center gap-1">
-                        <Zap className="w-3 h-3" />
-                        {clip.virality_score}
-                      </div>
-                    )}
-
-                    {/* Duration */}
-                    <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/60 text-white text-xs">
-                      {formatDuration(clip.duration_seconds || (clip.end_seconds - clip.start_seconds))}
-                    </div>
-
-                    {/* Status Badge */}
-                    {clip.status !== "ready" && clip.status !== "pending" && (
-                      <div className="absolute top-2 right-2">
-                        <Badge variant={clip.status === "failed" ? "destructive" : "secondary"} className="text-[10px]">
-                          {clip.status}
-                        </Badge>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="p-3">
-                    <p className="text-sm font-medium line-clamp-2 mb-2">{clip.title || "Untitled Clip"}</p>
-                    
-                    {/* Caption/Hook */}
-                    {clip.suggested_caption && (
-                      <p className="text-xs text-yellow-400 font-medium truncate mb-2">
-                        "{clip.suggested_caption}"
-                      </p>
-                    )}
-
-                    {/* Platform Icons */}
-                    <div className="flex items-center gap-1">
-                      {Object.entries(PlatformIcons).slice(0, 3).map(([key, Icon]) => (
-                        <div key={key} className="w-6 h-6 rounded bg-white/10 flex items-center justify-center">
-                          <Icon />
+                    {/* Thumbnail */}
+                    <div 
+                      className="aspect-[9/16] relative cursor-pointer"
+                      onClick={() => setPlayingClipId(clip.id)}
+                    >
+                      {clipThumbnail ? (
+                        <img 
+                          src={clipThumbnail} 
+                          alt={clip.title || "Clip"} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-emerald-900/30 to-purple-900/30 flex items-center justify-center">
+                          <Film className="w-10 h-10 text-white/30" />
                         </div>
-                      ))}
+                      )}
+                      
+                      {/* Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+                      
+                      {/* Play Button */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                          <Play className="w-6 h-6 text-white fill-white" />
+                        </div>
+                      </div>
+
+                      {/* Score Badge */}
+                      {clip.virality_score && (
+                        <div className="absolute top-2 left-2 px-2 py-1 rounded-lg bg-emerald-500/90 text-white text-xs font-bold flex items-center gap-1">
+                          <Zap className="w-3 h-3" />
+                          {clip.virality_score}
+                        </div>
+                      )}
+
+                      {/* Duration */}
+                      <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/60 text-white text-xs">
+                        {formatDuration(clip.duration_seconds || (clip.end_seconds - clip.start_seconds))}
+                      </div>
+
+                      {/* Status Badge */}
+                      {clip.status !== "ready" && clip.status !== "pending" && (
+                        <div className="absolute top-2 right-2">
+                          <Badge variant={clip.status === "failed" ? "destructive" : "secondary"} className="text-[10px]">
+                            {clip.status}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="p-3">
+                      <p className="text-sm font-medium line-clamp-2 mb-2">{clip.title || "Untitled Clip"}</p>
+                      
+                      {/* Caption/Hook */}
+                      {clip.suggested_caption && (
+                        <p className="text-xs text-yellow-400 font-medium truncate mb-2">
+                          "{clip.suggested_caption}"
+                        </p>
+                      )}
+
+                      {/* Platform Icons */}
+                      <div className="flex items-center gap-1">
+                        {Object.entries(PlatformIcons).slice(0, 3).map(([key, Icon]) => (
+                          <div key={key} className="w-6 h-6 rounded bg-white/10 flex items-center justify-center">
+                            <Icon />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-20">
