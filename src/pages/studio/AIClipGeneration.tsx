@@ -271,6 +271,7 @@ export default function AIClipGeneration() {
             fileName={selectedMedia?.file_name || "Selected Video"}
             duration={selectedMedia?.duration_seconds}
             thumbnail={thumbnailUrl}
+            fileType="video"
             isImporting={false}
             onChangeMedia={handleChangeMedia}
             source={selectedMedia?.edit_status === "edited" ? "AI Enhanced" : selectedMedia?.source}
