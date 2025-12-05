@@ -162,17 +162,12 @@ import VoiceCredentials from "./pages/VoiceCredentialsSimple";
 import VoiceCredentialsAdmin from "./pages/admin/VoiceCredentialsAdmin";
 import StudioRecordingNew from "./pages/studio/StudioRecordingNew";
 import StudioRecordings from "./pages/studio/StudioRecordings";
-import StudioClips from "./pages/studio/StudioClips";
 import StudioAds from "./pages/studio/StudioAds";
 import StudioGuests from "./pages/studio/StudioGuests";
 import StudioSettings from "./pages/studio/StudioSettings";
 import StudioLiveNew from "./pages/studio/StudioLiveNew";
 import StudioHubPremium from "./pages/studio/StudioHubPremium";
-import AIClipGeneratorPremium from "./pages/studio/AIClipGeneratorPremium";
-import AIClipGeneratorFull from "./pages/studio/AIClipGeneratorFull";
-import AIClipGeneratorDemoV2 from "./pages/studio/AIClipGeneratorDemoV2";
-import AIClipGeneratorDemoV3 from "./pages/studio/AIClipGeneratorDemoV3";
-import AIClipGeneratorV4 from "./pages/studio/AIClipGeneratorV4";
+import ClipEngine from "./pages/studio/ClipEngine";
 import MediaLibraryHub from "./pages/studio/MediaLibraryHub";
 import AIPostProduction from "./pages/studio/AIPostProduction";
 import StudioTemplatesPage from "./pages/studio/StudioTemplates";
@@ -760,12 +755,7 @@ const AppContent = () => {
               <Route path="/studio" element={<TourModeWrapper><StudioHubPremium /></TourModeWrapper>} />
               <Route path="/studio/audio" element={<TourModeWrapper><AudioStudioPremium /></TourModeWrapper>} />
               <Route path="/studio/video" element={<TourModeWrapper><VideoStudioPremium /></TourModeWrapper>} />
-              <Route path="/studio/clips" element={<TourModeWrapper><AIClipGeneratorFull /></TourModeWrapper>} />
-              <Route path="/studio/ai-clips" element={<AIClipGeneratorFull />} />
-              <Route path="/studio/ai-production" element={<AIClipGeneratorFull />} />
-              <Route path="/studio/clips-demo-v2" element={<AIClipGeneratorDemoV2 />} />
-              <Route path="/studio/clips-demo-v3" element={<AIClipGeneratorDemoV3 />} />
-              <Route path="/studio/clips-v4" element={<AIClipGeneratorV4 />} />
+              <Route path="/studio/clips" element={<TourModeWrapper><ClipEngine /></TourModeWrapper>} />
               <Route path="/studio/media" element={<TourModeWrapper><MediaLibraryHub /></TourModeWrapper>} />
               <Route path="/studio/ai-post-production" element={<TourModeWrapper><AIPostProduction /></TourModeWrapper>} />
               <Route path="/studio/templates" element={<StudioTemplatesPage />} />
