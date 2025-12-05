@@ -212,6 +212,13 @@ export default function AdminAdAnalytics() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Advertisers</SelectItem>
+                    <SelectItem value="nike">Nike</SelectItem>
+                    <SelectItem value="ford">Ford</SelectItem>
+                    <SelectItem value="starbucks">Starbucks</SelectItem>
+                    <SelectItem value="verizon">Verizon</SelectItem>
+                    <SelectItem value="acme">Acme Corp</SelectItem>
+                    <SelectItem value="techstart">TechStart Inc</SelectItem>
+                    <SelectItem value="global">Global Solutions</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

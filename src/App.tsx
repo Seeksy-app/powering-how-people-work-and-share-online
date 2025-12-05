@@ -235,6 +235,7 @@ import HelpDeskSettings from "./pages/helpdesk/Settings";
 import CMOCommandCenter from "./pages/admin/cmo/CMOCommandCenter";
 import CCOCommunications from "./pages/admin/cco/CCOCommunications";
 import SalesLeads from "./pages/admin/SalesLeads";
+import SiteVisitors from "./pages/admin/SiteVisitors";
 import SalesDesk from "./pages/admin/SalesDesk";
 import SWOTAnalysis from "./pages/admin/SWOTAnalysis";
 import TeamMembers from "./pages/admin/TeamMembers";
@@ -863,6 +864,7 @@ const AppContent = () => {
               <Route path="/admin/marketing-gtm" element={<MarketingGTM />} />
               <Route path="/admin/investor-spreadsheets-v2" element={<InvestorSpreadsheets />} />
               <Route path="/admin/sales-leads" element={<SalesLeads />} />
+              <Route path="/admin/site-leads" element={<SiteVisitors />} />
               {/* Marketing CMO Routes */}
               <Route path="/admin/marketing/campaigns" element={<OutboundCampaigns />} />
               <Route path="/admin/marketing/funnels" element={<FunnelsAttribution />} />
