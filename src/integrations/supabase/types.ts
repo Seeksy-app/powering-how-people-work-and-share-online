@@ -3954,36 +3954,51 @@ export type Database = {
       calendar_connections: {
         Row: {
           access_token: string
+          cache_expires_at: string | null
+          cached_busy_slots: Json | null
           calendar_email: string | null
           calendar_id: string | null
           created_at: string
+          google_override_seeksy: boolean | null
           id: string
+          last_sync_at: string | null
           provider: string
           refresh_token: string
+          sync_mode: string | null
           token_expiry: string
           updated_at: string
           user_id: string
         }
         Insert: {
           access_token: string
+          cache_expires_at?: string | null
+          cached_busy_slots?: Json | null
           calendar_email?: string | null
           calendar_id?: string | null
           created_at?: string
+          google_override_seeksy?: boolean | null
           id?: string
+          last_sync_at?: string | null
           provider?: string
           refresh_token: string
+          sync_mode?: string | null
           token_expiry: string
           updated_at?: string
           user_id: string
         }
         Update: {
           access_token?: string
+          cache_expires_at?: string | null
+          cached_busy_slots?: Json | null
           calendar_email?: string | null
           calendar_id?: string | null
           created_at?: string
+          google_override_seeksy?: boolean | null
           id?: string
+          last_sync_at?: string | null
           provider?: string
           refresh_token?: string
+          sync_mode?: string | null
           token_expiry?: string
           updated_at?: string
           user_id?: string
@@ -13024,6 +13039,8 @@ export type Database = {
           created_at: string | null
           description: string | null
           end_time: string
+          google_calendar_event_id: string | null
+          google_calendar_synced: boolean | null
           id: string
           is_active: boolean | null
           location_details: string | null
@@ -13049,6 +13066,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           end_time: string
+          google_calendar_event_id?: string | null
+          google_calendar_synced?: boolean | null
           id?: string
           is_active?: boolean | null
           location_details?: string | null
@@ -13074,6 +13093,8 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           end_time?: string
+          google_calendar_event_id?: string | null
+          google_calendar_synced?: boolean | null
           id?: string
           is_active?: boolean | null
           location_details?: string | null
