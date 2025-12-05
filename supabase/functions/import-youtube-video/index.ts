@@ -20,8 +20,55 @@ function extractYouTubeVideoId(url: string): string | null {
   return null;
 }
 
-// Fetch YouTube video metadata via oEmbed (no API key needed)
+// Fetch YouTube video metadata - try Data API first, fallback to oEmbed
 async function fetchYouTubeMetadata(videoId: string) {
+  const youtubeApiKey = Deno.env.get('YOUTUBE_API_KEY');
+  
+  // Try YouTube Data API first (has duration info)
+  if (youtubeApiKey) {
+    try {
+      const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet,contentDetails&key=${youtubeApiKey}`;
+      const response = await fetch(apiUrl);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.items && data.items.length > 0) {
+          const item = data.items[0];
+          const snippet = item.snippet;
+          const contentDetails = item.contentDetails;
+          
+          // Parse ISO 8601 duration to seconds
+          const duration = contentDetails?.duration;
+          let durationSeconds = 0;
+          if (duration) {
+            const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+            if (match) {
+              const hours = parseInt(match[1] || '0');
+              const minutes = parseInt(match[2] || '0');
+              const seconds = parseInt(match[3] || '0');
+              durationSeconds = hours * 3600 + minutes * 60 + seconds;
+            }
+          }
+          
+          console.log('YouTube API metadata fetched:', { title: snippet.title, duration: durationSeconds });
+          
+          return {
+            title: snippet.title,
+            thumbnail_url: snippet.thumbnails?.maxres?.url || 
+                          snippet.thumbnails?.high?.url || 
+                          `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+            author_name: snippet.channelTitle,
+            description: snippet.description?.substring(0, 500),
+            duration_seconds: durationSeconds,
+          };
+        }
+      }
+    } catch (error) {
+      console.error('YouTube Data API error, falling back to oEmbed:', error);
+    }
+  }
+  
+  // Fallback to oEmbed (no API key needed, but no duration)
   try {
     const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
     const response = await fetch(oembedUrl);
@@ -36,6 +83,7 @@ async function fetchYouTubeMetadata(videoId: string) {
       title: data.title || `YouTube Video ${videoId}`,
       thumbnail_url: data.thumbnail_url || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
       author_name: data.author_name,
+      duration_seconds: null, // oEmbed doesn't provide duration
     };
   } catch (error) {
     console.error('Error fetching YouTube metadata:', error);
@@ -142,11 +190,12 @@ serve(async (req) => {
         user_id: user.id,
         file_name: title,
         file_type: 'video',
-        file_url: youtube_url, // Temporary - will be replaced with Cloudflare URL
+        file_url: youtube_url, // YouTube URL - can be played via embed
         source: 'youtube',
         external_id: videoId,
         original_source_url: youtube_url,
         thumbnail_url: thumbnail,
+        duration_seconds: metadata?.duration_seconds || null,
         status: 'importing',
       })
       .select()
