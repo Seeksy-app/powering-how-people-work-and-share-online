@@ -12,7 +12,6 @@ import { TopNavBar } from "@/components/TopNavBar";
 import { TourModeWrapper } from "@/components/layout/TourModeWrapper";
 import { NavCustomizationModal } from "@/components/dashboard/NavCustomizationModal";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
-import { FloatingSparkButton } from "@/components/FloatingSparkButton";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -123,7 +122,6 @@ import SubscriptionSettings from "./pages/SubscriptionSettings";
 import { CommandPaletteProvider } from "./components/command/CommandPaletteProvider";
 import { AIAssistantProvider } from "./components/ai/AIAssistantProvider";
 import { CommandPalette } from "./components/command/CommandPalette";
-import { AIAssistantPanel } from "./components/ai/AIAssistantPanel";
 import { AppErrorBoundary } from "./components/AppErrorBoundary";
 import AdminSettings from "./pages/admin/Settings";
 import LogoManagerV2 from "./pages/admin/LogoManagerV2";
@@ -1120,10 +1118,7 @@ const AppContent = () => {
             </RouteTransition>
           </main>
         </div>
-        <FloatingSparkButton />
-        
         <CommandPalette />
-        <AIAssistantPanel />
         <NavCustomizationModal open={navModalOpen} onOpenChange={setNavModalOpen} />
         </div>
       </SidebarProvider>

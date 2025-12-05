@@ -38,21 +38,21 @@ export interface NavItem {
 const DEFAULT_NAV_CONFIG: NavConfig = {
   order: [
     'my_day',
-    'dashboard',
     'creator_hub',
-    'meetings',
-    'studio',
-    'social_analytics',
+    'dashboard',
     'media_content',
-    'monetization',
     'seekies',
     'email',
     'media_distribution',
     'marketing',
-    'settings'
+    'awards',
+    'meetings',
+    'monetization',
+    'settings',
+    'my_workspaces'
   ],
   hidden: [],
-  pinned: ['my_day', 'dashboard', 'creator_hub'],
+  pinned: ['my_day', 'creator_hub', 'dashboard'],
   subItems: {}
 };
 
@@ -77,46 +77,8 @@ const DEFAULT_LANDING_ROUTE = '/my-day';
  */
 export const NAV_ITEMS: NavItem[] = [
   { id: 'my_day', label: 'My Day', path: '/my-day', isHome: true, level: 0 },
-  { id: 'dashboard', label: 'Dashboard', path: '/dashboard', isHome: true, level: 0 },
   { id: 'creator_hub', label: 'Creator Hub', path: '/creator-hub', isHome: true, level: 0 },
-  { id: 'my_streaming_channel', label: 'My Streaming Channel', path: '/mypage', moduleId: 'my-page-streaming', level: 0 },
-  { id: 'my_workspaces', label: 'My Workspaces', path: '/apps?category=my-workspaces', level: 0 },
-  {
-    id: 'meetings', 
-    label: 'Meetings', 
-    path: '/creator/meetings',
-    moduleId: 'meetings',
-    level: 0,
-    subItems: [
-      { id: 'meetings_dashboard', label: 'Dashboard', path: '/creator/meetings' },
-      { id: 'meetings_types', label: 'Meeting Types', path: '/creator/meetings/types' },
-      { id: 'meetings_booking_links', label: 'Booking Links', path: '/creator/meetings/booking-links' },
-      { id: 'meetings_scheduled', label: 'Scheduled Meetings', path: '/creator/meetings/scheduled' },
-      { id: 'meetings_availability', label: 'Availability', path: '/creator/meetings/availability' },
-      { id: 'meetings_settings', label: 'Settings', path: '/creator/meetings/settings' },
-    ]
-  },
-  { 
-    id: 'studio', 
-    label: 'Studio', 
-    path: '/studio',
-    moduleId: 'studio',
-    level: 0,
-    subItems: [
-      { id: 'video_studio', label: 'Video Studio', path: '/studio/video' },
-      { id: 'audio_studio', label: 'Audio Studio', path: '/studio/audio' },
-      { id: 'clips_editing', label: 'Clips & Editing', path: '/studio/clips' },
-      { id: 'media_library_studio', label: 'Media Library', path: '/studio/media' },
-      { id: 'studio_templates', label: 'Templates', path: '/studio/templates' },
-    ]
-  },
-  { 
-    id: 'social_analytics', 
-    label: 'Social Analytics', 
-    path: '/social-analytics',
-    moduleId: 'social-analytics',
-    level: 0
-  },
+  { id: 'dashboard', label: 'Dashboard', path: '/dashboard', isHome: true, level: 0 },
   { 
     id: 'media_content', 
     label: 'Media & Content', 
@@ -126,18 +88,7 @@ export const NAV_ITEMS: NavItem[] = [
       { id: 'content_library', label: 'Content Library', path: '/media' },
       { id: 'content_transcripts', label: 'Transcripts', path: '/transcripts' },
       { id: 'content_blogs', label: 'Blog Posts', path: '/blog' },
-    ]
-  },
-  { 
-    id: 'monetization', 
-    label: 'Monetization', 
-    path: '/monetization',
-    moduleId: 'revenue-tracking',
-    level: 0,
-    subItems: [
-      { id: 'monetization_hub', label: 'Monetization Hub', path: '/monetization' },
-      { id: 'monetization_brand_campaigns', label: 'Brand Campaigns', path: '/creator-campaigns' },
-      { id: 'monetization_revenue', label: 'Revenue Tracking', path: '/monetization' },
+      { id: 'generate_clips', label: 'Generate Clips', path: '/studio/clips' },
     ]
   },
   { id: 'seekies', label: 'Seekies & Apps', path: '/apps', level: 0 },
@@ -161,7 +112,6 @@ export const NAV_ITEMS: NavItem[] = [
     subItems: [
       { id: 'media_studio_hub', label: 'Studio Hub', path: '/studio' },
       { id: 'media_podcasts', label: 'Podcasts', path: '/podcasts' },
-      { id: 'media_streaming_channel', label: 'My Streaming Channel', path: '/mypage' },
     ]
   },
   { 
@@ -177,7 +127,36 @@ export const NAV_ITEMS: NavItem[] = [
       { id: 'marketing_automations', label: 'Automations', path: '/marketing/automations' },
     ]
   },
+  { id: 'awards', label: 'Awards', path: '/awards', level: 0 },
+  {
+    id: 'meetings', 
+    label: 'Meetings', 
+    path: '/creator/meetings',
+    moduleId: 'meetings',
+    level: 0,
+    subItems: [
+      { id: 'meetings_dashboard', label: 'Dashboard', path: '/creator/meetings' },
+      { id: 'meetings_types', label: 'Meeting Types', path: '/creator/meetings/types' },
+      { id: 'meetings_booking_links', label: 'Booking Links', path: '/creator/meetings/booking-links' },
+      { id: 'meetings_scheduled', label: 'Scheduled Meetings', path: '/creator/meetings/scheduled' },
+      { id: 'meetings_availability', label: 'Availability', path: '/creator/meetings/availability' },
+      { id: 'meetings_settings', label: 'Settings', path: '/creator/meetings/settings' },
+    ]
+  },
+  { 
+    id: 'monetization', 
+    label: 'Monetization', 
+    path: '/monetization',
+    moduleId: 'revenue-tracking',
+    level: 0,
+    subItems: [
+      { id: 'monetization_hub', label: 'Monetization Hub', path: '/monetization' },
+      { id: 'monetization_brand_campaigns', label: 'Brand Campaigns', path: '/creator-campaigns' },
+      { id: 'monetization_revenue', label: 'Revenue Tracking', path: '/monetization' },
+    ]
+  },
   { id: 'settings', label: 'Settings', path: '/settings', level: 0 },
+  { id: 'my_workspaces', label: 'My Workspaces', path: '/apps?category=my-workspaces', level: 0 },
 ];
 
 export const LANDING_OPTIONS = [
