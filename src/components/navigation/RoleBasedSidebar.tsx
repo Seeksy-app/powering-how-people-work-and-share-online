@@ -272,10 +272,10 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
     .sort((a, b) => {
       const aIndex = navConfig.order.indexOf(a.id);
       const bIndex = navConfig.order.indexOf(b.id);
-      if (aIndex === -1 && bIndex === -1) return 0;
-      if (aIndex === -1) return 1;
-      if (bIndex === -1) return -1;
-      return aIndex - bIndex;
+      // Items not in order go to the END (use a large number)
+      const aSort = aIndex === -1 ? 9999 : aIndex;
+      const bSort = bIndex === -1 ? 9999 : bIndex;
+      return aSort - bSort;
     });
 
   // Use permission-filtered navigation for admin users (combines role + permission checks)
