@@ -14,13 +14,14 @@ import { useCredits } from "@/hooks/useCredits";
 import { useClipGeneration } from "@/hooks/useClipGeneration";
 import { ClipGenerationProgress } from "@/components/clips/ClipGenerationProgress";
 import { GeneratedClipsGrid } from "@/components/clips/GeneratedClipsGrid";
+import { SocialPublishModal } from "@/components/clips/SocialPublishModal";
 import { SelectedMediaHeader } from "@/components/studio/SelectedMediaHeader";
 import { cn } from "@/lib/utils";
 import { 
   ArrowLeft, Film, Sparkles, Upload, Folder, 
   Clock, FileVideo, Zap, Users, Volume2,
   Smartphone, Square, Monitor, Loader2,
-  CheckCircle2
+  CheckCircle2, Share2
 } from "lucide-react";
 
 // Cloudflare Stream customer subdomain
@@ -74,6 +75,8 @@ export default function AIClipGeneration() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadingFileName, setUploadingFileName] = useState("");
+  const [showSocialModal, setShowSocialModal] = useState(false);
+  const [clipToPublish, setClipToPublish] = useState<any>(null);
   
   // Options
   const [options, setOptions] = useState({
@@ -458,7 +461,7 @@ export default function AIClipGeneration() {
             {/* Quick stats when complete */}
             {!isGenerating && currentJob?.status === "completed" && (
               <Card className="border-green-500/30 bg-green-50/50">
-                <CardContent className="pt-6">
+                <CardContent className="pt-6 space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
                       <CheckCircle2 className="h-5 w-5 text-white" />
@@ -470,6 +473,28 @@ export default function AIClipGeneration() {
                       </p>
                     </div>
                   </div>
+                  
+                  {/* Publish to Social CTA */}
+                  {allClips.length > 0 && (
+                    <Button
+                      className="w-full bg-gradient-to-r from-[#053877] to-[#2C6BED] text-white"
+                      onClick={() => {
+                        const firstClip = allClips[0];
+                        setClipToPublish({
+                          id: firstClip.id,
+                          title: firstClip.title || `Clip`,
+                          thumbnail_url: firstClip.thumbnail_url,
+                          file_url: firstClip.vertical_url || firstClip.storage_path,
+                          duration_seconds: firstClip.end_seconds - firstClip.start_seconds,
+                          aspect_ratio: firstClip.aspect_ratio || "9:16"
+                        });
+                        setShowSocialModal(true);
+                      }}
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Publish Clip to Social
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -557,6 +582,13 @@ export default function AIClipGeneration() {
             </ScrollArea>
           </DialogContent>
         </Dialog>
+
+        {/* Social Publish Modal */}
+        <SocialPublishModal
+          open={showSocialModal}
+          onOpenChange={setShowSocialModal}
+          clip={clipToPublish}
+        />
       </div>
     </div>
   );

@@ -8,11 +8,12 @@ import { cn } from "@/lib/utils";
 import { 
   Play, Pause, Download, Film, Zap, 
   Smartphone, Square, Monitor, Maximize2,
-  Copy, ExternalLink, FolderOpen
+  Copy, ExternalLink, FolderOpen, Share2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import type { Clip } from "@/hooks/useClipGeneration";
+import { SocialPublishModal } from "./SocialPublishModal";
 
 interface GeneratedClipsGridProps {
   clips: Clip[];
@@ -51,6 +52,13 @@ export function GeneratedClipsGrid({ clips, sourceMediaId }: GeneratedClipsGridP
   const [playingClipId, setPlayingClipId] = useState<string | null>(null);
   const [selectedClip, setSelectedClip] = useState<Clip | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showSocialModal, setShowSocialModal] = useState(false);
+  const [clipToPublish, setClipToPublish] = useState<Clip | null>(null);
+
+  const handlePublishToSocial = (clip: Clip) => {
+    setClipToPublish(clip);
+    setShowSocialModal(true);
+  };
 
   if (!clips || clips.length === 0) {
     return null;
@@ -221,6 +229,15 @@ export function GeneratedClipsGrid({ clips, sourceMediaId }: GeneratedClipsGridP
                     <Download className="h-3.5 w-3.5 mr-1" />
                     Download
                   </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="flex-1 bg-gradient-to-r from-[#053877] to-[#2C6BED]"
+                    onClick={() => handlePublishToSocial(clip)}
+                  >
+                    <Share2 className="h-3.5 w-3.5 mr-1" />
+                    Publish
+                  </Button>
                   {allFormats.length > 1 && (
                     <Button
                       variant="ghost"
@@ -308,11 +325,35 @@ export function GeneratedClipsGrid({ clips, sourceMediaId }: GeneratedClipsGridP
                   <FolderOpen className="h-4 w-4 mr-2" />
                   View in Library
                 </Button>
+                <Button 
+                  className="flex-1 bg-gradient-to-r from-[#053877] to-[#2C6BED]"
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    handlePublishToSocial(selectedClip);
+                  }}
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Publish to Social
+                </Button>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Social Publish Modal */}
+      <SocialPublishModal
+        open={showSocialModal}
+        onOpenChange={setShowSocialModal}
+        clip={clipToPublish ? {
+          id: clipToPublish.id,
+          title: clipToPublish.title || `Clip ${clipToPublish.start_seconds?.toFixed(0)}s`,
+          thumbnail_url: clipToPublish.thumbnail_url,
+          file_url: clipToPublish.vertical_url || clipToPublish.storage_path,
+          duration_seconds: clipToPublish.end_seconds - clipToPublish.start_seconds,
+          aspect_ratio: clipToPublish.aspect_ratio || "9:16"
+        } : null}
+      />
     </div>
   );
 }
