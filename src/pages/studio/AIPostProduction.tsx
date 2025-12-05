@@ -35,6 +35,7 @@ interface MediaFile {
   edit_status: string | null;
   file_size_bytes: number | null;
   source?: string | null;
+  external_id?: string | null;
 }
 
 interface ProcessingJob {
@@ -114,7 +115,7 @@ export default function AIPostProduction() {
       
       const { data, error } = await supabase
         .from('media_files')
-        .select('id, file_name, file_type, file_url, cloudflare_download_url, duration_seconds, created_at, thumbnail_url, edit_status, file_size_bytes, source')
+        .select('id, file_name, file_type, file_url, cloudflare_download_url, duration_seconds, created_at, thumbnail_url, edit_status, file_size_bytes, source, external_id')
         .eq('user_id', user.id)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
@@ -131,7 +132,7 @@ export default function AIPostProduction() {
     const pollImportStatus = async () => {
       const { data, error } = await supabase
         .from('media_files')
-        .select('id, file_name, file_type, file_url, cloudflare_download_url, duration_seconds, thumbnail_url, status, source')
+        .select('id, file_name, file_type, file_url, cloudflare_download_url, duration_seconds, thumbnail_url, status, source, external_id')
         .eq('id', selectedMedia.id)
         .single();
 
@@ -149,7 +150,8 @@ export default function AIPostProduction() {
           cloudflare_download_url: data.cloudflare_download_url,
           duration_seconds: data.duration_seconds,
           thumbnail_url: data.thumbnail_url,
-        });
+          external_id: data.external_id,
+        } as MediaFile);
         toast({
           title: "Import Complete",
           description: `"${data.file_name}" is ready for processing.`,
@@ -404,10 +406,16 @@ export default function AIPostProduction() {
   };
 
   const latestFailedJob = processingJobs?.find(j => j.status === 'failed');
+  
+  // For YouTube videos, use embed URL; for others use cloudflare or file URL
+  const isYouTube = selectedMedia?.source === 'youtube';
+  const youTubeEmbedUrl = isYouTube && selectedMedia?.external_id 
+    ? `https://www.youtube.com/embed/${selectedMedia.external_id}?autoplay=1&mute=1&loop=1&playlist=${selectedMedia.external_id}`
+    : null;
   const videoUrl = selectedMedia?.cloudflare_download_url || selectedMedia?.file_url;
   const overallProgress = Math.min(100, Math.round((currentStep / PROCESSING_STEPS.length) * 100 + (stepProgress / PROCESSING_STEPS.length)));
 
-  // Check if original preview is available (not for external imports)
+  // Check if original preview is available (not for external imports without proper URL)
   const hasOriginalPreview = selectedMedia?.source !== 'youtube' && selectedMedia?.source !== 'zoom';
 
   return (
@@ -578,8 +586,19 @@ export default function AIPostProduction() {
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Video Preview */}
                   <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-                    {/* Video element - always render if URL exists */}
-                    {videoUrl && !videoError && (
+                    {/* YouTube embed for YouTube videos */}
+                    {isYouTube && youTubeEmbedUrl && (
+                      <iframe
+                        src={youTubeEmbedUrl}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title="Video preview"
+                      />
+                    )}
+                    
+                    {/* Video element for non-YouTube sources */}
+                    {!isYouTube && videoUrl && !videoError && (
                       <video 
                         src={videoUrl} 
                         className="w-full h-full object-cover" 
@@ -592,7 +611,7 @@ export default function AIPostProduction() {
                     )}
                     
                     {/* Fallback when no video */}
-                    {(!videoUrl || videoError) && (
+                    {!isYouTube && (!videoUrl || videoError) && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <FileVideo className="h-16 w-16 text-white/20 mb-2" />
                         <p className="text-white/50 text-sm">
@@ -612,20 +631,22 @@ export default function AIPostProduction() {
                       </div>
                     )}
                     
-                    {/* Processing Overlay - semi-transparent so video shows through */}
-                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center backdrop-blur-[1px]">
-                      <div className="relative">
-                        <div className="w-16 h-16 rounded-full border-4 border-[#2C6BED]/40 bg-black/50 flex items-center justify-center">
-                          {(() => {
-                            const StepIcon = PROCESSING_STEPS[currentStep]?.icon || Wand2;
-                            return <StepIcon className="h-7 w-7 text-[#2C6BED] animate-pulse" />;
-                          })()}
+                    {/* Processing Overlay - only show for non-YouTube to avoid blocking iframe */}
+                    {!isYouTube && (
+                      <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center backdrop-blur-[1px]">
+                        <div className="relative">
+                          <div className="w-16 h-16 rounded-full border-4 border-[#2C6BED]/40 bg-black/50 flex items-center justify-center">
+                            {(() => {
+                              const StepIcon = PROCESSING_STEPS[currentStep]?.icon || Wand2;
+                              return <StepIcon className="h-7 w-7 text-[#2C6BED] animate-pulse" />;
+                            })()}
+                          </div>
+                          <div className="absolute inset-0 rounded-full border-2 border-[#2C6BED]/50 animate-ping" />
                         </div>
-                        <div className="absolute inset-0 rounded-full border-2 border-[#2C6BED]/50 animate-ping" />
+                        <p className="mt-3 text-white font-medium drop-shadow-md">{processingStatus}</p>
+                        <p className="text-white/70 text-sm drop-shadow-md">Step {currentStep + 1} of {PROCESSING_STEPS.length}</p>
                       </div>
-                      <p className="mt-3 text-white font-medium drop-shadow-md">{processingStatus}</p>
-                      <p className="text-white/70 text-sm drop-shadow-md">Step {currentStep + 1} of {PROCESSING_STEPS.length}</p>
-                    </div>
+                    )}
                   </div>
 
                   {/* Step Progress */}
