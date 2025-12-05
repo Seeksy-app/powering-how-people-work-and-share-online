@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -9,11 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Upload, FolderOpen, PlayCircle, Video, AudioWaveform, 
-  Loader2, Check, AlertCircle, Clock, X
+  Loader2, Check, AlertCircle, Clock, RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type MediaSource = 'upload' | 'library' | 'youtube' | 'zoom' | 'riverside';
+export type ImportStatus = 'idle' | 'importing' | 'ready' | 'error';
 
 interface MediaSourceSelectorProps {
   onUploadClick: () => void;
@@ -26,16 +27,18 @@ interface MediaSourceSelectorProps {
     duration_seconds: number | null;
     file_type: string | null;
     source?: MediaSource;
+    status?: string;
+    error_message?: string | null;
   } | null;
   onClearMedia: () => void;
-  importStatus?: 'idle' | 'importing' | 'ready' | 'error';
+  importStatus?: ImportStatus;
 }
 
 interface ZoomRecording {
   id: string;
   topic: string;
   start_time: string;
-  duration: number;
+  duration_seconds: number;
   thumbnail_url?: string;
   download_url?: string;
 }
@@ -69,10 +72,52 @@ export function MediaSourceSelector({
   const [isImportingYouTube, setIsImportingYouTube] = useState(false);
   
   // Zoom state
-  const [zoomConnected, setZoomConnected] = useState(false);
   const [zoomRecordings, setZoomRecordings] = useState<ZoomRecording[]>([]);
   const [isLoadingZoom, setIsLoadingZoom] = useState(false);
   const [connectingZoom, setConnectingZoom] = useState(false);
+  const [zoomError, setZoomError] = useState<string | null>(null);
+  
+  // Import polling state
+  const [pollingMediaId, setPollingMediaId] = useState<string | null>(null);
+  const [currentImportStatus, setCurrentImportStatus] = useState<ImportStatus>('idle');
+
+  // Poll for import status
+  useEffect(() => {
+    if (!pollingMediaId) return;
+
+    const pollStatus = async () => {
+      const { data, error } = await supabase
+        .from('media_files')
+        .select('id, status, file_name, thumbnail_url, duration_seconds, error_message')
+        .eq('id', pollingMediaId)
+        .single();
+
+      if (error) {
+        console.error('Polling error:', error);
+        return;
+      }
+
+      if (data.status === 'ready') {
+        setCurrentImportStatus('ready');
+        setPollingMediaId(null);
+        toast({
+          title: "Import Complete",
+          description: `"${data.file_name}" is ready to use.`,
+        });
+      } else if (data.status === 'error') {
+        setCurrentImportStatus('error');
+        setPollingMediaId(null);
+        toast({
+          title: "Import Failed",
+          description: data.error_message || "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    const interval = setInterval(pollStatus, 2000);
+    return () => clearInterval(interval);
+  }, [pollingMediaId, toast]);
 
   // Validate YouTube URL
   const validateYouTubeUrl = (url: string): boolean => {
@@ -92,44 +137,23 @@ export function MediaSourceSelector({
     }
     
     if (!validateYouTubeUrl(youtubeUrl)) {
-      setYoutubeError('Please enter a valid YouTube URL');
+      setYoutubeError('Please enter a valid YouTube URL (e.g., youtube.com/watch?v=...)');
       return;
     }
     
     setYoutubeError('');
     setIsImportingYouTube(true);
+    setCurrentImportStatus('importing');
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      
-      // Create media_files row with pending status
-      const { data: mediaFile, error: insertError } = await supabase
-        .from('media_files')
-        .insert({
-          user_id: user.id,
-          file_name: `YouTube Import - ${new Date().toLocaleString()}`,
-          file_type: 'video',
-          file_url: youtubeUrl, // Temporary - will be replaced after import
-          source: 'youtube',
-          edit_status: 'pending',
-        })
-        .select()
-        .single();
-      
-      if (insertError) throw insertError;
-      
-      // Call edge function to process YouTube video (stub for now)
-      const { error: fnError } = await supabase.functions.invoke('import-youtube-video', {
-        body: { 
-          media_file_id: mediaFile.id,
-          youtube_url: youtubeUrl 
-        }
+      const { data, error } = await supabase.functions.invoke('import-youtube-video', {
+        body: { youtube_url: youtubeUrl }
       });
       
-      // Even if the function fails, we've created the record
-      if (fnError) {
-        console.warn('YouTube import function not available yet:', fnError);
+      if (error) throw error;
+      
+      if (data.status === 'error') {
+        throw new Error(data.message);
       }
       
       toast({
@@ -137,14 +161,19 @@ export function MediaSourceSelector({
         description: "Your YouTube video is being imported. This may take a few minutes.",
       });
       
-      onMediaSelected(mediaFile.id, 'youtube');
+      // Start polling for this media
+      setPollingMediaId(data.media_file_id);
+      onMediaSelected(data.media_file_id, 'youtube');
       setShowYouTubeModal(false);
       setYoutubeUrl('');
     } catch (error) {
       console.error('YouTube import error:', error);
+      setCurrentImportStatus('error');
+      const message = error instanceof Error ? error.message : 'Could not import the YouTube video.';
+      setYoutubeError(message);
       toast({
         title: "Import Failed",
-        description: "Could not import the YouTube video. Please try again.",
+        description: message,
         variant: "destructive"
       });
     } finally {
@@ -153,67 +182,29 @@ export function MediaSourceSelector({
   };
 
   const handleZoomClick = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      // Check if Zoom is connected
-      const { data: zoomData } = await supabase
-        .from('zoom_connections')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (zoomData) {
-        setZoomConnected(true);
-        setShowZoomModal(true);
-        loadZoomRecordings();
-      } else {
-        setShowZoomConnectModal(true);
-      }
-    } catch (error) {
-      setShowZoomConnectModal(true);
-    }
-  };
-
-  const loadZoomRecordings = async () => {
+    setZoomError(null);
     setIsLoadingZoom(true);
+    
     try {
       const { data, error } = await supabase.functions.invoke('zoom-list-recordings');
       
       if (error) throw error;
       
-      // Mock data for now if function doesn't return recordings
-      const recordings = data?.recordings || [
-        {
-          id: 'mock-1',
-          topic: 'Team Standup Meeting',
-          start_time: new Date(Date.now() - 86400000).toISOString(),
-          duration: 1800,
-          thumbnail_url: 'https://picsum.photos/seed/zoom1/160/90'
-        },
-        {
-          id: 'mock-2', 
-          topic: 'Product Demo Call',
-          start_time: new Date(Date.now() - 172800000).toISOString(),
-          duration: 2400,
-          thumbnail_url: 'https://picsum.photos/seed/zoom2/160/90'
-        }
-      ];
+      if (data.status === 'not_connected' || data.status === 'needs_reconnect') {
+        setIsLoadingZoom(false);
+        setShowZoomConnectModal(true);
+        return;
+      }
       
-      setZoomRecordings(recordings);
+      if (data.status === 'ok') {
+        setZoomRecordings(data.recordings || []);
+        setShowZoomModal(true);
+      } else {
+        throw new Error(data.message || 'Failed to load recordings');
+      }
     } catch (error) {
-      console.error('Error loading Zoom recordings:', error);
-      // Show mock data anyway for demo
-      setZoomRecordings([
-        {
-          id: 'mock-1',
-          topic: 'Team Standup Meeting',
-          start_time: new Date(Date.now() - 86400000).toISOString(),
-          duration: 1800,
-          thumbnail_url: 'https://picsum.photos/seed/zoom1/160/90'
-        }
-      ]);
+      console.error('Zoom error:', error);
+      setShowZoomConnectModal(true);
     } finally {
       setIsLoadingZoom(false);
     }
@@ -228,6 +219,8 @@ export function MediaSourceSelector({
       
       if (data?.authUrl) {
         window.location.href = data.authUrl;
+      } else {
+        throw new Error('No auth URL received');
       }
     } catch (error) {
       console.error('Zoom connect error:', error);
@@ -242,37 +235,36 @@ export function MediaSourceSelector({
   };
 
   const handleZoomRecordingSelect = async (recording: ZoomRecording) => {
+    setCurrentImportStatus('importing');
+    setShowZoomModal(false);
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      
-      // Create media_files row
-      const { data: mediaFile, error: insertError } = await supabase
-        .from('media_files')
-        .insert({
-          user_id: user.id,
-          file_name: recording.topic,
-          file_type: 'video',
-          file_url: recording.download_url || 'pending-zoom-import',
-          source: 'zoom',
-          edit_status: 'pending',
-          duration_seconds: recording.duration,
+      const { data, error } = await supabase.functions.invoke('import-zoom-recording', {
+        body: {
+          zoom_recording_id: recording.id,
+          topic: recording.topic,
+          download_url: recording.download_url,
+          duration_seconds: recording.duration_seconds,
           thumbnail_url: recording.thumbnail_url,
-        })
-        .select()
-        .single();
+        }
+      });
       
-      if (insertError) throw insertError;
+      if (error) throw error;
+      
+      if (data.status === 'error') {
+        throw new Error(data.message);
+      }
       
       toast({
         title: "Import Started",
         description: "Your Zoom recording is being imported.",
       });
       
-      onMediaSelected(mediaFile.id, 'zoom');
-      setShowZoomModal(false);
+      setPollingMediaId(data.media_file_id);
+      onMediaSelected(data.media_file_id, 'zoom');
     } catch (error) {
       console.error('Zoom import error:', error);
+      setCurrentImportStatus('error');
       toast({
         title: "Import Failed",
         description: "Could not import the Zoom recording.",
@@ -281,12 +273,26 @@ export function MediaSourceSelector({
     }
   };
 
+  const handleRiversideClick = async () => {
+    try {
+      const { data } = await supabase.functions.invoke('riverside-sessions');
+      
+      if (data?.status === 'coming_soon') {
+        setShowRiversideModal(true);
+      }
+    } catch (error) {
+      setShowRiversideModal(true);
+    }
+  };
+
   // Get status badge
   const getStatusBadge = () => {
-    switch (importStatus) {
+    const status = currentImportStatus !== 'idle' ? currentImportStatus : importStatus;
+    
+    switch (status) {
       case 'importing':
         return (
-          <Badge className="bg-[#FFCF5C] text-[#053877] animate-pulse">
+          <Badge className="animate-pulse" style={{ backgroundColor: '#FFC857', color: '#053877' }}>
             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
             Importing...
           </Badge>
@@ -310,21 +316,31 @@ export function MediaSourceSelector({
     }
   };
 
-  const getSourceLabel = (source?: MediaSource) => {
+  const getSourceLabel = (source?: MediaSource | string) => {
     switch (source) {
       case 'upload': return 'Uploaded';
       case 'library': return 'Media Library';
       case 'youtube': return 'YouTube';
       case 'zoom': return 'Zoom';
       case 'riverside': return 'Riverside';
-      default: return 'Unknown';
+      case 'studio': return 'Studio';
+      default: return 'Media Library';
+    }
+  };
+
+  const getSourceColor = (source?: MediaSource | string) => {
+    switch (source) {
+      case 'youtube': return 'bg-red-100 text-red-700 border-red-200';
+      case 'zoom': return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'riverside': return 'bg-purple-100 text-purple-700 border-purple-200';
+      default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
 
   // If media is selected, show compact view
   if (selectedMedia) {
     return (
-      <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border border-[rgba(5,56,119,0.18)]">
+      <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg border" style={{ borderColor: 'rgba(5,56,119,0.18)' }}>
         <div className="w-28 h-16 bg-muted rounded-lg overflow-hidden flex items-center justify-center relative shrink-0">
           {selectedMedia.thumbnail_url ? (
             <img 
@@ -337,24 +353,38 @@ export function MediaSourceSelector({
           ) : (
             <AudioWaveform className="h-8 w-8 text-muted-foreground" />
           )}
+          {currentImportStatus === 'importing' && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <Loader2 className="h-6 w-6 text-white animate-spin" />
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-medium truncate">{selectedMedia.file_name || 'Untitled'}</p>
           <div className="flex items-center gap-2 flex-wrap mt-1">
-            <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              {formatDuration(selectedMedia.duration_seconds)}
-            </span>
-            <Badge variant="outline" className="text-xs">
+            {selectedMedia.duration_seconds && (
+              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                {formatDuration(selectedMedia.duration_seconds)}
+              </span>
+            )}
+            <Badge variant="outline" className={cn("text-xs", getSourceColor(selectedMedia.source))}>
               {getSourceLabel(selectedMedia.source)}
             </Badge>
             {getStatusBadge()}
           </div>
+          {selectedMedia.error_message && (
+            <p className="text-xs text-destructive mt-1">{selectedMedia.error_message}</p>
+          )}
         </div>
         <Button 
           variant="outline" 
           size="sm"
-          onClick={onClearMedia}
+          onClick={() => {
+            setCurrentImportStatus('idle');
+            setPollingMediaId(null);
+            onClearMedia();
+          }}
           className="shrink-0"
         >
           Change Media
@@ -374,11 +404,8 @@ export function MediaSourceSelector({
           {/* Upload Files */}
           <Button
             onClick={onUploadClick}
-            className="rounded-full px-5 py-2 h-auto gap-2 font-medium"
-            style={{ 
-              backgroundColor: '#FFCF5C', 
-              color: '#053877',
-            }}
+            className="rounded-full px-5 py-2 h-auto gap-2 font-medium hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: '#FFC857', color: '#053877' }}
           >
             <Upload className="h-4 w-4" />
             Upload Files
@@ -387,7 +414,7 @@ export function MediaSourceSelector({
           {/* From Media Library */}
           <Button
             onClick={onLibraryClick}
-            className="rounded-full px-5 py-2 h-auto gap-2 font-medium text-white"
+            className="rounded-full px-5 py-2 h-auto gap-2 font-medium text-white hover:opacity-90 transition-opacity"
             style={{ backgroundColor: '#053877' }}
           >
             <FolderOpen className="h-4 w-4" />
@@ -398,7 +425,7 @@ export function MediaSourceSelector({
           <Button
             onClick={() => setShowYouTubeModal(true)}
             variant="outline"
-            className="rounded-full px-5 py-2 h-auto gap-2 font-medium border-red-500 text-red-600 hover:bg-red-50"
+            className="rounded-full px-5 py-2 h-auto gap-2 font-medium border-red-400 text-red-600 hover:bg-red-50 hover:text-red-700"
           >
             <PlayCircle className="h-4 w-4" />
             Import from YouTube
@@ -407,23 +434,23 @@ export function MediaSourceSelector({
           {/* Import from Zoom */}
           <Button
             onClick={handleZoomClick}
-            className="rounded-full px-5 py-2 h-auto gap-2 font-medium text-white"
+            disabled={isLoadingZoom}
+            className="rounded-full px-5 py-2 h-auto gap-2 font-medium text-white hover:opacity-90 transition-opacity"
             style={{ backgroundColor: '#2C6BED' }}
           >
-            <Video className="h-4 w-4" />
+            {isLoadingZoom ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Video className="h-4 w-4" />
+            )}
             Import from Zoom
           </Button>
 
           {/* Import from Riverside */}
           <Button
-            onClick={() => setShowRiversideModal(true)}
+            onClick={handleRiversideClick}
             variant="outline"
-            className="rounded-full px-5 py-2 h-auto gap-2 font-medium"
-            style={{ 
-              backgroundColor: '#E9E9E9', 
-              color: '#333',
-              borderColor: '#D1D1D1'
-            }}
+            className="rounded-full px-5 py-2 h-auto gap-2 font-medium bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200"
           >
             <AudioWaveform className="h-4 w-4" />
             Import from Riverside
@@ -459,10 +486,18 @@ export function MediaSourceSelector({
                   setYoutubeError('');
                 }}
                 className={cn(youtubeError && "border-destructive")}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !isImportingYouTube) {
+                    handleYouTubeImport();
+                  }
+                }}
               />
               {youtubeError && (
                 <p className="text-sm text-destructive">{youtubeError}</p>
               )}
+              <p className="text-xs text-muted-foreground">
+                This may take a few minutes while we fetch your video.
+              </p>
             </div>
             <div className="flex gap-3 justify-end">
               <Button variant="outline" onClick={() => setShowYouTubeModal(false)}>
@@ -479,7 +514,7 @@ export function MediaSourceSelector({
                     Importing...
                   </>
                 ) : (
-                  'Import Video'
+                  'Import from YouTube'
                 )}
               </Button>
             </div>
@@ -500,8 +535,8 @@ export function MediaSourceSelector({
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-4">
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-blue-800">
+            <div className="p-4 rounded-lg border" style={{ backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }}>
+              <p className="text-sm" style={{ color: '#1E40AF' }}>
                 Once connected, you'll be able to browse and import your Zoom cloud recordings 
                 for AI enhancement and clip generation.
               </p>
@@ -514,6 +549,7 @@ export function MediaSourceSelector({
                 onClick={handleConnectZoom}
                 disabled={connectingZoom}
                 style={{ backgroundColor: '#2C6BED' }}
+                className="text-white"
               >
                 {connectingZoom ? (
                   <>
@@ -532,8 +568,8 @@ export function MediaSourceSelector({
       {/* Zoom Recordings Modal */}
       <Dialog open={showZoomModal} onOpenChange={setShowZoomModal}>
         <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+          <DialogHeader className="pb-4 border-b" style={{ borderColor: 'rgba(5,56,119,0.1)' }}>
+            <DialogTitle className="flex items-center gap-2" style={{ color: '#053877' }}>
               <Video className="h-5 w-5" style={{ color: '#2C6BED' }} />
               Select Zoom Recording
             </DialogTitle>
@@ -549,7 +585,8 @@ export function MediaSourceSelector({
             ) : zoomRecordings.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
                 <Video className="h-12 w-12 mb-2 opacity-50" />
-                <p>No cloud recordings found</p>
+                <p className="font-medium">No cloud recordings found</p>
+                <p className="text-sm">Record a meeting with cloud recording enabled to see it here.</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -557,9 +594,9 @@ export function MediaSourceSelector({
                   <button
                     key={recording.id}
                     onClick={() => handleZoomRecordingSelect(recording)}
-                    className="w-full flex items-center gap-4 p-3 rounded-lg border hover:border-[#2C6BED] hover:bg-blue-50/50 transition-colors text-left"
+                    className="w-full flex items-center gap-4 p-3 rounded-lg border hover:border-blue-400 hover:bg-blue-50/50 transition-colors text-left"
                   >
-                    <div className="w-20 h-12 bg-muted rounded overflow-hidden shrink-0">
+                    <div className="w-20 h-12 bg-gradient-to-br from-blue-100 to-blue-50 rounded overflow-hidden shrink-0 flex items-center justify-center">
                       {recording.thumbnail_url ? (
                         <img 
                           src={recording.thumbnail_url} 
@@ -567,19 +604,19 @@ export function MediaSourceSelector({
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Video className="h-6 w-6 text-muted-foreground" />
-                        </div>
+                        <Video className="h-6 w-6" style={{ color: '#2C6BED' }} />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{recording.topic}</p>
                       <div className="flex items-center gap-3 text-sm text-muted-foreground">
                         <span>{new Date(recording.start_time).toLocaleDateString()}</span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDuration(recording.duration)}
-                        </span>
+                        {recording.duration_seconds > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {formatDuration(recording.duration_seconds)}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </button>
@@ -587,6 +624,22 @@ export function MediaSourceSelector({
               </div>
             )}
           </ScrollArea>
+          <div className="pt-4 border-t flex justify-between items-center">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => {
+                setIsLoadingZoom(true);
+                handleZoomClick();
+              }}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button variant="outline" onClick={() => setShowZoomModal(false)}>
+              Cancel
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -595,17 +648,20 @@ export function MediaSourceSelector({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AudioWaveform className="h-5 w-5 text-gray-600" />
+              <AudioWaveform className="h-5 w-5 text-purple-600" />
               Riverside Import
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-4">
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
-              <AudioWaveform className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-              <h4 className="font-medium text-gray-800 mb-2">Coming Soon</h4>
+            <div className="p-6 bg-gradient-to-br from-purple-50 to-gray-50 rounded-lg border border-purple-200 text-center">
+              <AudioWaveform className="h-12 w-12 mx-auto mb-3 text-purple-400" />
+              <h4 className="font-semibold text-gray-800 mb-2">Coming Soon</h4>
               <p className="text-sm text-gray-600">
-                Riverside import is coming soon. Connect your account to enable 
-                automatic studio sync and import your recordings directly.
+                Riverside integration is coming soon. You'll be able to pull episodes directly 
+                from your Riverside studio.
+              </p>
+              <p className="text-sm text-gray-500 mt-3">
+                For now, download from Riverside and upload to Seeksy manually.
               </p>
             </div>
             <div className="flex gap-3 justify-end">
@@ -615,7 +671,7 @@ export function MediaSourceSelector({
               <Button 
                 variant="outline"
                 disabled
-                className="opacity-50"
+                className="opacity-50 cursor-not-allowed"
               >
                 Connect Riverside
               </Button>

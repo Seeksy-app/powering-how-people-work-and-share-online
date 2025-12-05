@@ -26,6 +26,8 @@ interface MediaFile {
   cloudflare_download_url: string | null;
   thumbnail_url: string | null;
   file_size_bytes: number | null;
+  source?: string | null;
+  status?: string | null;
 }
 
 interface Clip {
@@ -195,6 +197,27 @@ export default function MediaLibraryHub() {
     const FileIcon = getFileIcon(file.file_type);
     const thumbnailSrc = getThumbnailUrl(file.thumbnail_url, file.cloudflare_download_url);
     
+    // Source badge styling
+    const getSourceBadge = () => {
+      if (!file.source || file.source === 'upload' || file.source === 'library') return null;
+      
+      const sourceConfig: Record<string, { label: string; className: string }> = {
+        youtube: { label: 'YouTube', className: 'bg-red-500/90 text-white' },
+        zoom: { label: 'Zoom', className: 'bg-blue-500/90 text-white' },
+        riverside: { label: 'Riverside', className: 'bg-purple-500/90 text-white' },
+        studio: { label: 'Studio', className: 'bg-green-500/90 text-white' },
+      };
+      
+      const config = sourceConfig[file.source];
+      if (!config) return null;
+      
+      return (
+        <Badge className={`absolute top-2 left-2 text-[10px] px-1.5 py-0.5 ${config.className}`}>
+          {config.label}
+        </Badge>
+      );
+    };
+    
     return (
       <div
         key={file.id}
@@ -210,9 +233,15 @@ export default function MediaLibraryHub() {
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
             <Play className="w-10 h-10 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
+          {getSourceBadge()}
           <Badge className="absolute bottom-2 right-2 text-xs tabular-nums bg-black/60 text-white border-0">
             {formatDuration(file.duration_seconds)}
           </Badge>
+          {file.status === 'importing' && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-white animate-spin" />
+            </div>
+          )}
         </div>
         <div className="p-3">
           <p className="font-medium text-sm text-foreground truncate">{file.file_name}</p>
