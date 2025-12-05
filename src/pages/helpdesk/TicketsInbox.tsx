@@ -129,12 +129,12 @@ export default function TicketsInbox() {
   }), [tickets]);
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b border-border bg-background px-6 py-4 text-left">
+      <div className="border-b border-border bg-background px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-semibold">Ticket Inbox</h1>
+            <h2 className="text-xl font-semibold">Ticket Inbox</h2>
             <p className="text-sm text-muted-foreground">
               {stats.open} open · {stats.inProgress} in progress · {stats.total} total
             </p>
