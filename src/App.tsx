@@ -358,6 +358,8 @@ import AdminCampaigns from "./pages/admin/AdminCampaigns";
 import AdminAdAnalytics from "./pages/admin/AdminAdAnalytics";
 import OnboardingAdmin from "./pages/admin/OnboardingAdmin";
 import LeadMagnetsAdmin from "./pages/admin/LeadMagnetsAdmin";
+import LeadMagnetLanding from "./pages/public/LeadMagnetLanding";
+import LeadMagnetThankYou from "./pages/public/LeadMagnetThankYou";
 import VoiceCertificationDashboard from "./pages/voice-certification/VoiceCertificationDashboard";
 import PublicCreatorIdentity from "./pages/PublicCreatorIdentity";
 import VoiceVerificationUnified from "./pages/voice-certification/VoiceVerificationUnified";
@@ -695,6 +697,12 @@ const AppContent = () => {
               <Route path="/security" element={<SecurityPublic />} />
               <Route path="/about" element={<About />} />
               <Route path="/apps-and-tools" element={<AppsAndTools />} />
+              
+              {/* Lead Magnet Landing Pages */}
+              <Route path="/blueprint" element={<LeadMagnetLanding />} />
+              <Route path="/roi-playbook" element={<LeadMagnetLanding />} />
+              <Route path="/event-growth-kit" element={<LeadMagnetLanding />} />
+              <Route path="/thank-you/:slug" element={<LeadMagnetThankYou />} />
           <Route path="/dashboard" element={<UniversalDashboard />} />
           <Route path="/dashboard-legacy" element={<Dashboard />} />
           <Route path="/dashboard-v2" element={<DashboardV2 />} />

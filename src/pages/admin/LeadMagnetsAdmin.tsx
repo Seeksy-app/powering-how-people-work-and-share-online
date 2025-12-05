@@ -1,47 +1,25 @@
 import { useState } from "react";
 import { 
-  FileText, 
-  Plus, 
-  Upload, 
-  Copy, 
-  Edit2, 
-  Trash2, 
-  Archive,
-  CheckCircle,
-  Loader2,
-  X 
+  FileText, Plus, Upload, Copy, Edit2, Trash2, Archive, CheckCircle, 
+  Loader2, X, Share2, ExternalLink, Download, TrendingUp, Eye, BarChart3,
+  Link as LinkIcon, QrCode
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   useAllLeadMagnets,
   useCreateLeadMagnet,
@@ -52,6 +30,7 @@ import {
   getLeadMagnetSignedUrl,
   type LeadMagnet,
 } from "@/hooks/useLeadMagnets";
+import { LeadMagnetShareDialog } from "@/components/lead-magnet/LeadMagnetShareDialog";
 
 const AUDIENCE_ROLES = [
   { value: "podcaster", label: "Podcaster" },
@@ -63,15 +42,34 @@ const AUDIENCE_ROLES = [
   { value: "agency", label: "Agency / Consultant" },
 ];
 
+const CATEGORIES = [
+  "Creators",
+  "Brands & Agencies", 
+  "Events",
+  "General"
+];
+
 interface LeadMagnetFormData {
   title: string;
   description: string;
   slug: string;
   audience_roles: string[];
   bullets: string[];
+  category: string;
+  tags: string[];
+}
+
+// Extended LeadMagnet type with new fields
+interface ExtendedLeadMagnet extends LeadMagnet {
+  thumbnail_url?: string | null;
+  category?: string | null;
+  tags?: string[] | null;
+  view_count?: number;
+  conversion_rate?: number;
 }
 
 export default function LeadMagnetsAdmin() {
+  const navigate = useNavigate();
   const { data: leadMagnets, isLoading } = useAllLeadMagnets();
   const createMutation = useCreateLeadMagnet();
   const updateMutation = useUpdateLeadMagnet();
@@ -79,17 +77,45 @@ export default function LeadMagnetsAdmin() {
   const deleteMutation = useDeleteLeadMagnet();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<LeadMagnet | null>(null);
+  const [editingItem, setEditingItem] = useState<ExtendedLeadMagnet | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [shareDialogItem, setShareDialogItem] = useState<ExtendedLeadMagnet | null>(null);
   const [formData, setFormData] = useState<LeadMagnetFormData>({
     title: "",
     description: "",
     slug: "",
     audience_roles: [],
     bullets: [],
+    category: "General",
+    tags: [],
   });
   const [bulletInput, setBulletInput] = useState("");
+  const [tagInput, setTagInput] = useState("");
+
+  // Fetch analytics summary
+  const { data: analyticsData } = useQuery({
+    queryKey: ["lead-magnet-analytics-summary"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lead_magnet_analytics")
+        .select("lead_magnet_id, event_type")
+        .order("created_at", { ascending: false });
+      
+      if (error) return {};
+      
+      // Group by lead_magnet_id
+      const summary: Record<string, { views: number; downloads: number }> = {};
+      data?.forEach((event: any) => {
+        if (!summary[event.lead_magnet_id]) {
+          summary[event.lead_magnet_id] = { views: 0, downloads: 0 };
+        }
+        if (event.event_type === 'view') summary[event.lead_magnet_id].views++;
+        if (event.event_type === 'download') summary[event.lead_magnet_id].downloads++;
+      });
+      return summary;
+    }
+  });
 
   const resetForm = () => {
     setFormData({
@@ -98,9 +124,12 @@ export default function LeadMagnetsAdmin() {
       slug: "",
       audience_roles: [],
       bullets: [],
+      category: "General",
+      tags: [],
     });
     setSelectedFile(null);
     setBulletInput("");
+    setTagInput("");
     setEditingItem(null);
   };
 
@@ -109,7 +138,7 @@ export default function LeadMagnetsAdmin() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (item: LeadMagnet) => {
+  const openEditModal = (item: ExtendedLeadMagnet) => {
     setEditingItem(item);
     setFormData({
       title: item.title,
@@ -117,6 +146,8 @@ export default function LeadMagnetsAdmin() {
       slug: item.slug,
       audience_roles: item.audience_roles || [],
       bullets: item.bullets || [],
+      category: item.category || "General",
+      tags: item.tags || [],
     });
     setIsModalOpen(true);
   };
@@ -161,6 +192,23 @@ export default function LeadMagnetsAdmin() {
     setFormData((prev) => ({
       ...prev,
       bullets: prev.bullets.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, tagInput.trim()],
+      }));
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((t) => t !== tag),
     }));
   };
 
@@ -225,28 +273,42 @@ export default function LeadMagnetsAdmin() {
     }
   };
 
-  const handleCopyLink = async (item: LeadMagnet) => {
+  const handleCopyLink = async (item: ExtendedLeadMagnet) => {
+    const publicUrl = `${window.location.origin}/${item.slug}`;
+    await navigator.clipboard.writeText(publicUrl);
+    toast.success("Landing page link copied to clipboard");
+  };
+
+  const handleCopyDownloadLink = async (item: ExtendedLeadMagnet) => {
     const url = await getLeadMagnetSignedUrl(item.storage_path);
     if (url) {
       await navigator.clipboard.writeText(url);
-      toast.success("Download link copied to clipboard");
+      toast.success("Direct download link copied to clipboard");
     } else {
       toast.error("Failed to generate download link");
     }
   };
 
-  const handleToggleActive = (item: LeadMagnet) => {
+  const handleToggleActive = (item: ExtendedLeadMagnet) => {
     toggleMutation.mutate({ id: item.id, is_active: !item.is_active });
   };
 
-  const handleDelete = (item: LeadMagnet) => {
+  const handleDelete = (item: ExtendedLeadMagnet) => {
     if (confirm(`Are you sure you want to delete "${item.title}"?`)) {
       deleteMutation.mutate(item.id);
     }
   };
 
+  const handleViewLanding = (item: ExtendedLeadMagnet) => {
+    window.open(`/${item.slug}`, "_blank");
+  };
+
+  // Calculate stats
+  const totalDownloads = leadMagnets?.reduce((sum, m) => sum + m.download_count, 0) || 0;
+  const activeCount = leadMagnets?.filter(m => m.is_active).length || 0;
+
   return (
-    <div className="container mx-auto px-4 py-6 max-w-6xl">
+    <div className="container mx-auto px-4 py-6 max-w-7xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -254,7 +316,7 @@ export default function LeadMagnetsAdmin() {
             Lead Magnets
           </h1>
           <p className="text-muted-foreground text-sm">
-            Manage downloadable reports and guides for lead generation
+            Manage downloadable resources for lead generation
           </p>
         </div>
         <Button onClick={openCreateModal}>
@@ -263,9 +325,59 @@ export default function LeadMagnetsAdmin() {
         </Button>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Lead Magnets</p>
+                <p className="text-2xl font-bold">{leadMagnets?.length || 0}</p>
+              </div>
+              <FileText className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Active</p>
+                <p className="text-2xl font-bold text-green-600">{activeCount}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Downloads</p>
+                <p className="text-2xl font-bold">{totalDownloads}</p>
+              </div>
+              <Download className="h-8 w-8 text-primary/50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Avg Conversion</p>
+                <p className="text-2xl font-bold">--</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-amber-500/50" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">All Lead Magnets</CardTitle>
+          <CardDescription>Click on a row to view analytics and manage settings</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -273,101 +385,162 @@ export default function LeadMagnetsAdmin() {
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
           ) : leadMagnets?.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No lead magnets yet. Click "Add Lead Magnet" to create one.
+            <div className="text-center py-12">
+              <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+              <h3 className="font-semibold mb-2">No lead magnets yet</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Create your first lead magnet to start capturing leads
+              </p>
+              <Button onClick={openCreateModal}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Lead Magnet
+              </Button>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Title</TableHead>
-                  <TableHead>Audience</TableHead>
-                  <TableHead>Downloads</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Tags</TableHead>
+                  <TableHead className="text-center">Downloads</TableHead>
+                  <TableHead className="text-center">Conversion</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {leadMagnets?.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{item.title}</p>
-                        <p className="text-xs text-muted-foreground">{item.slug}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {item.audience_roles?.slice(0, 2).map((role) => (
-                          <Badge key={role} variant="secondary" className="text-xs">
-                            {AUDIENCE_ROLES.find((r) => r.value === role)?.label || role}
-                          </Badge>
-                        ))}
-                        {(item.audience_roles?.length || 0) > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{item.audience_roles.length - 2}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{item.download_count}</TableCell>
-                    <TableCell>
-                      <Badge variant={item.is_active ? "default" : "secondary"}>
-                        {item.is_active ? "Active" : "Archived"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(item.created_at), "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleCopyLink(item)}
-                          title="Copy download link"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEditModal(item)}
-                          title="Edit"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleToggleActive(item)}
-                          title={item.is_active ? "Archive" : "Activate"}
-                        >
-                          {item.is_active ? (
-                            <Archive className="h-4 w-4" />
-                          ) : (
-                            <CheckCircle className="h-4 w-4" />
+                {leadMagnets?.map((item) => {
+                  const extItem = item as ExtendedLeadMagnet;
+                  const analytics = analyticsData?.[item.id];
+                  const conversionRate = analytics?.views 
+                    ? Math.round((analytics.downloads / analytics.views) * 100) 
+                    : 0;
+
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                            <FileText className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{item.title}</p>
+                            <p className="text-xs text-muted-foreground">/{item.slug}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {extItem.category || "General"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {extItem.tags?.slice(0, 2).map((tag) => (
+                            <Badge key={tag} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                          {(extItem.tags?.length || 0) > 2 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{extItem.tags!.length - 2}
+                            </Badge>
                           )}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(item)}
-                          title="Delete"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-semibold">{item.download_count}</span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {analytics?.views ? (
+                          <div className="flex items-center justify-center gap-2">
+                            <Progress value={conversionRate} className="w-16 h-2" />
+                            <span className="text-xs text-muted-foreground">{conversionRate}%</span>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">--</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={item.is_active ? "default" : "secondary"}>
+                          {item.is_active ? "Active" : "Archived"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewLanding(extItem)}
+                            title="View landing page"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setShareDialogItem(extItem)}
+                            title="Share link & QR"
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleCopyLink(extItem)}
+                            title="Copy landing page link"
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditModal(extItem)}
+                            title="Edit"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleToggleActive(extItem)}
+                            title={item.is_active ? "Archive" : "Activate"}
+                          >
+                            {item.is_active ? (
+                              <Archive className="h-4 w-4" />
+                            ) : (
+                              <CheckCircle className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(extItem)}
+                            title="Delete"
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
+
+      {/* Share Dialog */}
+      {shareDialogItem && (
+        <LeadMagnetShareDialog
+          open={!!shareDialogItem}
+          onOpenChange={(open) => !open && setShareDialogItem(null)}
+          leadMagnet={shareDialogItem}
+        />
+      )}
 
       {/* Create/Edit Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -385,7 +558,7 @@ export default function LeadMagnetsAdmin() {
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder="e.g., 5 Ways AI Will Transform Podcasting"
+                placeholder="e.g., Creator Growth Blueprint"
               />
             </div>
 
@@ -395,10 +568,10 @@ export default function LeadMagnetsAdmin() {
                 id="slug"
                 value={formData.slug}
                 onChange={(e) => setFormData((p) => ({ ...p, slug: e.target.value }))}
-                placeholder="e.g., ai-podcast-guide"
+                placeholder="e.g., creator-growth-blueprint"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Used for the file path and URL
+                Landing page URL: /{formData.slug || "your-slug"}
               </p>
             </div>
 
@@ -411,6 +584,47 @@ export default function LeadMagnetsAdmin() {
                 placeholder="Brief description of the lead magnet..."
                 rows={2}
               />
+            </div>
+
+            <div>
+              <Label htmlFor="category">Category</Label>
+              <select
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData((p) => ({ ...p, category: e.target.value }))}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                {CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <Label>Tags</Label>
+              <div className="flex gap-2 mt-1">
+                <Input
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  placeholder="Add a tag..."
+                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                />
+                <Button type="button" variant="outline" onClick={addTag}>
+                  Add
+                </Button>
+              </div>
+              {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {formData.tags.map((tag) => (
+                    <Badge key={tag} variant="secondary" className="gap-1">
+                      {tag}
+                      <button onClick={() => removeTag(tag)}>
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
@@ -515,9 +729,9 @@ export default function LeadMagnetsAdmin() {
                   Saving...
                 </>
               ) : editingItem ? (
-                "Update"
+                "Save Changes"
               ) : (
-                "Create"
+                "Create Lead Magnet"
               )}
             </Button>
           </DialogFooter>
