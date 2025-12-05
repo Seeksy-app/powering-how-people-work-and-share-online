@@ -432,25 +432,23 @@ export default function VideoStudio() {
             onFullscreen={handleFullscreen}
           />
 
-          {/* Layout Templates Bar */}
-          <LayoutTemplatesBar
-            currentLayout={currentLayoutTemplate}
-            onLayoutChange={(layout) => {
-              setCurrentLayoutTemplate(layout);
-              // Map layout template to scene layout
-              if (layout === "fullscreen") setCurrentLayout("host-only");
-              else if (layout === "side-by-side") setCurrentLayout("side-by-side");
-              else if (layout.includes("pip")) setCurrentLayout("host-guest");
-              else if (layout === "grid-2x2") setCurrentLayout("grid");
-              else if (layout === "presentation") setCurrentLayout("screen-share");
-              else if (layout === "speaker-focus") setCurrentLayout("speaker");
-              else if (layout === "gallery") setCurrentLayout("grid");
-            }}
-            sceneType={scenes.find(s => s.id === activeSceneId)?.sceneType}
-          />
-
-          {/* Host Tools Bar - Centered below layouts */}
-          <div className="flex justify-center py-3 bg-[#0d0f12] border-t border-white/10">
+          {/* Layout Templates + Host Tools Bar - Single Row */}
+          <div className="flex items-center justify-center gap-4 py-3 bg-[#0d0f12] border-t border-white/10 flex-wrap">
+            <LayoutTemplatesBar
+              currentLayout={currentLayoutTemplate}
+              onLayoutChange={(layout) => {
+                setCurrentLayoutTemplate(layout);
+                // Map layout template to scene layout
+                if (layout === "fullscreen") setCurrentLayout("host-only");
+                else if (layout === "side-by-side") setCurrentLayout("side-by-side");
+                else if (layout.includes("pip")) setCurrentLayout("host-guest");
+                else if (layout === "grid-2x2") setCurrentLayout("grid");
+                else if (layout === "presentation") setCurrentLayout("screen-share");
+                else if (layout === "speaker-focus") setCurrentLayout("speaker");
+                else if (layout === "gallery") setCurrentLayout("grid");
+              }}
+              sceneType={scenes.find(s => s.id === activeSceneId)?.sceneType}
+            />
             <HostToolsBar
               activeDrawer={activeHostDrawer}
               onOpenScript={() => setActiveHostDrawer(activeHostDrawer === "script" ? null : "script")}

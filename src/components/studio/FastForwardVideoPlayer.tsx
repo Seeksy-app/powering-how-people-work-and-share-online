@@ -34,26 +34,36 @@ export function FastForwardVideoPlayer({
   const [playbackSpeed, setPlaybackSpeed] = useState(4);
   const [fakeProgress, setFakeProgress] = useState(0);
 
-  // Start fast-forward playback when processing begins
+  // Start fast-forward playback when processing begins OR when video loads
   useEffect(() => {
-    if (!isProcessing || !videoRef.current) return;
+    if (!videoRef.current) return;
 
     const video = videoRef.current;
     
-    // Configure fast-forward playback
-    video.playbackRate = playbackSpeed;
+    // Configure playback
+    video.playbackRate = isProcessing ? playbackSpeed : 1;
     video.muted = true;
     video.loop = true;
     
-    // Start playback
-    video.play().catch(console.error);
+    // Always try to play the video
+    const playVideo = () => {
+      video.play().catch(err => {
+        console.log('Auto-play prevented, will play on user interaction', err);
+      });
+    };
+    
+    // Try immediately
+    playVideo();
+    
+    // Also try when metadata/data is loaded
+    video.addEventListener('loadeddata', playVideo);
+    video.addEventListener('canplay', playVideo);
 
     return () => {
-      if (video) {
-        video.pause();
-      }
+      video.removeEventListener('loadeddata', playVideo);
+      video.removeEventListener('canplay', playVideo);
     };
-  }, [isProcessing, playbackSpeed]);
+  }, [isProcessing, playbackSpeed, videoUrl]);
 
   // Sync fake progress bar with video playback and step progress
   useEffect(() => {

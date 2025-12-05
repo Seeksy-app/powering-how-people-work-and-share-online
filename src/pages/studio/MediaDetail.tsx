@@ -393,28 +393,28 @@ export default function MediaDetail() {
               </CardContent>
             </Card>
 
-            {/* Analytics Tabs */}
+            {/* Analytics Tabs - Enhancements First */}
             <Card>
-              <Tabs defaultValue="ai" className="w-full">
+              <Tabs defaultValue="enhancements" className="w-full">
                 <CardHeader className="pb-0">
                   <TabsList className="w-full grid grid-cols-3 bg-muted">
-                    <TabsTrigger value="ai" className="flex items-center gap-2">
+                    <TabsTrigger value="enhancements" className="flex items-center gap-2">
                       <Sparkles className="w-4 h-4" />
-                      AI Enhancements
+                      Enhancements
                     </TabsTrigger>
                     <TabsTrigger value="clips" className="flex items-center gap-2">
                       <Scissors className="w-4 h-4" />
                       Clips
                     </TabsTrigger>
-                    <TabsTrigger value="video" className="flex items-center gap-2">
+                    <TabsTrigger value="analytics" className="flex items-center gap-2">
                       <BarChart2 className="w-4 h-4" />
-                      Video Analytics
+                      Analytics
                     </TabsTrigger>
                   </TabsList>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  {/* AI Enhancements Tab */}
-                  <TabsContent value="ai" className="mt-0">
+                  {/* Enhancements Tab */}
+                  <TabsContent value="enhancements" className="mt-0">
                     {!hasAIProcessing ? (
                       <div className="text-center py-8">
                         <Wand2 className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
@@ -562,8 +562,8 @@ export default function MediaDetail() {
                     )}
                   </TabsContent>
                   
-                  {/* Video Analytics Tab */}
-                  <TabsContent value="video" className="mt-0">
+                  {/* Analytics Tab */}
+                  <TabsContent value="analytics" className="mt-0">
                     <div className="flex items-center justify-between mb-4">
                       <Badge variant={isPublished ? "default" : "secondary"}>
                         {isPublished ? `Published to ${publishStatus.replace('published_', '').charAt(0).toUpperCase() + publishStatus.replace('published_', '').slice(1)}` : "Not yet published"}

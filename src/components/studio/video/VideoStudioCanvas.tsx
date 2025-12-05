@@ -36,10 +36,11 @@ export function VideoStudioCanvas({
         </Badge>
       </div>
 
-      {/* Main Canvas */}
+      {/* Main Canvas - Wider aspect ratio for podcasters */}
       <div className={cn(
-        "flex-1 relative rounded-lg overflow-hidden",
-        "bg-gradient-to-br from-indigo-900/60 via-purple-900/40 to-blue-900/60"
+        "relative rounded-lg overflow-hidden mx-auto w-full",
+        "bg-gradient-to-br from-indigo-900/60 via-purple-900/40 to-blue-900/60",
+        "aspect-[16/10] max-h-[65vh]"
       )}>
         {/* Video Element */}
         {!isVideoOff ? (
