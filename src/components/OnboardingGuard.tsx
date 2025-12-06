@@ -25,7 +25,7 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     const publicPaths = [
       '/auth', '/onboarding', '/onboarding-test', '/signup-select', '/', '/pricing', '/comparison',
       '/privacy', '/terms', '/cookies', '/security', '/about', '/apps-and-tools',
-      '/advertiser', '/advertiser/signup', '/demo', '/investor'
+      '/advertiser', '/advertiser/signup', '/demo', '/investor', '/demo-videos'
     ];
     const isPublicPath = publicPaths.some(path => location.pathname === path || location.pathname.startsWith('/c/') || location.pathname.startsWith('/book/') || location.pathname.startsWith('/proforma/') || location.pathname.startsWith('/investor'));
     const isBoardPath = location.pathname.startsWith('/board');
