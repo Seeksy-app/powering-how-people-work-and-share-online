@@ -624,8 +624,8 @@ function generateHtmlSignature(formData: any, signatureId: string): string {
     
     for (const [platform, url] of socialLinks) {
       const trackUrl = `${clickTrackingBase}/social/${platform}?url=${encodeURIComponent(url as string)}`;
-      const icon = getSocialIcon(platform);
-      html += `<a href="${trackUrl}" style="margin-right: 8px; text-decoration: none;">${icon}</a>`;
+      const iconUrl = getSocialIconUrl(platform);
+      html += `<a href="${trackUrl}" style="margin-right: 8px; text-decoration: none; display: inline-block;"><img src="${iconUrl}" alt="${platform}" width="24" height="24" style="border: 0; display: inline-block;" /></a>`;
     }
     
     html += `
@@ -702,15 +702,17 @@ function generatePlainTextSignature(formData: any): string {
   return text.trim();
 }
 
-function getSocialIcon(platform: string): string {
-  const icons: Record<string, string> = {
-    facebook: "📘",
-    twitter: "🐦",
-    instagram: "📷",
-    linkedin: "💼",
-    youtube: "🎬",
-    tiktok: "🎵",
-    pinterest: "📌",
+// CDN-hosted social icons that work in email clients
+function getSocialIconUrl(platform: string): string {
+  // Using Simple Icons CDN for consistent, professional social icons
+  const iconMap: Record<string, string> = {
+    facebook: "https://cdn.simpleicons.org/facebook/1877F2",
+    twitter: "https://cdn.simpleicons.org/x/000000",
+    instagram: "https://cdn.simpleicons.org/instagram/E4405F",
+    linkedin: "https://cdn.simpleicons.org/linkedin/0A66C2",
+    youtube: "https://cdn.simpleicons.org/youtube/FF0000",
+    tiktok: "https://cdn.simpleicons.org/tiktok/000000",
+    pinterest: "https://cdn.simpleicons.org/pinterest/BD081C",
   };
-  return icons[platform] || "🔗";
+  return iconMap[platform] || "https://cdn.simpleicons.org/link/666666";
 }
