@@ -417,6 +417,82 @@ const CreateBlogPost = () => {
                   )}
                 />
 
+                {/* Featured Image Upload */}
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>Featured Image</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <FormField
+                      control={form.control}
+                      name="featured_image_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <BlogImageUpload 
+                              value={field.value || ""} 
+                              onChange={field.onChange} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Publishing Settings */}
+                <Card className="mb-8">
+                  <CardHeader>
+                    <CardTitle>Publishing Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="draft">Draft</SelectItem>
+                              <SelectItem value="published">Published</SelectItem>
+                              <SelectItem value="archived">Archived</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="publish_to_master"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-sm">Publish to Master Blog</FormLabel>
+                            <FormDescription className="text-xs">
+                              Share this post to the master blog
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+
                 <div className="mb-12">
                   <Button type="submit" disabled={isSubmitting} size="lg" className="w-full sm:w-auto">
                     <Save className="w-4 h-4 mr-2" />
@@ -877,81 +953,7 @@ const CreateBlogPost = () => {
                   </CardContent>
                 </Card>
 
-                {/* Featured Image Upload */}
-                <Card className="mb-8">
-                  <CardHeader>
-                    <CardTitle>Featured Image</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <FormField
-                      control={form.control}
-                      name="featured_image_url"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <BlogImageUpload 
-                              value={field.value || ""} 
-                              onChange={field.onChange} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
 
-                {/* Publishing Settings */}
-                <Card className="mb-8">
-                  <CardHeader>
-                    <CardTitle>Publishing Settings</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="draft">Draft</SelectItem>
-                              <SelectItem value="published">Published</SelectItem>
-                              <SelectItem value="archived">Archived</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="publish_to_master"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                          <div className="space-y-0.5">
-                            <FormLabel className="text-sm">Publish to Master Blog</FormLabel>
-                            <FormDescription className="text-xs">
-                              Share this post to the master blog
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
 
                 {/* Action Buttons */}
                 <div className="flex items-center justify-between">
