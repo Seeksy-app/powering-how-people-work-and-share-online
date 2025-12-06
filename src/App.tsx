@@ -28,6 +28,7 @@ import CommunicationHistory from "./pages/CommunicationHistory";
 import Newsletter from "./pages/Newsletter";
 import Unsubscribe from "./pages/Unsubscribe";
 import NotificationPreferences from "./pages/NotificationPreferences";
+import SMSNotificationSettings from "./pages/SMSNotificationSettings";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import EventDetail from "./pages/EventDetail";
@@ -1044,6 +1045,7 @@ const AppContent = () => {
               <Route path="/background-remover" element={<BackgroundRemover />} />
               <Route path="/ask-spark" element={<Navigate to="/my-day" replace />} />
               <Route path="/notification-preferences" element={<NotificationPreferences />} />
+              <Route path="/sms-notification-settings" element={<SMSNotificationSettings />} />
               <Route path="/subscription" element={<SubscriptionSettings />} />
               <Route path="/credit-info" element={<CreditInfo />} />
               <Route path="/qr-codes" element={<QRCodes />} />

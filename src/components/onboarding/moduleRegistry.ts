@@ -136,6 +136,13 @@ export const MODULE_REGISTRY: Record<string, RecommendedModule> = {
     category: "business",
     priority: "optional",
   },
+  "project-management": {
+    id: "project-management",
+    name: "Project Management",
+    description: "Tasks, tickets, leads, and documents",
+    category: "business",
+    priority: "recommended",
+  },
   "events": {
     id: "events",
     name: "Events",
