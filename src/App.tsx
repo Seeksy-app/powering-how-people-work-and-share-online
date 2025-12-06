@@ -4,11 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { RoleBasedSidebar } from "@/components/navigation/RoleBasedSidebar";
-import { AdvertiserSidebarNav } from "@/components/advertiser/AdvertiserSidebarNav";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { RoleProvider } from "@/contexts/RoleContext";
-import { TopNavBar } from "@/components/TopNavBar";
+import { WorkspaceLayout } from "@/components/layout/WorkspaceLayout";
 import { TourModeWrapper } from "@/components/layout/TourModeWrapper";
 import { NavCustomizationModal } from "@/components/dashboard/NavCustomizationModal";
 import { OnboardingProvider } from "@/components/onboarding/OnboardingProvider";
@@ -578,20 +576,13 @@ const AppContent = () => {
       <OnboardingGuard>
       <OnboardingProvider>
       <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-background">
-          {/* Sidebar: Show advertiser sidebar for /advertiser routes, otherwise role-based sidebar */}
-          {shouldShowSidebar && (
-            isAdvertiserRoute ? <AdvertiserSidebarNav /> : <RoleBasedSidebar user={user} />
-          )}
-        
-        <div className="flex-1 flex flex-col min-h-screen overflow-auto">
-          {/* TopNavBar on all authenticated pages except studio routes and tour mode */}
-          {shouldShowTopNav && <TopNavBar />}
-          
+        <WorkspaceLayout 
+          user={user} 
+          shouldShowSidebar={shouldShowSidebar} 
+          shouldShowTopNav={shouldShowTopNav}
+        >
           {/* Board View Banner for super admins in preview mode */}
           <BoardViewBanner />
-          
-          <main className="flex-1 flex flex-col bg-background">
             <RouteTransition>
               <Routes>
               <Route path="/" element={<Index />} />
@@ -1139,11 +1130,9 @@ const AppContent = () => {
               <Route path="*" element={<NotFound />} />
             </Routes>
             </RouteTransition>
-          </main>
-        </div>
         <CommandPalette />
         <NavCustomizationModal open={navModalOpen} onOpenChange={setNavModalOpen} />
-        </div>
+        </WorkspaceLayout>
       </SidebarProvider>
       </OnboardingProvider>
       </OnboardingGuard>
