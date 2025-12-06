@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Download, Chrome, CheckCircle, Copy, ExternalLink } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Download, Chrome, CheckCircle, ExternalLink, Sparkles, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import JSZip from "jszip";
 
@@ -13,20 +14,25 @@ interface ChromeExtensionDownloadProps {
   apiKey: string | null;
 }
 
+// Chrome Web Store listing URL (placeholder for when published)
+const CHROME_STORE_URL = ""; // Will be set after publishing
+
 export function ChromeExtensionDownload({ signatures, apiKey }: ChromeExtensionDownloadProps) {
   const { toast } = useToast();
   const [selectedSignature, setSelectedSignature] = useState<string>("");
   const [downloading, setDownloading] = useState(false);
+  const [installMethod, setInstallMethod] = useState<"store" | "developer">("store");
 
   const activeSignatures = signatures.filter(s => s.is_active);
   const selectedSig = signatures.find(s => s.id === selectedSignature);
+  const isStorePublished = Boolean(CHROME_STORE_URL);
 
   const generateExtensionFiles = () => {
     const manifest = {
       manifest_version: 3,
       name: "Seeksy Email Signatures",
       version: "1.0.0",
-      description: "Inject Seeksy smart signatures into Gmail with tracking",
+      description: "Inject Seeksy smart signatures into Gmail with open & click tracking. Auto-insert your branded signature with analytics.",
       permissions: ["activeTab", "storage"],
       host_permissions: ["https://mail.google.com/*"],
       content_scripts: [
@@ -48,7 +54,11 @@ export function ChromeExtensionDownload({ signatures, apiKey }: ChromeExtensionD
           "16": "icon16.png",
           "48": "icon48.png"
         }
-      }
+      },
+      // For Chrome Web Store
+      key: undefined,
+      offline_enabled: true,
+      short_name: "Seeksy Sigs"
     };
 
     const contentScript = `
@@ -144,87 +154,157 @@ export function ChromeExtensionDownload({ signatures, apiKey }: ChromeExtensionD
   <meta charset="UTF-8">
   <style>
     body {
-      width: 300px;
-      padding: 16px;
+      width: 320px;
+      padding: 20px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       margin: 0;
+      background: #fafafa;
     }
     .header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 16px;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e5e5e5;
     }
     .logo {
-      width: 24px;
-      height: 24px;
+      width: 32px;
+      height: 32px;
       background: linear-gradient(135deg, #fbbf24, #f59e0b);
-      border-radius: 4px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #000;
+      font-size: 18px;
     }
     h1 {
-      font-size: 16px;
+      font-size: 18px;
       margin: 0;
+      color: #18181b;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #71717a;
+      margin-top: 2px;
     }
     .status {
-      padding: 12px;
-      background: #f0fdf4;
-      border-radius: 8px;
-      margin-bottom: 12px;
+      padding: 16px;
+      background: #fff;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      border: 1px solid #e5e5e5;
     }
     .status.active {
       background: #f0fdf4;
-      color: #166534;
+      border-color: #bbf7d0;
+    }
+    .status-icon {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #16a34a;
+      font-size: 13px;
+      margin-bottom: 8px;
     }
     .signature-name {
       font-weight: 600;
-      margin-top: 4px;
+      font-size: 15px;
+      color: #18181b;
     }
     .toggle-btn {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       background: #18181b;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
     }
     .toggle-btn:hover {
       background: #27272a;
     }
+    .toggle-btn.disabled {
+      background: #e11d48;
+    }
     .footer {
-      margin-top: 16px;
+      margin-top: 20px;
       text-align: center;
       font-size: 12px;
       color: #71717a;
+    }
+    .footer a {
+      color: #f59e0b;
+      text-decoration: none;
+    }
+    .tracking-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 11px;
+      border-radius: 4px;
+      margin-top: 8px;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <div class="logo"></div>
-    <h1>Seeksy Signatures</h1>
+    <div class="logo">S</div>
+    <div>
+      <h1>Seeksy Signatures</h1>
+      <div class="subtitle">Gmail Auto-Injector</div>
+    </div>
   </div>
   
-  <div class="status active">
-    <div>✓ Active Signature</div>
+  <div class="status active" id="statusBox">
+    <div class="status-icon">
+      <span>✓</span> Active Signature
+    </div>
     <div class="signature-name">${selectedSig?.name || "No signature selected"}</div>
+    <div class="tracking-badge">📊 Tracking enabled</div>
   </div>
   
-  <button class="toggle-btn" id="toggleBtn">Toggle Injection</button>
+  <button class="toggle-btn" id="toggleBtn">Disable Auto-Inject</button>
   
   <div class="footer">
-    Tracking enabled • Opens & clicks logged
+    Opens & clicks logged in <a href="https://seeksy.io/signatures" target="_blank">Seeksy Dashboard</a>
   </div>
 
   <script>
-    document.getElementById('toggleBtn').addEventListener('click', () => {
-      chrome.storage.local.get(['enabled'], (result) => {
-        const newState = !result.enabled;
-        chrome.storage.local.set({ enabled: newState });
-        alert(newState ? 'Signature injection enabled' : 'Signature injection disabled');
-      });
+    let enabled = true;
+    const btn = document.getElementById('toggleBtn');
+    const statusBox = document.getElementById('statusBox');
+    
+    chrome.storage.local.get(['enabled'], (result) => {
+      enabled = result.enabled !== false;
+      updateUI();
     });
+    
+    btn.addEventListener('click', () => {
+      enabled = !enabled;
+      chrome.storage.local.set({ enabled });
+      updateUI();
+    });
+    
+    function updateUI() {
+      if (enabled) {
+        btn.textContent = 'Disable Auto-Inject';
+        btn.classList.remove('disabled');
+        statusBox.classList.add('active');
+      } else {
+        btn.textContent = 'Enable Auto-Inject';
+        btn.classList.add('disabled');
+        statusBox.classList.remove('active');
+      }
+    }
   </script>
 </body>
 </html>`;
@@ -325,6 +405,55 @@ export function ChromeExtensionDownload({ signatures, apiKey }: ChromeExtensionD
     return icons[platform] || "🔗";
   };
 
+  // Generate proper PNG icons as base64
+  const generateIconPng = (size: number): Uint8Array => {
+    // Create a simple PNG with a yellow "S" logo
+    // This is a minimal valid PNG structure
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return new Uint8Array();
+    
+    // Yellow gradient background
+    const gradient = ctx.createLinearGradient(0, 0, size, size);
+    gradient.addColorStop(0, '#fbbf24');
+    gradient.addColorStop(1, '#f59e0b');
+    ctx.fillStyle = gradient;
+    
+    // Rounded rectangle
+    const radius = size / 6;
+    ctx.beginPath();
+    ctx.moveTo(radius, 0);
+    ctx.lineTo(size - radius, 0);
+    ctx.quadraticCurveTo(size, 0, size, radius);
+    ctx.lineTo(size, size - radius);
+    ctx.quadraticCurveTo(size, size, size - radius, size);
+    ctx.lineTo(radius, size);
+    ctx.quadraticCurveTo(0, size, 0, size - radius);
+    ctx.lineTo(0, radius);
+    ctx.quadraticCurveTo(0, 0, radius, 0);
+    ctx.closePath();
+    ctx.fill();
+    
+    // "S" text
+    ctx.fillStyle = '#000000';
+    ctx.font = `bold ${size * 0.6}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('S', size / 2, size / 2 + size * 0.05);
+    
+    // Convert to blob
+    const dataUrl = canvas.toDataURL('image/png');
+    const base64 = dataUrl.split(',')[1];
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  };
+
   const handleDownload = async () => {
     if (!selectedSignature) {
       toast({
@@ -345,14 +474,10 @@ export function ChromeExtensionDownload({ signatures, apiKey }: ChromeExtensionD
       zip.file("popup.html", popupHtml);
       zip.file("styles.css", styles);
       
-      // Create simple placeholder icons (colored squares)
-      const iconSvg = (size: number) => `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="${size}" height="${size}" fill="#fbbf24" rx="${size/8}"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="#000" font-size="${size/2}" font-weight="bold">S</text></svg>`;
-      
-      // Convert SVG to PNG-like data (for simplicity, we'll use SVG as placeholder)
-      // In production, you'd generate actual PNGs
-      zip.file("icon16.png", iconSvg(16));
-      zip.file("icon48.png", iconSvg(48));
-      zip.file("icon128.png", iconSvg(128));
+      // Generate proper PNG icons
+      zip.file("icon16.png", generateIconPng(16));
+      zip.file("icon48.png", generateIconPng(48));
+      zip.file("icon128.png", generateIconPng(128));
 
       const content = await zip.generateAsync({ type: "blob" });
       
@@ -368,7 +493,7 @@ export function ChromeExtensionDownload({ signatures, apiKey }: ChromeExtensionD
 
       toast({
         title: "Extension downloaded!",
-        description: "Unzip and load as unpacked extension in Chrome."
+        description: "Follow the installation steps below."
       });
     } catch (error) {
       console.error("Error generating extension:", error);
@@ -390,58 +515,121 @@ export function ChromeExtensionDownload({ signatures, apiKey }: ChromeExtensionD
           Chrome Extension
         </CardTitle>
         <CardDescription>
-          Download the Seeksy Gmail extension to auto-inject signatures with tracking
+          Auto-inject your signature into Gmail with open & click tracking
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!apiKey && (
-          <Alert>
-            <AlertDescription>
-              Generate an API key in Settings to enable the extension.
-            </AlertDescription>
-          </Alert>
-        )}
+        <Tabs value={installMethod} onValueChange={(v) => setInstallMethod(v as "store" | "developer")}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="store" className="gap-2">
+              <Sparkles className="h-4 w-4" />
+              Easy Install
+            </TabsTrigger>
+            <TabsTrigger value="developer" className="gap-2">
+              <Package className="h-4 w-4" />
+              Developer
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Select Signature</label>
-          <Select value={selectedSignature} onValueChange={setSelectedSignature}>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a signature..." />
-            </SelectTrigger>
-            <SelectContent>
-              {signatures.map(s => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name} {s.is_active && <Badge variant="secondary" className="ml-2">Active</Badge>}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <TabsContent value="store" className="space-y-4 mt-4">
+            {isStorePublished ? (
+              <>
+                <Button 
+                  asChild
+                  className="w-full gap-2"
+                >
+                  <a href={CHROME_STORE_URL} target="_blank" rel="noopener noreferrer">
+                    <Chrome className="h-4 w-4" />
+                    Install from Chrome Web Store
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </a>
+                </Button>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <span>One-click install • No developer mode required</span>
+                </div>
+              </>
+            ) : (
+              <Alert>
+                <Sparkles className="h-4 w-4" />
+                <AlertDescription className="ml-2">
+                  <p className="font-medium">Coming Soon to Chrome Web Store</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    The extension is being submitted for review. Once approved, you'll be able to install with one click—no developer mode needed.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    For now, use the <strong>Developer</strong> tab to install manually.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+          </TabsContent>
 
-        <Button 
-          onClick={handleDownload} 
-          disabled={!selectedSignature || downloading}
-          className="w-full gap-2"
-        >
-          <Download className="h-4 w-4" />
-          {downloading ? "Generating..." : "Download Extension ZIP"}
-        </Button>
+          <TabsContent value="developer" className="space-y-4 mt-4">
+            {!apiKey && (
+              <Alert>
+                <AlertDescription>
+                  Generate an API key in Settings to enable the extension.
+                </AlertDescription>
+              </Alert>
+            )}
 
-        <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
-          <p className="font-medium">Installation Steps:</p>
-          <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-            <li>Download and unzip the extension</li>
-            <li>Open <code className="bg-muted px-1 rounded">chrome://extensions</code></li>
-            <li>Enable "Developer mode" (top right)</li>
-            <li>Click "Load unpacked" and select the folder</li>
-            <li>Open Gmail — signature auto-injects!</li>
-          </ol>
-        </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select Signature</label>
+              <Select value={selectedSignature} onValueChange={setSelectedSignature}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a signature..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {signatures.map(s => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name} {s.is_active && <Badge variant="secondary" className="ml-2">Active</Badge>}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <CheckCircle className="h-4 w-4 text-green-500" />
-          <span>Tracking pixel + click tracking included</span>
-        </div>
+            <Button 
+              onClick={handleDownload} 
+              disabled={!selectedSignature || downloading}
+              className="w-full gap-2"
+            >
+              <Download className="h-4 w-4" />
+              {downloading ? "Generating..." : "Download Extension ZIP"}
+            </Button>
+
+            <div className="bg-muted/50 rounded-lg p-4 space-y-3 text-sm">
+              <p className="font-medium">Installation Steps:</p>
+              <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                <li>Download and <strong>unzip</strong> the extension folder</li>
+                <li>
+                  Open Chrome and go to{" "}
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">chrome://extensions</code>
+                </li>
+                <li>
+                  Enable <strong>"Developer mode"</strong> toggle (top right corner)
+                </li>
+                <li>
+                  Click <strong>"Load unpacked"</strong> and select the unzipped folder
+                </li>
+                <li>
+                  Open <strong>Gmail</strong> → compose a new email → signature auto-injects!
+                </li>
+              </ol>
+              <div className="pt-2 border-t border-border/50">
+                <p className="text-xs text-muted-foreground">
+                  💡 <strong>Tip:</strong> After installing, click the extension icon in your toolbar to toggle injection on/off.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <span>Tracking pixel + click tracking included</span>
+            </div>
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
