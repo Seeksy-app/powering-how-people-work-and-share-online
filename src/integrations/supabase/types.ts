@@ -8910,6 +8910,107 @@ export type Database = {
         }
         Relationships: []
       }
+      email_signatures: {
+        Row: {
+          banner_alt_text: string | null
+          banner_cta_url: string | null
+          banner_image_url: string | null
+          blocks: Json | null
+          company_address: string | null
+          company_logo_url: string | null
+          company_name: string | null
+          company_phone: string | null
+          company_website: string | null
+          created_at: string | null
+          custom_fields: Json | null
+          font_family: string | null
+          html_signature: string | null
+          id: string
+          is_active: boolean | null
+          link_color: string | null
+          name: string
+          plain_text_signature: string | null
+          primary_color: string | null
+          profile_name: string | null
+          profile_photo_url: string | null
+          profile_title: string | null
+          quote_text: string | null
+          secondary_color: string | null
+          social_links: Json | null
+          updated_at: string | null
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          banner_alt_text?: string | null
+          banner_cta_url?: string | null
+          banner_image_url?: string | null
+          blocks?: Json | null
+          company_address?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          company_website?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          font_family?: string | null
+          html_signature?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_color?: string | null
+          name?: string
+          plain_text_signature?: string | null
+          primary_color?: string | null
+          profile_name?: string | null
+          profile_photo_url?: string | null
+          profile_title?: string | null
+          quote_text?: string | null
+          secondary_color?: string | null
+          social_links?: Json | null
+          updated_at?: string | null
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          banner_alt_text?: string | null
+          banner_cta_url?: string | null
+          banner_image_url?: string | null
+          blocks?: Json | null
+          company_address?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          company_phone?: string | null
+          company_website?: string | null
+          created_at?: string | null
+          custom_fields?: Json | null
+          font_family?: string | null
+          html_signature?: string | null
+          id?: string
+          is_active?: boolean | null
+          link_color?: string | null
+          name?: string
+          plain_text_signature?: string | null
+          primary_color?: string | null
+          profile_name?: string | null
+          profile_photo_url?: string | null
+          profile_title?: string | null
+          quote_text?: string | null
+          secondary_color?: string | null
+          social_links?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_signatures_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "custom_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_template_folders: {
         Row: {
           color: string | null
@@ -16219,6 +16320,184 @@ export type Database = {
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signature_extension_keys: {
+        Row: {
+          api_key: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          name: string | null
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          api_key: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          name?: string | null
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          api_key?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          name?: string | null
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_extension_keys_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "custom_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signature_notification_settings: {
+        Row: {
+          created_at: string | null
+          digest_mode: boolean | null
+          id: string
+          notify_on_banner_click: boolean | null
+          notify_on_click: boolean | null
+          notify_on_open: boolean | null
+          notify_on_social_click: boolean | null
+          notify_via_app: boolean | null
+          notify_via_browser: boolean | null
+          notify_via_email: boolean | null
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          updated_at: string | null
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          digest_mode?: boolean | null
+          id?: string
+          notify_on_banner_click?: boolean | null
+          notify_on_click?: boolean | null
+          notify_on_open?: boolean | null
+          notify_on_social_click?: boolean | null
+          notify_via_app?: boolean | null
+          notify_via_browser?: boolean | null
+          notify_via_email?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          updated_at?: string | null
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          digest_mode?: boolean | null
+          id?: string
+          notify_on_banner_click?: boolean | null
+          notify_on_click?: boolean | null
+          notify_on_open?: boolean | null
+          notify_on_social_click?: boolean | null
+          notify_via_app?: boolean | null
+          notify_via_browser?: boolean | null
+          notify_via_email?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          updated_at?: string | null
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_notification_settings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "custom_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signature_tracking_events: {
+        Row: {
+          created_at: string | null
+          device_type: string | null
+          email_client: string | null
+          event_type: string
+          geo_city: string | null
+          geo_country: string | null
+          geo_region: string | null
+          id: string
+          ip_address: string | null
+          link_id: string | null
+          message_key: string | null
+          recipient_email: string | null
+          signature_id: string | null
+          target_url: string | null
+          user_agent: string | null
+          user_id: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_type?: string | null
+          email_client?: string | null
+          event_type: string
+          geo_city?: string | null
+          geo_country?: string | null
+          geo_region?: string | null
+          id?: string
+          ip_address?: string | null
+          link_id?: string | null
+          message_key?: string | null
+          recipient_email?: string | null
+          signature_id?: string | null
+          target_url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_type?: string | null
+          email_client?: string | null
+          event_type?: string
+          geo_city?: string | null
+          geo_country?: string | null
+          geo_region?: string | null
+          id?: string
+          ip_address?: string | null
+          link_id?: string | null
+          message_key?: string | null
+          recipient_email?: string | null
+          signature_id?: string | null
+          target_url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signature_tracking_events_signature_id_fkey"
+            columns: ["signature_id"]
+            isOneToOne: false
+            referencedRelation: "email_signatures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signature_tracking_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "custom_packages"
             referencedColumns: ["id"]
           },
         ]
