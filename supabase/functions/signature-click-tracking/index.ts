@@ -92,7 +92,30 @@ const handler = async (req: Request): Promise<Response> => {
     } else {
       console.log("[Click Tracking] Click event logged successfully:", eventType);
       
-      // TODO: Send notification if enabled
+      // Send notification email if user has it enabled
+      if (signature?.user_id) {
+        try {
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const notificationUrl = `${supabaseUrl}/functions/v1/signature-notification`;
+          await fetch(notificationUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({
+              userId: signature.user_id,
+              signatureId: signatureId,
+              eventType: eventType,
+              targetUrl: targetUrl,
+              linkId: linkType === "social" ? linkId : linkType,
+              deviceType: deviceType,
+            }),
+          });
+        } catch (notifError) {
+          console.error("[Click Tracking] Failed to send notification:", notifError);
+        }
+      }
     }
 
     // Redirect to target URL

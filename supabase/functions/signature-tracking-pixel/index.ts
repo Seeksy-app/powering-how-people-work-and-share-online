@@ -94,8 +94,28 @@ const handler = async (req: Request): Promise<Response> => {
     } else {
       console.log("[Tracking Pixel] Open event logged successfully");
       
-      // TODO: Send notification if enabled
-      // This would trigger a webhook to send email/browser notification
+      // Send notification email if user has it enabled
+      if (signature?.user_id) {
+        try {
+          const notificationUrl = `${supabaseUrl}/functions/v1/signature-notification`;
+          await fetch(notificationUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({
+              userId: signature.user_id,
+              signatureId: signatureId,
+              eventType: "open",
+              deviceType: deviceType,
+              emailClient: emailClient,
+            }),
+          });
+        } catch (notifError) {
+          console.error("[Tracking Pixel] Failed to send notification:", notifError);
+        }
+      }
     }
 
     // Return the transparent pixel
