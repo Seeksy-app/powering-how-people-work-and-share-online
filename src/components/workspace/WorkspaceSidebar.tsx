@@ -597,18 +597,18 @@ export function WorkspaceSidebar() {
           </ScrollArea>
         </SidebarContent>
 
-        <SidebarFooter className="p-3 pt-0">
+        {/* Sticky Footer - always visible even when scrolling */}
+        <SidebarFooter className="p-3 pt-2 border-t border-sidebar-border bg-sidebar mt-auto">
           <SidebarMenu>
-            {/* AI Agent / Ask Seeksy */}
+            {/* AI Agent / Ask Spark - Opens chat panel */}
             <SidebarMenuItem>
               <SidebarMenuButton
-                onClick={() => navigate('/assistant')}
-                isActive={isActive('/assistant')}
-                tooltip="AI Agent"
+                onClick={() => document.dispatchEvent(new Event('open-spark-assistant'))}
+                tooltip="Ask Spark"
                 className="text-sidebar-foreground hover:bg-sidebar-accent"
               >
                 <Sparkles className="h-4 w-4 text-primary" />
-                {!isCollapsed && <span>AI Agent</span>}
+                {!isCollapsed && <span>Ask Spark</span>}
               </SidebarMenuButton>
             </SidebarMenuItem>
             

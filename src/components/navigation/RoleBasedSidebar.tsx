@@ -609,6 +609,22 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
         })}
 
       </SidebarContent>
+      
+      {/* Sticky AI Chat Footer - always visible */}
+      <div className="border-t border-sidebar-border p-3 bg-sidebar mt-auto">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton 
+              tooltip={collapsed ? "Ask Spark" : undefined}
+              onClick={() => document.dispatchEvent(new Event('open-spark-assistant'))}
+              className="flex items-center gap-3 transition-all duration-150 cursor-pointer text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            >
+              <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+              {!collapsed && <span className="truncate">Ask Spark</span>}
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </div>
     </Sidebar>
   );
 }
