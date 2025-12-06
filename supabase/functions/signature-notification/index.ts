@@ -1,0 +1,247 @@
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@2.0.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+interface NotificationRequest {
+  userId: string;
+  signatureId: string;
+  eventType: "open" | "link_click" | "banner_click" | "social_click";
+  targetUrl?: string;
+  linkId?: string;
+  deviceType?: string;
+  emailClient?: string;
+}
+
+const handler = async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const payload: NotificationRequest = await req.json();
+    const { userId, signatureId, eventType, targetUrl, linkId, deviceType, emailClient } = payload;
+
+    console.log("[Signature Notification] Received:", payload);
+
+    if (!userId || !signatureId || !eventType) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get user's notification preferences
+    const { data: preferences } = await supabase
+      .from("notification_preferences")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("notification_type", "signature_tracking")
+      .single();
+
+    // Check if email notifications are enabled (default to true if no preference set)
+    const emailEnabled = preferences?.email_enabled !== false;
+    const notifyOnOpens = preferences?.channels?.notify_opens !== false;
+    const notifyOnClicks = preferences?.channels?.notify_clicks !== false;
+
+    // Determine if we should send based on event type
+    const shouldSendEmail = emailEnabled && (
+      (eventType === "open" && notifyOnOpens) ||
+      (["link_click", "banner_click", "social_click"].includes(eventType) && notifyOnClicks)
+    );
+
+    if (!shouldSendEmail) {
+      console.log("[Signature Notification] Notifications disabled for this event type");
+      return new Response(JSON.stringify({ success: true, sent: false, reason: "disabled" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Get user email
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email, first_name")
+      .eq("id", userId)
+      .single();
+
+    if (!profile?.email) {
+      console.log("[Signature Notification] No email found for user");
+      return new Response(JSON.stringify({ success: false, error: "No email" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Get signature details
+    const { data: signature } = await supabase
+      .from("email_signatures")
+      .select("name")
+      .eq("id", signatureId)
+      .single();
+
+    const signatureName = signature?.name || "your email signature";
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const formattedTime = now.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    // Build subject and body based on event type
+    let subject = "";
+    let bodyHtml = "";
+    const deviceInfo = deviceType ? ` on ${deviceType}` : "";
+    const clientInfo = emailClient && emailClient !== "unknown" ? ` using ${emailClient}` : "";
+
+    if (eventType === "open") {
+      subject = `Someone opened your email`;
+      bodyHtml = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">📧 Email Opened!</h1>
+          </div>
+          <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none;">
+            <p style="font-size: 16px; color: #334155; margin: 0 0 20px;">
+              Great news! Someone opened your email that uses <strong>"${signatureName}"</strong> signature.
+            </p>
+            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Event</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">Email Opened</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Signature</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${signatureName}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formattedDate}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Time</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formattedTime}</td>
+                </tr>
+                ${deviceType ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Device</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${deviceType}</td>
+                </tr>
+                ` : ""}
+                ${emailClient && emailClient !== "unknown" ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Email Client</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${emailClient}</td>
+                </tr>
+                ` : ""}
+              </table>
+            </div>
+            <p style="font-size: 13px; color: #94a3b8; margin: 0; text-align: center;">
+              View all your signature analytics in your Seeksy dashboard.
+            </p>
+          </div>
+        </div>
+      `;
+    } else {
+      // Click events
+      const clickType = eventType === "banner_click" ? "banner" : 
+                        eventType === "social_click" ? `${linkId || "social"} icon` : 
+                        "link";
+      subject = `Someone clicked a ${clickType} in your email`;
+      bodyHtml = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #10b981, #06b6d4); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">🔗 Link Clicked!</h1>
+          </div>
+          <div style="background: #f8fafc; padding: 30px; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none;">
+            <p style="font-size: 16px; color: #334155; margin: 0 0 20px;">
+              Someone clicked a ${clickType} in your email that uses <strong>"${signatureName}"</strong> signature.
+            </p>
+            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Event</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">Click on ${clickType}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Signature</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${signatureName}</td>
+                </tr>
+                ${targetUrl ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Link Clicked</td>
+                  <td style="padding: 8px 0; color: #3b82f6; font-size: 14px; text-align: right; word-break: break-all;">${targetUrl}</td>
+                </tr>
+                ` : ""}
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Date</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formattedDate}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Time</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${formattedTime}</td>
+                </tr>
+                ${deviceType ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #64748b; font-size: 14px;">Device</td>
+                  <td style="padding: 8px 0; color: #1e293b; font-size: 14px; text-align: right;">${deviceType}</td>
+                </tr>
+                ` : ""}
+              </table>
+            </div>
+            <p style="font-size: 13px; color: #94a3b8; margin: 0; text-align: center;">
+              View all your signature analytics in your Seeksy dashboard.
+            </p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Send the email
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      console.error("[Signature Notification] RESEND_API_KEY not configured");
+      return new Response(JSON.stringify({ success: false, error: "Email not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const resend = new Resend(resendApiKey);
+    const senderEmail = Deno.env.get("SENDER_EMAIL") || "notifications@seeksy.dev";
+
+    const emailResponse = await resend.emails.send({
+      from: `Seeksy <${senderEmail}>`,
+      to: [profile.email],
+      subject: subject,
+      html: bodyHtml,
+    });
+
+    console.log("[Signature Notification] Email sent:", emailResponse);
+
+    return new Response(JSON.stringify({ success: true, sent: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error: any) {
+    console.error("[Signature Notification] Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+};
+
+serve(handler);
