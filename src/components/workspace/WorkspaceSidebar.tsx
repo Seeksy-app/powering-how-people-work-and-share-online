@@ -27,6 +27,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { 
@@ -39,6 +44,7 @@ import {
   Trash2,
   ChevronDown,
   ChevronRight,
+  ExternalLink,
   // Module icons
   Mic,
   Podcast,
@@ -264,7 +270,7 @@ export function WorkspaceSidebar() {
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 bg-popover border shadow-lg z-50">
+            <DropdownMenuContent align="end" className="w-48 bg-popover border shadow-lg z-50">
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
@@ -274,8 +280,26 @@ export function WorkspaceSidebar() {
                 disabled={removingModule === module.id}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Remove from workspace
+                Remove
               </DropdownMenuItem>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toast.success("Module added as standalone", {
+                        description: `${module.name} is now a standalone menu item.`,
+                      });
+                    }}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Standalone
+                  </DropdownMenuItem>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  <p>Add to menu as a standalone module</p>
+                </TooltipContent>
+              </Tooltip>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -404,7 +428,7 @@ export function WorkspaceSidebar() {
                                   <MoreHorizontal className="h-3.5 w-3.5" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-44 bg-popover border shadow-lg z-50">
+                              <DropdownMenuContent align="end" className="w-48 bg-popover border shadow-lg z-50">
                                 <DropdownMenuItem
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -414,8 +438,26 @@ export function WorkspaceSidebar() {
                                   disabled={removingModule === primary.id}
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
-                                  Remove from workspace
+                                  Remove
                                 </DropdownMenuItem>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <DropdownMenuItem
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast.success("Module added as standalone", {
+                                          description: `${primary.name} is now a standalone menu item.`,
+                                        });
+                                      }}
+                                    >
+                                      <ExternalLink className="h-4 w-4 mr-2" />
+                                      Standalone
+                                    </DropdownMenuItem>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="left">
+                                    <p>Add to menu as a standalone module</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
