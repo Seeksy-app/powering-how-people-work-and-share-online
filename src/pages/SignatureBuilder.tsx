@@ -151,11 +151,8 @@ export default function SignatureBuilder() {
           </Button>
         </div>
 
-        {/* Analytics shown immediately */}
-        <SignatureAnalytics signatures={signatures} />
-
         {/* Tabs for management */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="signatures" className="gap-2">
               <Mail className="h-4 w-4" />
