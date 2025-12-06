@@ -50,6 +50,7 @@ const DEFAULT_NAV_CONFIG: NavConfig = {
     'email',
     'marketing',
     'awards',
+    'project_management',
   ],
   hidden: [],
   pinned: ['my_day', 'dashboard', 'creator_hub'],
@@ -86,7 +87,8 @@ export const NAV_ITEMS: NavItem[] = [
   { id: 'events', label: 'Events', path: '/events', level: 0, moduleId: 'events' },
   { id: 'my_page', label: 'My Page', path: '/profile/edit', level: 0, moduleId: 'my-page' },
   { id: 'awards', label: 'Awards', path: '/awards', level: 0, moduleId: 'awards' },
-  
+  { id: 'project_management', label: 'Project Management', path: '/project-management', level: 0, moduleId: 'project-management' },
+
   // Grouped module items (collapsible sections when activated)
   { 
     id: 'media_content', 

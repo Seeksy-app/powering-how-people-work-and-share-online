@@ -118,6 +118,7 @@ const NAV_TO_MODULE_MAP: Record<string, string> = {
   'email': 'email',
   'marketing': 'marketing',
   'awards': 'awards',
+  'project_management': 'project-management',
 };
 
 // Icon mapping for all nav items

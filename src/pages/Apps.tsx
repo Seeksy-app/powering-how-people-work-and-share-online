@@ -400,6 +400,17 @@ const modules: Module[] = [
     creditEstimate: 5,
   },
   {
+    id: "project-management",
+    name: "Project Management",
+    description: "Tasks, tickets, leads, and e-signatures",
+    icon: FolderOpen,
+    status: "active",
+    category: "business",
+    route: "/project-management",
+    recommendedWith: ["Tasks", "Contacts & Audience"],
+    creditEstimate: 15,
+  },
+  {
     id: "events",
     name: "Events",
     description: "Create events and manage RSVPs",
