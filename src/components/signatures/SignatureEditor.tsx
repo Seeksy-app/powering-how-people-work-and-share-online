@@ -768,7 +768,7 @@ function generateHtmlSignature(formData: any, signatureId: string): string {
     }
     
     html += `<img src="${formData.banner_image_url}" alt="${formData.banner_alt_text || "Banner"}" 
-                 style="max-width: 600px; width: 100%; height: auto; display: block;" />`;
+                 style="max-width: 400px; width: 100%; height: auto; display: block;" />`;
     
     if (bannerTrackUrl) {
       html += `</a>`;
