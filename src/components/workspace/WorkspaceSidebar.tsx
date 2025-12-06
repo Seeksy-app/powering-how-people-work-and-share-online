@@ -312,7 +312,7 @@ export function WorkspaceSidebar() {
           tooltip={module.name}
           className={cn(
             "text-sidebar-foreground hover:bg-sidebar-accent pr-8",
-            indented && "pl-10 text-sm"
+            indented && "ml-6 pl-4 text-sm"
           )}
         >
           <Icon className="h-4 w-4" />
@@ -505,8 +505,8 @@ export function WorkspaceSidebar() {
                                 className="flex-1 text-sidebar-foreground hover:bg-sidebar-accent"
                                 onClick={() => toggleGroup(groupKey)}
                               >
-                                <GroupIcon className="h-4 w-4" />
-                                {!isCollapsed && <span className="font-semibold">{groupName}</span>}
+                                <GroupIcon className="h-5 w-5" />
+                                {!isCollapsed && <span className="font-bold text-[15px]">{groupName}</span>}
                               </SidebarMenuButton>
                             </div>
                           </SidebarMenuItem>
