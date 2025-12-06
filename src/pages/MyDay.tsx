@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Calendar, 
   CheckSquare, 
@@ -17,18 +18,36 @@ import {
   Clock,
   Sparkles,
   BarChart3,
-  TrendingUp,
-  Users,
-  Podcast,
-  Image,
-  MousePointerClick
 } from "lucide-react";
+
+// Import the colorful dashboard widgets
+import {
+  ProfileViewsWidget,
+  LinkClicksWidget,
+  EngagementWidget,
+  EventsWidget,
+  MeetingsWidget,
+  PollsWidget,
+  PodcastsWidget,
+  MediaWidget,
+  SignupSheetsWidget,
+  EmailsSentWidget,
+  EmailsOpenedWidget,
+  EmailClicksWidget,
+  StreamAnalyticsWidget,
+  QuickActionsWidget,
+} from "@/components/dashboard/widgets";
+import { IdentityStatusCard } from "@/components/dashboard/IdentityStatusCard";
+import { CertifiedClipsCard } from "@/components/dashboard/CertifiedClipsCard";
+import { MediaVaultCard } from "@/components/dashboard/MediaVaultCard";
+import { AdvertiserAccessCard } from "@/components/dashboard/AdvertiserAccessCard";
+import { QuickCreateCard } from "@/components/dashboard/QuickCreateCard";
+import { DashboardWidget } from "@/components/dashboard/DashboardWidget";
 
 /**
  * MY DAY - Daily Control Center + Dashboard Overview
  * 
- * SECTION A: Dashboard Overview (metrics, performance)
- * SECTION B: My Day Content (today's schedule, action items)
+ * Uses the original colorful Dashboard layout with brand-colored widgets
  */
 
 interface DailyStats {
@@ -40,26 +59,33 @@ interface DailyStats {
 
 interface DashboardStats {
   profileViews: number;
+  profileViewsThisWeek: number;
   linkClicks: number;
+  linkClicksThisWeek: number;
+  totalEvents: number;
+  publishedEvents: number;
+  upcomingMeetings: number;
+  publishedPolls: number;
   totalPodcasts: number;
   totalEpisodes: number;
+  totalSignupSheets: number;
   mediaFiles: number;
   engagementRate: number;
-  totalContacts: number;
 }
 
 function getGreeting(): { text: string; icon: React.ReactNode } {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return { text: "Good morning", icon: <Sunrise className="h-5 w-5 text-amber-500" /> };
-  if (hour >= 12 && hour < 17) return { text: "Good afternoon", icon: <Sun className="h-5 w-5 text-yellow-500" /> };
-  if (hour >= 17 && hour < 21) return { text: "Good evening", icon: <Sunset className="h-5 w-5 text-orange-500" /> };
-  return { text: "Good night", icon: <Moon className="h-5 w-5 text-indigo-400" /> };
+  if (hour >= 5 && hour < 12) return { text: "Good morning", icon: <Sunrise className="h-6 w-6 text-amber-500" /> };
+  if (hour >= 12 && hour < 17) return { text: "Good afternoon", icon: <Sun className="h-6 w-6 text-yellow-500" /> };
+  if (hour >= 17 && hour < 21) return { text: "Good evening", icon: <Sunset className="h-6 w-6 text-orange-500" /> };
+  return { text: "Good night", icon: <Moon className="h-6 w-6 text-indigo-400" /> };
 }
 
 export default function MyDay() {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [firstName, setFirstName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [dailyStats, setDailyStats] = useState<DailyStats>({
     unreadEmails: 0,
@@ -69,12 +95,18 @@ export default function MyDay() {
   });
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     profileViews: 0,
+    profileViewsThisWeek: 0,
     linkClicks: 0,
+    linkClicksThisWeek: 0,
+    totalEvents: 0,
+    publishedEvents: 0,
+    upcomingMeetings: 0,
+    publishedPolls: 0,
     totalPodcasts: 0,
     totalEpisodes: 0,
+    totalSignupSheets: 0,
     mediaFiles: 0,
     engagementRate: 0,
-    totalContacts: 0,
   });
   const greeting = getGreeting();
   const today = new Date().toLocaleDateString('en-US', { 
@@ -114,12 +146,15 @@ export default function MyDay() {
     if (!user) return;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("account_full_name")
+      .select("account_full_name, account_avatar_url")
       .eq("id", user.id)
       .single();
 
     if (profile?.account_full_name) {
       setFirstName(profile.account_full_name.split(" ")[0]);
+    }
+    if (profile?.account_avatar_url) {
+      setAvatarUrl(profile.account_avatar_url);
     }
   };
 
@@ -166,18 +201,33 @@ export default function MyDay() {
     if (!user) return;
     setLoading(true);
     try {
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
       const [
         { count: profileViews },
+        { count: profileViewsThisWeek },
         { count: linkClicks },
+        { count: linkClicksThisWeek },
+        { count: totalEvents },
+        { count: publishedEvents },
+        { count: upcomingMeetings },
+        { count: publishedPolls },
         { count: totalPodcasts },
+        { count: totalSignupSheets },
         { count: mediaFiles },
-        { count: totalContacts },
       ] = await Promise.all([
         supabase.from("profile_views").select("*", { count: "exact", head: true }).eq("profile_id", user.id),
+        supabase.from("profile_views").select("*", { count: "exact", head: true }).eq("profile_id", user.id).gte("viewed_at", weekAgo.toISOString()),
         supabase.from("link_clicks").select("*", { count: "exact", head: true }).eq("profile_id", user.id),
+        supabase.from("link_clicks").select("*", { count: "exact", head: true }).eq("profile_id", user.id).gte("clicked_at", weekAgo.toISOString()),
+        supabase.from("events").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("events").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("is_published", true),
+        supabase.from("meetings").select("*", { count: "exact", head: true }).eq("user_id", user.id).gte("start_time", now.toISOString()),
+        supabase.from("polls").select("*", { count: "exact", head: true }).eq("user_id", user.id).eq("is_published", true),
         supabase.from("podcasts").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("signup_sheets").select("*", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("media_files").select("*", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("contacts").select("*", { count: "exact", head: true }).eq("user_id", user.id),
       ]);
 
       const engagementRate = profileViews && profileViews > 0 
@@ -186,12 +236,18 @@ export default function MyDay() {
 
       setDashboardStats({
         profileViews: profileViews || 0,
+        profileViewsThisWeek: profileViewsThisWeek || 0,
         linkClicks: linkClicks || 0,
+        linkClicksThisWeek: linkClicksThisWeek || 0,
+        totalEvents: totalEvents || 0,
+        publishedEvents: publishedEvents || 0,
+        upcomingMeetings: upcomingMeetings || 0,
+        publishedPolls: publishedPolls || 0,
         totalPodcasts: totalPodcasts || 0,
         totalEpisodes: 0,
+        totalSignupSheets: totalSignupSheets || 0,
         mediaFiles: mediaFiles || 0,
         engagementRate,
-        totalContacts: totalContacts || 0,
       });
     } catch (error) {
       console.error("Error loading dashboard stats:", error);
@@ -210,18 +266,26 @@ export default function MyDay() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {greeting.icon}
+      <main className="px-6 lg:px-10 pt-8 pb-16 flex flex-col items-start w-full">
+        {/* Header with Avatar - matching old Dashboard style */}
+        <div className="w-full mb-8 flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            {avatarUrl && (
+              <Avatar className="h-16 w-16 ring-2 ring-primary/20">
+                <AvatarImage src={avatarUrl} alt={firstName} />
+                <AvatarFallback className="text-2xl">
+                  {firstName?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+            )}
             <div>
-              <h1 className="text-2xl font-bold">
-                {greeting.text}, {firstName || "Creator"}
-              </h1>
-              <p className="text-muted-foreground">
-                {today}
-              </p>
+              <div className="flex items-center gap-3">
+                {greeting.icon}
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-brand-blue to-brand-navy bg-clip-text text-transparent">
+                  {greeting.text}{firstName ? `, ${firstName}` : ""}!
+                </h1>
+              </div>
+              <p className="text-muted-foreground mt-1">{today} — Here's what's happening with your account.</p>
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={() => navigate("/meetings/create")}>
@@ -230,157 +294,119 @@ export default function MyDay() {
           </Button>
         </div>
 
-        {/* SECTION A: Dashboard Overview */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
+        {/* Identity & Content Cards Row */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mb-8 w-full">
+          <IdentityStatusCard />
+          <CertifiedClipsCard />
+          <MediaVaultCard />
+          <AdvertiserAccessCard />
+          <QuickCreateCard />
+        </div>
+
+        {/* My Page Analytics - Colorful widgets */}
+        <div className="space-y-6 w-full mb-8">
+          <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Dashboard Overview</h2>
+            <h2 className="text-lg font-semibold">My Page Analytics</h2>
           </div>
-
-          {/* Dashboard Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate("/profile")}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <TrendingUp className="h-4 w-4" />
-                  <span className="text-xs font-medium">Profile Views</span>
-                </div>
-                <p className="text-2xl font-bold">{dashboardStats.profileViews.toLocaleString()}</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate("/profile")}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <MousePointerClick className="h-4 w-4" />
-                  <span className="text-xs font-medium">Link Clicks</span>
-                </div>
-                <p className="text-2xl font-bold">{dashboardStats.linkClicks.toLocaleString()}</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate("/podcasts")}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <Podcast className="h-4 w-4" />
-                  <span className="text-xs font-medium">Podcasts</span>
-                </div>
-                <p className="text-2xl font-bold">{dashboardStats.totalPodcasts}</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate("/studio/media")}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <Image className="h-4 w-4" />
-                  <span className="text-xs font-medium">Media Files</span>
-                </div>
-                <p className="text-2xl font-bold">{dashboardStats.mediaFiles}</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate("/audience")}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <Users className="h-4 w-4" />
-                  <span className="text-xs font-medium">Contacts</span>
-                </div>
-                <p className="text-2xl font-bold">{dashboardStats.totalContacts}</p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <BarChart3 className="h-4 w-4" />
-                  <span className="text-xs font-medium">Engagement</span>
-                </div>
-                <p className="text-2xl font-bold">{dashboardStats.engagementRate.toFixed(1)}%</p>
-              </CardContent>
-            </Card>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <ProfileViewsWidget data={dashboardStats} />
+            <LinkClicksWidget data={dashboardStats} />
+            <EngagementWidget data={dashboardStats} />
+            <StreamAnalyticsWidget />
           </div>
         </div>
 
-        {/* SECTION B: My Day Content */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
+        {/* Email Analytics Section */}
+        <div className="space-y-4 w-full mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Mail className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Email Analytics</h2>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <EmailsSentWidget />
+            <EmailsOpenedWidget />
+            <EmailClicksWidget />
+          </div>
+        </div>
+
+        {/* Seekies & Content Section */}
+        <div className="space-y-4 w-full mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Seekies & Content</h2>
+          </div>
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <EventsWidget data={dashboardStats} />
+            <MeetingsWidget data={dashboardStats} />
+            <PollsWidget data={dashboardStats} />
+            <SignupSheetsWidget data={dashboardStats} />
+          </div>
+        </div>
+
+        {/* Media & Podcasts Section */}
+        <div className="space-y-4 w-full mb-8">
+          <div className="grid gap-4 md:grid-cols-2">
+            <PodcastsWidget data={dashboardStats} />
+            <MediaWidget data={dashboardStats} />
+          </div>
+        </div>
+
+        {/* Today's Focus Section */}
+        <div className="space-y-4 w-full mb-8">
+          <div className="flex items-center gap-2 mb-4">
             <Clock className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">Today's Focus</h2>
           </div>
 
-          {/* Daily Action Cards */}
+          {/* Daily Action Cards with brand colors */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate("/inbox")}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Emails
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{dailyStats.unreadEmails}</p>
-                <p className="text-xs text-muted-foreground">Unread messages</p>
-              </CardContent>
-            </Card>
+            <div onClick={() => navigate("/inbox")} className="cursor-pointer">
+              <DashboardWidget title="Emails" icon={<Mail className="h-5 w-5" />} brandColor="red">
+                <div className="text-4xl font-bold tracking-tight mb-2">
+                  {dailyStats.unreadEmails}
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">Unread messages</p>
+              </DashboardWidget>
+            </div>
 
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate("/meetings")}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Meetings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{dailyStats.meetingsToday}</p>
-                <p className="text-xs text-muted-foreground">Scheduled today</p>
-              </CardContent>
-            </Card>
+            <div onClick={() => navigate("/meetings")} className="cursor-pointer">
+              <DashboardWidget title="Meetings" icon={<Calendar className="h-5 w-5" />} brandColor="blue">
+                <div className="text-4xl font-bold tracking-tight mb-2">
+                  {dailyStats.meetingsToday}
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">Scheduled today</p>
+              </DashboardWidget>
+            </div>
 
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate("/tasks")}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <CheckSquare className="h-4 w-4" />
-                  Tasks
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{dailyStats.tasksDue}</p>
-                <p className="text-xs text-muted-foreground">Due today</p>
-              </CardContent>
-            </Card>
+            <div onClick={() => navigate("/tasks")} className="cursor-pointer">
+              <DashboardWidget title="Tasks" icon={<CheckSquare className="h-5 w-5" />} brandColor="gold">
+                <div className="text-4xl font-bold tracking-tight mb-2">
+                  {dailyStats.tasksDue}
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">Due today</p>
+              </DashboardWidget>
+            </div>
 
-            <Card 
-              className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate("/notifications")}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                  <Bell className="h-4 w-4" />
-                  Alerts
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{dailyStats.alerts}</p>
-                <p className="text-xs text-muted-foreground">Notifications</p>
-              </CardContent>
-            </Card>
+            <div onClick={() => navigate("/notifications")} className="cursor-pointer">
+              <DashboardWidget title="Alerts" icon={<Bell className="h-5 w-5" />} brandColor="navy">
+                <div className="text-4xl font-bold tracking-tight mb-2">
+                  {dailyStats.alerts}
+                </div>
+                <p className="text-sm text-muted-foreground font-medium">Notifications</p>
+              </DashboardWidget>
+            </div>
           </div>
 
           {/* Schedule & Tasks */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <Card className="transition-all duration-300 hover:shadow-lg border-border/50 bg-gradient-to-br from-card via-card to-brand-blue/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
+                  <Calendar className="h-5 w-5 text-brand-blue" />
                   Upcoming Meetings
                 </CardTitle>
               </CardHeader>
@@ -404,10 +430,10 @@ export default function MyDay() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="transition-all duration-300 hover:shadow-lg border-border/50 bg-gradient-to-br from-card via-card to-brand-gold/5">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <CheckSquare className="h-5 w-5" />
+                  <CheckSquare className="h-5 w-5 text-brand-gold" />
                   Today's Key Tasks
                 </CardTitle>
               </CardHeader>
@@ -433,31 +459,11 @@ export default function MyDay() {
           </div>
         </div>
 
-        {/* Quick Links */}
-        <Card className="bg-muted/30">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Sparkles className="h-4 w-4" />
-                <span>Explore your tools and grow your audience</span>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/dashboard">
-                    <BarChart3 className="h-3 w-3 mr-1" />
-                    Full Dashboard <ArrowRight className="h-3 w-3 ml-1" />
-                  </Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link to="/creator-hub">
-                    Open Creator Hub <ArrowRight className="h-3 w-3 ml-1" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Quick Actions */}
+        <div className="w-full">
+          <QuickActionsWidget />
+        </div>
+      </main>
     </div>
   );
 }
