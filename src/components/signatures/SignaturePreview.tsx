@@ -59,9 +59,12 @@ export function SignaturePreview({ formData, signatureId }: SignaturePreviewProp
       {Object.entries(formData.social_links || {}).filter(([_, url]) => url).length > 0 && (
         <div className="flex gap-2 mb-3">
           {Object.entries(formData.social_links).filter(([_, url]) => url).map(([platform]) => (
-            <span key={platform} className="text-lg">
-              {getSocialIcon(platform)}
-            </span>
+            <img 
+              key={platform}
+              src={getSocialIconUrl(platform)} 
+              alt={platform}
+              className="w-6 h-6"
+            />
           ))}
         </div>
       )}
@@ -81,10 +84,16 @@ export function SignaturePreview({ formData, signatureId }: SignaturePreviewProp
   );
 }
 
-function getSocialIcon(platform: string): string {
-  const icons: Record<string, string> = {
-    facebook: "📘", twitter: "🐦", instagram: "📷", linkedin: "💼",
-    youtube: "🎬", tiktok: "🎵", pinterest: "📌",
+// CDN-hosted social icons
+function getSocialIconUrl(platform: string): string {
+  const iconMap: Record<string, string> = {
+    facebook: "https://cdn.simpleicons.org/facebook/1877F2",
+    twitter: "https://cdn.simpleicons.org/x/000000",
+    instagram: "https://cdn.simpleicons.org/instagram/E4405F",
+    linkedin: "https://cdn.simpleicons.org/linkedin/0A66C2",
+    youtube: "https://cdn.simpleicons.org/youtube/FF0000",
+    tiktok: "https://cdn.simpleicons.org/tiktok/000000",
+    pinterest: "https://cdn.simpleicons.org/pinterest/BD081C",
   };
-  return icons[platform] || "🔗";
+  return iconMap[platform] || "https://cdn.simpleicons.org/link/666666";
 }

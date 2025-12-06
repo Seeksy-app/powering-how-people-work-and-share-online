@@ -369,8 +369,8 @@ export function ChromeExtensionDownload({ signatures, apiKey }: ChromeExtensionD
       html += `<tr><td style="padding: 8px 0;">`;
       for (const [platform, url] of socialLinks) {
         const trackUrl = `${clickTrackingBase}/social/${platform}?url=${encodeURIComponent(url as string)}`;
-        const icon = getSocialEmoji(platform);
-        html += `<a href="${trackUrl}" style="margin-right: 8px; text-decoration: none;">${icon}</a>`;
+        const iconUrl = getSocialIconUrl(platform);
+        html += `<a href="${trackUrl}" style="margin-right: 8px; text-decoration: none; display: inline-block;"><img src="${iconUrl}" alt="${platform}" width="24" height="24" style="border: 0; display: inline-block;" /></a>`;
       }
       html += `</td></tr>`;
     }
@@ -392,17 +392,18 @@ export function ChromeExtensionDownload({ signatures, apiKey }: ChromeExtensionD
     return html;
   };
 
-  const getSocialEmoji = (platform: string): string => {
-    const icons: Record<string, string> = {
-      facebook: "📘",
-      twitter: "🐦",
-      instagram: "📷",
-      linkedin: "💼",
-      youtube: "🎬",
-      tiktok: "🎵",
-      pinterest: "📌",
+  // CDN-hosted social icons that work in email clients
+  const getSocialIconUrl = (platform: string): string => {
+    const iconMap: Record<string, string> = {
+      facebook: "https://cdn.simpleicons.org/facebook/1877F2",
+      twitter: "https://cdn.simpleicons.org/x/000000",
+      instagram: "https://cdn.simpleicons.org/instagram/E4405F",
+      linkedin: "https://cdn.simpleicons.org/linkedin/0A66C2",
+      youtube: "https://cdn.simpleicons.org/youtube/FF0000",
+      tiktok: "https://cdn.simpleicons.org/tiktok/000000",
+      pinterest: "https://cdn.simpleicons.org/pinterest/BD081C",
     };
-    return icons[platform] || "🔗";
+    return iconMap[platform] || "https://cdn.simpleicons.org/link/666666";
   };
 
   // Generate proper PNG icons as base64
