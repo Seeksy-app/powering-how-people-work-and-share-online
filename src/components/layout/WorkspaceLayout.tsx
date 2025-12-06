@@ -1,5 +1,6 @@
 import { User } from "@supabase/supabase-js";
 import { useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/contexts/WorkspaceContext";
 import { WorkspaceSidebar } from "@/components/workspace/WorkspaceSidebar";
 import { GlobalTopNav } from "@/components/workspace/GlobalTopNav";
@@ -48,6 +49,9 @@ function WorkspaceLayoutInner({
   const { workspaces, isLoading, currentWorkspace } = useWorkspace();
   const useLegacyNav = useShouldUseLegacyNav();
   const isAdvertiserRoute = location.pathname.startsWith('/advertiser');
+  const [hasCompletedWorkspaceOnboarding, setHasCompletedWorkspaceOnboarding] = useState(() => {
+    return localStorage.getItem('workspaceOnboardingComplete') === 'true';
+  });
 
   // Public routes that don't need workspace onboarding
   const isPublicRoute = [
@@ -62,10 +66,30 @@ function WorkspaceLayoutInner({
     '/apps-and-tools',
   ].some(route => location.pathname === route || location.pathname.startsWith('/public'));
 
-  // Show workspace onboarding if user has no workspaces and not on legacy/public routes
+  // Mark as complete once we have workspaces
+  useEffect(() => {
+    if (workspaces.length > 0 && !hasCompletedWorkspaceOnboarding) {
+      localStorage.setItem('workspaceOnboardingComplete', 'true');
+      setHasCompletedWorkspaceOnboarding(true);
+    }
+  }, [workspaces, hasCompletedWorkspaceOnboarding]);
+
+  // Handler for when workspace onboarding completes
+  const handleWorkspaceOnboardingComplete = () => {
+    localStorage.setItem('workspaceOnboardingComplete', 'true');
+    setHasCompletedWorkspaceOnboarding(true);
+  };
+
+  // Show workspace onboarding only if:
+  // - Not loading
+  // - User exists
+  // - No workspaces
+  // - Haven't previously completed workspace onboarding
+  // - Not on legacy/public/onboarding routes
   const needsWorkspaceOnboarding = !isLoading && 
     user && 
     workspaces.length === 0 && 
+    !hasCompletedWorkspaceOnboarding &&
     !useLegacyNav &&
     !isPublicRoute &&
     !location.pathname.startsWith('/onboarding') &&
@@ -75,8 +99,7 @@ function WorkspaceLayoutInner({
     return (
       <div className="min-h-screen flex w-full bg-background">
         <div className="flex-1 flex flex-col min-h-screen overflow-auto">
-          <WorkspaceOnboarding />
-          {children}
+          <WorkspaceOnboarding onComplete={handleWorkspaceOnboardingComplete} />
         </div>
       </div>
     );
