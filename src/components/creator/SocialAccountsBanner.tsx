@@ -2,24 +2,17 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Instagram, Facebook, TrendingUp, X } from "lucide-react";
+import { Instagram, TrendingUp, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { useMyPageEnabled } from "@/hooks/useMyPageEnabled";
+import { useBannerDismissal } from "@/hooks/useBannerDismissal";
+
+const SOCIAL_BANNER_KEY = "socialAccountsBannerDismissed";
 
 export function SocialAccountsBanner() {
   const navigate = useNavigate();
   const { data: myPageEnabled, isLoading: myPageLoading } = useMyPageEnabled();
-  
-  // Initialize from localStorage to prevent flash
-  const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem("socialAccountsBannerDismissed") === "true";
-  });
-
-  const handleDismiss = () => {
-    localStorage.setItem("socialAccountsBannerDismissed", "true");
-    setDismissed(true);
-  };
+  const { isDismissed, isLoading: dismissalLoading, dismiss } = useBannerDismissal(SOCIAL_BANNER_KEY);
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ['social-media-accounts-check'],
@@ -40,7 +33,7 @@ export function SocialAccountsBanner() {
   }
 
   // Don't show while loading, if dismissed, or if they have accounts connected
-  if (isLoading || dismissed || (accounts && accounts.length > 0)) {
+  if (isLoading || dismissalLoading || isDismissed || (accounts && accounts.length > 0)) {
     return null;
   }
 
@@ -71,7 +64,7 @@ export function SocialAccountsBanner() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleDismiss}
+          onClick={dismiss}
           className="text-yellow-600 hover:text-yellow-700"
         >
           <X className="h-4 w-4" />

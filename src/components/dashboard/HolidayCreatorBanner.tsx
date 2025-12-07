@@ -1,39 +1,27 @@
-import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, Calendar, Video, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useBannerDismissal } from "@/hooks/useBannerDismissal";
 
 interface HolidayCreatorBannerProps {
   firstName?: string;
 }
 
-const HOLIDAY_BANNER_DISMISSED_KEY = "holiday-banner-dismissed-2024";
+const HOLIDAY_BANNER_KEY = "holiday-banner-dismissed-2024";
 
 export const HolidayCreatorBanner = ({ firstName = "Creator" }: HolidayCreatorBannerProps) => {
   const navigate = useNavigate();
-  const [isDismissed, setIsDismissed] = useState(false);
+  const { isDismissed, isLoading, dismiss } = useBannerDismissal(HOLIDAY_BANNER_KEY);
 
-  useEffect(() => {
-    const dismissed = localStorage.getItem(HOLIDAY_BANNER_DISMISSED_KEY);
-    if (dismissed === "true") {
-      setIsDismissed(true);
-    }
-  }, []);
-
-  const handleDismiss = () => {
-    localStorage.setItem(HOLIDAY_BANNER_DISMISSED_KEY, "true");
-    setIsDismissed(true);
-  };
-
-  if (isDismissed) return null;
+  if (isLoading || isDismissed) return null;
 
   return (
     <Card className="p-6 mb-6 bg-gradient-to-r from-red-600/20 via-green-600/20 to-red-600/20 border-2 border-red-500/30 relative overflow-hidden">
       {/* Close button */}
       <button
-        onClick={handleDismiss}
+        onClick={dismiss}
         className="absolute top-3 right-3 p-1.5 rounded-full bg-black/10 hover:bg-black/20 transition-colors z-20"
         aria-label="Dismiss holiday banner"
       >
