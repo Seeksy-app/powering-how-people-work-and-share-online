@@ -261,7 +261,7 @@ export default function BoardDashboard() {
                   <span>{formatDuration(featuredVideo.duration_seconds)}</span>
                 </div>
                 <Button 
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
                   onClick={() => navigate('/board/videos')}
                 >
                   <Play className="w-4 h-4 mr-2" />
