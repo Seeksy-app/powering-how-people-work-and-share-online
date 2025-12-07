@@ -30,14 +30,6 @@ export function WelcomeBanner({ firstName }: WelcomeBannerProps) {
           <p className="text-xs text-slate-500">Board overview</p>
         </div>
       </div>
-      <Button 
-        size="sm"
-        className="gap-2 bg-blue-600 hover:bg-blue-700"
-        onClick={() => navigate('/board/videos')}
-      >
-        <PlayCircle className="w-4 h-4" />
-        Start with Overview Video
-      </Button>
     </motion.div>
   );
 }
