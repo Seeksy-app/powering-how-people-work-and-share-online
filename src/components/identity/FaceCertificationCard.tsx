@@ -28,10 +28,19 @@ export function FaceCertificationCard({ userId, faceIdentity, onCertified }: Fac
       const file = files[i];
       if (!file.type.startsWith("image/")) continue;
       
-      // Convert to base64
+      // Convert to base64 - ensure we get proper JPEG/PNG format
       const reader = new FileReader();
-      const base64 = await new Promise<string>((resolve) => {
-        reader.onload = () => resolve(reader.result as string);
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Ensure proper data URL format
+          if (result.startsWith("data:image/")) {
+            resolve(result);
+          } else {
+            resolve(`data:image/jpeg;base64,${result}`);
+          }
+        };
+        reader.onerror = reject;
         reader.readAsDataURL(file);
       });
       
