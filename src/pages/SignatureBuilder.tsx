@@ -15,7 +15,7 @@ import { SignatureActivityLog } from "@/components/signatures/SignatureActivityL
 export default function SignatureBuilder() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("signatures");
+  const [activeTab, setActiveTab] = useState("analytics");
   const [signatures, setSignatures] = useState<any[]>([]);
   const [selectedSignature, setSelectedSignature] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -154,14 +154,6 @@ export default function SignatureBuilder() {
         {/* Tabs for management */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
-            <TabsTrigger value="signatures" className="gap-2">
-              <Mail className="h-4 w-4" />
-              Signatures
-            </TabsTrigger>
-            <TabsTrigger value="editor" className="gap-2" disabled={!selectedSignature}>
-              <Settings className="h-4 w-4" />
-              Editor
-            </TabsTrigger>
             <TabsTrigger value="analytics" className="gap-2">
               <BarChart3 className="h-4 w-4" />
               Analytics
@@ -169,6 +161,14 @@ export default function SignatureBuilder() {
             <TabsTrigger value="activity" className="gap-2">
               <Activity className="h-4 w-4" />
               Activity Log
+            </TabsTrigger>
+            <TabsTrigger value="signatures" className="gap-2">
+              <Mail className="h-4 w-4" />
+              Signatures
+            </TabsTrigger>
+            <TabsTrigger value="editor" className="gap-2" disabled={!selectedSignature}>
+              <Settings className="h-4 w-4" />
+              Editor
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Download className="h-4 w-4" />
