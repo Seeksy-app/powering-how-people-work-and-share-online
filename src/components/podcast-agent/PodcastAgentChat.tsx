@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AgentMessageCard } from "./AgentMessageCard";
 import { EpisodeProgressPanel } from "./EpisodeProgressPanel";
+import { CreateMeetingTypeModal } from "./CreateMeetingTypeModal";
 import { AgentAction, AgentMessage, EpisodeWorkspace } from "./types";
 
 interface PodcastAgentChatProps {
@@ -37,6 +38,12 @@ export function PodcastAgentChat({ podcastId, episodeId }: PodcastAgentChatProps
   const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [workspace, setWorkspace] = useState<EpisodeWorkspace | null>(null);
   const [pendingTasks, setPendingTasks] = useState(0);
+  const [showCreateMeetingModal, setShowCreateMeetingModal] = useState(false);
+  const [suggestedMeetingName, setSuggestedMeetingName] = useState("");
+  const [pendingMeetingAction, setPendingMeetingAction] = useState<{
+    messageIndex: number;
+    actionIndex: number;
+  } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -153,6 +160,14 @@ export function PodcastAgentChat({ podcastId, episodeId }: PodcastAgentChatProps
   };
 
   const handleApproveAction = async (action: AgentAction, messageIndex: number, actionIndex: number) => {
+    // Handle create_meeting_type action by opening modal
+    if (action.type === "create_meeting_type") {
+      setSuggestedMeetingName(action.data?.suggestedName || "Pre-Podcast Interview");
+      setPendingMeetingAction({ messageIndex, actionIndex });
+      setShowCreateMeetingModal(true);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -421,6 +436,37 @@ export function PodcastAgentChat({ podcastId, episodeId }: PodcastAgentChatProps
           pendingTasks={pendingTasks}
         />
       </div>
+
+      {/* Create Meeting Type Modal */}
+      <CreateMeetingTypeModal
+        open={showCreateMeetingModal}
+        onClose={() => {
+          setShowCreateMeetingModal(false);
+          setPendingMeetingAction(null);
+        }}
+        suggestedName={suggestedMeetingName}
+        onCreated={(meetingType) => {
+          // Mark action as completed
+          if (pendingMeetingAction) {
+            setMessages((prev) =>
+              prev.map((msg, mIdx) => {
+                if (mIdx === pendingMeetingAction.messageIndex && msg.actions) {
+                  return {
+                    ...msg,
+                    actions: msg.actions.map((a, aIdx) =>
+                      aIdx === pendingMeetingAction.actionIndex
+                        ? { ...a, status: "completed" as const }
+                        : a
+                    ),
+                  };
+                }
+                return msg;
+              })
+            );
+          }
+          setPendingMeetingAction(null);
+        }}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 export interface AgentAction {
-  type: 'outreach' | 'research' | 'outline' | 'task' | 'schedule' | 'follow_up';
+  type: 'outreach' | 'research' | 'outline' | 'task' | 'schedule' | 'follow_up' | 'create_meeting_type';
   title: string;
   description: string;
   data: Record<string, any>;
