@@ -1,4 +1,4 @@
-import { Inbox, Send, Clock, FileText, Archive, AlertCircle, Ban, Bot, UserX, Edit3, Trash2, Settings, BarChart3 } from "lucide-react";
+import { Inbox, Send, Clock, FileText, Archive, AlertCircle, Ban, Bot, UserX, Edit3, Trash2, Settings, BarChart3, Signature } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -98,11 +98,18 @@ export function EmailFolderList({ selectedFolder, onFolderSelect, onCompose, cou
           <span>Tracking & Analytics</span>
         </button>
         <button
+          onClick={() => navigate("/signatures")}
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm hover:bg-muted text-foreground transition-colors"
+        >
+          <Signature className="h-4 w-4" />
+          <span>Signature & Tracking</span>
+        </button>
+        <button
           onClick={() => navigate("/email-settings")}
           className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm hover:bg-muted text-foreground transition-colors"
         >
           <Settings className="h-4 w-4" />
-          <span>Email Settings</span>
+          <span>Settings</span>
         </button>
       </div>
     </div>
