@@ -484,6 +484,17 @@ const modules: Module[] = [
     category: "identity",
     creditEstimate: 10,
   },
+  {
+    id: "guest-appearances",
+    name: "Guest Appearances",
+    description: "Track and showcase your podcast and video appearances",
+    icon: Mic,
+    status: "active",
+    category: "identity",
+    route: "/my-appearances",
+    recommendedWith: ["Identity & Verification", "Social Connect"],
+    creditEstimate: 10,
+  },
 
   // Integrations
   {

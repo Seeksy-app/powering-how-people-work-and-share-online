@@ -94,6 +94,25 @@ export default function MyAppearances() {
     faceIdentity: any;
   } | null>(null);
 
+  // Check Spotify/YouTube connection status
+  const { data: socialConnections } = useQuery({
+    queryKey: ["social-connections-appearances", user?.id],
+    queryFn: async () => {
+      if (!user) return { spotify: false, youtube: false };
+      const { data } = await supabase
+        .from("social_media_profiles")
+        .select("platform")
+        .eq("user_id", user.id);
+      
+      const platforms = data?.map(d => d.platform) || [];
+      return {
+        spotify: platforms.includes("spotify"),
+        youtube: platforms.includes("youtube"),
+      };
+    },
+    enabled: !!user,
+  });
+
   useEffect(() => {
     if (!user) return;
     
@@ -124,16 +143,41 @@ export default function MyAppearances() {
           certificate: certResult.data?.[0] || null
         });
 
-        // Check for face identity
+        // Check for face identity - check both face_identity and identity_assets tables
+        let faceVerified = false;
+        let faceData = null;
+
+        // Check face_identity table first
         const faceResult = await supabase
           .from("face_identity")
           .select("*")
           .eq("user_id", user.id)
-          .single();
+          .maybeSingle();
+
+        if (faceResult.data?.verification_status === "verified") {
+          faceVerified = true;
+          faceData = faceResult.data;
+        }
+
+        // Also check identity_assets table for face_identity type
+        if (!faceVerified) {
+          const assetResult = await supabase
+            .from("identity_assets")
+            .select("*")
+            .eq("user_id", user.id)
+            .eq("type", "face_identity")
+            .eq("cert_status", "minted")
+            .maybeSingle();
+
+          if (assetResult.data) {
+            faceVerified = true;
+            faceData = assetResult.data;
+          }
+        }
 
         setFaceStatus({
-          isCertified: faceResult.data?.verification_status === "verified",
-          faceIdentity: faceResult.data || null
+          isCertified: faceVerified,
+          faceIdentity: faceData
         });
       } catch (error) {
         console.error("Error checking certification status:", error);
@@ -417,77 +461,117 @@ export default function MyAppearances() {
         </div>
       </div>
 
-      {/* Voice Certification Status */}
-      {voiceStatus?.isCertified ? (
-        <Alert className="border-green-500/50 bg-green-500/10">
-          <Shield className="h-4 w-4 text-green-600" />
-          <AlertTitle className="text-green-700">Voice Certified</AlertTitle>
-          <AlertDescription className="text-green-600">
-            Your voice is blockchain-certified. You can now fingerprint and verify your appearances with cryptographic proof.
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <Alert className="border-amber-500/50 bg-amber-500/10">
-          <AlertCircle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-700">Voice Certification Required</AlertTitle>
-          <AlertDescription className="flex items-center justify-between">
-            <span className="text-amber-600">
-              Certify your voice to enable fingerprint verification of your appearances and prove authenticity.
-            </span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => navigate("/voice-certification")}
-              className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-500/20"
-            >
-              <Fingerprint className="h-4 w-4 mr-2" />
-              Certify Your Voice
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
+      {/* Verification Status Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Voice Status */}
+        {voiceStatus?.isCertified ? (
+          <Alert className="border-green-500/50 bg-green-500/10">
+            <Shield className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-700">Voice Certified</AlertTitle>
+            <AlertDescription className="text-green-600">
+              Your voice is blockchain-certified for fingerprint verification.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert className="border-amber-500/50 bg-amber-500/10">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-700">Voice Not Certified</AlertTitle>
+            <AlertDescription className="flex items-center justify-between">
+              <span className="text-amber-600">Certify to enable voice verification.</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/voice-certification")}
+                className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-500/20"
+              >
+                <Fingerprint className="h-4 w-4 mr-2" />
+                Certify
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
-      {/* Connect Channels for Auto-Scan */}
-      <Card className="border-primary/20 bg-primary/5">
+        {/* Face Status */}
+        {faceStatus?.isCertified ? (
+          <Alert className="border-green-500/50 bg-green-500/10">
+            <ScanFace className="h-4 w-4 text-green-600" />
+            <AlertTitle className="text-green-700">Face Verified</AlertTitle>
+            <AlertDescription className="text-green-600">
+              Your face is verified for appearance detection.
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert className="border-amber-500/50 bg-amber-500/10">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-700">Face Not Verified</AlertTitle>
+            <AlertDescription className="flex items-center justify-between">
+              <span className="text-amber-600">Verify to enable face detection.</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate("/identity")}
+                className="ml-4 border-amber-500 text-amber-700 hover:bg-amber-500/20"
+              >
+                <ScanFace className="h-4 w-4 mr-2" />
+                Verify
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+      </div>
+
+      {/* Connected Channels */}
+      <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Link2 className="h-5 w-5 text-primary" />
               <div>
-                <CardTitle className="text-base">Connect Channels for Auto-Scan</CardTitle>
+                <CardTitle className="text-base">Connected Channels</CardTitle>
                 <CardDescription>
-                  Connected channels are automatically scanned every 30 days for new appearances
+                  Your connected platforms for auto-scanning appearances
                 </CardDescription>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={() => navigate("/integrations")}>
               <Settings className="h-4 w-4 mr-2" />
-              Manage Integrations
+              Manage
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" size="sm" onClick={() => navigate("/integrations?connect=youtube")}>
-              <Youtube className="h-4 w-4 mr-2 text-red-500" />
-              Connect YouTube
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/integrations?connect=spotify")}>
-              <Music2 className="h-4 w-4 mr-2 text-green-500" />
-              Connect Spotify
-            </Button>
-            <Button variant="outline" size="sm" disabled className="opacity-50">
-              <Instagram className="h-4 w-4 mr-2 text-pink-500" />
+            {socialConnections?.youtube ? (
+              <Badge variant="outline" className="gap-2 py-1.5 px-3 border-green-500/50 bg-green-500/10 text-green-700">
+                <Youtube className="h-4 w-4 text-red-500" />
+                YouTube Connected
+              </Badge>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => navigate("/integrations?connect=youtube")}>
+                <Youtube className="h-4 w-4 mr-2 text-red-500" />
+                Connect YouTube
+              </Button>
+            )}
+            {socialConnections?.spotify ? (
+              <Badge variant="outline" className="gap-2 py-1.5 px-3 border-green-500/50 bg-green-500/10 text-green-700">
+                <Music2 className="h-4 w-4 text-green-500" />
+                Spotify Connected
+              </Badge>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => navigate("/integrations?connect=spotify")}>
+                <Music2 className="h-4 w-4 mr-2 text-green-500" />
+                Connect Spotify
+              </Button>
+            )}
+            <Badge variant="outline" className="gap-2 py-1.5 px-3 opacity-50">
+              <Instagram className="h-4 w-4 text-pink-500" />
               Instagram (Soon)
-            </Button>
-            <Button variant="outline" size="sm" disabled className="opacity-50">
-              <Video className="h-4 w-4 mr-2" />
+            </Badge>
+            <Badge variant="outline" className="gap-2 py-1.5 px-3 opacity-50">
+              <Video className="h-4 w-4" />
               TikTok (Soon)
-            </Button>
+            </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Without connected channels, you can still search by name or scan individual videos for face/voice matches.
-          </p>
         </CardContent>
       </Card>
 
