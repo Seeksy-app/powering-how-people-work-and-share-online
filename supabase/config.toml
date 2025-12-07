@@ -332,3 +332,12 @@ verify_jwt = false
 
 [functions.resend-inbound-email]
 verify_jwt = false
+
+[functions.acrcloud-fingerprint]
+verify_jwt = true
+
+[functions.content-scan-job]
+verify_jwt = true
+
+[functions.generate-proof-certificate]
+verify_jwt = true
