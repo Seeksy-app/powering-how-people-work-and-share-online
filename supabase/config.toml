@@ -350,3 +350,6 @@ verify_jwt = false
 
 [functions.spotify-import-podcasts]
 verify_jwt = true
+
+[functions.youtube-import-videos]
+verify_jwt = true

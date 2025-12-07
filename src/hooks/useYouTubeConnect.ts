@@ -4,6 +4,7 @@ import { toast } from '@/hooks/use-toast';
 
 export function useYouTubeConnect() {
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const connectYouTube = async () => {
     setIsConnecting(true);
@@ -42,6 +43,40 @@ export function useYouTubeConnect() {
     }
   };
 
+  const importVideos = async () => {
+    setIsImporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('youtube-import-videos');
+      
+      if (error) {
+        console.error('YouTube import error:', error);
+        toast({
+          title: 'Import Failed',
+          description: 'Failed to import videos from YouTube. Please try again.',
+          variant: 'destructive',
+        });
+        return null;
+      }
+
+      toast({
+        title: 'Import Complete',
+        description: data.message || `Imported ${data.imported} videos for content protection.`,
+      });
+      
+      return data;
+    } catch (err) {
+      console.error('YouTube import error:', err);
+      toast({
+        title: 'Import Failed',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+      return null;
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const syncYouTube = async (profileId: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('sync-youtube-channel-data', {
@@ -76,7 +111,9 @@ export function useYouTubeConnect() {
 
   return {
     connectYouTube,
+    importVideos,
     syncYouTube,
     isConnecting,
+    isImporting,
   };
 }
