@@ -79,12 +79,24 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
 
       setWorkspaces(mapped);
 
-      // Set current workspace
+      // Set current workspace - prioritize saved ID, then default, then first workspace
       const savedWorkspaceId = localStorage.getItem('currentWorkspaceId');
-      const defaultWorkspace = mapped.find(w => w.is_default) || mapped[0];
-      const savedWorkspace = savedWorkspaceId ? mapped.find(w => w.id === savedWorkspaceId) : null;
+      let workspaceToSet: Workspace | null = null;
       
-      const workspaceToSet = savedWorkspace || defaultWorkspace || null;
+      // Try to restore from saved ID first
+      if (savedWorkspaceId) {
+        workspaceToSet = mapped.find(w => w.id === savedWorkspaceId) || null;
+      }
+      
+      // Fall back to default or first workspace
+      if (!workspaceToSet) {
+        workspaceToSet = mapped.find(w => w.is_default) || mapped[0] || null;
+        // Update localStorage with the fallback choice
+        if (workspaceToSet) {
+          localStorage.setItem('currentWorkspaceId', workspaceToSet.id);
+        }
+      }
+      
       setCurrentWorkspaceState(workspaceToSet);
       
       if (workspaceToSet) {

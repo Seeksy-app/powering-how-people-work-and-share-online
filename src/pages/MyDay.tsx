@@ -393,14 +393,12 @@ export default function MyDay() {
         {/* My Day Header with Avatar, Greeting, and Action Buttons */}
         <div className="w-full mb-8 flex items-start justify-between">
           <div className="flex items-center gap-4">
-            {avatarUrl && (
-              <Avatar className="h-16 w-16 ring-2 ring-primary/20">
-                <AvatarImage src={avatarUrl} alt={firstName} />
-                <AvatarFallback className="text-2xl">
-                  {firstName?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
-            )}
+            <Avatar className="h-16 w-16 ring-2 ring-primary/20">
+              <AvatarImage src={avatarUrl || undefined} alt={firstName} />
+              <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                {firstName?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
             <div>
               <div className="flex items-center gap-3">
                 {greeting.icon}
