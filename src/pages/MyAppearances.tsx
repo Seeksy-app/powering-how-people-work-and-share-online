@@ -37,6 +37,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FaceScanCard } from "@/components/identity/FaceScanCard";
 
 interface GuestAppearance {
   id: string;
@@ -71,17 +72,22 @@ export default function MyAppearances() {
     supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
   }, []);
 
-  // Check voice certification status - using voice_blockchain_certificates table
+  // Check voice and face certification status
   const [voiceStatus, setVoiceStatus] = useState<{
     isCertified: boolean;
     hasFingerprint: boolean;
     certificate: any;
   } | null>(null);
 
+  const [faceStatus, setFaceStatus] = useState<{
+    isCertified: boolean;
+    faceIdentity: any;
+  } | null>(null);
+
   useEffect(() => {
     if (!user) return;
     
-    const checkVoiceStatus = async () => {
+    const checkCertificationStatus = async () => {
       try {
         // Check for active blockchain certificate with verified status
         const certResult = await supabase
@@ -107,13 +113,26 @@ export default function MyAppearances() {
           hasFingerprint: !!(hasCert || (hasIdentity && identityResult.data[0].fingerprint)),
           certificate: certResult.data?.[0] || null
         });
+
+        // Check for face identity
+        const faceResult = await supabase
+          .from("face_identity")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        setFaceStatus({
+          isCertified: faceResult.data?.verification_status === "verified",
+          faceIdentity: faceResult.data || null
+        });
       } catch (error) {
-        console.error("Error checking voice status:", error);
+        console.error("Error checking certification status:", error);
         setVoiceStatus({ isCertified: false, hasFingerprint: false, certificate: null });
+        setFaceStatus({ isCertified: false, faceIdentity: null });
       }
     };
 
-    checkVoiceStatus();
+    checkCertificationStatus();
   }, [user]);
 
   // Fetch appearances - only for this user
@@ -405,6 +424,15 @@ export default function MyAppearances() {
             </Button>
           </AlertDescription>
         </Alert>
+      )}
+
+      {/* Face Scan for Video Appearances */}
+      {user && (
+        <FaceScanCard
+          userId={user.id}
+          isFaceCertified={faceStatus?.isCertified || false}
+          onScanComplete={() => queryClient.invalidateQueries({ queryKey: ["guest-appearances"] })}
+        />
       )}
 
       {/* Search Panel */}
