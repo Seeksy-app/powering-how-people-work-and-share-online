@@ -111,7 +111,6 @@ serve(async (req) => {
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
         token_expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-        is_active: true,
         metadata: {
           email: spotifyProfile?.email,
           country: spotifyProfile?.country,
