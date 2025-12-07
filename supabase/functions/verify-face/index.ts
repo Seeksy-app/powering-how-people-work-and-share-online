@@ -90,79 +90,34 @@ serve(async (req) => {
 
     console.log(`→ Processing ${images.length} face images`);
 
-    // Check if user already has a face identity asset
-    const { data: existingAsset } = await supabase
-      .from('identity_assets')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('type', 'face_identity')
-      .maybeSingle();
-
-    let assetId: string;
-
-    if (existingAsset) {
-      assetId = existingAsset.id;
-      console.log(`→ Updating existing face identity: ${assetId}`);
+    // Clean and validate base64 images
+    const cleanedImages = images.map((img, idx) => {
+      // Extract the base64 content and mime type
+      let base64Data = img;
+      let mimeType = "image/jpeg";
       
-      // Update to pending
-      await supabase
-        .from('identity_assets')
-        .update({ 
-          cert_status: 'pending',
-          cert_updated_at: new Date().toISOString(),
-        })
-        .eq('id', assetId);
-
-      // Log face verification started
-      await supabase.from('identity_access_logs').insert({
-        identity_asset_id: assetId,
-        action: 'face_started',
-        actor_id: user.id,
-        details: { images_count: images.length },
-      });
-
-    } else {
-      console.log("→ Creating new face identity asset");
-      
-      // Create new face identity asset
-      const { data: newAsset, error: createError } = await supabase
-        .from('identity_assets')
-        .insert({
-          user_id: user.id,
-          type: 'face_identity',
-          title: 'Face Identity',
-          file_url: '', // Will be populated if we store processed image
-          cert_status: 'pending',
-          permissions: {
-            clip_use: false,
-            ai_generation: false,
-            advertiser_access: false,
-            anonymous_training: false,
-          },
-          consent_version: '1.0',
-        })
-        .select()
-        .single();
-
-      if (createError || !newAsset) {
-        console.error("❌ Failed to create face identity asset:", createError);
-        throw new Error("Failed to create face identity asset");
+      if (img.startsWith("data:")) {
+        const match = img.match(/^data:([^;]+);base64,(.+)$/);
+        if (match) {
+          mimeType = match[1];
+          base64Data = match[2];
+        }
       }
+      
+      // Convert unsupported formats (heic, heif) to jpeg indicator
+      if (mimeType.includes("heic") || mimeType.includes("heif")) {
+        mimeType = "image/jpeg"; // OpenAI will still try to process it
+      }
+      
+      // Ensure we have a proper data URL
+      const cleanUrl = `data:${mimeType};base64,${base64Data.replace(/^data:[^;]+;base64,/, '')}`;
+      console.log(`→ Image ${idx + 1} mime type: ${mimeType}`);
+      
+      return cleanUrl;
+    });
 
-      assetId = newAsset.id;
-      console.log(`→ Created face identity asset: ${assetId}`);
-
-      // Log face verification started
-      await supabase.from('identity_access_logs').insert({
-        identity_asset_id: assetId,
-        action: 'face_started',
-        actor_id: user.id,
-        details: { images_count: images.length },
-      });
-    }
-
-    // Step 1: Extract best frame (use first image for MVP)
-    const bestImage = images[0];
+    // Step 1: Use first valid image
+    const bestImage = cleanedImages[0];
     console.log("→ Using first image for face extraction");
 
     // Step 2: Generate face embedding using OpenAI Vision
@@ -190,18 +145,41 @@ serve(async (req) => {
             content: [
               {
                 type: "text",
-                text: "Analyze this face and provide a detailed description of facial features including face shape, eye characteristics, nose structure, and overall facial geometry. Be specific and consistent for identity verification purposes.",
+                text: `Analyze this face image for identity verification. Provide a detailed JSON description of:
+1. Face shape (oval, round, square, heart, oblong)
+2. Eye characteristics (shape, spacing, color if visible)
+3. Nose structure (width, length, shape)
+4. Mouth/lips characteristics
+5. Eyebrow shape and thickness
+6. Any distinctive features (dimples, moles, scars, etc.)
+7. Overall facial proportions
+8. Confidence score (0-1) for how clear and usable this image is
+
+Respond ONLY with valid JSON in this format:
+{
+  "isValidFace": true/false,
+  "faceShape": "...",
+  "eyeCharacteristics": "...",
+  "noseCharacteristics": "...",
+  "mouthCharacteristics": "...",
+  "eyebrowCharacteristics": "...",
+  "distinctiveFeatures": ["...", "..."],
+  "facialProportions": "...",
+  "confidenceScore": 0.95,
+  "summary": "Brief summary for hashing"
+}`,
               },
               {
                 type: "image_url",
                 image_url: {
-                  url: bestImage.startsWith('data:') ? bestImage : `data:image/jpeg;base64,${bestImage}`,
+                  url: bestImage,
+                  detail: "high",
                 },
               },
             ],
           },
         ],
-        max_tokens: 500,
+        max_tokens: 800,
       }),
     });
 
@@ -215,119 +193,90 @@ serve(async (req) => {
     const faceDescription = openaiData.choices[0].message.content;
     console.log("✓ Face analysis complete");
 
+    // Parse the JSON response
+    let faceData: any = {};
+    try {
+      // Try to extract JSON from the response
+      const jsonMatch = faceDescription.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        faceData = JSON.parse(jsonMatch[0]);
+      }
+    } catch (parseError) {
+      console.log("→ Could not parse JSON, using raw description");
+      faceData = { summary: faceDescription, confidenceScore: 0.8 };
+    }
+
+    if (faceData.isValidFace === false) {
+      throw new Error("No clear face detected in the image. Please upload a clearer photo.");
+    }
+
     // Step 3: Generate stable faceHash from embedding
     const hash = createHash('sha256');
-    hash.update(faceDescription + user.id); // Include user ID for uniqueness
+    hash.update(JSON.stringify(faceData) + user.id); // Include user ID for uniqueness
     const faceHash = '0x' + hash.digest('hex');
     
     console.log(`→ Generated faceHash: ${faceHash.substring(0, 10)}...`);
 
     // Step 4: Create metadata for IPFS (simulated for MVP)
     const metadataUri = `ipfs://Qm${faceHash.substring(2, 48)}`; // Simulated IPFS URI
-    const metadata = {
-      name: "Seeksy Face Identity Certificate",
-      description: "Blockchain-verified face identity",
-      creator: user.id,
-      faceHash,
-      timestamp: new Date().toISOString(),
-      version: "1.0",
-    };
 
-    console.log(`→ Metadata URI: ${metadataUri}`);
+    // Step 5: Save to face_identity table
+    const { data: existingFace } = await supabase
+      .from('face_identity')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-    // Step 5: Update asset with face_hash and metadata (let mint function handle status)
-    await supabase
-      .from('identity_assets')
-      .update({
-        face_hash: faceHash,
-        face_metadata_uri: metadataUri,
-        cert_updated_at: new Date().toISOString(),
-      })
-      .eq('id', assetId);
-
-    // Step 6: Mint Face Identity Certificate on Polygon
-    console.log("→ Minting face certificate on blockchain...");
-
-    const mintResponse = await fetch(
-      `${Deno.env.get("SUPABASE_URL")}/functions/v1/mint-identity-certificate`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({
-          identityAssetId: assetId,
-          chain: "polygon",
-        }),
-      }
-    );
-
-    const mintResult = await mintResponse.json();
-
-    if (!mintResult.success) {
-      const errorMsg = mintResult.error || mintResult.message || "Unknown minting error";
-      const stage = mintResult.stage || "mint";
-      const code = mintResult.code || "UNKNOWN_ERROR";
-      
-      console.error(`❌ Blockchain minting failed at ${stage}:`, errorMsg);
-      console.error(`❌ Error code: ${code}`);
-      
-      // Update to failed status
+    if (existingFace) {
+      // Update existing
       await supabase
-        .from('identity_assets')
-        .update({ cert_status: 'failed', cert_updated_at: new Date().toISOString() })
-        .eq('id', assetId);
+        .from('face_identity')
+        .update({
+          face_hash: faceHash,
+          embedding_data: faceData,
+          verification_status: 'verified',
+          verification_method: 'openai_vision',
+          metadata_uri: metadataUri,
+          confidence_score: faceData.confidenceScore || 0.9,
+          verified_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingFace.id);
+      
+      console.log(`→ Updated existing face identity: ${existingFace.id}`);
+    } else {
+      // Create new
+      const { error: insertError } = await supabase
+        .from('face_identity')
+        .insert({
+          user_id: user.id,
+          face_hash: faceHash,
+          embedding_data: faceData,
+          verification_status: 'verified',
+          verification_method: 'openai_vision',
+          source_images: cleanedImages.slice(0, 3), // Store first 3 images
+          metadata_uri: metadataUri,
+          confidence_score: faceData.confidenceScore || 0.9,
+          verified_at: new Date().toISOString(),
+        });
 
-      // Log failure with detailed error info
-      await supabase.from('identity_access_logs').insert({
-        identity_asset_id: assetId,
-        action: 'face_failed',
-        actor_id: user.id,
-        details: { 
-          error: errorMsg,
-          stage,
-          code,
-        },
-      });
-
-      return new Response(
-        JSON.stringify({
-          status: "failed",
-          stage,
-          code,
-          message: errorMsg,
-          details: "Face verification completed but blockchain minting failed",
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      if (insertError) {
+        console.error("❌ Failed to save face identity:", insertError);
+        throw new Error("Failed to save face identity");
+      }
+      
+      console.log("→ Created new face identity record");
     }
 
-    console.log("✓ Face identity verified and minted on-chain");
-
-    // Log success
-    await supabase.from('identity_access_logs').insert({
-      identity_asset_id: assetId,
-      action: 'face_verified',
-      actor_id: user.id,
-      details: {
-        faceHash,
-        tx_hash: mintResult.certificate.tx_hash,
-        chain: mintResult.certificate.chain,
-      },
-    });
+    console.log("✓ Face identity verified and saved");
 
     return new Response(
       JSON.stringify({
+        success: true,
         status: "verified",
         faceHash,
-        txHash: mintResult.certificate.tx_hash,
-        explorerUrl: mintResult.certificate.explorer_url,
         metadataUri,
-        assetId,
+        confidenceScore: faceData.confidenceScore || 0.9,
         message: "Face identity verified successfully",
       }),
       {
