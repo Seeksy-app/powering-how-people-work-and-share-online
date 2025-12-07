@@ -6929,6 +6929,42 @@ export type Database = {
           },
         ]
       }
+      content_scan_settings: {
+        Row: {
+          auto_scan_enabled: boolean | null
+          created_at: string | null
+          default_frequency: string | null
+          id: string
+          notify_email: boolean | null
+          notify_in_app: boolean | null
+          notify_on_match: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_scan_enabled?: boolean | null
+          created_at?: string | null
+          default_frequency?: string | null
+          id?: string
+          notify_email?: boolean | null
+          notify_in_app?: boolean | null
+          notify_on_match?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_scan_enabled?: boolean | null
+          created_at?: string | null
+          default_frequency?: string | null
+          id?: string
+          notify_email?: boolean | null
+          notify_in_app?: boolean | null
+          notify_on_match?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversational_ad_charges: {
         Row: {
           advertiser_id: string
@@ -16472,15 +16508,20 @@ export type Database = {
           blockchain_tx_hash: string | null
           content_type: string
           created_at: string
+          credits_spent: number | null
           duration_seconds: number | null
           external_id: string | null
           file_hash: string
           id: string
+          last_scanned_at: string | null
           metadata: Json | null
+          next_scan_at: string | null
           original_file_url: string | null
           proof_status: string
+          scan_frequency: string | null
           source: string | null
           title: string
+          total_scans: number | null
           transcript: string | null
           transcript_embedding: Json | null
           updated_at: string
@@ -16492,15 +16533,20 @@ export type Database = {
           blockchain_tx_hash?: string | null
           content_type: string
           created_at?: string
+          credits_spent?: number | null
           duration_seconds?: number | null
           external_id?: string | null
           file_hash: string
           id?: string
+          last_scanned_at?: string | null
           metadata?: Json | null
+          next_scan_at?: string | null
           original_file_url?: string | null
           proof_status?: string
+          scan_frequency?: string | null
           source?: string | null
           title: string
+          total_scans?: number | null
           transcript?: string | null
           transcript_embedding?: Json | null
           updated_at?: string
@@ -16512,15 +16558,20 @@ export type Database = {
           blockchain_tx_hash?: string | null
           content_type?: string
           created_at?: string
+          credits_spent?: number | null
           duration_seconds?: number | null
           external_id?: string | null
           file_hash?: string
           id?: string
+          last_scanned_at?: string | null
           metadata?: Json | null
+          next_scan_at?: string | null
           original_file_url?: string | null
           proof_status?: string
+          scan_frequency?: string | null
           source?: string | null
           title?: string
+          total_scans?: number | null
           transcript?: string | null
           transcript_embedding?: Json | null
           updated_at?: string
@@ -17249,6 +17300,27 @@ export type Database = {
           proforma_name?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      scan_credit_costs: {
+        Row: {
+          credits_per_scan: number
+          description: string | null
+          frequency: string
+          id: string
+        }
+        Insert: {
+          credits_per_scan: number
+          description?: string | null
+          frequency: string
+          id?: string
+        }
+        Update: {
+          credits_per_scan?: number
+          description?: string | null
+          frequency?: string
+          id?: string
         }
         Relationships: []
       }
