@@ -122,6 +122,13 @@ export const MODULE_REGISTRY: Record<string, RecommendedModule> = {
     category: "identity",
     priority: "recommended",
   },
+  "guest-appearances": {
+    id: "guest-appearances",
+    name: "Guest Appearances",
+    description: "Track and verify your podcast/video guest appearances",
+    category: "identity",
+    priority: "recommended",
+  },
   "proposals": {
     id: "proposals",
     name: "Proposals",
