@@ -374,3 +374,6 @@ verify_jwt = false
 
 [functions.visitor-chat]
 verify_jwt = false
+
+[functions.acrcloud-scan]
+verify_jwt = false

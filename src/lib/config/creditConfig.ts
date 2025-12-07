@@ -43,6 +43,11 @@ export const CREDIT_USAGE = {
   transcription_per_10min: 1,
   extra_storage_per_gb: 10,
   voice_cloning: 5,
+  // Content Scan Costs
+  scan_hourly: 5,
+  scan_daily: 2,
+  scan_weekly: 1,
+  scan_monthly: 0,
 } as const;
 
 // Monthly Credit Usage by User Persona
