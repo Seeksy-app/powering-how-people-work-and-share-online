@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
@@ -48,6 +48,7 @@ import { QuickCreateCard } from "@/components/dashboard/QuickCreateCard";
 import { HolidayCreatorBanner } from "@/components/dashboard/HolidayCreatorBanner";
 import { useHolidaySettings } from "@/hooks/useHolidaySettings";
 import { useRole } from "@/contexts/RoleContext";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
 
 interface DashboardStats {
   totalEvents: number;
@@ -87,6 +88,29 @@ interface TrackingStats {
   clicks: number;
   total: number;
 }
+
+// Widget to module mapping - which modules are required for each widget
+const WIDGET_MODULE_MAP: Record<string, string[]> = {
+  "profile-views": ["my-page", "mypage"],
+  "link-clicks": ["my-page", "mypage"],
+  "engagement": ["my-page", "mypage"],
+  "stream-analytics": ["my-page", "mypage", "streaming"],
+  "clicks-by-type": ["my-page", "mypage"],
+  "top-links": ["my-page", "mypage"],
+  "social-media": ["social-media", "social-analytics"],
+  "emails-sent": ["email", "newsletters", "email-signatures", "email-client"],
+  "emails-opened": ["email", "newsletters", "email-signatures", "email-client"],
+  "email-clicks": ["email", "newsletters", "email-signatures", "email-client"],
+  "events": ["events"],
+  "meetings": ["meetings"],
+  "polls": ["polls"],
+  "signup-sheets": ["signup-sheets"],
+  "quick-actions": [], // Always show
+  "podcasts": ["podcasts", "podcast-hosting"],
+  "media": ["media-library", "studio"],
+  "revenue": ["monetization", "advertising"],
+  "impressions": ["monetization", "advertising"],
+};
 
 const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "profile-views", label: "Profile Visits", enabled: true, category: "mypage" },
@@ -129,6 +153,29 @@ export default function MyDay() {
   const [clickBreakdown, setClickBreakdown] = useState<LinkClickBreakdown[]>([]);
   const [topLinks, setTopLinks] = useState<TopLink[]>([]);
   const [trackingStats, setTrackingStats] = useState<TrackingStats>({ opens: 0, clicks: 0, total: 0 });
+  const { currentWorkspace, workspaceModules } = useWorkspace();
+  
+  // Get active module IDs from workspace
+  const activeModuleIds = useMemo(() => {
+    const moduleIds = new Set<string>();
+    workspaceModules.forEach(wm => moduleIds.add(wm.module_id.toLowerCase()));
+    currentWorkspace?.modules?.forEach(m => moduleIds.add(m.toLowerCase()));
+    return moduleIds;
+  }, [workspaceModules, currentWorkspace]);
+
+  // Check if a widget should be visible based on active modules
+  const isWidgetVisible = (widgetId: string): boolean => {
+    const requiredModules = WIDGET_MODULE_MAP[widgetId] || [];
+    if (requiredModules.length === 0) return true; // No module requirement
+    return requiredModules.some(modId => 
+      activeModuleIds.has(modId) || 
+      Array.from(activeModuleIds).some(activeId => 
+        activeId.includes(modId) || modId.includes(activeId)
+      )
+    );
+  };
+
+  // Load widgets from localStorage but filter by active modules
   const [widgets, setWidgets] = useState<WidgetConfig[]>(() => {
     const saved = localStorage.getItem("myday-widgets");
     if (saved) {
@@ -140,6 +187,11 @@ export default function MyDay() {
     }
     return DEFAULT_WIDGETS;
   });
+
+  // Filter widgets to only show those with active modules
+  const visibleWidgets = useMemo(() => {
+    return widgets.filter(w => w.enabled && isWidgetVisible(w.id));
+  }, [widgets, activeModuleIds]);
   
   const { data: myPageEnabled } = useMyPageEnabled();
   const { currentRole } = useRole();
@@ -457,11 +509,11 @@ export default function MyDay() {
         {/* Customizable Widgets */}
         {stats && (
           <div className="space-y-6 mb-8 w-full">
-            {/* MY PAGE SECTION */}
-            {myPageEnabled && (
+            {/* MY PAGE SECTION - only show if myPage is enabled AND widgets are visible */}
+            {myPageEnabled && visibleWidgets.some(w => ['profile-views', 'link-clicks', 'engagement', 'stream-analytics'].includes(w.id)) && (
               <div className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {widgets.filter(w => w.enabled && ['profile-views', 'link-clicks', 'engagement', 'stream-analytics'].includes(w.id)).map(widget => {
+                  {visibleWidgets.filter(w => ['profile-views', 'link-clicks', 'engagement', 'stream-analytics'].includes(w.id)).map(widget => {
                     switch (widget.id) {
                       case "profile-views":
                         return <ProfileViewsWidget key={widget.id} data={stats} />;
@@ -477,18 +529,18 @@ export default function MyDay() {
                   })}
                 </div>
 
-                {stats.linkClicks > 0 && (widgets.find(w => w.id === 'clicks-by-type' && w.enabled) || widgets.find(w => w.id === 'top-links' && w.enabled)) && (
+                {stats.linkClicks > 0 && visibleWidgets.some(w => ['clicks-by-type', 'top-links'].includes(w.id)) && (
                   <div className="grid gap-6 md:grid-cols-2">
-                    {widgets.find(w => w.id === 'clicks-by-type' && w.enabled) && (
+                    {visibleWidgets.find(w => w.id === 'clicks-by-type') && (
                       <ClicksByTypeWidget clickBreakdown={clickBreakdown} totalClicks={stats.linkClicks} />
                     )}
-                    {widgets.find(w => w.id === 'top-links' && w.enabled) && (
+                    {visibleWidgets.find(w => w.id === 'top-links') && (
                       <TopLinksWidget topLinks={topLinks} />
                     )}
                   </div>
                 )}
 
-                {widgets.find(w => w.id === 'social-media' && w.enabled) && (
+                {visibleWidgets.find(w => w.id === 'social-media') && (
                   <div>
                     <SocialMediaAnalytics />
                   </div>
@@ -497,9 +549,9 @@ export default function MyDay() {
             )}
 
             {/* EMAIL ANALYTICS SECTION */}
-            {widgets.some(w => w.enabled && ['emails-sent', 'emails-opened', 'email-clicks'].includes(w.id)) && (
+            {visibleWidgets.some(w => ['emails-sent', 'emails-opened', 'email-clicks'].includes(w.id)) && (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {widgets.filter(w => w.enabled && ['emails-sent', 'emails-opened', 'email-clicks'].includes(w.id)).map(widget => {
+                {visibleWidgets.filter(w => ['emails-sent', 'emails-opened', 'email-clicks'].includes(w.id)).map(widget => {
                   switch (widget.id) {
                     case "emails-sent":
                       return <EmailsSentWidget key={widget.id} />;
@@ -515,9 +567,9 @@ export default function MyDay() {
             )}
 
             {/* SEEKIES & CONTENT SECTION */}
-            {widgets.some(w => w.enabled && ['events', 'meetings', 'polls', 'signup-sheets'].includes(w.id)) && (
+            {visibleWidgets.some(w => ['events', 'meetings', 'polls', 'signup-sheets'].includes(w.id)) && (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {widgets.filter(w => w.enabled && ['events', 'meetings', 'polls', 'signup-sheets'].includes(w.id)).map(widget => {
+                {visibleWidgets.filter(w => ['events', 'meetings', 'polls', 'signup-sheets'].includes(w.id)).map(widget => {
                   switch (widget.id) {
                     case "events":
                       return <EventsWidget key={widget.id} data={stats} />;
@@ -535,9 +587,9 @@ export default function MyDay() {
             )}
 
             {/* MEDIA & PODCASTS SECTION */}
-            {widgets.some(w => w.enabled && ['podcasts', 'media'].includes(w.id)) && (
+            {visibleWidgets.some(w => ['podcasts', 'media'].includes(w.id)) && (
               <div className="grid gap-4 md:grid-cols-2">
-                {widgets.filter(w => w.enabled && ['podcasts', 'media'].includes(w.id)).map(widget => {
+                {visibleWidgets.filter(w => ['podcasts', 'media'].includes(w.id)).map(widget => {
                   switch (widget.id) {
                     case "podcasts":
                       return <PodcastsWidget key={widget.id} data={stats} />;
@@ -551,9 +603,9 @@ export default function MyDay() {
             )}
 
             {/* REVENUE SECTION */}
-            {widgets.some(w => w.enabled && ['revenue', 'impressions'].includes(w.id)) && (
+            {visibleWidgets.some(w => ['revenue', 'impressions'].includes(w.id)) && (
               <div className="grid gap-4 md:grid-cols-2">
-                {widgets.filter(w => w.enabled && ['revenue', 'impressions'].includes(w.id)).map(widget => {
+                {visibleWidgets.filter(w => ['revenue', 'impressions'].includes(w.id)).map(widget => {
                   switch (widget.id) {
                     case "revenue":
                       return <RevenueWidget key={widget.id} data={stats} />;
@@ -580,7 +632,7 @@ export default function MyDay() {
             )}
 
             {/* Quick Actions */}
-            {widgets.find(w => w.id === 'quick-actions' && w.enabled) && (
+            {visibleWidgets.find(w => w.id === 'quick-actions') && (
               <QuickActionsWidget />
             )}
           </div>
