@@ -442,15 +442,24 @@ function generateFallbackSegments(durationSeconds: number): ClipSegment[] {
   // Ensure valid duration
   const duration = durationSeconds > 0 ? durationSeconds : 60;
   
+  // Unique titles for fallback clips
+  const clipTitles = [
+    { title: "The Hook That Grabs Attention", hook: "Wait for it..." },
+    { title: "Mind-Blowing Insight Revealed", hook: "This changes everything!" },
+    { title: "The Moment Everyone Talks About", hook: "You need to see this!" },
+    { title: "Game-Changing Perspective", hook: "Here's the truth..." },
+    { title: "This Will Surprise You", hook: "Nobody expected this!" },
+  ];
+  
   // For short videos (< 60s), create 1-2 clips covering most of the video
   if (duration <= 30) {
     return [{
       startTime: 0,
       endTime: duration,
-      title: "Full Clip",
+      title: clipTitles[0].title,
       description: "Complete video",
       viralityScore: 85,
-      hook: "Watch this!",
+      hook: clipTitles[0].hook,
       transcriptSnippet: "",
     }];
   }
@@ -460,19 +469,19 @@ function generateFallbackSegments(durationSeconds: number): ClipSegment[] {
       {
         startTime: 0,
         endTime: Math.min(30, duration),
-        title: "Opening Moment",
+        title: clipTitles[0].title,
         description: "Strong opener",
         viralityScore: 88,
-        hook: "Check this out!",
+        hook: clipTitles[0].hook,
         transcriptSnippet: "",
       },
       {
         startTime: Math.max(0, duration - 30),
         endTime: duration,
-        title: "Best Moment",
+        title: clipTitles[1].title,
         description: "Highlight",
         viralityScore: 85,
-        hook: "You won't believe this!",
+        hook: clipTitles[1].hook,
         transcriptSnippet: "",
       }
     ];
@@ -486,14 +495,15 @@ function generateFallbackSegments(durationSeconds: number): ClipSegment[] {
   for (let i = 0; i < numSegments; i++) {
     const startTime = i * Math.floor(duration / numSegments);
     const endTime = Math.min(startTime + segmentDuration, duration);
+    const titleData = clipTitles[i % clipTitles.length];
 
     segments.push({
       startTime,
       endTime,
-      title: `Highlight ${i + 1}`,
+      title: titleData.title,
       description: "Auto-detected segment",
       viralityScore: 88 - i * 3,
-      hook: "Check this out!",
+      hook: titleData.hook,
       transcriptSnippet: "",
     });
   }
