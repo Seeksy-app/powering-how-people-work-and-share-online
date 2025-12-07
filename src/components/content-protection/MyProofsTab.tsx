@@ -27,7 +27,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Plus, FileAudio, FileVideo, FileText, Shield, Loader2, Music, Youtube, Download, ExternalLink, CheckCircle, RefreshCw, Clock } from "lucide-react";
+import { Plus, FileAudio, FileVideo, FileText, Shield, Loader2, Music, Youtube, Download, ExternalLink, CheckCircle, RefreshCw, Clock, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useSpotifyConnect } from "@/hooks/useSpotifyConnect";
 import { useYouTubeConnect } from "@/hooks/useYouTubeConnect";
@@ -36,6 +36,7 @@ export const MyProofsTab = () => {
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [autoSyncEnabled, setAutoSyncEnabled] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [formData, setFormData] = useState({
     title: "",
     contentType: "audio",
@@ -180,9 +181,14 @@ export const MyProofsTab = () => {
     }
   };
 
+  // Filter content by search
+  const filteredContent = protectedContent?.filter(c => 
+    c.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
   // Count pending items
-  const pendingContent = protectedContent?.filter(c => !c.blockchain_tx_hash) || [];
-  const certifiedContent = protectedContent?.filter(c => c.blockchain_tx_hash) || [];
+  const pendingContent = filteredContent.filter(c => !c.blockchain_tx_hash);
+  const certifiedContent = filteredContent.filter(c => c.blockchain_tx_hash);
 
   const handleCertifyAll = () => {
     if (pendingContent.length === 0) {
@@ -191,6 +197,11 @@ export const MyProofsTab = () => {
     }
     const ids = pendingContent.map(c => c.id);
     certifyMutation.mutate(ids);
+  };
+
+  const handleCertifySingle = (contentId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    certifyMutation.mutate([contentId]);
   };
 
   const handleContentClick = (content: any) => {
@@ -299,11 +310,20 @@ export const MyProofsTab = () => {
       </Card>
 
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
+        <div className="flex-1">
           <h2 className="text-xl font-semibold">My Protected Content</h2>
           <p className="text-sm text-muted-foreground">
             Register your content to protect it from unauthorized use
           </p>
+          <div className="relative mt-3 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search content..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
         </div>
 
         <div className="flex gap-2 flex-wrap">
@@ -401,9 +421,9 @@ export const MyProofsTab = () => {
         </div>
       </div>
 
-      {protectedContent && protectedContent.length > 0 ? (
+      {filteredContent && filteredContent.length > 0 ? (
         <div className="grid gap-4">
-          {protectedContent.map((content) => {
+          {filteredContent.map((content) => {
             const Icon = getContentTypeIcon(content.content_type);
             const isCertified = !!content.blockchain_tx_hash;
             return (
@@ -449,6 +469,24 @@ export const MyProofsTab = () => {
                       )}
                     </div>
                   </div>
+                  {!isCertified && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => handleCertifySingle(content.id, e)}
+                      disabled={certifyMutation.isPending}
+                      className="shrink-0"
+                    >
+                      {certifyMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Certify
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </Card>
             );
