@@ -5,10 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   Play, Clock, Upload, Sparkles, ChevronUp, ChevronDown, ImageIcon, 
-  Loader2, Trash2, Video, ArrowLeft, Lock, Check
+  Loader2, Trash2, Video, ArrowLeft, Pencil
 } from "lucide-react";
 import { DemoVideoUpload } from "@/components/demo-videos/DemoVideoUpload";
 import { useToast } from "@/hooks/use-toast";
@@ -70,12 +75,23 @@ const categoryColors: Record<string, string> = {
   'Platform Overview': 'bg-cyan-100 text-cyan-700',
 };
 
+const CATEGORY_OPTIONS = [
+  'Platform Overview',
+  'Creator Tools',
+  'Advertiser Tools',
+  'Monetization',
+  'Onboarding',
+  'AI Features',
+];
+
 export default function DemoVideos() {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [selectedVideo, setSelectedVideo] = useState<DemoVideo | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [generatingThumbnailId, setGeneratingThumbnailId] = useState<string | null>(null);
+  const [editingVideo, setEditingVideo] = useState<DemoVideo | null>(null);
+  const [editForm, setEditForm] = useState({ title: '', description: '', category: '', is_featured: false });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -150,6 +166,49 @@ export default function DemoVideos() {
       setSelectedVideo(null);
     },
   });
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: async (data: { id: string; title: string; description: string; category: string; is_featured: boolean }) => {
+      const { error } = await supabase
+        .from('demo_videos')
+        .update({
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          is_featured: data.is_featured,
+        })
+        .eq('id', data.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['demo-videos'] });
+      queryClient.invalidateQueries({ queryKey: ['boardVideos'] });
+      toast({ title: "Video updated" });
+      setEditingVideo(null);
+    },
+    onError: () => {
+      toast({ variant: "destructive", title: "Failed to update video" });
+    },
+  });
+
+  const openEditModal = (video: DemoVideo) => {
+    setEditForm({
+      title: video.title,
+      description: video.description || '',
+      category: video.category,
+      is_featured: video.is_featured,
+    });
+    setEditingVideo(video);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingVideo) return;
+    updateMutation.mutate({
+      id: editingVideo.id,
+      ...editForm,
+    });
+  };
 
   // Generate thumbnail from video
   const generateThumbnail = useCallback(async (video: DemoVideo) => {
@@ -422,25 +481,39 @@ export default function DemoVideos() {
                                 <ChevronDown className="h-4 w-4" />
                               </Button>
                             </div>
-                            {!video.thumbnail_url && (
+                            <div className="flex gap-1">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 className="h-7 text-xs"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  generateThumbnail(video);
+                                  openEditModal(video);
                                 }}
-                                disabled={generatingThumbnailId === video.id}
                               >
-                                {generatingThumbnailId === video.id ? (
-                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                ) : (
-                                  <ImageIcon className="h-3 w-3 mr-1" />
-                                )}
-                                Gen Thumb
+                                <Pencil className="h-3 w-3 mr-1" />
+                                Edit
                               </Button>
-                            )}
+                              {!video.thumbnail_url && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    generateThumbnail(video);
+                                  }}
+                                  disabled={generatingThumbnailId === video.id}
+                                >
+                                  {generatingThumbnailId === video.id ? (
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                  ) : (
+                                    <ImageIcon className="h-3 w-3 mr-1" />
+                                  )}
+                                  Gen Thumb
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         )}
                       </CardContent>
@@ -458,6 +531,77 @@ export default function DemoVideos() {
           </div>
         )}
       </div>
+
+      {/* Edit Video Modal */}
+      <Dialog open={!!editingVideo} onOpenChange={(open) => !open && setEditingVideo(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Video</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={editForm.title}
+                onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Video title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editForm.description}
+                onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Video description"
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Category</Label>
+              <Select
+                value={editForm.category}
+                onValueChange={(value) => setEditForm(prev => ({ ...prev, category: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORY_OPTIONS.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="edit-featured">Featured Video</Label>
+              <Switch
+                id="edit-featured"
+                checked={editForm.is_featured}
+                onCheckedChange={(checked) => setEditForm(prev => ({ ...prev, is_featured: checked }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingVideo(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
