@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { WorkspaceSelector } from "./WorkspaceSelector";
 import { MoveToSectionMenu } from "./MoveToSectionMenu";
+import { AddNewDropdown } from "./AddNewDropdown";
+import { CreateWorkspaceModal } from "./CreateWorkspaceModal";
 import { ModuleCenterModal } from "@/components/modules";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -180,6 +182,8 @@ export function WorkspaceSidebar() {
   const { currentWorkspace, workspaceModules, removeModule, toggleStandalone, togglePinned } = useWorkspace();
   const [moduleRegistry, setModuleRegistry] = useState<ModuleRegistryItem[]>([]);
   const [showModuleCenter, setShowModuleCenter] = useState(false);
+  const [moduleCenterDefaultToApps, setModuleCenterDefaultToApps] = useState(false);
+  const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
   const [removingModule, setRemovingModule] = useState<string | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['studio', 'campaigns', 'events', 'crm']));
 
@@ -469,14 +473,13 @@ export function WorkspaceSidebar() {
               <WorkspaceSelector />
             </div>
             {!isCollapsed && (
-              <Button
-                size="icon"
-                className="h-9 w-9 shrink-0 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-                onClick={() => setShowModuleCenter(true)}
-                title="Add module"
-              >
-                <Plus className="h-5 w-5" strokeWidth={2.5} />
-              </Button>
+              <AddNewDropdown
+                onAddWorkspace={() => setShowCreateWorkspace(true)}
+                onAddApps={() => {
+                  setModuleCenterDefaultToApps(true);
+                  setShowModuleCenter(true);
+                }}
+              />
             )}
           </div>
         </SidebarHeader>
@@ -637,7 +640,21 @@ export function WorkspaceSidebar() {
       {/* Module Center Modal */}
       <ModuleCenterModal 
         isOpen={showModuleCenter} 
-        onClose={() => setShowModuleCenter(false)} 
+        onClose={() => {
+          setShowModuleCenter(false);
+          setModuleCenterDefaultToApps(false);
+        }}
+        defaultToApps={moduleCenterDefaultToApps}
+      />
+
+      {/* Create Workspace Modal */}
+      <CreateWorkspaceModal
+        isOpen={showCreateWorkspace}
+        onClose={() => setShowCreateWorkspace(false)}
+        onOpenModuleCenter={() => {
+          setModuleCenterDefaultToApps(true);
+          setShowModuleCenter(true);
+        }}
       />
     </>
   );

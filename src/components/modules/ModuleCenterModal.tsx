@@ -25,6 +25,7 @@ import {
 interface ModuleCenterModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultToApps?: boolean;
 }
 
 type MainSection = "collections" | "apps" | "integrations";
@@ -36,11 +37,11 @@ const mainSections = [
   { id: "integrations" as MainSection, label: "Integrations", icon: Link2, description: "Third-party connections" },
 ];
 
-export function ModuleCenterModal({ isOpen, onClose }: ModuleCenterModalProps) {
+export function ModuleCenterModal({ isOpen, onClose, defaultToApps = false }: ModuleCenterModalProps) {
   const navigate = useNavigate();
   const { currentWorkspace, workspaceModules, addModule } = useWorkspace();
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeSection, setActiveSection] = useState<MainSection>("collections");
+  const [activeSection, setActiveSection] = useState<MainSection>(defaultToApps ? "apps" : "collections");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortOption>("default");
   const [installingModules, setInstallingModules] = useState<Set<string>>(new Set());
@@ -56,6 +57,13 @@ export function ModuleCenterModal({ isOpen, onClose }: ModuleCenterModalProps) {
   const installedModuleIds = useMemo(() => {
     return new Set(workspaceModules.map(wm => wm.module_id));
   }, [workspaceModules]);
+
+  // Set default section when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveSection(defaultToApps ? "apps" : "collections");
+    }
+  }, [isOpen, defaultToApps]);
 
   // Close on escape
   useEffect(() => {
