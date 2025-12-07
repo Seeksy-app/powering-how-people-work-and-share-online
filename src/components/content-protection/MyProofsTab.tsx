@@ -35,7 +35,7 @@ export const MyProofsTab = () => {
   });
 
   const { connectSpotify, importPodcasts, isConnecting: isSpotifyConnecting, isImporting: isSpotifyImporting } = useSpotifyConnect();
-  const { connectYouTube, isConnecting: isYouTubeConnecting } = useYouTubeConnect();
+  const { connectYouTube, importVideos, isConnecting: isYouTubeConnecting, isImporting: isYouTubeImporting } = useYouTubeConnect();
 
   // Check if Spotify is connected
   const { data: spotifyConnection } = useQuery({
@@ -48,6 +48,23 @@ export const MyProofsTab = () => {
         .select("id")
         .eq("user_id", user.id)
         .eq("platform", "spotify")
+        .eq("is_active", true)
+        .maybeSingle();
+      return result.data as { id: string } | null;
+    },
+  });
+
+  // Check if YouTube is connected
+  const { data: youtubeConnection } = useQuery({
+    queryKey: ["youtube-connection"],
+    queryFn: async (): Promise<{ id: string } | null> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) return null;
+      const result = await (supabase
+        .from("social_media_profiles") as any)
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("platform", "youtube")
         .eq("is_active", true)
         .maybeSingle();
       return result.data as { id: string } | null;
@@ -137,6 +154,13 @@ export const MyProofsTab = () => {
     }
   };
 
+  const handleYouTubeImport = async () => {
+    const result = await importVideos();
+    if (result) {
+      queryClient.invalidateQueries({ queryKey: ["protected-content"] });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Import Options Card */}
@@ -181,19 +205,35 @@ export const MyProofsTab = () => {
                 Connect Spotify
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={connectYouTube}
-              disabled={isYouTubeConnecting}
-            >
-              {isYouTubeConnecting ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Youtube className="h-4 w-4 mr-2 text-red-500" />
-              )}
-              Connect YouTube
-            </Button>
+            {youtubeConnection ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleYouTubeImport}
+                disabled={isYouTubeImporting}
+              >
+                {isYouTubeImporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Youtube className="h-4 w-4 mr-2 text-red-500" />
+                )}
+                Import from YouTube
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={connectYouTube}
+                disabled={isYouTubeConnecting}
+              >
+                {isYouTubeConnecting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Youtube className="h-4 w-4 mr-2 text-red-500" />
+                )}
+                Connect YouTube
+              </Button>
+            )}
           </div>
         </div>
       </Card>
