@@ -51,10 +51,10 @@ export function ClipsStudioWorkspace({
     : 0;
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="h-[100vh] max-h-[100vh] bg-background flex flex-col overflow-hidden">
       {/* Header - Fixed */}
-      <header className="flex-shrink-0 border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="flex items-center justify-between h-16 px-4">
+      <header className="flex-shrink-0 border-b bg-card/80 backdrop-blur-sm z-50">
+        <div className="flex items-center justify-between h-14 px-4">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={onBack}>
               <ArrowLeft className="h-5 w-5" />
@@ -118,8 +118,8 @@ export function ClipsStudioWorkspace({
         </div>
       </header>
 
-      {/* Main Content - 3 Panel Layout - Full height minus header */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
+      {/* Main Content - 3 Panel Layout */}
+      <div className="flex-1 flex overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
         {/* Left Panel - Clips Gallery (scrollable independently) */}
         <ClipsGallery
           clips={clips}
