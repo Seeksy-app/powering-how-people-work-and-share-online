@@ -4,11 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Mail, Settings, Clock, CalendarClock } from "lucide-react";
+import { Plus, Mail, Settings, CalendarClock, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SignatureEditor } from "@/components/signatures/SignatureEditor";
 import { SignatureList } from "@/components/signatures/SignatureList";
+import { SignatureAnalytics } from "@/components/signatures/SignatureAnalytics";
 import { format } from "date-fns";
 
 export default function SignatureBuilder() {
@@ -198,7 +199,7 @@ export default function SignatureBuilder() {
           </Card>
         )}
 
-        {/* Tabs for management - removed analytics, just signatures */}
+        {/* Tabs for management */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-8">
             <TabsTrigger value="signatures" className="gap-2">
@@ -208,6 +209,10 @@ export default function SignatureBuilder() {
             <TabsTrigger value="editor" className="gap-2" disabled={!selectedSignature}>
               <Settings className="h-4 w-4" />
               Edit
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
             </TabsTrigger>
           </TabsList>
 
@@ -252,6 +257,10 @@ export default function SignatureBuilder() {
                 </CardContent>
               </Card>
             )}
+          </TabsContent>
+
+          <TabsContent value="analytics" className="mt-6">
+            <SignatureAnalytics signatures={signatures} />
           </TabsContent>
         </Tabs>
       </div>
