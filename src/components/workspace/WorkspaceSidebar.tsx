@@ -432,7 +432,7 @@ export function WorkspaceSidebar() {
 
           {/* Workspace Selector below global nav - Monday style */}
           <div className="flex items-center gap-2">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0 max-w-[160px]">
               <WorkspaceSelector />
             </div>
             {!isCollapsed && (
