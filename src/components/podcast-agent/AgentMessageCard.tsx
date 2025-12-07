@@ -35,6 +35,7 @@ const actionIcons: Record<string, React.ReactNode> = {
   task: <CheckSquare className="h-4 w-4" />,
   schedule: <Calendar className="h-4 w-4" />,
   follow_up: <RefreshCw className="h-4 w-4" />,
+  create_meeting_type: <Calendar className="h-4 w-4" />,
 };
 
 const actionColors: Record<string, string> = {
@@ -44,6 +45,7 @@ const actionColors: Record<string, string> = {
   task: "bg-orange-500/10 text-orange-600 border-orange-500/20",
   schedule: "bg-cyan-500/10 text-cyan-600 border-cyan-500/20",
   follow_up: "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+  create_meeting_type: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
 };
 
 export function AgentMessageCard({

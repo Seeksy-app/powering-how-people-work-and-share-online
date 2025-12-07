@@ -62,6 +62,19 @@ For RESEARCH: include guestName, topic, questions array, talkingPoints array
 For OUTLINE: include titleSuggestions, introScript, outroScript, sections array
 For TASK: include title, description, dueDate, priority, taskType
 
+MISSING MEETING TYPE HANDLING:
+If the user asks to send an invite using a meeting type that doesn't exist in the meeting types list, include a special action:
+{
+  "type": "create_meeting_type",
+  "title": "Create Meeting Type",
+  "description": "No matching meeting type found. Would you like to create one?",
+  "data": {
+    "suggestedName": "Pre-Podcast Interview",
+    "suggestedDuration": 30
+  },
+  "requiresApproval": true
+}
+
 Be proactive - if you have what you need, create the action and show it for approval.`;
 
 async function getContactByName(supabase: any, userId: string, name: string) {

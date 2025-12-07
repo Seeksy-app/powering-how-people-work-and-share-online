@@ -1,6 +1,8 @@
-import { Inbox, Send, Clock, FileText, Archive, AlertCircle, Ban, Bot, UserX, Plus, Edit3, Trash2 } from "lucide-react";
+import { Inbox, Send, Clock, FileText, Archive, AlertCircle, Ban, Bot, UserX, Edit3, Trash2, Settings, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Separator } from "@/components/ui/separator";
 
 interface EmailFolderListProps {
   selectedFolder: string;
@@ -34,8 +36,10 @@ const folders = [
 ];
 
 export function EmailFolderList({ selectedFolder, onFolderSelect, onCompose, counts }: EmailFolderListProps) {
+  const navigate = useNavigate();
+
   return (
-    <div className="h-full border-r bg-muted/30 p-3">
+    <div className="h-full border-r bg-muted/30 p-3 flex flex-col">
       <Button 
         onClick={onCompose}
         className="w-full mb-3"
@@ -45,7 +49,7 @@ export function EmailFolderList({ selectedFolder, onFolderSelect, onCompose, cou
         New Email
       </Button>
       
-      <nav className="space-y-0.5">
+      <nav className="space-y-0.5 flex-1">
         {folders.map((folder) => {
           const Icon = folder.icon;
           const count = counts[folder.id as keyof typeof counts] || 0;
@@ -81,7 +85,26 @@ export function EmailFolderList({ selectedFolder, onFolderSelect, onCompose, cou
           );
         })}
       </nav>
-      
+
+      <Separator className="my-3" />
+
+      {/* Bottom Actions */}
+      <div className="space-y-0.5">
+        <button
+          onClick={() => navigate("/email/analytics")}
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm hover:bg-muted text-foreground transition-colors"
+        >
+          <BarChart3 className="h-4 w-4" />
+          <span>Tracking & Analytics</span>
+        </button>
+        <button
+          onClick={() => navigate("/email/settings")}
+          className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm hover:bg-muted text-foreground transition-colors"
+        >
+          <Settings className="h-4 w-4" />
+          <span>Email Settings</span>
+        </button>
+      </div>
     </div>
   );
 }
