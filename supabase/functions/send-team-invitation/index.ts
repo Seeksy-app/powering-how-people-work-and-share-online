@@ -205,19 +205,29 @@ serve(async (req) => {
           });
       }
       
-      try {
-        const emailHTML = generateTeamInviteHTML(inviterName, role, dashboardUrl);
+      const emailHTML = generateTeamInviteHTML(inviterName, role, dashboardUrl);
+      const senderEmail = Deno.env.get("SENDER_EMAIL_HELLO") || "Seeksy <hello@seeksy.io>";
+      
+      console.log("Attempting to send team invitation email:", {
+        from: senderEmail,
+        to: email,
+        inviterName,
+        role,
+      });
 
-        await resend.emails.send({
-          from: Deno.env.get("SENDER_EMAIL_HELLO") || "Seeksy <hello@seeksy.io>",
-          to: [email],
-          subject: "🎉 Welcome to the Seeksy Team!",
-          html: emailHTML,
-        });
-      } catch (emailError) {
-        console.error("Error sending invitation email:", emailError);
-        // Continue even if email fails
+      const { data: emailData, error: emailError } = await resend.emails.send({
+        from: senderEmail,
+        to: [email],
+        subject: "🎉 Welcome to the Seeksy Team!",
+        html: emailHTML,
+      });
+
+      if (emailError) {
+        console.error("❌ Resend email error:", emailError);
+        throw new Error(`Failed to send email: ${emailError.message || JSON.stringify(emailError)}`);
       }
+      
+      console.log("✅ Team invitation email sent successfully:", emailData);
       
       return new Response(
         JSON.stringify({ 
