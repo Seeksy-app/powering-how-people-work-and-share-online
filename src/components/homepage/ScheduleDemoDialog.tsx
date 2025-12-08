@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { format, addDays, setHours, setMinutes } from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,28 +19,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Calendar, CheckCircle } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon, CheckCircle, ArrowRight, Clock, User } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ScheduleDemoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const timeSlots = [
+  "9:00 AM",
+  "9:30 AM",
+  "10:00 AM",
+  "10:30 AM",
+  "11:00 AM",
+  "11:30 AM",
+  "1:00 PM",
+  "1:30 PM",
+  "2:00 PM",
+  "2:30 PM",
+  "3:00 PM",
+  "3:30 PM",
+  "4:00 PM",
+  "4:30 PM",
+];
+
 export function ScheduleDemoDialog({ open, onOpenChange }: ScheduleDemoDialogProps) {
+  const [step, setStep] = useState<"qualify" | "schedule" | "confirmed">("qualify");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [leadId, setLeadId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTime, setSelectedTime] = useState<string>("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     company: "",
     phone: "",
     role: "",
+    teamSize: "",
     message: "",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleQualifySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name || !formData.email) {
@@ -51,23 +75,62 @@ export function ScheduleDemoDialog({ open, onOpenChange }: ScheduleDemoDialogPro
 
     try {
       // Insert into CRM sales leads
-      const { error } = await supabase.from("crm_sales_leads").insert({
+      const { data, error } = await supabase.from("crm_sales_leads").insert({
         title: `Demo Request: ${formData.name}`,
         email: formData.email,
         company: formData.company || null,
         phone: formData.phone || null,
         source: "website_demo_request",
-        notes: `Role: ${formData.role || "Not specified"}\n\nMessage: ${formData.message || "No message provided"}`,
-        status: "new",
-      });
+        notes: `Role: ${formData.role || "Not specified"}\nTeam Size: ${formData.teamSize || "Not specified"}\n\nMessage: ${formData.message || "No message provided"}`,
+        status: "qualified",
+      }).select("id").single();
 
       if (error) throw error;
 
-      setSubmitted(true);
-      toast.success("Demo request submitted! We'll be in touch soon.");
+      setLeadId(data.id);
+      setStep("schedule");
+      toast.success("Great! Now pick a time for your demo.");
     } catch (error) {
       console.error("Error submitting demo request:", error);
       toast.error("Failed to submit request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleScheduleSubmit = async () => {
+    if (!selectedDate || !selectedTime) {
+      toast.error("Please select a date and time");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Parse time and combine with date
+      const [time, period] = selectedTime.split(" ");
+      const [hours, minutes] = time.split(":").map(Number);
+      let hour24 = hours;
+      if (period === "PM" && hours !== 12) hour24 += 12;
+      if (period === "AM" && hours === 12) hour24 = 0;
+
+      const scheduledDateTime = setMinutes(setHours(selectedDate, hour24), minutes);
+
+      // Update the lead with scheduled time
+      if (leadId) {
+        const { error } = await supabase.from("crm_sales_leads").update({
+          notes: `Role: ${formData.role || "Not specified"}\nTeam Size: ${formData.teamSize || "Not specified"}\n\nMessage: ${formData.message || "No message provided"}\n\n📅 Scheduled Demo: ${format(scheduledDateTime, "EEEE, MMMM d, yyyy 'at' h:mm a")}`,
+          status: "scheduled",
+        }).eq("id", leadId);
+
+        if (error) throw error;
+      }
+
+      setStep("confirmed");
+      toast.success("Demo scheduled successfully!");
+    } catch (error) {
+      console.error("Error scheduling demo:", error);
+      toast.error("Failed to schedule. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -77,19 +140,24 @@ export function ScheduleDemoDialog({ open, onOpenChange }: ScheduleDemoDialogPro
     onOpenChange(false);
     // Reset form after dialog closes
     setTimeout(() => {
-      setSubmitted(false);
+      setStep("qualify");
+      setLeadId(null);
+      setSelectedDate(undefined);
+      setSelectedTime("");
       setFormData({
         name: "",
         email: "",
         company: "",
         phone: "",
         role: "",
+        teamSize: "",
         message: "",
       });
     }, 200);
   };
 
-  if (submitted) {
+  // Confirmed state
+  if (step === "confirmed") {
     return (
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-md">
@@ -97,31 +165,136 @@ export function ScheduleDemoDialog({ open, onOpenChange }: ScheduleDemoDialogPro
             <div className="mb-4 rounded-full bg-green-100 p-3">
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
-            <DialogTitle className="text-xl mb-2">Request Submitted!</DialogTitle>
-            <DialogDescription className="mb-6">
-              Thank you for your interest in Seeksy. Our team will reach out within 24 hours to schedule your personalized demo.
+            <DialogTitle className="text-xl mb-2">Demo Scheduled!</DialogTitle>
+            <DialogDescription className="mb-4">
+              Your demo is confirmed for:
             </DialogDescription>
-            <Button onClick={handleClose}>Close</Button>
+            <div className="bg-muted rounded-lg p-4 mb-6 text-center">
+              <p className="font-semibold text-lg">
+                {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")}
+              </p>
+              <p className="text-primary font-medium">{selectedTime} (EST)</p>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              We've sent a calendar invite to <strong>{formData.email}</strong>
+            </p>
+            <Button onClick={handleClose}>Done</Button>
           </div>
         </DialogContent>
       </Dialog>
     );
   }
 
+  // Schedule step
+  if (step === "schedule") {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-1">
+              <CalendarIcon className="h-5 w-5 text-primary" />
+              <DialogTitle>Pick a Date & Time</DialogTitle>
+            </div>
+            <DialogDescription>
+              Select a convenient time for your 30-minute demo with our team.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid md:grid-cols-2 gap-6 py-4">
+            {/* Calendar */}
+            <div>
+              <Label className="mb-2 block">Select a Date</Label>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                disabled={(date) => {
+                  // Disable weekends and past dates
+                  const day = date.getDay();
+                  return date < new Date() || day === 0 || day === 6;
+                }}
+                initialFocus
+                className={cn("rounded-md border pointer-events-auto")}
+              />
+            </div>
+
+            {/* Time slots */}
+            <div>
+              <Label className="mb-2 block">Select a Time (EST)</Label>
+              <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-2">
+                {timeSlots.map((time) => (
+                  <Button
+                    key={time}
+                    type="button"
+                    variant={selectedTime === time ? "default" : "outline"}
+                    className={cn(
+                      "justify-start",
+                      selectedTime === time && "bg-primary text-primary-foreground"
+                    )}
+                    onClick={() => setSelectedTime(time)}
+                    disabled={!selectedDate}
+                  >
+                    <Clock className="mr-2 h-4 w-4" />
+                    {time}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setStep("qualify")}>
+              Back
+            </Button>
+            <Button 
+              onClick={handleScheduleSubmit} 
+              disabled={isSubmitting || !selectedDate || !selectedTime}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Scheduling...
+                </>
+              ) : (
+                <>
+                  Confirm Demo
+                  <CheckCircle className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Qualify step (default)
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <div className="flex items-center gap-2 mb-1">
-            <Calendar className="h-5 w-5 text-primary" />
+            <User className="h-5 w-5 text-primary" />
             <DialogTitle>Schedule a Demo</DialogTitle>
           </div>
           <DialogDescription>
-            Fill out the form below and our team will reach out to schedule a personalized demo of Seeksy.
+            Tell us a bit about yourself, then pick a time that works for you.
           </DialogDescription>
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 pt-2">
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-full bg-primary" />
+              <span className="text-xs font-medium text-primary">Your Info</span>
+            </div>
+            <div className="h-px flex-1 bg-border" />
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-full bg-muted" />
+              <span className="text-xs text-muted-foreground">Pick a Time</span>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleQualifySubmit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name *</Label>
@@ -134,7 +307,7 @@ export function ScheduleDemoDialog({ open, onOpenChange }: ScheduleDemoDialogPro
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">Work Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -168,34 +341,54 @@ export function ScheduleDemoDialog({ open, onOpenChange }: ScheduleDemoDialogPro
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="role">Your Role</Label>
-            <Select
-              value={formData.role}
-              onValueChange={(value) => setFormData({ ...formData, role: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select your role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="creator">Creator / Podcaster</SelectItem>
-                <SelectItem value="agency">Agency / Marketing</SelectItem>
-                <SelectItem value="brand">Brand / Advertiser</SelectItem>
-                <SelectItem value="event_planner">Event Planner</SelectItem>
-                <SelectItem value="business">Business Owner</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="role">Your Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value) => setFormData({ ...formData, role: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="creator">Creator / Podcaster</SelectItem>
+                  <SelectItem value="agency">Agency / Marketing</SelectItem>
+                  <SelectItem value="brand">Brand / Advertiser</SelectItem>
+                  <SelectItem value="event_planner">Event Planner</SelectItem>
+                  <SelectItem value="business">Business Owner</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="teamSize">Team Size</Label>
+              <Select
+                value={formData.teamSize}
+                onValueChange={(value) => setFormData({ ...formData, teamSize: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select size" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">Just me</SelectItem>
+                  <SelectItem value="2-5">2-5 people</SelectItem>
+                  <SelectItem value="6-20">6-20 people</SelectItem>
+                  <SelectItem value="21-50">21-50 people</SelectItem>
+                  <SelectItem value="50+">50+ people</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="message">How can we help? (Optional)</Label>
+            <Label htmlFor="message">What are you hoping to accomplish? (Optional)</Label>
             <Textarea
               id="message"
-              placeholder="Tell us about your needs or questions..."
+              placeholder="Tell us about your goals or challenges..."
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-              rows={3}
+              rows={2}
             />
           </div>
 
@@ -210,7 +403,10 @@ export function ScheduleDemoDialog({ open, onOpenChange }: ScheduleDemoDialogPro
                   Submitting...
                 </>
               ) : (
-                "Request Demo"
+                <>
+                  Continue
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
               )}
             </Button>
           </DialogFooter>
