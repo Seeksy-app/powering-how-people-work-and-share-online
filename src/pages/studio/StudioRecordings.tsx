@@ -1,129 +1,192 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Mic, Clock, CheckCircle2, Play, FolderOpen } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { 
+  ChevronRight, Video, Clock, Search,
+  Filter, Download, Trash2, MoreVertical,
+  Play, Film, Mic
+} from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
+import { motion } from "framer-motion";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function StudioRecordings() {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ["studio-all-sessions"],
-    queryFn: async (): Promise<any[]> => {
+  const { data: recordings, isLoading } = useQuery({
+    queryKey: ["all-studio-recordings"],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
-      const { data, error } = await supabase
-        .from("studio_sessions")
+      const { data } = await supabase
+        .from("media_files")
         .select("*")
         .eq("user_id", user.id)
+        .in("file_type", ["video", "audio"])
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching sessions:", error);
-        return [];
-      }
       return data || [];
     },
   });
 
+  const filteredRecordings = recordings?.filter((rec: any) =>
+    rec.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    rec.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="container max-w-7xl mx-auto p-8 space-y-6">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-6xl mx-auto px-6 lg:px-8 py-8 space-y-8">
+        {/* Breadcrumb */}
+        <nav className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
+          <button onClick={() => navigate("/studio")} className="hover:text-foreground transition-colors">
+            Studio Hub
+          </button>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-foreground font-medium">Recordings</span>
+        </nav>
+
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
           <div>
-            <h1 className="text-3xl font-bold">Recordings</h1>
-            <p className="text-muted-foreground mt-1">
-              All your recording sessions
-            </p>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">Recordings</h1>
+            <p className="text-muted-foreground mt-1">All recordings from your studios</p>
           </div>
-          <Button
-            size="lg"
-            className="gap-2"
-            onClick={() => navigate("/studio/recording/new")}
-          >
-            <Play className="w-4 h-4" />
-            New Recording
+          <Button onClick={() => navigate("/studio/video")} className="bg-primary hover:bg-primary/90">
+            <Play className="w-4 h-4 mr-2" /> New Recording
+          </Button>
+        </motion.div>
+
+        {/* Search & Filter */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search recordings..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button variant="outline">
+            <Filter className="w-4 h-4 mr-2" /> Filter
           </Button>
         </div>
 
-        {isLoading && (
-          <div className="text-center py-12 text-muted-foreground">
-            Loading recordings...
-          </div>
-        )}
-
-        {!isLoading && sessions.length === 0 && (
-          <Card className="border-2 border-dashed">
-            <CardContent className="py-16">
-              <div className="text-center space-y-4">
-                <FolderOpen className="w-16 h-16 text-muted-foreground/50 mx-auto" />
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">No recordings yet</h3>
-                  <p className="text-muted-foreground">
-                    Start your first recording to see it here
-                  </p>
-                </div>
-                <Button onClick={() => navigate("/studio/recording/new")}>
-                  Create Recording
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {!isLoading && sessions.length > 0 && (
+        {/* Recordings List */}
+        {isLoading ? (
           <div className="space-y-4">
-            {sessions.map((session) => (
-              <Card 
-                key={session.id}
-                className="hover:shadow-lg transition-all hover:border-primary/30 cursor-pointer"
-                onClick={() => navigate(`/studio/post-session/${session.id}`)}
-              >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-                        <Mic className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <CardTitle className="text-lg">
-                            {session.room_name || "Untitled Recording"}
-                          </CardTitle>
-                          {session.identity_verified && (
-                            <Badge variant="outline" className="gap-1">
-                              <CheckCircle2 className="w-3 h-3 text-green-500" />
-                              Verified
-                            </Badge>
-                          )}
-                        </div>
-                        <CardDescription className="flex items-center gap-2">
-                          <Clock className="w-3 h-3" />
-                          {formatDistanceToNow(new Date(session.created_at), { addSuffix: true })}
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge variant="secondary" className="tabular-nums">
-                        {session.duration_seconds 
-                          ? `${Math.floor(session.duration_seconds / 60)}:${(session.duration_seconds % 60).toString().padStart(2, '0')}`
-                          : "0:00"}
-                      </Badge>
-                      <Badge 
-                        variant={session.status === 'ended' ? 'outline' : 'default'}
-                        className="capitalize"
-                      >
-                        {session.status}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-20 w-full rounded-xl" />
             ))}
+          </div>
+        ) : filteredRecordings.length > 0 ? (
+          <div className="space-y-3">
+            {filteredRecordings.map((recording: any, index: number) => (
+              <motion.div
+                key={recording.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
+                className="flex items-center gap-4 p-4 bg-card border border-border rounded-xl hover:border-primary/30 transition-all cursor-pointer group"
+                onClick={() => navigate(`/studio/media/${recording.id}`)}
+              >
+                {/* Thumbnail */}
+                <div className="w-24 h-16 rounded-lg bg-gradient-to-br from-primary/20 to-muted flex items-center justify-center overflow-hidden shrink-0">
+                  {recording.thumbnail_url ? (
+                    <img 
+                      src={recording.thumbnail_url} 
+                      alt={recording.title} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : recording.file_type === "audio" ? (
+                    <Mic className="w-6 h-6 text-primary/50" />
+                  ) : (
+                    <Video className="w-6 h-6 text-primary/50" />
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                    {recording.title || "Untitled Recording"}
+                  </h3>
+                  <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {recording.duration_seconds 
+                        ? `${Math.floor(recording.duration_seconds / 60)}:${(recording.duration_seconds % 60).toString().padStart(2, '0')}`
+                        : "0:00"}
+                    </span>
+                    <span>{format(new Date(recording.created_at), "MMM d, yyyy")}</span>
+                  </div>
+                </div>
+
+                {/* Type Badge */}
+                <Badge variant="outline" className="capitalize shrink-0">
+                  {recording.file_type === "audio" ? (
+                    <><Mic className="w-3 h-3 mr-1" /> Audio</>
+                  ) : (
+                    <><Film className="w-3 h-3 mr-1" /> Video</>
+                  )}
+                </Badge>
+
+                {/* Actions */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" className="shrink-0">
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/studio/media/${recording.id}`);
+                    }}>
+                      <Play className="w-4 h-4 mr-2" /> View
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                      <Download className="w-4 h-4 mr-2" /> Download
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+              <Video className="w-7 h-7 text-muted-foreground" />
+            </div>
+            <p className="font-medium text-foreground mb-1">No recordings yet</p>
+            <p className="text-sm text-muted-foreground mb-6">
+              Start recording in your studio to see them here
+            </p>
+            <Button onClick={() => navigate("/studio/video")} className="bg-primary hover:bg-primary/90">
+              <Play className="w-4 h-4 mr-2" /> Start Recording
+            </Button>
           </div>
         )}
       </div>

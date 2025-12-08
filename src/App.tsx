@@ -168,6 +168,8 @@ import StudioGuests from "./pages/studio/StudioGuests";
 import StudioSettings from "./pages/studio/StudioSettings";
 import StudioLiveNew from "./pages/studio/StudioLiveNew";
 import StudioHubPremium from "./pages/studio/StudioHubPremium";
+import CreateStudio from "./pages/studio/CreateStudio";
+import StudioAdvertising from "./pages/studio/StudioAdvertising";
 import ClipEngine from "./pages/studio/ClipEngine";
 import MediaLibraryHub from "./pages/studio/MediaLibraryHub";
 import AIPostProduction from "./pages/studio/AIPostProduction";
@@ -794,6 +796,9 @@ const AppContent = () => {
               
               {/* Studio Hub */}
               <Route path="/studio" element={<TourModeWrapper><StudioHubPremium /></TourModeWrapper>} />
+              <Route path="/studio/new" element={<CreateStudio />} />
+              <Route path="/studio/advertising" element={<StudioAdvertising />} />
+              <Route path="/studio/advertising/:type" element={<StudioAdvertising />} />
               <Route path="/studio/audio" element={<TourModeWrapper><AudioStudioPremium /></TourModeWrapper>} />
               <Route path="/studio/video" element={<TourModeWrapper><VideoStudioPremium /></TourModeWrapper>} />
               <Route path="/studio/clips" element={<TourModeWrapper><ClipEngine /></TourModeWrapper>} />
