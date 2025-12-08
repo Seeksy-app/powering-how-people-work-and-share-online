@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
@@ -138,6 +138,52 @@ export function BoardSidebar() {
     const isActive = isItemActive(item);
     const Icon = item.icon;
 
+    // External links open in new tab
+    if (item.external && item.path) {
+      return (
+        <SidebarMenuItem key={item.id}>
+          <a
+            href={item.path}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              'w-full flex items-center gap-2 px-3 py-1 rounded-md transition-all duration-200',
+              'text-white hover:bg-slate-800/40',
+              'text-sm font-medium'
+            )}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0 text-slate-400" />
+            <span className="flex-1 truncate">{item.label}</span>
+          </a>
+        </SidebarMenuItem>
+      );
+    }
+
+    // Internal links use Link component for client-side navigation
+    if (item.path) {
+      return (
+        <SidebarMenuItem key={item.id}>
+          <Link
+            to={item.path}
+            data-tour={item.id === 'dashboard' ? 'nav-dashboard' : item.id === 'swot' ? 'nav-swot' : undefined}
+            className={cn(
+              'w-full flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200',
+              'text-white hover:bg-slate-800/40',
+              'text-sm font-medium',
+              isActive && 'bg-blue-500/30 font-semibold hover:bg-blue-500/40'
+            )}
+          >
+            <Icon className={cn(
+              "w-4 h-4 flex-shrink-0",
+              item.isAI ? "text-yellow-400" : isActive ? "text-blue-300" : "text-slate-400"
+            )} />
+            <span className="flex-1 truncate">{item.label}</span>
+          </Link>
+        </SidebarMenuItem>
+      );
+    }
+
+    // Items without paths (e.g., action items)
     return (
       <SidebarMenuItem key={item.id}>
         <SidebarMenuButton

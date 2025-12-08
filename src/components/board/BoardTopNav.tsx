@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Bell, Settings, User, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,7 +29,7 @@ export function BoardTopNav() {
           {/* Left side */}
           <div className="flex items-center gap-4">
             <SidebarTrigger className="md:hidden" />
-            <div className="flex items-center gap-3">
+            <Link to="/board" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">S</span>
               </div>
@@ -38,7 +38,7 @@ export function BoardTopNav() {
                 <span className="text-slate-300">|</span>
                 <span className="text-sm text-slate-500 font-medium">Board Portal</span>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Right side */}
@@ -48,11 +48,13 @@ export function BoardTopNav() {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => navigate('/board/generate-investor-link')}
+              asChild
               className="text-slate-600 hidden md:flex"
             >
-              <Share2 className="w-4 h-4 mr-2" />
-              Share with Investor
+              <Link to="/board/generate-investor-link">
+                <Share2 className="w-4 h-4 mr-2" />
+                Share with Investor
+              </Link>
             </Button>
             
             <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-700">
@@ -73,17 +75,17 @@ export function BoardTopNav() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Board Member</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/board')}>
-                  Dashboard
+                <DropdownMenuItem asChild>
+                  <Link to="/board" className="w-full cursor-pointer">Dashboard</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/board/investor-links')}>
-                  Shared Investor Links
+                <DropdownMenuItem asChild>
+                  <Link to="/board/investor-links" className="w-full cursor-pointer">Shared Investor Links</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/board/docs')}>
-                  Documents
+                <DropdownMenuItem asChild>
+                  <Link to="/board/docs" className="w-full cursor-pointer">Documents</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
