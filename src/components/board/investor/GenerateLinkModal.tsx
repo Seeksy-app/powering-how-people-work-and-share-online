@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Link2, Shield, Copy, Check, AlertTriangle, ArrowRight, ArrowLeft, 
-  Mail, Eye, Clock, Calendar, Video, ChevronDown, ChevronUp
+  Mail, Eye, Clock, Calendar, Video, ChevronDown, ChevronUp, Settings
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -63,6 +65,13 @@ export function GenerateLinkModal({ open, onOpenChange, onSuccess }: GenerateLin
   const [allowPDF, setAllowPDF] = useState(false);
   const [maskFinancials, setMaskFinancials] = useState(false);
   const [acknowledged, setAcknowledged] = useState(false);
+  
+  // New Image 3 options
+  const [overallAdjustment, setOverallAdjustment] = useState<'+' | '-'>('+');
+  const [adjustmentPercent, setAdjustmentPercent] = useState('0');
+  const [useRealTimeFinancials, setUseRealTimeFinancials] = useState(false);
+  const [allowSpreadsheetView, setAllowSpreadsheetView] = useState(true);
+  const [allowDownload, setAllowDownload] = useState(false);
 
   // Fetch available demo videos
   const { data: demoVideos } = useQuery({
@@ -100,6 +109,11 @@ export function GenerateLinkModal({ open, onOpenChange, onSuccess }: GenerateLin
     setAcknowledged(false);
     setGeneratedData(null);
     setCopied(false);
+    setOverallAdjustment('+');
+    setAdjustmentPercent('0');
+    setUseRealTimeFinancials(false);
+    setAllowSpreadsheetView(true);
+    setAllowDownload(false);
   };
 
   const toggleVideo = (videoId: string) => {
@@ -380,6 +394,80 @@ export function GenerateLinkModal({ open, onOpenChange, onSuccess }: GenerateLin
                     <div className="flex items-center gap-2">
                       <Checkbox id="mask" checked={maskFinancials} onCheckedChange={(c) => setMaskFinancials(!!c)} />
                       <label htmlFor="mask" className="text-sm cursor-pointer">Mask financial details</label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financial Adjustments Section */}
+                <div className="border-t pt-4">
+                  <Label className="mb-3 flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-slate-500" />
+                    Financial Adjustments
+                  </Label>
+                  
+                  <div className="space-y-4">
+                    {/* Overall Adjustment */}
+                    <div className="p-3 bg-slate-50 rounded-lg space-y-3">
+                      <div className="text-sm font-medium text-slate-700">Overall Adjustment (All Scenarios)</div>
+                      <div className="flex items-center gap-2">
+                        <Select value={overallAdjustment} onValueChange={(v) => setOverallAdjustment(v as '+' | '-')}>
+                          <SelectTrigger className="w-20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="+">+</SelectItem>
+                            <SelectItem value="-">-</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number"
+                          value={adjustmentPercent}
+                          onChange={(e) => setAdjustmentPercent(e.target.value)}
+                          className="w-20"
+                          min="0"
+                          max="100"
+                        />
+                        <span className="text-sm text-slate-600">%</span>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        Adjust all financial projections by this percentage
+                      </p>
+                    </div>
+
+                    {/* Toggle Options */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium text-slate-700">Use Real-Time Financials</div>
+                          <p className="text-xs text-slate-500">Pull live data instead of cached projections</p>
+                        </div>
+                        <Switch 
+                          checked={useRealTimeFinancials} 
+                          onCheckedChange={setUseRealTimeFinancials} 
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium text-slate-700">Allow HTML Spreadsheet View</div>
+                          <p className="text-xs text-slate-500">Enable interactive spreadsheet viewer</p>
+                        </div>
+                        <Switch 
+                          checked={allowSpreadsheetView} 
+                          onCheckedChange={setAllowSpreadsheetView} 
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm font-medium text-slate-700">Allow Download</div>
+                          <p className="text-xs text-slate-500">Permit downloading financial data as CSV/Excel</p>
+                        </div>
+                        <Switch 
+                          checked={allowDownload} 
+                          onCheckedChange={setAllowDownload} 
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
