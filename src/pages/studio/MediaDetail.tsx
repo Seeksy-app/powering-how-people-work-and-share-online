@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +9,11 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { SocialPublishModal } from "@/components/clips/SocialPublishModal";
 import { YouTubePublishModal } from "@/components/studio/YouTubePublishModal";
+import { useSidebar } from "@/components/ui/sidebar";
 import { formatDistanceToNow, format } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -19,7 +21,7 @@ import {
   Scissors, Wand2, FileText, Layers, Volume2, Palette, Mic,
   Sparkles, Copy, Instagram, Youtube, Video,
   CheckCircle, AlertCircle, Loader2, Eye, Heart, MessageSquare,
-  ThumbsUp, BarChart2, DollarSign, Info
+  ThumbsUp, BarChart2, DollarSign, Info, ChevronUp, ChevronDown, Play
 } from "lucide-react";
 
 interface MediaFile {
@@ -85,15 +87,38 @@ export default function MediaDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Try to get sidebar context safely
+  let sidebar: ReturnType<typeof useSidebar> | null = null;
+  try {
+    sidebar = useSidebar();
+  } catch {
+    // Sidebar context not available
+  }
+  
   const [showSocialModal, setShowSocialModal] = useState(false);
   const [selectedClip, setSelectedClip] = useState<Clip | null>(null);
   const [preSelectedPlatform, setPreSelectedPlatform] = useState<'youtube' | 'instagram' | 'tiktok' | null>(null);
   const [showAdSubmitModal, setShowAdSubmitModal] = useState(false);
   const [showYouTubeModal, setShowYouTubeModal] = useState(false);
+  const [showClipStrip, setShowClipStrip] = useState(true);
+  const [selectedPreviewClip, setSelectedPreviewClip] = useState<Clip | null>(null);
   
   // Local state for demo publish/ad status
   const [publishStatus, setPublishStatus] = useState<PublishStatus>('not_published');
   const [adStatus, setAdStatus] = useState<'none' | 'pending_review' | 'active'>('none');
+
+  // Auto-collapse sidebar when entering this page
+  useEffect(() => {
+    if (sidebar && !sidebar.isMobile) {
+      sidebar.setOpen(false);
+    }
+    return () => {
+      // Restore sidebar when leaving
+      if (sidebar && !sidebar.isMobile) {
+        sidebar.setOpen(true);
+      }
+    };
+  }, [sidebar]);
 
   // Fetch media file
   const { data: media, isLoading: loadingMedia } = useQuery({
@@ -299,9 +324,9 @@ export default function MediaDetail() {
   const sourceInfo = getSourceLabel(media.source);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="h-14 border-b border-border px-6 flex items-center justify-between sticky top-0 bg-background z-10">
+      <header className="h-14 border-b border-border px-6 flex items-center justify-between sticky top-0 bg-background z-10 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/studio/media")}>
             <ChevronLeft className="w-5 h-5" />
@@ -326,6 +351,8 @@ export default function MediaDetail() {
         </div>
       </header>
 
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Video Player Section */}
@@ -793,7 +820,105 @@ export default function MediaDetail() {
           </div>
         </div>
       </div>
+      </div>
 
+      {/* Clips Thumbnail Strip - Fixed at bottom */}
+      {clips && clips.length > 0 && (
+        <div className="flex-shrink-0 border-t bg-card/95 backdrop-blur-sm">
+          {/* Toggle header */}
+          <button 
+            onClick={() => setShowClipStrip(!showClipStrip)}
+            className="w-full flex items-center justify-between px-4 py-2 hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <Scissors className="w-4 h-4 text-primary" />
+              <span className="font-semibold text-sm">Generated Clips</span>
+              <Badge className="bg-[#2C6BED] text-white">
+                {clips.length} clip{clips.length !== 1 ? 's' : ''}
+              </Badge>
+            </div>
+            {showClipStrip ? (
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <ChevronUp className="w-4 h-4 text-muted-foreground" />
+            )}
+          </button>
+
+          {/* Scrollable clip thumbnails */}
+          {showClipStrip && (
+            <ScrollArea className="w-full border-t">
+              <div className="flex items-center gap-3 p-3">
+                {clips.map((clip) => (
+                  <div
+                    key={clip.id}
+                    className={cn(
+                      "flex-shrink-0 relative group cursor-pointer transition-all",
+                      selectedPreviewClip?.id === clip.id && "ring-2 ring-primary"
+                    )}
+                    onClick={() => setSelectedPreviewClip(clip)}
+                  >
+                    <div className="w-24 rounded-lg border bg-background overflow-hidden hover:border-primary/50">
+                      {/* Thumbnail */}
+                      <div className="aspect-[9/16] h-32 bg-muted relative">
+                        {clip.thumbnail_url ? (
+                          <img 
+                            src={clip.thumbnail_url} 
+                            alt={clip.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Scissors className="w-5 h-5 text-muted-foreground/40" />
+                          </div>
+                        )}
+                        
+                        {/* Duration badge */}
+                        <Badge className="absolute bottom-1 right-1 text-[9px] px-1 py-0 bg-black/70 text-white border-0">
+                          {formatDuration(clip.duration_seconds)}
+                        </Badge>
+
+                        {/* Play overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                          <Play className="w-6 h-6 text-white" fill="white" />
+                        </div>
+                      </div>
+                      
+                      {/* Title */}
+                      <div className="p-1.5">
+                        <p className="text-[9px] font-medium truncate">{clip.title || "Untitled"}</p>
+                        <div className="flex gap-1 mt-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="flex-1 text-[9px] h-5 px-1"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/studio/clips?clipId=${clip.id}`);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 text-[9px] h-5 px-1 bg-[#2C6BED] hover:bg-[#2C6BED]/90"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePublishToSocial(clip);
+                            }}
+                          >
+                            Publish
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          )}
+        </div>
+      )}
       {/* Social Publish Modal */}
       <SocialPublishModal
         open={showSocialModal}
