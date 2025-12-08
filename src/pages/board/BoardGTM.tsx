@@ -11,7 +11,7 @@ import { KeyMetricsTab } from '@/components/board/gtm/KeyMetricsTab';
 import { ChannelsTab } from '@/components/board/gtm/ChannelsTab';
 import { ROICalculatorTab } from '@/components/board/gtm/ROICalculatorTab';
 import { SWOTAnalysisTab } from '@/components/board/gtm/SWOTAnalysisTab';
-import { ShareWithInvestorTab } from '@/components/board/gtm/ShareWithInvestorTab';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 const tabContentVariants = {
@@ -72,9 +72,6 @@ export default function BoardGTM() {
             <TabsTrigger value="swot" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2">
               SWOT Analysis
             </TabsTrigger>
-            <TabsTrigger value="share" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2">
-              Share With Investor
-            </TabsTrigger>
           </TabsList>
 
           <div className="mt-6">
@@ -94,7 +91,6 @@ export default function BoardGTM() {
                 {activeTab === "channels" && <ChannelsTab />}
                 {activeTab === "roi" && <ROICalculatorTab />}
                 {activeTab === "swot" && <SWOTAnalysisTab />}
-                {activeTab === "share" && <ShareWithInvestorTab />}
               </motion.div>
             </AnimatePresence>
           </div>
