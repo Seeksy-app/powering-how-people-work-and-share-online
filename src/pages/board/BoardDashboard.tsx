@@ -113,7 +113,7 @@ export default function BoardDashboard() {
   // Fetch real platform metrics
   const { data: realData, isLoading: realLoading } = useRealPlatformMetrics();
 
-  // Fetch demo videos from database (only in demo mode)
+  // Fetch demo videos from database (videos are static investor media, not tied to data mode)
   const { data: dbVideos } = useQuery({
     queryKey: ['boardDashboardVideos'],
     queryFn: async () => {
@@ -126,10 +126,9 @@ export default function BoardDashboard() {
       if (error) throw error;
       return data;
     },
-    enabled: isDemo,
   });
 
-  const featuredVideo = isDemo && dbVideos && dbVideos.length > 0 ? dbVideos[0] : null;
+  const featuredVideo = dbVideos && dbVideos.length > 0 ? dbVideos[0] : null;
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -255,92 +254,90 @@ export default function BoardDashboard() {
           </CardContent>
         </Card>
 
-        {/* Featured Investor Video */}
-        {isDemo && (
-          <Card className="bg-white border-slate-100 shadow-sm rounded-xl overflow-hidden">
-            <CardHeader className="border-b border-slate-100 py-4 px-5">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
-                  <Video className="w-4 h-4 text-purple-500" />
-                  Featured Investor Video
-                </CardTitle>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="text-blue-600 hover:text-blue-700"
-                  onClick={() => navigate('/board/videos')}
-                >
-                  View All Videos <ExternalLink className="w-3 h-3 ml-1" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="grid lg:grid-cols-3">
-                {/* Video Player */}
-                <div className="lg:col-span-2 bg-slate-900">
-                  <div className="aspect-video relative">
-                    {isVideoLoading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="w-12 h-12 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin" />
-                          <p className="text-slate-400 text-sm">Loading video...</p>
-                        </div>
+        {/* Featured Investor Video - Static investor media, not tied to data mode */}
+        <Card className="bg-white border-slate-100 shadow-sm rounded-xl overflow-hidden">
+          <CardHeader className="border-b border-slate-100 py-4 px-5">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
+                <Video className="w-4 h-4 text-purple-500" />
+                Featured Investor Video
+              </CardTitle>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-blue-600 hover:text-blue-700"
+                onClick={() => navigate('/board/videos')}
+              >
+                View All Videos <ExternalLink className="w-3 h-3 ml-1" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="grid lg:grid-cols-3">
+              {/* Video Player */}
+              <div className="lg:col-span-2 bg-slate-900">
+                <div className="aspect-video relative">
+                  {isVideoLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900 z-10">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-12 h-12 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin" />
+                        <p className="text-slate-400 text-sm">Loading video...</p>
                       </div>
-                    )}
-                    {featuredVideo?.video_url ? (
-                      <video
-                        ref={videoRef}
-                        src={featuredVideo.video_url}
-                        controls
-                        className="w-full h-full"
-                        poster={featuredVideo.thumbnail_url || undefined}
-                        onLoadedData={() => setIsVideoLoading(false)}
-                        onCanPlay={() => setIsVideoLoading(false)}
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                        <Play className="w-16 h-16 mb-4" />
-                        <p className="text-sm">No video available yet</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Video Info */}
-                <div className="p-5 bg-slate-50 border-l border-slate-100">
-                  {featuredVideo ? (
-                    <>
-                      <Badge className={cn('text-xs mb-3', categoryColors[featuredVideo.category] || 'bg-slate-100 text-slate-600')}>
-                        {featuredVideo.category}
-                      </Badge>
-                      <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                        {featuredVideo.title}
-                      </h3>
-                      <p className="text-sm text-slate-500 mb-4">
-                        {featuredVideo.description || 'Platform demo video'}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-sm text-slate-500 mb-4">Loading videos...</p>
-                  )}
-                  {featuredVideo?.duration_seconds && (
-                    <div className="flex items-center gap-2 text-xs text-slate-400 mb-4">
-                      <Video className="w-3 h-3" />
-                      <span>{formatDuration(featuredVideo.duration_seconds)}</span>
                     </div>
                   )}
-                  <Button 
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                    onClick={() => navigate('/board/videos')}
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Watch All Videos
-                  </Button>
+                  {featuredVideo?.video_url ? (
+                    <video
+                      ref={videoRef}
+                      src={featuredVideo.video_url}
+                      controls
+                      className="w-full h-full"
+                      poster={featuredVideo.thumbnail_url || undefined}
+                      onLoadedData={() => setIsVideoLoading(false)}
+                      onCanPlay={() => setIsVideoLoading(false)}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                      <Play className="w-16 h-16 mb-4" />
+                      <p className="text-sm">No video available yet</p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              
+              {/* Video Info */}
+              <div className="p-5 bg-slate-50 border-l border-slate-100">
+                {featuredVideo ? (
+                  <>
+                    <Badge className={cn('text-xs mb-3', categoryColors[featuredVideo.category] || 'bg-slate-100 text-slate-600')}>
+                      {featuredVideo.category}
+                    </Badge>
+                    <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                      {featuredVideo.title}
+                    </h3>
+                    <p className="text-sm text-slate-500 mb-4">
+                      {featuredVideo.description || 'Platform demo video'}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-slate-500 mb-4">Loading videos...</p>
+                )}
+                {featuredVideo?.duration_seconds && (
+                  <div className="flex items-center gap-2 text-xs text-slate-400 mb-4">
+                    <Video className="w-3 h-3" />
+                    <span>{formatDuration(featuredVideo.duration_seconds)}</span>
+                  </div>
+                )}
+                <Button 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  onClick={() => navigate('/board/videos')}
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Watch All Videos
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Quick Links Grid */}
         <div>
