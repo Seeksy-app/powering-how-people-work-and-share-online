@@ -5158,6 +5158,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cfo_lock_status: {
+        Row: {
+          id: string
+          is_locked: boolean
+          locked_at: string | null
+          locked_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          is_locked?: boolean
+          locked_at?: string | null
+          locked_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cfo_swot: {
         Row: {
           ai_last_summary: string | null

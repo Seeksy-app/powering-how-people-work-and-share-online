@@ -2,13 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Database, ChevronDown, ChevronUp, ExternalLink, Info } from 'lucide-react';
+import { Database, ChevronDown, ChevronUp, ExternalLink, Info, Lock, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useCFOAssumptions, EffectiveAssumption } from '@/hooks/useCFOAssumptions';
+import { useCFOLockStatus } from '@/hooks/useCFOLockStatus';
 import { CFO_ASSUMPTIONS_SCHEMA } from '@/lib/cfo-assumptions-schema';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const CATEGORY_LABELS: Record<string, string> = {
   growth: 'Growth & CAC',
@@ -26,8 +27,13 @@ const SOURCE_BADGES = {
 
 export function CFOAssumptionsReadOnlyPanel() {
   const navigate = useNavigate();
-  const { effectiveAssumptions, rdCount, cfoOverrideCount, isLoading } = useCFOAssumptions();
+  const location = useLocation();
+  const { effectiveAssumptions, rdCount, cfoOverrideCount, hasCFOAssumptions, isLoading } = useCFOAssumptions();
+  const { isLocked, lockedAt } = useCFOLockStatus();
   const [expandedCategories, setExpandedCategories] = useState<string[]>(['growth', 'subscriptions']);
+  
+  // Check if user is on CFO route (has edit access)
+  const isCFORoute = location.pathname.startsWith('/cfo') || location.pathname.startsWith('/admin');
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev =>
@@ -65,29 +71,62 @@ export function CFOAssumptionsReadOnlyPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Info Alert */}
-      <Alert className="bg-blue-50 border-blue-200">
-        <Info className="w-4 h-4 text-blue-600" />
-        <AlertDescription className="text-blue-800">
-          Assumptions are managed in the <strong>CFO Assumption Studio</strong>. 
-          Edit them there to update this model.
-          <Button
-            variant="link"
-            size="sm"
-            className="text-blue-700 p-0 h-auto ml-1"
-            onClick={() => navigate('/cfo/assumptions')}
-          >
-            Open Studio <ExternalLink className="w-3 h-3 ml-1" />
-          </Button>
+      {/* CFO Control Notice */}
+      <Alert className={cn(
+        hasCFOAssumptions 
+          ? "bg-emerald-50 border-emerald-200" 
+          : "bg-amber-50 border-amber-200"
+      )}>
+        {hasCFOAssumptions ? (
+          <Shield className="w-4 h-4 text-emerald-600" />
+        ) : (
+          <Info className="w-4 h-4 text-amber-600" />
+        )}
+        <AlertDescription className={hasCFOAssumptions ? "text-emerald-800" : "text-amber-800"}>
+          {hasCFOAssumptions ? (
+            <>
+              <strong>These assumptions are controlled by the CFO</strong> and power all Board forecasts.
+              {isLocked && lockedAt && (
+                <span className="ml-2 flex items-center gap-1 inline-flex">
+                  <Lock className="w-3 h-3" />
+                  Locked on {new Date(lockedAt).toLocaleDateString()}
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <strong>Using Demo/R&D Benchmarks</strong> — CFO has not published assumptions yet.
+            </>
+          )}
+          {isCFORoute && (
+            <Button
+              variant="link"
+              size="sm"
+              className="text-blue-700 p-0 h-auto ml-2"
+              onClick={() => navigate('/cfo/assumptions')}
+            >
+              Open CFO Assumption Studio <ExternalLink className="w-3 h-3 ml-1" />
+            </Button>
+          )}
         </AlertDescription>
       </Alert>
 
       {/* Summary Badges */}
       <div className="flex items-center gap-3">
+        {hasCFOAssumptions ? (
+          <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 flex items-center gap-1">
+            <Shield className="w-3 h-3" />
+            CFO-Controlled Model
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+            Demo Mode
+          </Badge>
+        )}
         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
           {cfoOverrideCount} CFO Overrides
         </Badge>
-        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+        <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
           {rdCount} R&D Benchmarks
         </Badge>
       </div>

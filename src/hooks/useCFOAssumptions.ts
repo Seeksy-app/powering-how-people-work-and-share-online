@@ -244,6 +244,11 @@ export function useCFOAssumptions() {
     0
   );
 
+  // Determine data source status
+  const hasCFOAssumptions = cfoOverrideCount > 0;
+  const dataSource = hasCFOAssumptions ? 'cfo' : 'demo';
+  const lastCFOUpdate = cfoAssumptions?.[0]?.updated_at || null;
+
   return {
     cfoAssumptions,
     rdBenchmarks,
@@ -260,5 +265,9 @@ export function useCFOAssumptions() {
     cfoOverrideCount,
     schemaCount,
     isSaving: saveAssumption.isPending || saveMultipleAssumptions.isPending,
+    // New CFO-controlled data source info
+    hasCFOAssumptions,
+    dataSource,
+    lastCFOUpdate,
   };
 }

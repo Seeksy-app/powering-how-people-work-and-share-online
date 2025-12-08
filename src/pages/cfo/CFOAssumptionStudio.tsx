@@ -4,9 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sliders, TrendingUp, CreditCard, DollarSign, Calendar, ArrowLeft, Sparkles, Info } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Sliders, TrendingUp, CreditCard, DollarSign, Calendar, ArrowLeft, Sparkles, Info, Lock, Unlock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCFOAssumptions } from '@/hooks/useCFOAssumptions';
+import { useCFOLockStatus } from '@/hooks/useCFOLockStatus';
 import { GrowthCACCalculator } from '@/components/cfo/calculators/GrowthCACCalculator';
 import { SubscriptionRevenueCalculator } from '@/components/cfo/calculators/SubscriptionRevenueCalculator';
 import { AdRevenueCalculator } from '@/components/cfo/calculators/AdRevenueCalculator';
@@ -16,6 +19,7 @@ import { AssumptionsSummaryPanel } from '@/components/cfo/AssumptionsSummaryPane
 export default function CFOAssumptionStudio() {
   const navigate = useNavigate();
   const { rdCount, cfoOverrideCount, schemaCount, isLoading, deleteAssumption, cfoAssumptions } = useCFOAssumptions();
+  const { isLocked, lockedAt, toggleLock, isToggling } = useCFOLockStatus();
   const [activeTab, setActiveTab] = useState('growth');
 
   const handleResetAll = async () => {
@@ -61,6 +65,36 @@ export default function CFOAssumptionStudio() {
             <Badge variant="outline" className="text-sm bg-blue-50 text-blue-700 border-blue-200">
               {cfoOverrideCount} CFO overrides
             </Badge>
+            
+            {/* Lock Toggle for Board */}
+            <div className="flex items-center gap-2 border-l border-border pl-3 ml-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2">
+                    {isLocked ? (
+                      <Lock className="w-4 h-4 text-blue-600" />
+                    ) : (
+                      <Unlock className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <Switch
+                      checked={isLocked}
+                      onCheckedChange={(checked) => toggleLock(checked)}
+                      disabled={isToggling}
+                    />
+                    <span className="text-sm font-medium">
+                      {isLocked ? 'Locked for Board' : 'Unlock for Board'}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs text-xs">
+                    When locked, Board members can only view published assumptions. 
+                    They cannot see real-time changes until you unlock.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            
             <Button onClick={() => navigate('/board/proforma')} className="gap-2">
               <Sparkles className="w-4 h-4" />
               Generate Pro Forma
