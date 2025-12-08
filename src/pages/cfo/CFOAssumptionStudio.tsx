@@ -141,9 +141,8 @@ export default function CFOAssumptionStudio() {
         <Alert className="bg-indigo-50 border-indigo-200">
           <Info className="w-4 h-4 text-indigo-600" />
           <AlertDescription className="text-indigo-800">
-            <strong>How it works:</strong> Use the calculators below to set your financial assumptions. When you click 
-            "Generate Pro Forma", you'll see the same 3-year forecast view that the Board uses. Your values become CFO overrides 
-            that take precedence over R&D benchmarks.
+            <strong>How it works:</strong> After updating assumptions, click "Generate Pro Forma" to preview the same 3-year forecast the Board will see.
+            Your values become CFO overrides that take precedence over R&D benchmarks. The Base scenario uses pure CFO assumptions; Conservative and Aggressive apply multipliers on top.
           </AlertDescription>
         </Alert>
 

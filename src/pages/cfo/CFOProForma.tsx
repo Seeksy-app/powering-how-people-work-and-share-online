@@ -353,7 +353,9 @@ export default function CFOProForma() {
             <div>
               <h1 className="text-3xl font-bold text-foreground">AI-Powered 3-Year Pro Forma</h1>
               <p className="text-muted-foreground">
-                Preview financial projections based on your CFO assumptions.
+                {hasCFOAssumptions 
+                  ? `Previewing with ${cfoOverrideCount} CFO assumption${cfoOverrideCount !== 1 ? 's' : ''} and ${rdCount} R&D benchmarks.`
+                  : 'No CFO assumptions saved yet — using R&D benchmark defaults.'}
               </p>
             </div>
           </div>
@@ -365,7 +367,7 @@ export default function CFOProForma() {
             </Badge>
             {hasCFOAssumptions && (
               <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                {cfoOverrideCount} CFO Overrides Active
+                {cfoOverrideCount} CFO Overrides
               </Badge>
             )}
             <VersionSelector
@@ -391,8 +393,7 @@ export default function CFOProForma() {
           <Info className="w-4 h-4 text-indigo-600" />
           <AlertDescription className="text-indigo-800">
             <strong>CFO Preview Mode</strong> — This is the same 3-year forecast view that the Board uses. 
-            All scenarios use your CFO assumptions as the financial baseline. Conservative and Aggressive 
-            scenarios apply multipliers on top of your Base case.
+            Base scenario uses pure CFO assumptions; Conservative and Aggressive apply percentage multipliers on top.
           </AlertDescription>
         </Alert>
 
