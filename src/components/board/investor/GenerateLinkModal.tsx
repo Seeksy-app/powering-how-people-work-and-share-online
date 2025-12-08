@@ -336,99 +336,79 @@ export function GenerateLinkModal({ open, onOpenChange, onSuccess }: GenerateLin
                   </div>
                 </div>
 
-                {/* Video Selection - shows when Platform Videos is selected */}
-                {scope.includes('videos') && demoVideos && demoVideos.length > 0 && (
-                  <div className="border border-slate-200 rounded-lg p-3 bg-slate-50/50">
-                    <button
-                      type="button"
-                      onClick={() => setShowVideoSelector(!showVideoSelector)}
-                      className="flex items-center justify-between w-full text-left"
-                    >
+                {/* Available Videos Section - always visible */}
+                {demoVideos && demoVideos.length > 0 && (
+                  <div className="border border-purple-200 rounded-lg p-4 bg-purple-50/50">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <Video className="w-4 h-4 text-purple-600" />
-                        <span className="text-sm font-medium text-slate-700">
-                          Select Specific Videos
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          ({selectedVideos.length === 0 ? 'All videos' : `${selectedVideos.length} selected`})
+                        <Video className="w-5 h-5 text-purple-600" />
+                        <span className="text-sm font-semibold text-slate-800">
+                          Available Videos ({demoVideos.length})
                         </span>
                       </div>
-                      {showVideoSelector ? (
-                        <ChevronUp className="w-4 h-4 text-slate-400" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-slate-400" />
-                      )}
-                    </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={selectAllVideos}
+                          className="text-xs text-purple-600 hover:text-purple-700 font-medium"
+                        >
+                          Select all
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <button
+                          type="button"
+                          onClick={clearAllVideos}
+                          className="text-xs text-slate-500 hover:text-slate-700"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
                     
-                    {showVideoSelector && (
-                      <div className="mt-3 space-y-2">
-                        <div className="flex gap-2 mb-2">
-                          <button
-                            type="button"
-                            onClick={selectAllVideos}
-                            className="text-xs text-blue-600 hover:text-blue-700"
-                          >
-                            Select all
-                          </button>
-                          <span className="text-slate-300">|</span>
-                          <button
-                            type="button"
-                            onClick={clearAllVideos}
-                            className="text-xs text-slate-500 hover:text-slate-700"
-                          >
-                            Clear all
-                          </button>
-                        </div>
-                        {demoVideos.map((video) => (
-                          <div 
-                            key={video.id} 
-                            className="flex items-center gap-2 p-2 rounded-md hover:bg-white transition-colors"
-                          >
-                            <Checkbox
-                              id={`video-${video.id}`}
-                              checked={selectedVideos.includes(video.id)}
-                              onCheckedChange={() => toggleVideo(video.id)}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {demoVideos.map((video) => (
+                        <div 
+                          key={video.id} 
+                          className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
+                            selectedVideos.includes(video.id) 
+                              ? 'bg-purple-100 border-purple-300' 
+                              : 'bg-white border-slate-200 hover:border-purple-200'
+                          }`}
+                          onClick={() => toggleVideo(video.id)}
+                        >
+                          {video.thumbnail_url && (
+                            <img 
+                              src={video.thumbnail_url} 
+                              alt={video.title}
+                              className="w-12 h-8 object-cover rounded"
                             />
-                            <label 
-                              htmlFor={`video-${video.id}`} 
-                              className="flex-1 text-sm cursor-pointer text-slate-700"
-                            >
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-700 truncate">
                               {video.title}
-                            </label>
-                            <span className="text-xs text-slate-400">{video.category}</span>
+                            </p>
+                            <p className="text-xs text-slate-500">{video.category}</p>
                           </div>
-                        ))}
-                        <p className="text-xs text-slate-400 mt-2">
-                          Leave empty to include all videos
-                        </p>
-                      </div>
-                    )}
+                          <Checkbox
+                            id={`video-${video.id}`}
+                            checked={selectedVideos.includes(video.id)}
+                            onCheckedChange={() => toggleVideo(video.id)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <p className="text-xs text-slate-500 mt-3">
+                      {selectedVideos.length === 0 
+                        ? 'No videos selected — all videos will be accessible by default'
+                        : `${selectedVideos.length} video${selectedVideos.length > 1 ? 's' : ''} selected for sharing`
+                      }
+                    </p>
                   </div>
                 )}
 
-                <div>
-                  <Label className="mb-3 block">Data Mode</Label>
-                  <RadioGroup value={dataMode} onValueChange={(v) => setDataMode(v as 'demo' | 'real')}>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="demo" id="demo" />
-                      <label htmlFor="demo" className="text-sm cursor-pointer">
-                        Demo Data Only <span className="text-emerald-600">(Recommended)</span>
-                      </label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="real" id="real" />
-                      <label htmlFor="real" className="text-sm cursor-pointer">
-                        Real Data <span className="text-amber-600">(Restricted)</span>
-                      </label>
-                    </div>
-                  </RadioGroup>
-                  {dataMode === 'real' && (
-                    <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" />
-                      Real data exposes live platform metrics
-                    </p>
-                  )}
-                </div>
+                {/* Data now always uses CFO modeling */}
 
                 <div>
                   <Label className="mb-3 block">Access Duration</Label>
@@ -480,55 +460,8 @@ export function GenerateLinkModal({ open, onOpenChange, onSuccess }: GenerateLin
                   </div>
                 </div>
 
-                {/* Financial Adjustments Section */}
+                {/* Share Options Section */}
                 <div className="border-t pt-4 space-y-4">
-                  {/* Overall Adjustment - Only show when NOT using real-time financials */}
-                  {!useRealTimeFinancials && (
-                    <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="w-4 h-4 text-slate-600" />
-                        <div className="text-sm font-medium text-slate-700">Overall Adjustment (All Scenarios)</div>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        Apply +/- % adjustment to Conservative, Growth, and Aggressive projections
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <Select value={overallAdjustment} onValueChange={(v) => setOverallAdjustment(v as '+' | '-')}>
-                          <SelectTrigger className="w-20">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="+">+</SelectItem>
-                            <SelectItem value="-">-</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          type="number"
-                          value={adjustmentPercent}
-                          onChange={(e) => setAdjustmentPercent(e.target.value)}
-                          className="flex-1"
-                          min="0"
-                          max="100"
-                        />
-                        <span className="text-sm text-slate-600">%</span>
-                      </div>
-                      <p className="text-xs text-slate-500 italic">
-                        0% = Exact copy of AI Pro Forma. -10% = AI data reduced by 10%. +10% = AI data increased by 10%. Applies to all scenarios.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Toggle Options */}
-                  <div className="p-4 bg-slate-50 rounded-lg flex items-center justify-between">
-                    <div>
-                      <div className="text-sm font-medium text-slate-700">Use Real-Time Financials</div>
-                      <p className="text-xs text-slate-500">Show live data from your actual system metrics</p>
-                    </div>
-                    <Switch 
-                      checked={useRealTimeFinancials} 
-                      onCheckedChange={setUseRealTimeFinancials} 
-                    />
-                  </div>
                   
                   <div className="p-4 bg-slate-50 rounded-lg flex items-center justify-between">
                     <div>

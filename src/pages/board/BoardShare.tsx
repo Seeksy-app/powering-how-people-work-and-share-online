@@ -213,29 +213,7 @@ export default function BoardShare() {
                 </div>
               </div>
 
-              {/* Data Mode */}
-              <div className="space-y-3">
-                <Label>Data Mode for this link</Label>
-                <RadioGroup value={dataMode} onValueChange={setDataMode}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="demo" id="demo" />
-                    <label htmlFor="demo" className="text-sm text-slate-700 cursor-pointer">
-                      Demo Data Only <span className="text-emerald-600">(Recommended)</span>
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="real" id="real" />
-                    <label htmlFor="real" className="text-sm text-slate-700 cursor-pointer">
-                      Real Data <span className="text-amber-600">(Restricted)</span>
-                    </label>
-                  </div>
-                </RadioGroup>
-                {dataMode === 'real' && (
-                  <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                    Real data access shows live platform metrics. Use with caution.
-                  </p>
-                )}
-              </div>
+              {/* Data Mode - removed, now using CFO modeling */}
 
               {/* Duration */}
               <div className="space-y-3">
@@ -259,21 +237,6 @@ export default function BoardShare() {
               <div className="space-y-3">
                 <Label>Share Options</Label>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="real-time" className="text-sm font-medium">
-                        Use Real-Time Financials
-                      </Label>
-                      <p className="text-xs text-slate-500">
-                        Show live data from your actual system metrics
-                      </p>
-                    </div>
-                    <Switch
-                      id="real-time"
-                      checked={useRealTimeData}
-                      onCheckedChange={setUseRealTimeData}
-                    />
-                  </div>
 
                   <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                     <div className="space-y-0.5">
