@@ -175,7 +175,7 @@ export default function BoardVideos() {
   };
 
   return (
-    <div>
+    <div className="w-full">
         {/* Breadcrumb */}
         <Button
           variant="ghost"

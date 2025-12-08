@@ -7,8 +7,6 @@ import { BoardAIChat } from './BoardAIChat';
 import { BoardOnboardingTour } from './BoardOnboardingTour';
 import { BoardDataModeProvider } from '@/contexts/BoardDataModeContext';
 import { useTheme } from 'next-themes';
-import { useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 
 interface BoardLayoutProps {
   children: ReactNode;
@@ -16,7 +14,6 @@ interface BoardLayoutProps {
 
 export function BoardLayout({ children }: BoardLayoutProps) {
   const { setTheme, theme } = useTheme();
-  const location = useLocation();
 
   // Force light theme for board portal main content
   useEffect(() => {
@@ -35,18 +32,9 @@ export function BoardLayout({ children }: BoardLayoutProps) {
           {/* Light content area - ensure no extra margins */}
           <div className="flex-1 flex flex-col min-w-0 bg-white h-screen overflow-hidden">
             <main className="flex-1 bg-slate-50 overflow-auto relative">
-              <motion.div
-                key={location.pathname}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  duration: 0.25, 
-                  ease: [0.4, 0, 0.2, 1]
-                }}
-                className="px-6 lg:px-8 py-6 pb-16 min-h-full"
-              >
+              <div className="px-6 lg:px-8 py-6 pb-16 min-h-full w-full">
                 {children}
-              </motion.div>
+              </div>
               <BoardFooter />
             </main>
           </div>

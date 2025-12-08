@@ -53,7 +53,7 @@ export default function BoardDocs() {
   const hasRealDocs = dbDocuments && dbDocuments.length > 0;
 
   return (
-    <div>
+    <div className="w-full">
         <Button
           variant="ghost"
           className="text-slate-500 hover:text-slate-700 mb-6 -ml-2"
