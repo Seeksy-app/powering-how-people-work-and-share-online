@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Upload, Video, X } from "lucide-react";
+import { Loader2, Upload, Video, X, AlertCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import * as tus from 'tus-js-client';
 
 interface VideoUploadDialogProps {
   open: boolean;
@@ -22,8 +23,28 @@ export function VideoUploadDialog({ open, onOpenChange, onUploadComplete }: Vide
   const [seriesName, setSeriesName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadSpeed, setUploadSpeed] = useState<string>("");
+  const [timeRemaining, setTimeRemaining] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadRef = useRef<tus.Upload | null>(null);
+  const uploadStartTime = useRef<number>(0);
+  const lastProgressUpdate = useRef<{ time: number; bytes: number }>({ time: 0, bytes: 0 });
   const { toast } = useToast();
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatTime = (seconds: number) => {
+    if (!isFinite(seconds) || seconds < 0) return 'calculating...';
+    if (seconds < 60) return `${Math.round(seconds)}s`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
+    return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -51,35 +72,79 @@ export function VideoUploadDialog({ open, onOpenChange, onUploadComplete }: Vide
     }
 
     setIsUploading(true);
-    setUploadProgress(10);
+    setUploadProgress(0);
+    uploadStartTime.current = Date.now();
+    lastProgressUpdate.current = { time: Date.now(), bytes: 0 };
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
 
-      setUploadProgress(20);
-
-      // Upload to storage
-      const fileName = `${Date.now()}_${file.name}`;
+      const user = session.user;
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
       const filePath = `tv-videos/${user.id}/${fileName}`;
+      const bucketName = 'studio-recordings';
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 
-      const { error: uploadError } = await supabase.storage
-        .from('studio-recordings')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
+      // Use TUS resumable upload for large files
+      await new Promise<void>((resolve, reject) => {
+        const upload = new tus.Upload(file, {
+          endpoint: `https://${projectId}.supabase.co/storage/v1/upload/resumable`,
+          retryDelays: [0, 1000, 3000, 5000, 10000],
+          chunkSize: 6 * 1024 * 1024, // 6MB chunks
+          headers: {
+            authorization: `Bearer ${session.access_token}`,
+            'x-upsert': 'false',
+          },
+          uploadDataDuringCreation: true,
+          removeFingerprintOnSuccess: true,
+          metadata: {
+            bucketName: bucketName,
+            objectName: filePath,
+            contentType: file.type,
+            cacheControl: '3600',
+          },
+          onError: (error) => {
+            console.error('TUS upload error:', error);
+            reject(error);
+          },
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const now = Date.now();
+            const progress = Math.round((bytesUploaded / bytesTotal) * 100);
+            setUploadProgress(progress);
+
+            // Calculate speed and ETA
+            const timeDiff = (now - lastProgressUpdate.current.time) / 1000;
+            if (timeDiff > 0.5) {
+              const bytesDiff = bytesUploaded - lastProgressUpdate.current.bytes;
+              const speed = bytesDiff / timeDiff;
+              const remaining = bytesTotal - bytesUploaded;
+              const eta = remaining / speed;
+
+              setUploadSpeed(`${formatBytes(speed)}/s`);
+              setTimeRemaining(formatTime(eta));
+              lastProgressUpdate.current = { time: now, bytes: bytesUploaded };
+            }
+          },
+          onSuccess: () => {
+            console.log('TUS upload complete');
+            resolve();
+          },
         });
 
-      if (uploadError) throw uploadError;
-      
-      setUploadProgress(70);
+        uploadRef.current = upload;
+        upload.findPreviousUploads().then((previousUploads) => {
+          if (previousUploads.length) {
+            upload.resumeFromPreviousUpload(previousUploads[0]);
+          }
+          upload.start();
+        });
+      });
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
-        .from('studio-recordings')
+        .from(bucketName)
         .getPublicUrl(filePath);
-
-      setUploadProgress(85);
 
       // Create tv_content record
       const { error: dbError } = await supabase
@@ -106,6 +171,8 @@ export function VideoUploadDialog({ open, onOpenChange, onUploadComplete }: Vide
       setDescription("");
       setSeriesName("");
       setUploadProgress(0);
+      setUploadSpeed("");
+      setTimeRemaining("");
       
       onOpenChange(false);
       onUploadComplete?.();
@@ -118,7 +185,19 @@ export function VideoUploadDialog({ open, onOpenChange, onUploadComplete }: Vide
       });
     } finally {
       setIsUploading(false);
+      uploadRef.current = null;
     }
+  };
+
+  const handleCancel = () => {
+    if (uploadRef.current) {
+      uploadRef.current.abort();
+      uploadRef.current = null;
+    }
+    setIsUploading(false);
+    setUploadProgress(0);
+    setUploadSpeed("");
+    setTimeRemaining("");
   };
 
   const clearFile = () => {
@@ -128,8 +207,10 @@ export function VideoUploadDialog({ open, onOpenChange, onUploadComplete }: Vide
     }
   };
 
+  const isLargeFile = file && file.size > 500 * 1024 * 1024; // > 500MB
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!isUploading) onOpenChange(o); }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -177,6 +258,17 @@ export function VideoUploadDialog({ open, onOpenChange, onUploadComplete }: Vide
             />
           </div>
 
+          {/* Large file warning */}
+          {isLargeFile && !isUploading && (
+            <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-amber-700">
+                <p className="font-medium">Large file detected ({(file.size / (1024 * 1024 * 1024)).toFixed(2)} GB)</p>
+                <p>Upload may take a while. The upload is resumable if interrupted.</p>
+              </div>
+            </div>
+          )}
+
           {/* Title */}
           <div className="space-y-2">
             <Label htmlFor="title">Title *</Label>
@@ -216,18 +308,26 @@ export function VideoUploadDialog({ open, onOpenChange, onUploadComplete }: Vide
 
           {/* Progress */}
           {isUploading && (
-            <div className="space-y-2">
+            <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+              <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                <span>{uploadProgress}%</span>
+                {uploadSpeed && <span>{uploadSpeed}</span>}
+              </div>
               <Progress value={uploadProgress} className="h-2" />
-              <p className="text-xs text-center text-muted-foreground">
-                Uploading... {uploadProgress}%
-              </p>
+              <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                <span>Uploading...</span>
+                {timeRemaining && <span>~{timeRemaining} remaining</span>}
+              </div>
             </div>
           )}
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isUploading}>
-              Cancel
+            <Button 
+              variant="outline" 
+              onClick={isUploading ? handleCancel : () => onOpenChange(false)}
+            >
+              {isUploading ? 'Cancel Upload' : 'Cancel'}
             </Button>
             <Button onClick={handleUpload} disabled={isUploading || !file}>
               {isUploading ? (
