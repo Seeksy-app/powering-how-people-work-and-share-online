@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Share2, Shield, Copy, Check, AlertTriangle, Link2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -60,6 +61,9 @@ export default function BoardShare() {
   const [duration, setDuration] = useState('7d');
   const [allowAI, setAllowAI] = useState(true);
   const [allowPDF, setAllowPDF] = useState(false);
+  const [useRealTimeData, setUseRealTimeData] = useState(true);
+  const [allowHtmlView, setAllowHtmlView] = useState(true);
+  const [allowDownload, setAllowDownload] = useState(false);
   
   // Generated link data
   const [generatedLink, setGeneratedLink] = useState('');
@@ -103,6 +107,13 @@ export default function BoardShare() {
         expiresAt = now.toISOString();
       }
 
+      // Build share configuration for investor viewing
+      const shareConfig = {
+        useRealTimeData,
+        allowHtmlView,
+        allowDownload,
+      };
+
       const { data, error } = await supabase.from('investor_links').insert({
         token,
         passcode,
@@ -111,9 +122,11 @@ export default function BoardShare() {
         scope: selectedScope,
         allow_ai: allowAI,
         allow_pdf: allowPDF,
+        allow_download: allowDownload,
         created_by: user.id,
         expires_at: expiresAt,
         status: 'active',
+        share_config: shareConfig,
       }).select().single();
 
       if (error) throw error;
@@ -244,9 +257,63 @@ export default function BoardShare() {
                 </div>
               </div>
 
+              {/* Share Options */}
+              <div className="space-y-3">
+                <Label>Share Options</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="real-time" className="text-sm font-medium">
+                        Use Real-Time Financials
+                      </Label>
+                      <p className="text-xs text-slate-500">
+                        Show live data from your actual system metrics
+                      </p>
+                    </div>
+                    <Switch
+                      id="real-time"
+                      checked={useRealTimeData}
+                      onCheckedChange={setUseRealTimeData}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="html-view" className="text-sm font-medium">
+                        Allow HTML Spreadsheet View
+                      </Label>
+                      <p className="text-xs text-slate-500">
+                        Investors can view spreadsheet in browser (read-only)
+                      </p>
+                    </div>
+                    <Switch
+                      id="html-view"
+                      checked={allowHtmlView}
+                      onCheckedChange={setAllowHtmlView}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="download" className="text-sm font-medium">
+                        Allow Download
+                      </Label>
+                      <p className="text-xs text-slate-500">
+                        Investors can download Excel/PDF files
+                      </p>
+                    </div>
+                    <Switch
+                      id="download"
+                      checked={allowDownload}
+                      onCheckedChange={setAllowDownload}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Permissions */}
               <div className="space-y-3">
-                <Label>Permissions</Label>
+                <Label>AI & Export Permissions</Label>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox

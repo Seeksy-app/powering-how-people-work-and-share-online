@@ -229,13 +229,6 @@ export const NAVIGATION_CONFIG: {
           "roles": ["admin", "super_admin", "cfo"]
         },
         {
-          "id": "admin_proforma_combined",
-          "label": "3-Year Pro Forma (Combined)",
-          "icon": "line-chart",
-          "path": "/investor",
-          "roles": ["admin", "super_admin", "cfo", "board_member"]
-        },
-        {
           "id": "admin_proforma_events",
           "label": "Awards Pro Forma",
           "icon": "trophy",
