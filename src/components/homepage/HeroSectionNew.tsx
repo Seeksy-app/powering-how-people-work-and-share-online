@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, Play, Link2, Calendar, Mic, Video } from "lucide-react";
 import { motion } from "framer-motion";
+import { ScheduleDemoDialog } from "./ScheduleDemoDialog";
 
 // Hero card images - original human photos
 import heroPeopleImg from "@/assets/homepage/hero-people.jpg";
@@ -25,6 +27,7 @@ const heroCards = [
 
 export function HeroSectionNew() {
   const navigate = useNavigate();
+  const [showDemoDialog, setShowDemoDialog] = useState(false);
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-b from-background via-background to-muted/30">
@@ -110,13 +113,15 @@ export function HeroSectionNew() {
             <Button
               size="lg"
               variant="outline"
-              onClick={() => navigate("/demo")}
+              onClick={() => setShowDemoDialog(true)}
               className="bg-yellow-500 hover:bg-yellow-400 border-2 border-yellow-500 text-slate-900 text-lg px-8 py-7 h-auto font-semibold transition-all duration-300 hover:scale-105 group"
             >
               <Calendar className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
               Schedule a Demo
             </Button>
           </motion.div>
+
+          <ScheduleDemoDialog open={showDemoDialog} onOpenChange={setShowDemoDialog} />
 
           {/* Trust line */}
           <motion.p

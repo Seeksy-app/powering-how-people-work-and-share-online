@@ -114,7 +114,7 @@ const financialItems = [
     id: 'proforma-combined',
     label: '3-Year Pro Forma (Combined)',
     icon: TrendingUp,
-    path: '/investor',
+    path: '/cfo/proforma/combined',
   },
   {
     id: 'proforma-events',
