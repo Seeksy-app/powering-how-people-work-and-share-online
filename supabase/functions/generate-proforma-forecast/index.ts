@@ -32,13 +32,20 @@ serve(async (req) => {
   }
 
   try {
+    console.log('[ProForma] Starting forecast generation...');
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY is not configured');
+    }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
     const { scenarioKey, years = [2025, 2026, 2027], cfoOverrides = {} } = await req.json();
+    console.log('[ProForma] Generating for scenario:', scenarioKey, 'years:', years);
 
     // Fetch scenario config
     const { data: scenarioConfig, error: scenarioError } = await supabase
@@ -48,6 +55,7 @@ serve(async (req) => {
       .single();
 
     if (scenarioError || !scenarioConfig) {
+      console.error('[ProForma] Scenario error:', scenarioError);
       throw new Error(`Scenario not found: ${scenarioKey}`);
     }
 
@@ -57,8 +65,11 @@ serve(async (req) => {
       .select('metric_key, value, unit, confidence');
 
     if (benchmarksError) {
+      console.error('[ProForma] Benchmarks error:', benchmarksError);
       throw new Error(`Failed to fetch benchmarks: ${benchmarksError.message}`);
     }
+
+    console.log('[ProForma] Loaded', benchmarks?.length, 'benchmarks');
 
     // Convert benchmarks to a lookup map
     const benchmarkMap: Record<string, number> = {};
@@ -73,11 +84,8 @@ serve(async (req) => {
       }
     });
 
-    // Fetch market data
-    const { data: marketData } = await supabase
-      .from('rd_market_data')
-      .select('*')
-      .in('year', years);
+    // Helper to get benchmark with fallback
+    const getBenchmark = (key: string, fallback: number = 0) => benchmarkMap[key] ?? fallback;
 
     // Build prompt for AI
     const systemPrompt = `You are a CFO AI assistant for Seeksy, a creator economy platform. Generate detailed financial projections based on the provided benchmarks and scenario multipliers.
@@ -138,29 +146,63 @@ SCENARIO MULTIPLIERS:
 - Fill Rate: ${scenarioConfig.fill_rate_multiplier}x
 - Platform RevShare Adjustment: ${scenarioConfig.platform_revshare_adjustment}
 
-KEY BENCHMARKS:
-- Creator TAM 2027: $${(benchmarkMap['creator_TAM_2027'] / 1e9).toFixed(1)}B
-- Podcast Ad CAGR: ${(benchmarkMap['podcast_ad_CAGR'] * 100).toFixed(1)}%
-- Host-Read CPM Range: $${benchmarkMap['audio_hostread_CPM_low']}-$${benchmarkMap['audio_hostread_CPM_high']}
-- Programmatic CPM Range: $${benchmarkMap['audio_programmatic_CPM_low']}-$${benchmarkMap['audio_programmatic_CPM_high']}
-- Video CPM Range: $${benchmarkMap['video_preroll_CPM_low']}-$${benchmarkMap['video_preroll_CPM_high']}
-- Audio Fill Rate: ${(benchmarkMap['ad_fill_rate_audio'] * 100).toFixed(0)}%
-- Video Fill Rate: ${(benchmarkMap['ad_fill_rate_video'] * 100).toFixed(0)}%
-- Ad Slots per Episode: ${benchmarkMap['ad_load_per_episode']}
-- Host-Read Creator Share: ${(benchmarkMap['hostread_revshare_creator'] * 100).toFixed(0)}%
-- Programmatic Creator Share: ${(benchmarkMap['programmatic_revshare_creator'] * 100).toFixed(0)}%
-- Brand Deal Platform Fee: ${(benchmarkMap['brand_deal_revshare_platform'] * 100).toFixed(0)}%
-- Pro Subscription ARPU: $${benchmarkMap['subscription_pro_arpu']}
-- Business Subscription ARPU: $${benchmarkMap['subscription_business_arpu']}
-- Enterprise ARPU: $${benchmarkMap['subscription_enterprise_arpu']}
-- Monthly Churn: ${(benchmarkMap['monthly_churn_rate'] * 100).toFixed(1)}%
-- CAC: $${benchmarkMap['customer_acquisition_cost']}
-- LTV: $${benchmarkMap['customer_lifetime_value']}
-- Avg Creator Monthly Listens: ${benchmarkMap['avg_creator_monthly_listens_low']}-${benchmarkMap['avg_creator_monthly_listens_high']}
-- Avg Video Views: ${benchmarkMap['avg_video_views_low']}-${benchmarkMap['avg_video_views_high']}
-- Newsletter CPM: $${benchmarkMap['newsletter_CPM_avg']}
-- Display CPM: $${benchmarkMap['display_CPM_avg']}
-- Brand Deal Range: $${benchmarkMap['brand_deal_flat_fee_low']}-$${benchmarkMap['brand_deal_flat_fee_high']}
+KEY BENCHMARKS (from rd_benchmarks table):
+- Creator TAM 2027: $${((getBenchmark('creator_tam_2027', 480000000000)) / 1e9).toFixed(1)}B
+- Podcast Ad CAGR: ${getBenchmark('podcast_ad_cagr', 15)}%
+
+AUDIO CPMs:
+- Host-Read Pre-Roll: $${getBenchmark('audio_hostread_preroll_cpm_low', 18)}-$${getBenchmark('audio_hostread_preroll_cpm_high', 25)}
+- Host-Read Mid-Roll: $${getBenchmark('audio_hostread_midroll_cpm_low', 22)}-$${getBenchmark('audio_hostread_midroll_cpm_high', 30)}
+- Programmatic: $${getBenchmark('audio_programmatic_cpm_low', 8)}-$${getBenchmark('audio_programmatic_cpm_high', 15)}
+
+VIDEO CPMs:
+- Pre-Roll: $${getBenchmark('video_preroll_cpm_low', 10)}-$${getBenchmark('video_preroll_cpm_high', 20)}
+- Mid-Roll: $${getBenchmark('video_midroll_cpm_low', 15)}-$${getBenchmark('video_midroll_cpm_high', 28)}
+
+OTHER CHANNELS:
+- Newsletter CPM: $${getBenchmark('newsletter_cpm_avg', 35)}
+- Display CPM: $${getBenchmark('display_cpm_avg', 5)}
+- Livestream CPM: $${getBenchmark('livestream_cpm_blended', 18)}
+
+FILL RATES:
+- Audio: ${getBenchmark('audio_fill_rate', 65)}%
+- Video: ${getBenchmark('video_fill_rate', 55)}%
+- Newsletter: ${getBenchmark('newsletter_fill_rate', 80)}%
+- Livestream: ${getBenchmark('livestream_fill_rate', 45)}%
+
+AD LOAD:
+- Audio Ad Slots per Episode: ${getBenchmark('audio_ad_slots_per_episode', 3)}
+- Video Ad Slots per Video: ${getBenchmark('video_ad_slots_per_video', 2)}
+- Livestream Ad Slots per Hour: ${getBenchmark('livestream_ad_slots_per_hour', 4)}
+
+REVENUE SHARES (Creator vs Platform):
+- Host-Read: ${getBenchmark('hostread_creator_share', 70)}% / ${getBenchmark('hostread_platform_share', 30)}%
+- Programmatic: ${getBenchmark('programmatic_creator_share', 60)}% / ${getBenchmark('programmatic_platform_share', 40)}%
+- Brand Deals: ${getBenchmark('brand_deal_creator_share', 80)}% / ${getBenchmark('brand_deal_platform_share', 20)}%
+- Newsletter: ${getBenchmark('newsletter_creator_share', 75)}% / ${getBenchmark('newsletter_platform_share', 25)}%
+- Livestream: ${getBenchmark('livestream_creator_share', 65)}% / ${getBenchmark('livestream_platform_share', 35)}%
+
+SUBSCRIPTIONS:
+- Pro ARPU: $${getBenchmark('creator_subscription_arpu_pro', 29)}
+- Business ARPU: $${getBenchmark('creator_subscription_arpu_business', 79)}
+- Enterprise ARPU: $${getBenchmark('creator_subscription_arpu_enterprise', 299)}
+
+UNIT ECONOMICS:
+- Creator CAC (Organic): $${getBenchmark('creator_cac_organic', 15)}
+- Creator CAC (Paid): $${getBenchmark('creator_cac_paid', 45)}
+- Monthly Churn: ${getBenchmark('creator_monthly_churn', 5)}%
+
+CREATOR SEGMENTS (Monthly Impressions):
+- Small Podcasters: ${getBenchmark('podcaster_small_monthly_impressions_low', 500)}-${getBenchmark('podcaster_small_monthly_impressions_high', 5000)}
+- Mid Podcasters: ${getBenchmark('podcaster_mid_monthly_impressions_low', 5000)}-${getBenchmark('podcaster_mid_monthly_impressions_high', 50000)}
+- Large Podcasters: ${getBenchmark('podcaster_large_monthly_impressions_low', 50000)}-${getBenchmark('podcaster_large_monthly_impressions_high', 500000)}
+- Video Creator (Small): ${getBenchmark('video_creator_small_monthly_views_low', 1000)}-${getBenchmark('video_creator_small_monthly_views_high', 10000)}
+- Video Creator (Mid): ${getBenchmark('video_creator_mid_monthly_views_low', 10000)}-${getBenchmark('video_creator_mid_monthly_views_high', 100000)}
+- Video Creator (Large): ${getBenchmark('video_creator_large_monthly_views_low', 100000)}-${getBenchmark('video_creator_large_monthly_views_high', 1000000)}
+
+BRAND DEALS:
+- Flat Fee Range: $${getBenchmark('brand_deal_flat_fee_low', 250)}-$${getBenchmark('brand_deal_flat_fee_high', 10000)}
+- Avg Sponsorship Rate: $${getBenchmark('creator_sponsorship_rate_avg', 500)}
 
 STARTING ASSUMPTIONS (Year 1):
 - Starting Creators: 5,000
@@ -169,13 +211,14 @@ STARTING ASSUMPTIONS (Year 1):
 - Average Episodes/Month: 4
 
 Apply the scenario multipliers to generate realistic projections. For advertising revenue, calculate:
-1. Total Impressions = Creator Count × Monthly Listens × Episodes × Ad Slots
-2. Monetized Impressions = Total Impressions × Fill Rate
-3. Revenue = (Monetized Impressions / 1000) × CPM
-4. Platform Share = Revenue × Platform RevShare
+1. Total Impressions = Creator Count × Monthly Impressions (by segment) × Fill Rate
+2. Revenue = (Impressions / 1000) × CPM × Scenario Multiplier
+3. Platform Share = Revenue × Platform RevShare %
 
 Show year-over-year growth aligned with the scenario type. Return ONLY the JSON object.`;
 
+    console.log('[ProForma] Calling AI API...');
+    
     // Call AI API
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -196,12 +239,13 @@ Show year-over-year growth aligned with the scenario type. Return ONLY the JSON 
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI API error:', errorText);
+      console.error('[ProForma] AI API error:', response.status, errorText);
       throw new Error(`AI API error: ${response.status}`);
     }
 
     const aiResult = await response.json();
     const content = aiResult.choices?.[0]?.message?.content || '';
+    console.log('[ProForma] AI response received, length:', content.length);
     
     // Parse AI response
     let forecast;
@@ -209,14 +253,17 @@ Show year-over-year growth aligned with the scenario type. Return ONLY the JSON 
       // Clean up potential markdown formatting
       const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       forecast = JSON.parse(cleanContent);
+      console.log('[ProForma] Successfully parsed forecast for', forecast.years?.length, 'years');
     } catch (parseError) {
-      console.error('Failed to parse AI response:', content);
+      console.error('[ProForma] Failed to parse AI response:', content.substring(0, 500));
       throw new Error('Failed to parse AI forecast response');
     }
 
     // Store forecast in database
     for (const yearData of forecast.years || []) {
-      await supabase.from('proforma_forecasts').upsert({
+      console.log('[ProForma] Storing forecast for year:', yearData.year);
+      
+      const { error: upsertError } = await supabase.from('proforma_forecasts').upsert({
         scenario_key: scenarioKey,
         forecast_year: yearData.year,
         revenue_data: yearData.revenue,
@@ -237,7 +284,13 @@ Show year-over-year growth aligned with the scenario type. Return ONLY the JSON 
       }, {
         onConflict: 'scenario_key,forecast_year',
       });
+      
+      if (upsertError) {
+        console.error('[ProForma] Upsert error for year', yearData.year, ':', upsertError);
+      }
     }
+
+    console.log('[ProForma] Forecast generation complete');
 
     return new Response(
       JSON.stringify({
@@ -250,7 +303,7 @@ Show year-over-year growth aligned with the scenario type. Return ONLY the JSON 
     );
 
   } catch (error: unknown) {
-    console.error('Error generating forecast:', error);
+    console.error('[ProForma] Error generating forecast:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: errorMessage }),
