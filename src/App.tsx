@@ -463,6 +463,7 @@ import BoardDashboard from "./pages/board/BoardDashboard";
 import BoardBusinessModel from "./pages/board/BoardBusinessModel";
 import BoardGTM from "./pages/board/BoardGTM";
 import BoardForecasts from "./pages/board/BoardForecasts";
+import BoardProFormaAI from "./pages/board/BoardProFormaAI";
 import BoardVideos from "./pages/board/BoardVideos";
 import BoardDocs from "./pages/board/BoardDocs";
 import BoardInvestorLinks from "./pages/board/BoardInvestorLinks";
@@ -1040,7 +1041,7 @@ const AppContent = () => {
             <Route path="gtm" element={<BoardGTM />} />
             <Route path="ceo-plan" element={<BoardCEOPlan />} />
             <Route path="vto" element={<BoardCEOVTO />} />
-            <Route path="forecasts" element={<BoardForecasts />} />
+            <Route path="forecasts" element={<BoardProFormaAI />} />
             <Route path="videos" element={<BoardVideos />} />
             <Route path="docs" element={<BoardDocs />} />
             <Route path="investor-links" element={<BoardInvestorLinks />} />
@@ -1057,8 +1058,9 @@ const AppContent = () => {
             <Route path="swot" element={<BoardSWOT />} />
             <Route path="market-intel" element={<BoardMarketIntel />} />
             <Route path="inventory" element={<BoardInventory />} />
-            <Route path="proforma/combined" element={<BoardProForma />} />
+            <Route path="proforma/combined" element={<BoardProFormaAI />} />
             <Route path="proforma/events-awards" element={<EventsAwardsProForma />} />
+            <Route path="proforma/legacy" element={<BoardForecasts />} />
           </Route>
           <Route path="/investor/:token" element={<BoardInvestorPortal />} />
           
