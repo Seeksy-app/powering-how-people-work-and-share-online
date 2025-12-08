@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Outlet } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RoleProvider } from "@/contexts/RoleContext";
@@ -478,6 +478,7 @@ import BoardMarketIntelligence from "./pages/board/BoardMarketIntelligence";
 import BoardInvestorPortal from "./pages/investor/InvestorPortal";
 import BoardMemberManagement from "./pages/admin/BoardMemberManagement";
 import { BoardGuard } from "./components/board/BoardGuard";
+import { BoardLayout } from "./components/board/BoardLayout";
 import { BoardViewBanner } from "./components/board/BoardViewBanner";
 import RDIntelligenceFeeds from "./pages/admin/RDIntelligenceFeeds";
 import AgentTrainingDashboard from "./pages/admin/AgentTrainingDashboard";
@@ -1012,30 +1013,32 @@ const AppContent = () => {
           <Route path="/admin/checklists/template/:templateId" element={<ChecklistTemplate />} />
           <Route path="/admin/board-members" element={<BoardMemberManagement />} />
           
-          {/* Board Member Portal Routes */}
-          <Route path="/board" element={<BoardDashboard />} />
-          <Route path="/board/business-model" element={<BoardBusinessModel />} />
-          <Route path="/board/gtm" element={<BoardGTM />} />
-          <Route path="/board/ceo-plan" element={<BoardCEOPlan />} />
-          <Route path="/board/vto" element={<BoardCEOVTO />} />
-          <Route path="/board/forecasts" element={<BoardForecasts />} />
-          <Route path="/board/videos" element={<BoardVideos />} />
-          <Route path="/board/docs" element={<BoardDocs />} />
-          <Route path="/board/investor-links" element={<BoardInvestorLinks />} />
-          <Route path="/board/share" element={<BoardShare />} />
-          <Route path="/board/research" element={<BoardResearch />} />
-          <Route path="/board/revenue-insights" element={<BoardRevenueInsights />} />
-          <Route path="/board/market-intelligence" element={<BoardMarketIntelligence />} />
-          <Route path="/board/key-metrics" element={<BoardKeyMetrics />} />
-          <Route path="/board/roi-calculator" element={<BoardROICalculator />} />
-          <Route path="/board/ai-analyst" element={<BoardAIAnalyst />} />
-          <Route path="/board/contacts" element={<BoardContacts />} />
-          <Route path="/board/competitive-landscape" element={<BoardCompetitiveLandscape />} />
-          <Route path="/board/swot" element={<BoardSWOT />} />
-          <Route path="/board/market-intel" element={<BoardMarketIntel />} />
-          <Route path="/board/inventory" element={<BoardInventory />} />
-          <Route path="/board/proforma/combined" element={<InvestorPortal />} />
-          <Route path="/board/proforma/events-awards" element={<EventsAwardsProForma />} />
+          {/* Board Member Portal Routes - All wrapped in BoardLayout */}
+          <Route path="/board" element={<BoardLayout><Outlet /></BoardLayout>}>
+            <Route index element={<BoardDashboard />} />
+            <Route path="business-model" element={<BoardBusinessModel />} />
+            <Route path="gtm" element={<BoardGTM />} />
+            <Route path="ceo-plan" element={<BoardCEOPlan />} />
+            <Route path="vto" element={<BoardCEOVTO />} />
+            <Route path="forecasts" element={<BoardForecasts />} />
+            <Route path="videos" element={<BoardVideos />} />
+            <Route path="docs" element={<BoardDocs />} />
+            <Route path="investor-links" element={<BoardInvestorLinks />} />
+            <Route path="share" element={<BoardShare />} />
+            <Route path="research" element={<BoardResearch />} />
+            <Route path="revenue-insights" element={<BoardRevenueInsights />} />
+            <Route path="market-intelligence" element={<BoardMarketIntelligence />} />
+            <Route path="key-metrics" element={<BoardKeyMetrics />} />
+            <Route path="roi-calculator" element={<BoardROICalculator />} />
+            <Route path="ai-analyst" element={<BoardAIAnalyst />} />
+            <Route path="contacts" element={<BoardContacts />} />
+            <Route path="competitive-landscape" element={<BoardCompetitiveLandscape />} />
+            <Route path="swot" element={<BoardSWOT />} />
+            <Route path="market-intel" element={<BoardMarketIntel />} />
+            <Route path="inventory" element={<BoardInventory />} />
+            <Route path="proforma/combined" element={<InvestorPortal />} />
+            <Route path="proforma/events-awards" element={<EventsAwardsProForma />} />
+          </Route>
           <Route path="/investor/:token" element={<BoardInvestorPortal />} />
           
           {/* Admin Financials Routes (reuse Board components) */}

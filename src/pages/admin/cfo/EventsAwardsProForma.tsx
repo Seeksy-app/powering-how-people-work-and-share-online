@@ -11,7 +11,6 @@ import ProFormaFinancialTables from "@/components/cfo/proforma/ProFormaFinancial
 import ProFormaCharts from "@/components/cfo/proforma/ProFormaCharts";
 import ProFormaAssumptions from "@/components/cfo/proforma/ProFormaAssumptions";
 import { useProFormaData, ProFormaAssumptions as AssumptionsType } from "@/hooks/useProFormaData";
-import { BoardLayout } from "@/components/board/BoardLayout";
 
 const EventsAwardsProForma = () => {
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ const EventsAwardsProForma = () => {
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState(false);
   
-  // Check if we're on a board route to use BoardLayout
+  // Check if we're on a board route for navigation
   const isBoardRoute = location.pathname.startsWith('/board');
 
   const { financialData, assumptions, updateAssumptions } = useProFormaData();
@@ -317,11 +316,6 @@ const EventsAwardsProForma = () => {
       </div>
     </div>
   );
-
-  // Wrap with BoardLayout if on board route
-  if (isBoardRoute) {
-    return <BoardLayout>{content}</BoardLayout>;
-  }
 
   return content;
 };
