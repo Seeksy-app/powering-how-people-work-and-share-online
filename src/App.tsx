@@ -488,6 +488,7 @@ import { BoardViewBanner } from "./components/board/BoardViewBanner";
 import RDIntelligenceFeeds from "./pages/admin/RDIntelligenceFeeds";
 import AgentTrainingDashboard from "./pages/admin/AgentTrainingDashboard";
 import Permissions from "./pages/admin/Permissions";
+import AdminIntegrations from "./pages/admin/AdminIntegrations";
 import Webhooks from "./pages/admin/Webhooks";
 import Logs from "./pages/admin/Logs";
 import MarketIntelligence from "./pages/admin/MarketIntelligence";
@@ -943,6 +944,7 @@ const AppContent = () => {
             <Route path="/admin/lead-magnets" element={<LeadMagnetsAdmin />} />
             <Route path="/admin/module-organizer" element={<ModuleOrganizer />} />
               <Route path="/admin/permissions" element={<Permissions />} />
+              <Route path="/admin/integrations" element={<AdminIntegrations />} />
               <Route path="/admin/webhooks" element={<Webhooks />} />
               <Route path="/admin/logs" element={<Logs />} />
               <Route path="/admin/market-intelligence" element={<MarketIntelligence />} />

@@ -442,6 +442,13 @@ export const NAVIGATION_CONFIG: {
       "collapsible": true,
       "items": [
         {
+          "id": "admin_integrations",
+          "label": "Integrations",
+          "icon": "puzzle",
+          "path": "/admin/integrations",
+          "roles": ["admin", "super_admin"]
+        },
+        {
           "id": "admin_keys_vault",
           "label": "API Keys",
           "icon": "key",
