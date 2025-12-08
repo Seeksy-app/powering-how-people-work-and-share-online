@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
 import { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { WelcomeBanner } from '@/components/board/WelcomeBanner';
 import { BoardFloatingAIButton } from '@/components/board/BoardFloatingAIButton';
 import { BoardAISlidePanel } from '@/components/board/BoardAISlidePanel';
@@ -64,7 +64,6 @@ const stateOfCompanyContent = {
 };
 
 export default function BoardDashboard() {
-  const navigate = useNavigate();
   const [firstName, setFirstName] = useState<string>('');
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
@@ -84,6 +83,7 @@ export default function BoardDashboard() {
       if (error) throw error;
       return data;
     },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const featuredVideo = dbVideos && dbVideos.length > 0 ? dbVideos[0] : null;
@@ -165,10 +165,12 @@ export default function BoardDashboard() {
             <Button 
               variant="ghost" 
               size="sm" 
+              asChild
               className="text-blue-600 hover:text-blue-700"
-              onClick={() => navigate('/board/videos')}
             >
-              View All Videos <ExternalLink className="w-3 h-3 ml-1" />
+              <Link to="/board/videos">
+                View All Videos <ExternalLink className="w-3 h-3 ml-1" />
+              </Link>
             </Button>
           </div>
         </CardHeader>
@@ -229,10 +231,12 @@ export default function BoardDashboard() {
               )}
               <Button 
                 className="w-full bg-blue-600 hover:bg-blue-700"
-                onClick={() => navigate('/board/videos')}
+                asChild
               >
-                <Play className="w-4 h-4 mr-2" />
-                Watch All Videos
+                <Link to="/board/videos">
+                  <Play className="w-4 h-4 mr-2" />
+                  Watch All Videos
+                </Link>
               </Button>
             </div>
           </div>
@@ -246,22 +250,24 @@ export default function BoardDashboard() {
           {quickLinks.map((link) => {
             const Icon = link.icon;
             return (
-              <Card
+              <Link
                 key={link.path}
-                className="bg-white border-slate-100 hover:border-slate-200 hover:shadow-md transition-all cursor-pointer group rounded-xl"
-                onClick={() => navigate(link.path)}
+                to={link.path}
+                className="block"
               >
-                <CardContent className="p-4">
-                  <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${link.gradient} flex items-center justify-center mb-3 shadow-sm`}>
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-sm font-semibold text-slate-900 mb-0.5">{link.title}</h3>
-                  <p className="text-xs text-slate-500 truncate">{link.description}</p>
-                  <span className="text-xs text-blue-600 group-hover:translate-x-1 transition-transform inline-flex items-center font-medium mt-2">
-                    View <ArrowRight className="w-3 h-3 ml-1" />
-                  </span>
-                </CardContent>
-              </Card>
+                <Card className="bg-white border-slate-100 hover:border-slate-200 hover:shadow-md transition-all cursor-pointer group rounded-xl h-full">
+                  <CardContent className="p-4">
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${link.gradient} flex items-center justify-center mb-3 shadow-sm`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-slate-900 mb-0.5">{link.title}</h3>
+                    <p className="text-xs text-slate-500 truncate">{link.description}</p>
+                    <span className="text-xs text-blue-600 group-hover:translate-x-1 transition-transform inline-flex items-center font-medium mt-2">
+                      View <ArrowRight className="w-3 h-3 ml-1" />
+                    </span>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>
@@ -275,42 +281,46 @@ export default function BoardDashboard() {
             <Button 
               variant="ghost" 
               size="sm" 
+              asChild
               className="text-blue-600 hover:text-blue-700"
-              onClick={() => navigate('/board/videos')}
             >
-              View All <ArrowRight className="w-3 h-3 ml-1" />
+              <Link to="/board/videos">
+                View All <ArrowRight className="w-3 h-3 ml-1" />
+              </Link>
             </Button>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {additionalVideos.map((video) => (
-              <Card 
+              <Link 
                 key={video.id}
-                className="bg-white border-slate-100 hover:border-slate-200 hover:shadow-md transition-all cursor-pointer group rounded-xl overflow-hidden"
-                onClick={() => navigate('/board/videos')}
+                to="/board/videos"
+                className="block"
               >
-                <div className="aspect-video bg-slate-900 relative">
-                  {video.thumbnail_url ? (
-                    <img 
-                      src={video.thumbnail_url} 
-                      alt={video.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <Play className="w-8 h-8 text-slate-400" />
+                <Card className="bg-white border-slate-100 hover:border-slate-200 hover:shadow-md transition-all cursor-pointer group rounded-xl overflow-hidden h-full">
+                  <div className="aspect-video bg-slate-900 relative">
+                    {video.thumbnail_url ? (
+                      <img 
+                        src={video.thumbnail_url} 
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Play className="w-8 h-8 text-slate-400" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Play className="w-10 h-10 text-white" />
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Play className="w-10 h-10 text-white" />
                   </div>
-                </div>
-                <CardContent className="p-3">
-                  <Badge className={cn('text-[10px] mb-1.5', categoryColors[video.category] || 'bg-slate-100 text-slate-600')}>
-                    {video.category}
-                  </Badge>
-                  <h3 className="text-sm font-medium text-slate-900 line-clamp-1">{video.title}</h3>
-                </CardContent>
-              </Card>
+                  <CardContent className="p-3">
+                    <Badge className={cn('text-[10px] mb-1.5', categoryColors[video.category] || 'bg-slate-100 text-slate-600')}>
+                      {video.category}
+                    </Badge>
+                    <h3 className="text-sm font-medium text-slate-900 line-clamp-1">{video.title}</h3>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

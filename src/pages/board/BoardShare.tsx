@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Share2, Shield, Copy, Check, AlertTriangle, Link2, ChevronDown, ChevronUp, Video } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -230,11 +230,13 @@ export default function BoardShare() {
     <div className="w-full space-y-6">
         <Button
           variant="ghost"
+          asChild
           className="text-slate-500 hover:text-slate-700 mb-6 -ml-2"
-          onClick={() => navigate('/board')}
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
+          <Link to="/board">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Link>
         </Button>
 
         <div className="flex items-center gap-4 mb-8">
