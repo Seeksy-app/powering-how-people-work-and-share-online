@@ -19,16 +19,16 @@ import {
   Megaphone,
 } from 'lucide-react';
 
-// Demo metrics
+// Demo metrics - must include all keys from metricConfig
 const demoMetrics = {
   creators: { value: '2,450', change: '+12%', label: 'Total Creators' },
-  mau: { value: '1,200', change: '+18%', label: 'Monthly Active Users' },
+  podcasts: { value: '890', change: '+15%', label: 'Total Podcasts' },
+  episodes: { value: '4,200', change: '+22%', label: 'Total Episodes' },
+  newSignups: { value: '340', change: '+22%', label: 'New Signups (30d)' },
+  campaigns: { value: '156', change: '+18%', label: 'Ad Campaigns' },
+  events: { value: '42', change: '+8%', label: 'Total Events' },
   revenue: { value: '$45,000', change: '+25%', label: 'Revenue MTD' },
   growth: { value: '18%', change: '+3%', label: 'MoM Growth' },
-  arpu: { value: '$35', change: '+8%', label: 'Avg Revenue Per User' },
-  churn: { value: '4.2%', change: '-0.5%', label: 'Monthly Churn Rate' },
-  newSignups: { value: '340', change: '+22%', label: 'New Signups (30d)' },
-  avgSession: { value: '12m', change: '+15%', label: 'Avg Session Duration' },
 };
 
 const metricConfig = [
@@ -75,8 +75,9 @@ export default function BoardKeyMetrics() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {metricConfig.map(({ key, icon: Icon, color }, idx) => {
             const metric = metrics[key as keyof typeof metrics];
-            const isPositive = metric.change.startsWith('+');
-            const isNegative = metric.change.startsWith('-');
+            if (!metric) return null;
+            const isPositive = metric.change?.startsWith('+') ?? false;
+            const isNegative = metric.change?.startsWith('-') ?? false;
 
             return (
               <motion.div

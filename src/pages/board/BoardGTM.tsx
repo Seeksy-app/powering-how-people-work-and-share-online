@@ -25,7 +25,7 @@ export default function BoardGTM() {
   const [activeTab, setActiveTab] = useState("market-overview");
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
         {/* Header */}
         <div>
           <Button
