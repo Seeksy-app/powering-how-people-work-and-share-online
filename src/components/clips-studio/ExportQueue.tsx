@@ -49,10 +49,6 @@ export function ExportQueue({
   enableCertification,
   onCertificationChange,
 }: ExportQueueProps) {
-  if (queuedClips.length === 0) {
-    return null;
-  }
-
   // Group clips by format for summary
   const formatCounts = queuedClips.reduce((acc, clip) => {
     acc[clip.format] = (acc[clip.format] || 0) + 1;
@@ -61,24 +57,29 @@ export function ExportQueue({
 
   return (
     <div className="flex-shrink-0 border-t bg-card/95 backdrop-blur-sm">
-      {/* Queue header */}
+      {/* Queue header - always visible */}
       <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/30">
         <div className="flex items-center gap-3">
           <h3 className="font-semibold text-sm">Export Queue</h3>
-          <Badge className="bg-[#2C6BED] text-white">
+          <Badge className={cn(
+            "text-white",
+            queuedClips.length > 0 ? "bg-[#2C6BED]" : "bg-muted-foreground/50"
+          )}>
             {queuedClips.length} clip{queuedClips.length !== 1 ? 's' : ''}
           </Badge>
-          <div className="flex items-center gap-2 ml-4">
-            {Object.entries(formatCounts).map(([format, count]) => {
-              const Icon = formatIcons[format] || Square;
-              return (
-                <Badge key={format} variant="outline" className="gap-1 text-xs">
-                  <Icon className="h-3 w-3" />
-                  {format}: {count}
-                </Badge>
-              );
-            })}
-          </div>
+          {queuedClips.length > 0 && (
+            <div className="flex items-center gap-2 ml-4">
+              {Object.entries(formatCounts).map(([format, count]) => {
+                const Icon = formatIcons[format] || Square;
+                return (
+                  <Badge key={format} variant="outline" className="gap-1 text-xs">
+                    <Icon className="h-3 w-3" />
+                    {format}: {count}
+                  </Badge>
+                );
+              })}
+            </div>
+          )}
         </div>
         
         <div className="flex items-center gap-4">
@@ -95,7 +96,13 @@ export function ExportQueue({
             </Label>
           </div>
 
-          <Button variant="ghost" size="sm" onClick={onClearQueue} className="text-xs text-muted-foreground">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onClearQueue} 
+            className="text-xs text-muted-foreground"
+            disabled={queuedClips.length === 0}
+          >
             <Trash2 className="h-3 w-3 mr-1" />
             Clear All
           </Button>
@@ -104,65 +111,80 @@ export function ExportQueue({
             size="sm" 
             className="bg-[#053877] hover:bg-[#053877]/90"
             onClick={onPublish}
+            disabled={queuedClips.length === 0}
           >
             <Share2 className="h-4 w-4 mr-2" />
-            Publish {queuedClips.length} Clip{queuedClips.length !== 1 ? 's' : ''}
+            Publish {queuedClips.length > 0 ? `${queuedClips.length} Clip${queuedClips.length !== 1 ? 's' : ''}` : 'Clips'}
           </Button>
         </div>
       </div>
 
-      {/* Horizontal scrollable queue */}
+      {/* Horizontal scrollable queue or placeholder */}
       <ScrollArea className="w-full">
-        <div className="flex items-center gap-3 p-3">
-          {queuedClips.map((item, index) => {
-            const Icon = formatIcons[item.format] || Square;
-            return (
-              <div
-                key={`${item.clipId}-${item.format}-${index}`}
-                className="flex-shrink-0 relative group"
-              >
-                <div className="w-28 rounded-lg border bg-background overflow-hidden">
-                  {/* Thumbnail */}
-                  <div className="aspect-video bg-muted relative">
-                    {item.thumbnailUrl ? (
-                      <img 
-                        src={item.thumbnailUrl} 
-                        alt={item.clipTitle}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Icon className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                    )}
-                    
-                    {/* Format badge */}
-                    <Badge 
-                      className={cn(
-                        "absolute bottom-1 right-1 text-[10px] px-1 py-0 text-white border-0",
-                        formatColors[item.format] || "bg-gray-500"
+        <div className="flex items-center gap-3 p-3 min-h-[80px]">
+          {queuedClips.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="h-5 w-5 opacity-40" />
+                  <Square className="h-5 w-5 opacity-40" />
+                  <Monitor className="h-5 w-5 opacity-40" />
+                  <RectangleHorizontal className="h-5 w-5 opacity-40" />
+                </div>
+                <span className="text-sm">Select aspect ratios and add clips to the export queue</span>
+              </div>
+            </div>
+          ) : (
+            queuedClips.map((item, index) => {
+              const Icon = formatIcons[item.format] || Square;
+              return (
+                <div
+                  key={`${item.clipId}-${item.format}-${index}`}
+                  className="flex-shrink-0 relative group"
+                >
+                  <div className="w-28 rounded-lg border bg-background overflow-hidden">
+                    {/* Thumbnail */}
+                    <div className="aspect-video bg-muted relative">
+                      {item.thumbnailUrl ? (
+                        <img 
+                          src={item.thumbnailUrl} 
+                          alt={item.clipTitle}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Icon className="h-6 w-6 text-muted-foreground" />
+                        </div>
                       )}
-                    >
-                      {item.format}
-                    </Badge>
+                      
+                      {/* Format badge */}
+                      <Badge 
+                        className={cn(
+                          "absolute bottom-1 right-1 text-[10px] px-1 py-0 text-white border-0",
+                          formatColors[item.format] || "bg-gray-500"
+                        )}
+                      >
+                        {item.format}
+                      </Badge>
 
-                    {/* Remove button */}
-                    <button
-                      onClick={() => onRemoveFromQueue(item.clipId, item.format)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                  
-                  {/* Title */}
-                  <div className="p-1.5">
-                    <p className="text-[10px] font-medium truncate">{item.clipTitle}</p>
+                      {/* Remove button */}
+                      <button
+                        onClick={() => onRemoveFromQueue(item.clipId, item.format)}
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                    
+                    {/* Title */}
+                    <div className="p-1.5">
+                      <p className="text-[10px] font-medium truncate">{item.clipTitle}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
