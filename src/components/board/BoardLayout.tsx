@@ -25,17 +25,17 @@ export function BoardLayout({ children }: BoardLayoutProps) {
   return (
     <BoardDataModeProvider>
       <SidebarProvider defaultOpen={true}>
-        <div className="flex min-h-screen w-full">
+        <div className="flex h-screen w-full bg-slate-900">
           {/* Dark sidebar - fixed width */}
           <BoardSidebar />
           
           {/* Light content area - takes remaining space */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white">
-            <main className="flex-1 h-full overflow-y-auto bg-slate-50">
-              <div className="w-full p-6 lg:p-8 pb-20 space-y-6">
+          <div className="flex flex-1 flex-col min-w-0 bg-slate-50">
+            <main className="flex-1 overflow-y-auto">
+              <div className="w-full px-6 lg:px-8 py-6 pb-20">
                 {children}
-                <BoardFooter />
               </div>
+              <BoardFooter />
             </main>
           </div>
         </div>
