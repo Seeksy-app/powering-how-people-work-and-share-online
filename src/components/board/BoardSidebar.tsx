@@ -116,12 +116,6 @@ const financialItems = [
     icon: TrendingUp,
     path: '/board/proforma/combined',
   },
-  {
-    id: 'proforma-events',
-    label: 'Awards Pro Forma',
-    icon: TrendingUp,
-    path: '/board/proforma/events-awards',
-  },
 ];
 
 // Competitive & Strategy section
