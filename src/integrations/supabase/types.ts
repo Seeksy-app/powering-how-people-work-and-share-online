@@ -21837,9 +21837,67 @@ export type Database = {
         }
         Relationships: []
       }
+      tv_channels: {
+        Row: {
+          avatar_url: string | null
+          category: string | null
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          follower_count: number | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          name: string
+          slug: string
+          social_links: Json | null
+          tags: string[] | null
+          total_views: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          follower_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          name: string
+          slug: string
+          social_links?: Json | null
+          tags?: string[] | null
+          total_views?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          category?: string | null
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          follower_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          name?: string
+          slug?: string
+          social_links?: Json | null
+          tags?: string[] | null
+          total_views?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tv_content: {
         Row: {
           category: string | null
+          channel_id: string | null
           content_type: string | null
           created_at: string | null
           description: string | null
@@ -21863,6 +21921,7 @@ export type Database = {
         }
         Insert: {
           category?: string | null
+          channel_id?: string | null
           content_type?: string | null
           created_at?: string | null
           description?: string | null
@@ -21886,6 +21945,7 @@ export type Database = {
         }
         Update: {
           category?: string | null
+          channel_id?: string | null
           content_type?: string | null
           created_at?: string | null
           description?: string | null
@@ -21907,7 +21967,15 @@ export type Database = {
           video_url?: string
           view_count?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tv_content_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "tv_channels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ui_screenshots: {
         Row: {
