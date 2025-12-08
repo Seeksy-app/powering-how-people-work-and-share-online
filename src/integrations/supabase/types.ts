@@ -13320,6 +13320,60 @@ export type Database = {
           },
         ]
       }
+      live_channels: {
+        Row: {
+          channel_arn: string | null
+          channel_name: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          ingest_endpoint: string | null
+          is_active: boolean | null
+          metadata: Json | null
+          playback_url: string | null
+          started_at: string | null
+          status: string | null
+          stream_key: string | null
+          updated_at: string
+          user_id: string
+          viewer_count: number | null
+        }
+        Insert: {
+          channel_arn?: string | null
+          channel_name: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          ingest_endpoint?: string | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          playback_url?: string | null
+          started_at?: string | null
+          status?: string | null
+          stream_key?: string | null
+          updated_at?: string
+          user_id: string
+          viewer_count?: number | null
+        }
+        Update: {
+          channel_arn?: string | null
+          channel_name?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          ingest_endpoint?: string | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          playback_url?: string | null
+          started_at?: string | null
+          status?: string | null
+          stream_key?: string | null
+          updated_at?: string
+          user_id?: string
+          viewer_count?: number | null
+        }
+        Relationships: []
+      }
       live_stream_viewers: {
         Row: {
           id: string
