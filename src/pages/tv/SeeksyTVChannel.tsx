@@ -1,67 +1,78 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { 
   Play, Bell, Share2, Users, Radio, Scissors, Video,
-  Calendar, ArrowLeft, ExternalLink, Twitter, Instagram
+  Calendar, ArrowLeft, ExternalLink, Twitter, Instagram, Loader2
 } from "lucide-react";
 import { Tv } from "lucide-react";
 import { TVFooter } from "@/components/tv/TVFooter";
-
-// Mock creator data
-const mockCreator = {
-  id: "1",
-  name: "The Daily Tech",
-  username: "@dailytech",
-  avatar: "/placeholder.svg",
-  cover: "/placeholder.svg",
-  bio: "Your daily source for the latest in technology, AI, and innovation. Join us for deep dives into the tech that shapes our world.",
-  followers: "125K",
-  totalViews: "2.5M",
-  episodeCount: 156,
-  isLive: true,
-  category: "Technology",
-  links: {
-    twitter: "https://twitter.com/dailytech",
-    instagram: "https://instagram.com/dailytech",
-    website: "https://dailytech.com"
-  }
-};
-
-const episodes = [
-  { id: "1", title: "The Future of AI in 2025", duration: "45:32", thumbnail: "/placeholder.svg", views: "15K", date: "2 days ago" },
-  { id: "2", title: "Apple Vision Pro: One Year Later", duration: "38:15", thumbnail: "/placeholder.svg", views: "12K", date: "5 days ago" },
-  { id: "3", title: "The Rise of Open Source AI", duration: "52:18", thumbnail: "/placeholder.svg", views: "28K", date: "1 week ago" },
-  { id: "4", title: "Quantum Computing Explained", duration: "41:05", thumbnail: "/placeholder.svg", views: "9.2K", date: "2 weeks ago" },
-];
-
-const clips = [
-  { id: "1", title: "The AI Moment That Changed Everything", duration: "0:58", thumbnail: "/placeholder.svg", views: "45K" },
-  { id: "2", title: "Why GPT-5 Matters", duration: "1:15", thumbnail: "/placeholder.svg", views: "32K" },
-  { id: "3", title: "Tech Prediction for 2025", duration: "0:45", thumbnail: "/placeholder.svg", views: "67K" },
-];
-
-const livestreams = [
-  { id: "1", title: "Morning Tech Roundup", status: "live", viewers: "2.3K", thumbnail: "/placeholder.svg" },
-  { id: "2", title: "CES 2025 Coverage", status: "upcoming", date: "Tomorrow at 10 AM", thumbnail: "/placeholder.svg" },
-  { id: "3", title: "AI Weekly Deep Dive", status: "past", views: "8.5K", duration: "1:23:45", thumbnail: "/placeholder.svg" },
-];
-
-const playlists = [
-  { id: "1", title: "AI Fundamentals", episodeCount: 12, thumbnail: "/placeholder.svg" },
-  { id: "2", title: "Tech News Roundup", episodeCount: 52, thumbnail: "/placeholder.svg" },
-  { id: "3", title: "Interviews", episodeCount: 24, thumbnail: "/placeholder.svg" },
-];
 
 export default function SeeksyTVChannel() {
   const { channelId } = useParams();
   const navigate = useNavigate();
   const [isFollowing, setIsFollowing] = useState(false);
 
-  const creator = mockCreator; // In real app, fetch by channelId
+  // Fetch channel by slug
+  const { data: channel, isLoading: channelLoading } = useQuery({
+    queryKey: ['tv-channel', channelId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tv_channels')
+        .select('*')
+        .eq('slug', channelId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!channelId
+  });
+
+  // Fetch videos for this channel
+  const { data: videos, isLoading: videosLoading } = useQuery({
+    queryKey: ['tv-channel-videos', channel?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tv_content')
+        .select('*')
+        .eq('channel_id', channel!.id)
+        .eq('is_published', true)
+        .order('published_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!channel?.id
+  });
+
+  if (channelLoading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a14] text-white flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+      </div>
+    );
+  }
+
+  if (!channel) {
+    return (
+      <div className="min-h-screen bg-[#0a0a14] text-white flex flex-col items-center justify-center">
+        <Tv className="h-16 w-16 text-gray-600 mb-4" />
+        <h1 className="text-2xl font-bold mb-2">Channel Not Found</h1>
+        <p className="text-gray-400 mb-4">The channel you're looking for doesn't exist.</p>
+        <Button onClick={() => navigate('/tv')} variant="outline" className="border-white/20 text-white hover:bg-white/10">
+          Back to Seeksy TV
+        </Button>
+      </div>
+    );
+  }
+
+  const socialLinks = (channel.social_links as Record<string, string>) || {};
 
   return (
     <div className="min-h-screen bg-[#0a0a14] text-white">
@@ -99,7 +110,9 @@ export default function SeeksyTVChannel() {
       {/* Cover Image */}
       <div className="relative h-64 md:h-80">
         <div className="absolute inset-0 bg-gradient-to-r from-[#053877] to-[#2C6BED]">
-          <img src={creator.cover} alt="" className="w-full h-full object-cover opacity-50" />
+          {channel.cover_url && (
+            <img src={channel.cover_url} alt="" className="w-full h-full object-cover opacity-50" />
+          )}
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a14] to-transparent" />
       </div>
@@ -109,12 +122,16 @@ export default function SeeksyTVChannel() {
         <div className="flex flex-col md:flex-row items-start gap-6">
           {/* Avatar */}
           <div className="relative">
-            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden border-4 border-[#0a0a14]">
-              <img src={creator.avatar} alt={creator.name} className="w-full h-full object-cover" />
+            <div className="w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden border-4 border-[#0a0a14] bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+              {channel.avatar_url ? (
+                <img src={channel.avatar_url} alt={channel.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-5xl font-bold text-white">{channel.name.charAt(0)}</span>
+              )}
             </div>
-            {creator.isLive && (
-              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-red-600 text-white">
-                <span className="animate-pulse mr-1">●</span> LIVE
+            {channel.is_verified && (
+              <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-blue-600 text-white">
+                ✓ Verified
               </Badge>
             )}
           </div>
@@ -123,8 +140,8 @@ export default function SeeksyTVChannel() {
           <div className="flex-1">
             <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
               <div>
-                <h1 className="text-3xl font-bold">{creator.name}</h1>
-                <p className="text-gray-400">{creator.username}</p>
+                <h1 className="text-3xl font-bold">{channel.name}</h1>
+                <p className="text-gray-400">@{channel.slug}</p>
               </div>
               <div className="flex gap-2">
                 <Button
@@ -145,38 +162,40 @@ export default function SeeksyTVChannel() {
               </div>
             </div>
 
-            <p className="text-gray-300 mb-4 max-w-2xl">{creator.bio}</p>
+            {channel.description && (
+              <p className="text-gray-300 mb-4 max-w-2xl">{channel.description}</p>
+            )}
 
             {/* Stats */}
             <div className="flex flex-wrap gap-6 text-sm">
               <div>
-                <span className="font-bold text-white">{creator.followers}</span>
+                <span className="font-bold text-white">{channel.follower_count?.toLocaleString() || 0}</span>
                 <span className="text-gray-400 ml-1">Followers</span>
               </div>
               <div>
-                <span className="font-bold text-white">{creator.totalViews}</span>
+                <span className="font-bold text-white">{channel.total_views?.toLocaleString() || 0}</span>
                 <span className="text-gray-400 ml-1">Total Views</span>
               </div>
               <div>
-                <span className="font-bold text-white">{creator.episodeCount}</span>
-                <span className="text-gray-400 ml-1">Episodes</span>
+                <span className="font-bold text-white">{videos?.length || 0}</span>
+                <span className="text-gray-400 ml-1">Videos</span>
               </div>
             </div>
 
             {/* Social Links */}
             <div className="flex gap-3 mt-4">
-              {creator.links.twitter && (
-                <a href={creator.links.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+              {socialLinks.twitter && (
+                <a href={socialLinks.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                   <Twitter className="h-5 w-5" />
                 </a>
               )}
-              {creator.links.instagram && (
-                <a href={creator.links.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+              {socialLinks.instagram && (
+                <a href={socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                   <Instagram className="h-5 w-5" />
                 </a>
               )}
-              {creator.links.website && (
-                <a href={creator.links.website} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+              {socialLinks.website && (
+                <a href={socialLinks.website} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                   <ExternalLink className="h-5 w-5" />
                 </a>
               )}
@@ -191,151 +210,58 @@ export default function SeeksyTVChannel() {
           <TabsList className="bg-white/5 border border-white/10 p-1">
             <TabsTrigger value="episodes" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
               <Radio className="h-4 w-4 mr-2" />
-              Episodes
-            </TabsTrigger>
-            <TabsTrigger value="clips" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
-              <Scissors className="h-4 w-4 mr-2" />
-              Clips
-            </TabsTrigger>
-            <TabsTrigger value="livestreams" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
-              <Video className="h-4 w-4 mr-2" />
-              Livestreams
-            </TabsTrigger>
-            <TabsTrigger value="playlists" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
-              <Calendar className="h-4 w-4 mr-2" />
-              Playlists
+              Videos
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="episodes" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {episodes.map((episode) => (
-                <div
-                  key={episode.id}
-                  className="group cursor-pointer"
-                  onClick={() => navigate(`/tv/watch/${episode.id}`)}
-                >
-                  <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-gradient-to-br from-gray-800 to-gray-900">
-                    <img src={episode.thumbnail} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute bottom-2 right-2">
-                      <Badge variant="secondary" className="bg-black/70 text-white text-xs">
-                        {episode.duration}
-                      </Badge>
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                      <div className="w-14 h-14 rounded-full bg-amber-500/90 flex items-center justify-center">
-                        <Play className="h-6 w-6 text-white fill-current ml-1" />
-                      </div>
-                    </div>
-                  </div>
-                  <h3 className="font-semibold group-hover:text-amber-400 transition-colors line-clamp-2 mb-1">
-                    {episode.title}
-                  </h3>
-                  <p className="text-sm text-gray-400">{episode.views} views • {episode.date}</p>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="clips" className="mt-6">
-            <ScrollArea className="w-full">
-              <div className="flex gap-4 pb-4">
-                {clips.map((clip) => (
+            {videosLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+              </div>
+            ) : videos && videos.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {videos.map((video) => (
                   <div
-                    key={clip.id}
-                    className="shrink-0 w-44 group cursor-pointer"
-                    onClick={() => navigate(`/tv/clip/${clip.id}`)}
+                    key={video.id}
+                    className="group cursor-pointer"
+                    onClick={() => navigate(`/tv/watch/${video.id}`)}
                   >
-                    <div className="relative aspect-[9/16] rounded-xl overflow-hidden mb-3 bg-gradient-to-br from-purple-900 to-pink-900">
-                      <img src={clip.thumbnail} alt="" className="w-full h-full object-cover" />
-                      <div className="absolute top-2 left-2">
-                        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs">
-                          <Scissors className="h-3 w-3 mr-1" /> AI Clip
-                        </Badge>
-                      </div>
-                      <div className="absolute bottom-2 right-2">
-                        <Badge variant="secondary" className="bg-black/70 text-white text-xs">
-                          {clip.duration}
-                        </Badge>
+                    <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-gradient-to-br from-gray-800 to-gray-900">
+                      {video.thumbnail_url ? (
+                        <img src={video.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Tv className="h-12 w-12 text-gray-600" />
+                        </div>
+                      )}
+                      {video.duration_seconds && (
+                        <div className="absolute bottom-2 right-2">
+                          <Badge variant="secondary" className="bg-black/70 text-white text-xs">
+                            {Math.floor(video.duration_seconds / 60)}:{String(video.duration_seconds % 60).padStart(2, '0')}
+                          </Badge>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                        <div className="w-14 h-14 rounded-full bg-amber-500/90 flex items-center justify-center">
+                          <Play className="h-6 w-6 text-white fill-current ml-1" />
+                        </div>
                       </div>
                     </div>
-                    <h3 className="font-medium text-sm group-hover:text-amber-400 transition-colors line-clamp-2">
-                      {clip.title}
+                    <h3 className="font-semibold group-hover:text-amber-400 transition-colors line-clamp-2 mb-1">
+                      {video.title}
                     </h3>
-                    <p className="text-xs text-gray-400 mt-1">{clip.views} views</p>
+                    <p className="text-sm text-gray-400">{video.view_count || 0} views</p>
                   </div>
                 ))}
               </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="livestreams" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {livestreams.map((stream) => (
-                <div
-                  key={stream.id}
-                  className="group relative rounded-xl overflow-hidden cursor-pointer"
-                  onClick={() => navigate(`/tv/watch/${stream.id}`)}
-                >
-                  <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900">
-                    <img src={stream.thumbnail} alt="" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                  <div className="absolute top-3 left-3">
-                    {stream.status === "live" && (
-                      <Badge className="bg-red-600 text-white text-xs">
-                        <span className="animate-pulse mr-1">●</span> LIVE
-                      </Badge>
-                    )}
-                    {stream.status === "upcoming" && (
-                      <Badge className="bg-blue-600 text-white text-xs">UPCOMING</Badge>
-                    )}
-                    {stream.status === "past" && (
-                      <Badge variant="secondary" className="bg-gray-700 text-white text-xs">REPLAY</Badge>
-                    )}
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <h3 className="font-semibold text-lg mb-1 group-hover:text-amber-400 transition-colors">
-                      {stream.title}
-                    </h3>
-                    {stream.status === "live" && (
-                      <p className="text-sm text-gray-400">{stream.viewers} watching</p>
-                    )}
-                    {stream.status === "upcoming" && (
-                      <p className="text-sm text-gray-400">{stream.date}</p>
-                    )}
-                    {stream.status === "past" && (
-                      <p className="text-sm text-gray-400">{stream.views} views • {stream.duration}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="playlists" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {playlists.map((playlist) => (
-                <div
-                  key={playlist.id}
-                  className="group cursor-pointer"
-                >
-                  <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-gradient-to-br from-gray-800 to-gray-900">
-                    <img src={playlist.thumbnail} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                      <div className="text-center">
-                        <p className="text-3xl font-bold">{playlist.episodeCount}</p>
-                        <p className="text-sm text-gray-300">Episodes</p>
-                      </div>
-                    </div>
-                  </div>
-                  <h3 className="font-semibold group-hover:text-amber-400 transition-colors">
-                    {playlist.title}
-                  </h3>
-                </div>
-              ))}
-            </div>
+            ) : (
+              <div className="text-center py-12">
+                <Tv className="h-12 w-12 mx-auto text-gray-600 mb-4" />
+                <h3 className="text-lg font-semibold">No videos yet</h3>
+                <p className="text-gray-400">This channel hasn't published any videos yet.</p>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

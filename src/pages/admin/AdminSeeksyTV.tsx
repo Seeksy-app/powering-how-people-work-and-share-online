@@ -2,24 +2,51 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tv, Upload, FolderSync, Play, Clock, Eye } from "lucide-react";
+import { Tv, Upload, FolderSync, Play, Clock, Eye, Radio, MoreVertical, ExternalLink } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { DropboxImportDialog } from "@/components/tv/DropboxImportDialog";
 import { VideoUploadDialog } from "@/components/tv/VideoUploadDialog";
+import { ChannelSelector } from "@/components/tv/ChannelSelector";
 import { format } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
 
 const AdminSeeksyTV = () => {
+  const navigate = useNavigate();
   const [dropboxOpen, setDropboxOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [channelSelectorOpen, setChannelSelectorOpen] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<{ id: string; title: string; channelId?: string | null } | null>(null);
 
   const { data: tvContent, isLoading, refetch } = useQuery({
     queryKey: ['admin-tv-content'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tv_content')
-        .select('*')
+        .select(`
+          *,
+          channel:tv_channels(id, name, slug)
+        `)
         .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: channels } = useQuery({
+    queryKey: ['tv-channels'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tv_channels')
+        .select('*')
+        .order('name');
       
       if (error) throw error;
       return data;
@@ -61,6 +88,11 @@ const AdminSeeksyTV = () => {
       : <Badge variant="secondary">Draft</Badge>;
   };
 
+  const openChannelSelector = (video: { id: string; title: string; channel_id?: string | null }) => {
+    setSelectedVideo({ id: video.id, title: video.title, channelId: video.channel_id });
+    setChannelSelectorOpen(true);
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -86,7 +118,7 @@ const AdminSeeksyTV = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Videos</CardTitle>
@@ -117,6 +149,16 @@ const AdminSeeksyTV = () => {
         </Card>
         <Card>
           <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Channels</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-purple-500">
+              {channels?.length || 0}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Pending Imports</CardTitle>
           </CardHeader>
           <CardContent>
@@ -126,6 +168,41 @@ const AdminSeeksyTV = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Channels Section */}
+      {channels && channels.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Radio className="h-5 w-5" />
+              TV Channels
+            </CardTitle>
+            <CardDescription>Your Seeksy TV channels</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {channels.map((channel) => (
+                <div
+                  key={channel.id}
+                  className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                  onClick={() => navigate(`/tv/channel/${channel.slug}`)}
+                >
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-bold">
+                    {channel.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-medium">{channel.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {tvContent?.filter(v => v.channel_id === channel.id).length || 0} videos
+                    </p>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-muted-foreground ml-2" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Import Jobs */}
       {importJobs && importJobs.length > 0 && (
@@ -194,9 +271,34 @@ const AdminSeeksyTV = () => {
                     <div className="absolute top-2 right-2">
                       {getPublishBadge(video.is_published)}
                     </div>
+                    <div className="absolute top-2 left-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="secondary" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start">
+                          <DropdownMenuItem onClick={() => openChannelSelector(video)}>
+                            <Radio className="h-4 w-4 mr-2" />
+                            {video.channel_id ? "Change Channel" : "Publish to Channel"}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => window.open(video.video_url, '_blank')}>
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            View Video
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-semibold line-clamp-1">{video.title}</h3>
+                    {video.channel && (
+                      <Badge variant="outline" className="mt-1 text-xs">
+                        <Radio className="h-3 w-3 mr-1" />
+                        {(video.channel as { name: string }).name}
+                      </Badge>
+                    )}
                     {video.description && (
                       <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                         {video.description}
@@ -243,6 +345,17 @@ const AdminSeeksyTV = () => {
         onOpenChange={setUploadOpen}
         onUploadComplete={() => refetch()}
       />
+
+      {selectedVideo && (
+        <ChannelSelector
+          open={channelSelectorOpen}
+          onOpenChange={setChannelSelectorOpen}
+          videoId={selectedVideo.id}
+          videoTitle={selectedVideo.title}
+          currentChannelId={selectedVideo.channelId}
+          onSuccess={() => refetch()}
+        />
+      )}
     </div>
   );
 };
