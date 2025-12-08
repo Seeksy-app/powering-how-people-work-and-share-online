@@ -251,7 +251,7 @@ export default function BoardCEOVTO() {
       animate="animate"
       exit="exit"
       transition={{ duration: 0.25, ease: "easeOut" }}
-      className="max-w-4xl mx-auto py-8 px-6 space-y-6"
+      className="w-full space-y-6"
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-4">

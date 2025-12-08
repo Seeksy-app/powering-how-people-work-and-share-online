@@ -38,7 +38,7 @@ export default function BoardRevenueInsights() {
   const revenueByChannel = isDemo ? demoRevenueByChannel : [];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 w-full">
         <Button
           variant="ghost"
           className="text-slate-500 hover:text-slate-700 -ml-2"

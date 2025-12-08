@@ -101,10 +101,10 @@ export default function BoardForecasts() {
   const multiplier = selectedScenario?.multiplier || 1;
 
   return (
-    <div>
+    <div className="w-full space-y-6">
         <Button
           variant="ghost"
-          className="text-slate-500 hover:text-slate-700 mb-6 -ml-2"
+          className="text-slate-500 hover:text-slate-700 -ml-2"
           onClick={() => navigate('/board')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
