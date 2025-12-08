@@ -7,8 +7,8 @@ export function DataModeToggle() {
   const { dataMode, setDataMode, availableModes, modeTooltip } = useBoardDataMode();
 
   const modeConfig = {
-    cfo: { icon: Sparkles, label: 'CFO Model' },
     live: { icon: Activity, label: 'Live Data' },
+    cfo: { icon: Sparkles, label: 'CFO Model' },
   };
 
   // Only show toggle if there are multiple available modes
@@ -78,8 +78,8 @@ export function DataModeLabel() {
 
   return (
     <p className="text-sm text-muted-foreground">
-      {isCFO && 'Viewing: CFO-Controlled Financial Model'}
       {isLive && 'Viewing: Real-time platform metrics'}
+      {isCFO && 'Viewing: CFO-Controlled Financial Model'}
     </p>
   );
 }
@@ -88,13 +88,13 @@ export function DataModeBadge({ className }: { className?: string }) {
   const { dataMode } = useBoardDataMode();
 
   const badgeStyles = {
-    cfo: 'bg-primary/10 text-primary',
-    live: 'bg-emerald-100 text-emerald-700',
+    live: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    cfo: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
   };
 
   const labels = {
-    cfo: 'CFO Model',
-    live: 'Live',
+    live: 'LIVE',
+    cfo: 'MODEL',
   };
 
   return (
@@ -107,5 +107,19 @@ export function DataModeBadge({ className }: { className?: string }) {
     >
       {labels[dataMode]}
     </span>
+  );
+}
+
+export function CFOModelBanner() {
+  const { isCFO } = useBoardDataMode();
+  
+  if (!isCFO) return null;
+  
+  return (
+    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3 mb-4">
+      <p className="text-sm text-amber-800 dark:text-amber-200 font-medium">
+        CFO-Controlled Financial Model — All KPIs and forecasts are derived from CFO assumptions.
+      </p>
+    </div>
   );
 }

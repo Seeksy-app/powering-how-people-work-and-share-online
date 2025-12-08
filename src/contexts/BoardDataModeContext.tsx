@@ -33,8 +33,8 @@ export function BoardDataModeProvider({ children }: { children: ReactNode }) {
   // Available modes: CFO Model and Live Data
   const availableModes: DataMode[] = ['cfo', 'live'];
 
-  // Default to CFO if available, otherwise live
-  const defaultMode: DataMode = hasCFOAssumptions ? 'cfo' : 'live';
+  // Default to Live Data mode
+  const defaultMode: DataMode = 'live';
   
   const [dataMode, setDataMode] = useState<DataMode>(defaultMode);
 
@@ -51,12 +51,12 @@ export function BoardDataModeProvider({ children }: { children: ReactNode }) {
       case 'cfo':
         return {
           label: 'CFO Model',
-          tooltip: 'All metrics powered by CFO assumptions. Baseline for all Board forecasts.',
+          tooltip: 'CFO-Controlled Financial Model — All KPIs and forecasts are derived from CFO assumptions.',
         };
       case 'live':
         return {
           label: 'Live Data',
-          tooltip: 'Real-time operational metrics from Seeksy platform.',
+          tooltip: 'Real-time platform metrics: creators, podcasts, episodes, signups, and revenue.',
         };
     }
   };
