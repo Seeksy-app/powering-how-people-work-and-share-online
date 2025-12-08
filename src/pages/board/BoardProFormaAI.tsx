@@ -5,15 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
-  TrendingUp, ArrowLeft, Calendar, RefreshCw, Download, FileSpreadsheet,
-  Sparkles, Target, TrendingDown, Check, Loader2, Save, Share2
+  TrendingUp, ArrowLeft, Calendar, Download, FileSpreadsheet,
+  Sparkles, Target, TrendingDown, Check, Loader2, Save, Share2, Lock, Shield
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useBoardDataMode } from '@/contexts/BoardDataModeContext';
-import { DataModeLabel, DataModeBadge } from '@/components/board/DataModeToggle';
 import { useProFormaForecast, ScenarioKey, ForecastResult } from '@/hooks/useProFormaForecast';
 import { useProFormaVersions, ProFormaVersion } from '@/hooks/useProFormaVersions';
 import { useCFOAssumptions } from '@/hooks/useCFOAssumptions';
+import { useCFOLockStatus } from '@/hooks/useCFOLockStatus';
 import { CFOAssumptionsReadOnlyPanel } from '@/components/cfo/proforma/CFOAssumptionsReadOnlyPanel';
 import { AdRevenueBreakdown } from '@/components/cfo/proforma/AdRevenueBreakdown';
 import { ProFormaSummary } from '@/components/cfo/proforma/ProFormaSummary';
@@ -55,14 +54,13 @@ const formatCurrency = (value: number) => {
 
 export default function BoardProFormaAI() {
   const navigate = useNavigate();
-  const { isDemo, isReal } = useBoardDataMode();
-  const [useCustomOverrides, setUseCustomOverrides] = useState(false);
   const [selectedYear, setSelectedYear] = useState(2025);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [viewingVersion, setViewingVersion] = useState<ProFormaVersion | null>(null);
   
-  const { rdCount, cfoOverrideCount } = useCFOAssumptions();
+  const { rdCount, cfoOverrideCount, hasCFOAssumptions, dataSource, lastCFOUpdate } = useCFOAssumptions();
+  const { isLocked, lockedAt } = useCFOLockStatus();
   
   const {
     selectedScenario,
@@ -271,7 +269,7 @@ export default function BoardProFormaAI() {
     generateForecast({
       scenarioKey: selectedScenario,
       years: [2025, 2026, 2027],
-      overrides: useCustomOverrides ? cfoOverrides : {},
+      overrides: cfoOverrides,
     });
   };
 
@@ -359,7 +357,24 @@ export default function BoardProFormaAI() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Data Source Status Badge */}
+          {hasCFOAssumptions ? (
+            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5" />
+              Live Forecast (CFO-Controlled)
+            </Badge>
+          ) : (
+            <Badge className="bg-amber-100 text-amber-700 border-amber-200">
+              Demo Forecast — Using R&D Benchmarks
+            </Badge>
+          )}
+          {isLocked && (
+            <Badge className="bg-blue-100 text-blue-700 border-blue-200 flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5" />
+              Locked by CFO
+            </Badge>
+          )}
           <VersionSelector
             versions={versions}
             selectedVersion={viewingVersion}
@@ -369,7 +384,11 @@ export default function BoardProFormaAI() {
           />
           <div className="flex items-center gap-2 text-slate-400">
             <Calendar className="w-4 h-4" />
-            <span className="text-sm">Updated: {new Date().toLocaleDateString()}</span>
+            <span className="text-sm">
+              {lastCFOUpdate 
+                ? `Updated: ${new Date(lastCFOUpdate).toLocaleDateString()}`
+                : `Updated: ${new Date().toLocaleDateString()}`}
+            </span>
           </div>
         </div>
       </div>
@@ -393,12 +412,23 @@ export default function BoardProFormaAI() {
         </Alert>
       )}
 
-      <DataModeLabel />
-
-      {isReal && (
-        <Alert className="border-blue-200 bg-blue-50">
-          <AlertDescription className="text-blue-800">
-            <strong>Real Mode Active:</strong> Forecasts are based on R&D benchmarks. As platform data grows, projections will incorporate actual metrics.
+      {/* CFO-Controlled Status Notice */}
+      {hasCFOAssumptions ? (
+        <Alert className="border-emerald-200 bg-emerald-50">
+          <Shield className="w-4 h-4 text-emerald-600" />
+          <AlertDescription className="text-emerald-800">
+            <strong>Viewing: CFO-Controlled Financial Model</strong> — All scenarios use CFO assumptions as baseline.
+            {isLocked && lockedAt && (
+              <span className="ml-2 text-emerald-600">
+                Locked on {new Date(lockedAt).toLocaleDateString()}
+              </span>
+            )}
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Alert className="border-amber-200 bg-amber-50">
+          <AlertDescription className="text-amber-800">
+            <strong>Viewing: Demo Data</strong> — Using R&D benchmarks until CFO publishes assumptions.
           </AlertDescription>
         </Alert>
       )}
