@@ -81,7 +81,13 @@ function WorkspaceLayoutInner({
     autoCreateWorkspace();
   }, [isLoading, user, workspaces.length, useLegacyNav, isPublicRoute, createWorkspace, setCurrentWorkspace]);
 
-  // Use legacy navigation for admin/board/advertiser routes
+  // Board routes have their own complete layout (BoardLayout) - skip WorkspaceLayout wrapper
+  const isBoardRoute = location.pathname.startsWith('/board');
+  if (isBoardRoute) {
+    return <>{children}</>;
+  }
+
+  // Use legacy navigation for admin/advertiser routes
   if (useLegacyNav || isPublicRoute || !user) {
     return (
       <div className="min-h-screen flex w-full bg-background">
