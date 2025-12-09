@@ -22,15 +22,21 @@ export interface Milestone {
   category: MilestoneCategory;
   status: MilestoneStatus;
   owner: string | null;
+  team: string | null;
   due_date: string | null;
+  start_date: string | null;
   progress_type: ProgressType;
-  progress_percent: number | null;
+  progress_value: number | null;
   metric_key: string | null;
   metric_target: number | null;
   metric_current: number | null;
+  metric_unit: string | null;
   dependencies: string[];
+  tags: string[] | null;
   display_order: number;
   is_demo: boolean;
+  ai_summary: string | null;
+  ai_risks: string[] | null;
   created_at: string;
   updated_at: string;
   subtasks?: MilestoneSubtask[];
@@ -95,7 +101,7 @@ export const STATUS_COLORS: Record<MilestoneStatus, string> = {
 export function calculateProgress(milestone: Milestone): number {
   switch (milestone.progress_type) {
     case 'manual':
-      return milestone.progress_percent || 0;
+      return milestone.progress_value || 0;
     case 'subtask':
       if (!milestone.subtasks || milestone.subtasks.length === 0) return 0;
       const completed = milestone.subtasks.filter(s => s.is_completed).length;

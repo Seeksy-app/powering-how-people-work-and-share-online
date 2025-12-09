@@ -59,7 +59,7 @@ export function MilestoneFormDialog({
         owner: milestone.owner || '',
         due_date: milestone.due_date || '',
         progress_type: milestone.progress_type,
-        progress_percent: milestone.progress_percent || 0,
+        progress_percent: milestone.progress_value || 0,
         metric_key: milestone.metric_key || '',
         metric_target: milestone.metric_target || 0,
         dependencies: milestone.dependencies || [],

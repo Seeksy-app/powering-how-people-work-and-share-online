@@ -15135,6 +15135,8 @@ export type Database = {
       }
       milestones: {
         Row: {
+          ai_risks: string[] | null
+          ai_summary: string | null
           category: string
           created_at: string
           dependencies: string[] | null
@@ -15146,14 +15148,20 @@ export type Database = {
           metric_current: number | null
           metric_key: string | null
           metric_target: number | null
+          metric_unit: string | null
           owner: string | null
-          progress_percent: number | null
           progress_type: string
+          progress_value: number | null
+          start_date: string | null
           status: string
+          tags: string[] | null
+          team: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          ai_risks?: string[] | null
+          ai_summary?: string | null
           category?: string
           created_at?: string
           dependencies?: string[] | null
@@ -15165,14 +15173,20 @@ export type Database = {
           metric_current?: number | null
           metric_key?: string | null
           metric_target?: number | null
+          metric_unit?: string | null
           owner?: string | null
-          progress_percent?: number | null
           progress_type?: string
+          progress_value?: number | null
+          start_date?: string | null
           status?: string
+          tags?: string[] | null
+          team?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          ai_risks?: string[] | null
+          ai_summary?: string | null
           category?: string
           created_at?: string
           dependencies?: string[] | null
@@ -15184,10 +15198,14 @@ export type Database = {
           metric_current?: number | null
           metric_key?: string | null
           metric_target?: number | null
+          metric_unit?: string | null
           owner?: string | null
-          progress_percent?: number | null
           progress_type?: string
+          progress_value?: number | null
+          start_date?: string | null
           status?: string
+          tags?: string[] | null
+          team?: string | null
           title?: string
           updated_at?: string
         }
