@@ -24,6 +24,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Landmark, Eye } from 'lucide-react';
 import { CFOBrief, generateInvestorBriefText } from '@/components/cfo-v2/CFOBrief';
 import { SaveProFormaVersionModal } from '@/components/cfo/SaveProFormaVersionModal';
+import { ShareToBoardModal } from '@/components/cfo-v2/ShareToBoardModal';
 import { GlossaryTerm } from '@/components/cfo-v2/CFOGlossary';
 import { AIExplanationCard } from '@/components/cfo-v2/CFOAIExplanations';
 import { CFOScenarioSummary, ScenarioSummaryExport, ScenarioType } from '@/components/cfo-v2/CFOScenarioSummary';
@@ -146,6 +147,7 @@ export default function CFOStudioV2() {
   });
   const [savingTab, setSavingTab] = useState<string | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const TAB_ORDER = ['revenue', 'cogs', 'opex', 'headcount', 'metrics', 'assumptions', 'capital', 'statements', 'summary'];
   const allTabsSaved = Object.values(savedTabs).every(Boolean);
@@ -494,7 +496,7 @@ export default function CFOStudioV2() {
     toast.success('Excel export complete');
   };
 
-  const shareToBoard = () => toast.success('Pro Forma shared to Board');
+  const shareToBoard = () => setShowShareModal(true);
 
   // Version management handlers
   const mappedVersions: CFOStudioVersion[] = useMemo(() => {
@@ -1955,6 +1957,14 @@ export default function CFOStudioV2() {
           navigate('/cfo/proforma');
         }}
         isSaving={isSaving}
+      />
+
+      {/* Share to Board Modal */}
+      <ShareToBoardModal
+        open={showShareModal}
+        onOpenChange={setShowShareModal}
+        versionLabel={currentVersionId ? mappedVersions.find(v => v.id === currentVersionId)?.name : undefined}
+        versionId={currentVersionId || undefined}
       />
     </div>
   );

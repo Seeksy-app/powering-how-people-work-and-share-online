@@ -113,9 +113,9 @@ export function ShareToBoardModal({
 
       onOpenChange(false);
 
-      // Navigate to board view if "share and view" is selected
+      // Navigate to CFO proforma view (admin route) if "share and view" is selected
       if (shareOption === 'share-view') {
-        navigate('/board/proforma');
+        navigate('/cfo/proforma');
       }
     } catch (error) {
       console.error('Share error:', error);
