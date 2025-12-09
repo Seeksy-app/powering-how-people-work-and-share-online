@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,9 +8,10 @@ import {
   TrendingUp, ArrowLeft, Calendar, Download, FileSpreadsheet,
   Sparkles, Target, TrendingDown, Check, Loader2, Save, Share2, Lock, Shield
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useProFormaForecast, ScenarioKey, ForecastResult } from '@/hooks/useProFormaForecast';
 import { useProFormaVersions, ProFormaVersion } from '@/hooks/useProFormaVersions';
+import { useCFOProFormaVersions, CFOProFormaVersion } from '@/hooks/useCFOProFormaVersions';
 import { useCFOAssumptions } from '@/hooks/useCFOAssumptions';
 import { useCFOLockStatus } from '@/hooks/useCFOLockStatus';
 import { CFOAssumptionsReadOnlyPanel } from '@/components/cfo/proforma/CFOAssumptionsReadOnlyPanel';
@@ -18,12 +19,14 @@ import { AdRevenueBreakdown } from '@/components/cfo/proforma/AdRevenueBreakdown
 import { ProFormaSummary } from '@/components/cfo/proforma/ProFormaSummary';
 import { SaveVersionDialog } from '@/components/board/SaveVersionDialog';
 import { VersionSelector } from '@/components/board/VersionSelector';
+import { CFOVersionSelector } from '@/components/cfo/CFOVersionSelector';
 import { ShareWithInvestorsDialog } from '@/components/board/ShareWithInvestorsDialog';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, Legend,
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import { formatDistanceToNow } from 'date-fns';
 
 const SCENARIO_STYLES = {
   conservative: {
@@ -54,13 +57,22 @@ const formatCurrency = (value: number) => {
 
 export default function BoardProFormaAI() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedYear, setSelectedYear] = useState(2025);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [viewingVersion, setViewingVersion] = useState<ProFormaVersion | null>(null);
+  const [viewingCFOVersion, setViewingCFOVersion] = useState<CFOProFormaVersion | null>(null);
   
   const { rdCount, cfoOverrideCount, hasCFOAssumptions, dataSource, lastCFOUpdate } = useCFOAssumptions();
   const { isLocked, lockedAt } = useCFOLockStatus();
+  
+  // CFO Pro Forma Versions (the new system)
+  const { 
+    versions: cfoVersions, 
+    latestVersion: latestCFOVersion,
+    isLoading: cfoVersionsLoading 
+  } = useCFOProFormaVersions();
   
   const {
     selectedScenario,
@@ -84,8 +96,17 @@ export default function BoardProFormaAI() {
     isSaving,
   } = useProFormaVersions();
 
+  // Handle navigation state for viewing a specific version
+  useEffect(() => {
+    if (location.state?.viewVersion) {
+      setViewingCFOVersion(location.state.viewVersion);
+      // Clear state to avoid re-setting on future navigations
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, location.pathname]);
+
   // Determine if we're in live mode (no historical version selected)
-  const isLiveMode = viewingVersion === null;
+  const isLiveMode = viewingVersion === null && viewingCFOVersion === null;
 
   // Parse forecast data for display - prefer viewed version, then generated, then stored
   const forecastData = useMemo(() => {
@@ -373,26 +394,58 @@ export default function BoardProFormaAI() {
               Locked by CFO
             </Badge>
           )}
-          <VersionSelector
-            versions={versions}
-            selectedVersion={viewingVersion}
-            onSelectVersion={setViewingVersion}
-            onDeleteVersion={deleteVersion}
+          
+          {/* CFO Version Selector */}
+          <CFOVersionSelector
+            versions={cfoVersions}
+            selectedVersion={viewingCFOVersion}
+            latestVersion={latestCFOVersion}
+            onSelectVersion={(version) => {
+              setViewingCFOVersion(version);
+              setViewingVersion(null); // Clear old version selector
+            }}
             isLiveMode={isLiveMode}
           />
+          
           <div className="flex items-center gap-2 text-slate-400">
             <Calendar className="w-4 h-4" />
             <span className="text-sm">
-              {lastCFOUpdate 
-                ? `Updated: ${new Date(lastCFOUpdate).toLocaleDateString()}`
-                : `Updated: ${new Date().toLocaleDateString()}`}
+              {latestCFOVersion 
+                ? `Latest: ${formatDistanceToNow(new Date(latestCFOVersion.created_at), { addSuffix: true })}`
+                : lastCFOUpdate 
+                  ? `Updated: ${new Date(lastCFOUpdate).toLocaleDateString()}`
+                  : `Updated: ${new Date().toLocaleDateString()}`}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Historical Version Banner */}
-      {!isLiveMode && viewingVersion && (
+      {/* CFO Version Banner - when viewing a saved CFO version */}
+      {viewingCFOVersion && (
+        <Alert className="border-indigo-200 bg-indigo-50">
+          <AlertDescription className="text-indigo-800 flex items-center justify-between">
+            <div>
+              <strong>Forecast Version:</strong> {viewingCFOVersion.name}
+              <span className="text-indigo-600 ml-2">
+                (saved {formatDistanceToNow(new Date(viewingCFOVersion.created_at), { addSuffix: true })})
+              </span>
+              {viewingCFOVersion.notes && (
+                <span className="ml-2 text-indigo-600 italic">— {viewingCFOVersion.notes}</span>
+              )}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setViewingCFOVersion(null)}
+            >
+              Return to Live Mode
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Historical Version Banner (legacy) */}
+      {!isLiveMode && viewingVersion && !viewingCFOVersion && (
         <Alert className="border-amber-200 bg-amber-50">
           <AlertDescription className="text-amber-800 flex items-center justify-between">
             <span>
@@ -410,8 +463,8 @@ export default function BoardProFormaAI() {
         </Alert>
       )}
 
-      {/* CFO-Controlled Status Notice - only show if CFO assumptions exist */}
-      {hasCFOAssumptions && (
+      {/* CFO-Controlled Status Notice - only show if CFO assumptions exist and NOT viewing a version */}
+      {hasCFOAssumptions && isLiveMode && (
         <Alert className="border-emerald-200 bg-emerald-50">
           <Shield className="w-4 h-4 text-emerald-600" />
           <AlertDescription className="text-emerald-800">
