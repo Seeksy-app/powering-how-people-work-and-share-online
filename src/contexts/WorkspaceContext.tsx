@@ -53,7 +53,9 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
   const fetchWorkspaces = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('[WorkspaceContext] Session:', session?.user?.id, session?.user?.email);
       if (!session) {
+        console.log('[WorkspaceContext] No session, skipping fetch');
         setIsLoading(false);
         return;
       }
@@ -63,6 +65,8 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: true });
+
+      console.log('[WorkspaceContext] Fetched workspaces:', data?.length, 'error:', error);
 
       if (error) throw error;
 
