@@ -337,17 +337,43 @@ export default function CFOStudioV2() {
     setAssumptions(prev => ({ ...prev, [key]: value }));
   }, []);
 
-  // Calculator apply handlers
-  const handleROIApply = useCallback((results: { roi: number; ltvCac: number; payback: number }) => {
-    toast.success(`ROI Calculator applied: ${results.roi.toFixed(0)}% ROI, ${results.ltvCac.toFixed(1)}x LTV:CAC`);
+  // Calculator apply handlers - sync inputs back to sliders
+  const handleROIApply = useCallback((
+    results: { roi: number; ltvCac: number; payback: number },
+    inputs: { marketingSpend: number; cac: number; churn: number; arpu: number }
+  ) => {
+    setAssumptions(prev => ({
+      ...prev,
+      monthlyMarketingBudget: Math.round(inputs.marketingSpend / 12),
+      cacPaid: inputs.cac,
+      churnRate: inputs.churn,
+      proTierArpu: inputs.arpu,
+    }));
+    toast.success(`ROI Calculator applied: ${results.roi.toFixed(0)}% ROI, ${results.ltvCac.toFixed(1)}x LTV:CAC — Sliders updated`);
   }, []);
 
-  const handleBreakevenApply = useCallback((results: { breakEvenMonth: number; breakEvenRunRate: number }) => {
-    toast.success(`Breakeven Month ${results.breakEvenMonth} applied to model`);
+  const handleBreakevenApply = useCallback((
+    results: { breakEvenMonth: number; breakEvenRunRate: number },
+    inputs: { fixedOpex: number; variableOpexPct: number; revenueGrowth: number }
+  ) => {
+    setAssumptions(prev => ({
+      ...prev,
+      monthlyCreatorGrowth: Math.round(inputs.revenueGrowth / 12 * 10) / 10,
+    }));
+    toast.success(`Breakeven Month ${results.breakEvenMonth} applied — Sliders updated`);
   }, []);
 
-  const handleGrowthImpactApply = useCallback((results: { deltaRevenue: number[]; deltaEbitda: number[]; deltaRunway: number }) => {
-    toast.success('Growth impact applied to model');
+  const handleGrowthImpactApply = useCallback((
+    results: { deltaRevenue: number[]; deltaEbitda: number[]; deltaRunway: number },
+    inputs: { growthDelta: number; pricingDelta: number; cacDelta: number; churnDelta: number }
+  ) => {
+    setAssumptions(prev => ({
+      ...prev,
+      monthlyCreatorGrowth: Math.max(0, Math.min(20, prev.monthlyCreatorGrowth * (1 + inputs.growthDelta / 100))),
+      pricingSensitivity: inputs.pricingDelta,
+      churnRate: Math.max(0, Math.min(15, prev.churnRate * (1 + inputs.churnDelta / 100))),
+    }));
+    toast.success('Growth impact applied — Sliders updated');
   }, []);
 
   // AI Forecast Generation
