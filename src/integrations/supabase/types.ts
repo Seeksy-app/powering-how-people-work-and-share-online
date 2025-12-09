@@ -5158,6 +5158,138 @@ export type Database = {
         }
         Relationships: []
       }
+      cfo_capital_events: {
+        Row: {
+          allocation_cac: number | null
+          allocation_hiring: number | null
+          allocation_infrastructure: number | null
+          allocation_runway: number | null
+          amount: number
+          created_at: string | null
+          event_type: string
+          id: string
+          is_active: boolean | null
+          label: string | null
+          notes: string | null
+          timing_quarter: string
+          timing_year: number
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          allocation_cac?: number | null
+          allocation_hiring?: number | null
+          allocation_infrastructure?: number | null
+          allocation_runway?: number | null
+          amount: number
+          created_at?: string | null
+          event_type: string
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          notes?: string | null
+          timing_quarter: string
+          timing_year: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          allocation_cac?: number | null
+          allocation_hiring?: number | null
+          allocation_infrastructure?: number | null
+          allocation_runway?: number | null
+          amount?: number
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          notes?: string | null
+          timing_quarter?: string
+          timing_year?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      cfo_cash_position: {
+        Row: {
+          break_even_month: number | null
+          cash_runway_months: number | null
+          created_at: string | null
+          current_cash: number
+          id: string
+          last_calculated_at: string | null
+          monthly_burn_rate: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          break_even_month?: number | null
+          cash_runway_months?: number | null
+          created_at?: string | null
+          current_cash?: number
+          id?: string
+          last_calculated_at?: string | null
+          monthly_burn_rate?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          break_even_month?: number | null
+          cash_runway_months?: number | null
+          created_at?: string | null
+          current_cash?: number
+          id?: string
+          last_calculated_at?: string | null
+          monthly_burn_rate?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      cfo_expenses: {
+        Row: {
+          category: string
+          created_at: string | null
+          expense_key: string
+          id: string
+          is_monthly: boolean | null
+          label: string
+          notes: string | null
+          unit: string
+          updated_at: string | null
+          user_id: string | null
+          value: number
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          expense_key: string
+          id?: string
+          is_monthly?: boolean | null
+          label: string
+          notes?: string | null
+          unit?: string
+          updated_at?: string | null
+          user_id?: string | null
+          value?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          expense_key?: string
+          id?: string
+          is_monthly?: boolean | null
+          label?: string
+          notes?: string | null
+          unit?: string
+          updated_at?: string | null
+          user_id?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       cfo_lock_status: {
         Row: {
           id: string
