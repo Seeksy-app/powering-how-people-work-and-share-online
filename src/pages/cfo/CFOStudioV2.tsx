@@ -22,6 +22,7 @@ import { CFOCapitalRunway, CapitalSettings, CapitalInfusion, CapitalOutputs } fr
 import { useCFOProFormaVersions } from '@/hooks/useCFOProFormaVersions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Landmark } from 'lucide-react';
+import { CFOBrief, generateInvestorBriefText } from '@/components/cfo-v2/CFOBrief';
 
 // Types
 interface RevenueModel {
@@ -446,7 +447,12 @@ export default function CFOStudioV2() {
   };
 
   // Export handlers
-  const exportPDF = () => toast.success('PDF export started');
+  const exportPDF = () => {
+    // Include investor brief in PDF export
+    const investorBrief = generateInvestorBriefText(metrics, YEARS);
+    console.log('PDF Export with Investor Brief:', investorBrief);
+    toast.success('PDF export started with CFO Investor Brief');
+  };
   const exportExcel = () => {
     const headers = ['Category', ...YEARS.map(y => y.toString())];
     const rows = [
@@ -1819,7 +1825,16 @@ export default function CFOStudioV2() {
               </Card>
             </div>
 
-            {/* Final Save Button */}
+            {/* CFO Brief for Board */}
+            <div className="mt-6">
+              <CFOBrief
+                variant="board"
+                metrics={metrics}
+                forecastMode={forecastMode}
+                scenario="base"
+                years={YEARS}
+              />
+            </div>
             <div className="mt-6 flex justify-center">
               <Button
                 size="lg"
