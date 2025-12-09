@@ -422,7 +422,7 @@ ${item.boardConsiderations.map(c => `• ${c}`).join('\n')}`;
                 {/* Quadrant Header */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className={cn("p-2.5 rounded-xl", config.iconBgColor)}>
-                    <span className="text-lg">{config.emoji}</span>
+                    <IconComponent className={cn("w-5 h-5", config.iconColor)} />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900">{config.title}</h3>

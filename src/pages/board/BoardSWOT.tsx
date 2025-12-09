@@ -630,16 +630,16 @@ ${item.boardConsiderations.map(c => `• ${c}`).join('\n')}`;
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-100 rounded-lg p-1">
+            <div className="flex items-center bg-slate-100 rounded-xl p-1.5 gap-1">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     size="sm"
                     variant={viewMode === 'quadrant' ? 'default' : 'ghost'}
-                    className="h-8 w-8 p-0"
+                    className="h-10 w-10 p-0"
                     onClick={() => setViewMode('quadrant')}
                   >
-                    <Grid3X3 className="w-4 h-4" />
+                    <Grid3X3 className="w-5 h-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Quadrant View</TooltipContent>
@@ -649,10 +649,10 @@ ${item.boardConsiderations.map(c => `• ${c}`).join('\n')}`;
                   <Button
                     size="sm"
                     variant={viewMode === 'stack' ? 'default' : 'ghost'}
-                    className="h-8 w-8 p-0"
+                    className="h-10 w-10 p-0"
                     onClick={() => setViewMode('stack')}
                   >
-                    <List className="w-4 h-4" />
+                    <List className="w-5 h-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Stack View</TooltipContent>
@@ -662,10 +662,10 @@ ${item.boardConsiderations.map(c => `• ${c}`).join('\n')}`;
                   <Button
                     size="sm"
                     variant={viewMode === 'radial' ? 'default' : 'ghost'}
-                    className="h-8 w-8 p-0"
+                    className="h-10 w-10 p-0"
                     onClick={() => setViewMode('radial')}
                   >
-                    <PieChart className="w-4 h-4" />
+                    <PieChart className="w-5 h-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Summary View</TooltipContent>
@@ -675,10 +675,10 @@ ${item.boardConsiderations.map(c => `• ${c}`).join('\n')}`;
                   <Button
                     size="sm"
                     variant={viewMode === 'tabs' ? 'default' : 'ghost'}
-                    className="h-8 w-8 p-0"
+                    className="h-10 w-10 p-0"
                     onClick={() => setViewMode('tabs')}
                   >
-                    <LayoutGrid className="w-4 h-4" />
+                    <LayoutGrid className="w-5 h-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Tabs View</TooltipContent>
