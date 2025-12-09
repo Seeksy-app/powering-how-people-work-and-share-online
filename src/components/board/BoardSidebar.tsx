@@ -85,12 +85,6 @@ const financialItems = [
     icon: Calculator,
     path: '/board/roi-calculator',
   },
-  {
-    id: 'key-metrics',
-    label: 'Key Metrics',
-    icon: BarChart3,
-    path: '/board/key-metrics',
-  },
 ];
 
 type NavItem = {
