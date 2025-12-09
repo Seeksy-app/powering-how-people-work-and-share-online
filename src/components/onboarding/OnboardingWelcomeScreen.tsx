@@ -95,28 +95,28 @@ export function OnboardingWelcomeScreen({
       icon: PartyPopper,
       title: 'Create Your First Event',
       description: 'Host workshops, meetups, or live experiences. Manage registrations effortlessly.',
-      path: '/events/new',
+      path: '/events',
       gradient: 'from-orange-500 to-pink-500',
     },
     {
       icon: CalendarDays,
       title: 'Set Up Meeting Bookings',
       description: 'Share your personalized booking link and let people schedule time with you automatically.',
-      path: '/meetings/settings',
+      path: '/meetings',
       gradient: 'from-blue-500 to-cyan-500',
     },
     {
       icon: Sparkles,
       title: 'Customize Your Profile',
       description: 'Build a polished landing page with your events, links, and booking tools in one place.',
-      path: '/my-page/settings',
+      path: '/profile/edit',
       gradient: 'from-purple-500 to-indigo-500',
     },
     {
       icon: BarChart3,
       title: 'Create Polls & Sign-Ups',
       description: 'Engage your community, collect feedback, or organize volunteers instantly.',
-      path: '/polls/new',
+      path: '/polls',
       gradient: 'from-green-500 to-emerald-500',
     },
   ];
@@ -149,7 +149,7 @@ export function OnboardingWelcomeScreen({
                   transition={{ delay: 0.2 }}
                   className="text-2xl sm:text-3xl font-bold mb-3"
                 >
-                  Welcome to Seeksy — Recommended Apps for You
+                  Welcome to Seeksy —<br />Recommended Apps for You
                 </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, y: 10 }}
