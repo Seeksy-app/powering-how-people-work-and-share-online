@@ -47,11 +47,26 @@ export default function CFOAssumptionStudio() {
     toast.success('Assumptions reset — rebuild required.');
   };
 
-  // Handler for when a calculator saves - mark section as saved
+  // Tab order for auto-advance
+  const tabOrder: CFOSectionKey[] = ['growth', 'subscriptions', 'adRevenue', 'events', 'expenses', 'capital'];
+  
+  // Map section keys to tab values (adRevenue uses 'ads' as tab value)
+  const sectionToTabValue = (section: CFOSectionKey): string => {
+    return section === 'adRevenue' ? 'ads' : section;
+  };
+
+  // Handler for when a calculator saves - mark section as saved and auto-advance
   const handleCalculatorSave = (section: CFOSectionKey, data?: Record<string, any>) => {
     markSectionSaved(section, data);
     setShowSaveSuccess(true);
     toast.success('Saved to Pro Forma — this section is now included in the forecast.');
+    
+    // Auto-advance to the next tab (unless we're on the last one)
+    const currentIndex = tabOrder.indexOf(section);
+    if (currentIndex < tabOrder.length - 1) {
+      const nextSection = tabOrder[currentIndex + 1];
+      setActiveTab(sectionToTabValue(nextSection));
+    }
   };
 
   // Auto-hide the success message after 8 seconds
