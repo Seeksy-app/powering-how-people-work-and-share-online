@@ -60,8 +60,13 @@ function WorkspaceLayoutInner({
     '/security',
     '/apps-and-tools',
     '/demo-videos',
-    '/onboarding',
-  ].some(route => location.pathname === route || location.pathname.startsWith('/public') || location.pathname.startsWith('/onboarding'));
+  ].some(route => location.pathname === route || location.pathname.startsWith('/public'));
+
+  // Onboarding route should render children ONLY - no nav, no sidebar
+  const isOnboardingRoute = location.pathname.startsWith('/onboarding');
+  if (isOnboardingRoute) {
+    return <>{children}</>;
+  }
 
   // Auto-create removed - workspaces are created during onboarding or via the Create Workspace button
   // This prevents the duplicate workspace creation error (23505)

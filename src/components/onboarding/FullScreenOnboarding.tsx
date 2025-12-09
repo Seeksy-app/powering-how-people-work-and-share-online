@@ -322,7 +322,7 @@ export function FullScreenOnboarding() {
         className="space-y-5"
       >
         <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-          Hey there, what brings you here today?
+          Hey there,<br />what brings you here today?
         </h1>
         <div className="flex flex-wrap gap-3">
           <PillButton label="Work" selected={data.purpose === 'work'} onClick={() => setData(prev => ({ ...prev, purpose: 'work' }))} />
