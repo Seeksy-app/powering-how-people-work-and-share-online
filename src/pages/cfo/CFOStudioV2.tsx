@@ -131,12 +131,16 @@ export default function CFOStudioV2() {
     cogs: false,
     opex: false,
     headcount: false,
+    metrics: false,
     assumptions: false,
     capital: false,
+    statements: false,
+    summary: false,
   });
   const [savingTab, setSavingTab] = useState<string | null>(null);
 
   const TAB_ORDER = ['revenue', 'cogs', 'opex', 'headcount', 'metrics', 'assumptions', 'capital', 'statements', 'summary'];
+  const allTabsSaved = Object.values(savedTabs).every(Boolean);
 
   // Capital & Runway State
   const [capitalSettings, setCapitalSettings] = useState<CapitalSettings>({
@@ -741,7 +745,7 @@ export default function CFOStudioV2() {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-          <TabsList className="grid grid-cols-8 w-full max-w-4xl">
+          <TabsList className="grid grid-cols-9 w-full max-w-5xl">
             <TabsTrigger value="revenue" className={cn("relative", savedTabs.revenue && "bg-emerald-100 data-[state=active]:bg-emerald-200")}>
               Revenue
               {savedTabs.revenue && <Check className="w-3 h-3 text-emerald-600 absolute -top-1 -right-1" />}
@@ -758,13 +762,26 @@ export default function CFOStudioV2() {
               Headcount
               {savedTabs.headcount && <Check className="w-3 h-3 text-emerald-600 absolute -top-1 -right-1" />}
             </TabsTrigger>
-            <TabsTrigger value="metrics">Metrics</TabsTrigger>
+            <TabsTrigger value="metrics" className={cn("relative", savedTabs.metrics && "bg-emerald-100 data-[state=active]:bg-emerald-200")}>
+              Metrics
+              {savedTabs.metrics && <Check className="w-3 h-3 text-emerald-600 absolute -top-1 -right-1" />}
+            </TabsTrigger>
             <TabsTrigger value="assumptions" className={cn("relative", savedTabs.assumptions && "bg-emerald-100 data-[state=active]:bg-emerald-200")}>
               Assumptions
               {savedTabs.assumptions && <Check className="w-3 h-3 text-emerald-600 absolute -top-1 -right-1" />}
             </TabsTrigger>
-            <TabsTrigger value="statements">Financials</TabsTrigger>
-            <TabsTrigger value="summary">Summary</TabsTrigger>
+            <TabsTrigger value="capital" className={cn("relative", savedTabs.capital && "bg-emerald-100 data-[state=active]:bg-emerald-200")}>
+              Capital
+              {savedTabs.capital && <Check className="w-3 h-3 text-emerald-600 absolute -top-1 -right-1" />}
+            </TabsTrigger>
+            <TabsTrigger value="statements" className={cn("relative", savedTabs.statements && "bg-emerald-100 data-[state=active]:bg-emerald-200")}>
+              Financials
+              {savedTabs.statements && <Check className="w-3 h-3 text-emerald-600 absolute -top-1 -right-1" />}
+            </TabsTrigger>
+            <TabsTrigger value="summary" className={cn("relative", savedTabs.summary && "bg-emerald-100 data-[state=active]:bg-emerald-200")}>
+              Summary
+              {savedTabs.summary && <Check className="w-3 h-3 text-emerald-600 absolute -top-1 -right-1" />}
+            </TabsTrigger>
           </TabsList>
 
           {/* Revenue Tab */}
@@ -1477,6 +1494,26 @@ export default function CFOStudioV2() {
                     </tbody>
                   </table>
                 </div>
+                {/* Save Button */}
+                <div className="mt-6 flex justify-end">
+                  <Button
+                    onClick={() => handleSaveTab('metrics')}
+                    disabled={savingTab === 'metrics'}
+                    className={cn(
+                      "transition-all duration-300",
+                      savingTab === 'metrics' && "animate-pulse",
+                      savedTabs.metrics && "bg-emerald-600 hover:bg-emerald-700"
+                    )}
+                  >
+                    {savingTab === 'metrics' ? (
+                      <>Saving...</>
+                    ) : savedTabs.metrics ? (
+                      <><Check className="w-4 h-4 mr-2" />Saved</>
+                    ) : (
+                      <><Save className="w-4 h-4 mr-2" />Save & Continue</>
+                    )}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1612,12 +1649,64 @@ export default function CFOStudioV2() {
               </CardContent>
             </Card>
           </TabsContent>
+          {/* Capital & Runway Tab */}
+          <TabsContent value="capital">
+            <CFOCapitalRunway
+              settings={capitalSettings}
+              onSettingsChange={setCapitalSettings}
+              infusions={capitalInfusions}
+              onInfusionsChange={setCapitalInfusions}
+              ebitda={metrics.ebitda}
+              years={YEARS}
+            />
+            {/* Save Button */}
+            <div className="mt-6 flex justify-end">
+              <Button
+                onClick={() => handleSaveTab('capital')}
+                disabled={savingTab === 'capital'}
+                className={cn(
+                  "transition-all duration-300",
+                  savingTab === 'capital' && "animate-pulse",
+                  savedTabs.capital && "bg-emerald-600 hover:bg-emerald-700"
+                )}
+              >
+                {savingTab === 'capital' ? (
+                  <>Saving...</>
+                ) : savedTabs.capital ? (
+                  <><Check className="w-4 h-4 mr-2" />Saved</>
+                ) : (
+                  <><Save className="w-4 h-4 mr-2" />Save & Continue</>
+                )}
+              </Button>
+            </div>
+          </TabsContent>
+
           <TabsContent value="statements">
             <CFOFinancialStatements
               data={financialData}
               years={YEARS}
               cashBalance={500000}
             />
+            {/* Save Button */}
+            <div className="mt-6 flex justify-end">
+              <Button
+                onClick={() => handleSaveTab('statements')}
+                disabled={savingTab === 'statements'}
+                className={cn(
+                  "transition-all duration-300",
+                  savingTab === 'statements' && "animate-pulse",
+                  savedTabs.statements && "bg-emerald-600 hover:bg-emerald-700"
+                )}
+              >
+                {savingTab === 'statements' ? (
+                  <>Saving...</>
+                ) : savedTabs.statements ? (
+                  <><Check className="w-4 h-4 mr-2" />Saved</>
+                ) : (
+                  <><Save className="w-4 h-4 mr-2" />Save & Continue</>
+                )}
+              </Button>
+            </div>
           </TabsContent>
 
           {/* Summary Tab */}
@@ -1728,6 +1817,28 @@ export default function CFOStudioV2() {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Final Save Button */}
+            <div className="mt-6 flex justify-center">
+              <Button
+                size="lg"
+                onClick={() => handleSaveTab('summary')}
+                disabled={savingTab === 'summary'}
+                className={cn(
+                  "transition-all duration-300 px-8",
+                  savingTab === 'summary' && "animate-pulse",
+                  savedTabs.summary && "bg-emerald-600 hover:bg-emerald-700"
+                )}
+              >
+                {savingTab === 'summary' ? (
+                  <>Saving...</>
+                ) : savedTabs.summary ? (
+                  <><Check className="w-4 h-4 mr-2" />Pro Forma Created</>
+                ) : (
+                  <><Save className="w-4 h-4 mr-2" />Save & Create Pro Forma</>
+                )}
+              </Button>
             </div>
           </TabsContent>
         </Tabs>
