@@ -42,6 +42,13 @@ const quickLinks = [
     path: '/board/proforma',
     gradient: 'from-amber-500 to-orange-600',
   },
+  {
+    title: 'CEO VTO',
+    description: 'Vision • Traction • Operations',
+    icon: Activity,
+    path: '/board/vto',
+    gradient: 'from-violet-500 to-purple-600',
+  },
 ];
 
 const categoryColors: Record<string, string> = {
@@ -49,18 +56,6 @@ const categoryColors: Record<string, string> = {
   Product: 'bg-purple-100 text-purple-700',
   Financials: 'bg-emerald-100 text-emerald-700',
   GTM: 'bg-amber-100 text-amber-700',
-};
-
-// State of the Company content (hard-coded for now, can be from admin panel later)
-const stateOfCompanyContent = {
-  status: `Seeksy is in active development with a strong foundation across creator tools, podcast hosting, and monetization systems. The platform has onboarded early creators and is preparing for broader market launch.`,
-  highlights: [
-    'Voice and Face Identity verification system live on Polygon mainnet',
-    'AI-powered clip generation and content certification operational',
-    'Podcast RSS hosting with migration support from major platforms',
-    'Board portal and investor tools completed',
-  ],
-  nextQuarter: `Accelerate creator acquisition, launch advertising marketplace, and expand monetization tools including digital products and paid DMs.`,
 };
 
 export default function BoardDashboard() {
@@ -123,36 +118,6 @@ export default function BoardDashboard() {
     <div className="space-y-6 w-full">
       {/* Welcome Banner */}
       <WelcomeBanner firstName={firstName} />
-
-      {/* State of the Company Card */}
-      <Card className="bg-white border-slate-100 shadow-sm rounded-xl">
-        <CardHeader className="border-b border-slate-100 py-4 px-5">
-          <CardTitle className="text-slate-900 flex items-center gap-2 text-base">
-            <Activity className="w-4 h-4 text-blue-500" />
-            State of the Company
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-5">
-          <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-1.5">Current Status</h3>
-              <p>{stateOfCompanyContent.status}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-1.5">Key Highlights</h3>
-              <ul className="list-disc list-inside space-y-0.5 text-slate-600">
-                {stateOfCompanyContent.highlights.map((highlight, i) => (
-                  <li key={i}>{highlight}</li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-slate-900 mb-1.5">Next Quarter Focus</h3>
-              <p>{stateOfCompanyContent.nextQuarter}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Featured Investor Video - Static investor media, not tied to data mode */}
       <Card className="bg-white border-slate-100 shadow-sm rounded-xl overflow-hidden">
@@ -245,8 +210,8 @@ export default function BoardDashboard() {
 
       {/* Quick Links Grid */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Quick Access</h2>
-        <div className="grid md:grid-cols-3 gap-4">
+        <h2 className="text-lg font-semibold text-foreground mb-4">Quick Access</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {quickLinks.map((link) => {
             const Icon = link.icon;
             return (
@@ -255,14 +220,14 @@ export default function BoardDashboard() {
                 to={link.path}
                 className="block"
               >
-                <Card className="bg-white border-slate-100 hover:border-slate-200 hover:shadow-md transition-all cursor-pointer group rounded-xl h-full">
+                <Card className="bg-background border-border hover:border-primary/30 hover:shadow-md transition-all cursor-pointer group rounded-xl h-full">
                   <CardContent className="p-4">
                     <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${link.gradient} flex items-center justify-center mb-3 shadow-sm`}>
                       <Icon className="w-5 h-5 text-white" />
                     </div>
-                    <h3 className="text-sm font-semibold text-slate-900 mb-0.5">{link.title}</h3>
-                    <p className="text-xs text-slate-500 truncate">{link.description}</p>
-                    <span className="text-xs text-blue-600 group-hover:translate-x-1 transition-transform inline-flex items-center font-medium mt-2">
+                    <h3 className="text-sm font-semibold text-foreground mb-0.5">{link.title}</h3>
+                    <p className="text-xs text-muted-foreground truncate">{link.description}</p>
+                    <span className="text-xs text-primary group-hover:translate-x-1 transition-transform inline-flex items-center font-medium mt-2">
                       View <ArrowRight className="w-3 h-3 ml-1" />
                     </span>
                   </CardContent>
