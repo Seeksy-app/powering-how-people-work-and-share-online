@@ -202,7 +202,7 @@ export const NAVIGATION_CONFIG: {
       "items": [
       {
           "id": "admin_cfo_studio_v2",
-          "label": "CFO Studio V2",
+          "label": "CFO Studio V2.5",
           "icon": "calculator",
           "path": "/cfo/studio-v2",
           "roles": ["admin", "super_admin", "cfo"]
