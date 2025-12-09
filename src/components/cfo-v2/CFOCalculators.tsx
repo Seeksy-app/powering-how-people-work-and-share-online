@@ -11,7 +11,7 @@ interface ROICalculatorProps {
   cac: number;
   churn: number;
   arpu: number;
-  onApply: (results: { roi: number; ltvCac: number; payback: number }) => void;
+  onApply: (results: { roi: number; ltvCac: number; payback: number }, inputs: { marketingSpend: number; cac: number; churn: number; arpu: number }) => void;
 }
 
 export function ROICalculator({ marketingSpend, cac, churn, arpu, onApply }: ROICalculatorProps) {
@@ -107,7 +107,10 @@ export function ROICalculator({ marketingSpend, cac, churn, arpu, onApply }: ROI
           <Button
             size="sm"
             className="w-full"
-            onClick={() => onApply({ roi: results.roi, ltvCac: results.ltvCac, payback: results.payback })}
+            onClick={() => onApply(
+              { roi: results.roi, ltvCac: results.ltvCac, payback: results.payback },
+              { marketingSpend: localSpend, cac: localCac, churn: localChurn, arpu: localArpu }
+            )}
           >
             Apply to Model
           </Button>
@@ -122,7 +125,7 @@ interface BreakevenCalculatorProps {
   variableOpexPct: number;
   revenueGrowth: number;
   initialRevenue: number;
-  onApply: (results: { breakEvenMonth: number; breakEvenRunRate: number }) => void;
+  onApply: (results: { breakEvenMonth: number; breakEvenRunRate: number }, inputs: { fixedOpex: number; variableOpexPct: number; revenueGrowth: number }) => void;
 }
 
 export function BreakevenCalculator({
@@ -223,7 +226,7 @@ export function BreakevenCalculator({
           <Button
             size="sm"
             className="w-full"
-            onClick={() => onApply(results)}
+            onClick={() => onApply(results, { fixedOpex: localFixed, variableOpexPct: localVariable, revenueGrowth: localGrowth })}
           >
             Apply to Model
           </Button>
@@ -236,7 +239,7 @@ export function BreakevenCalculator({
 interface GrowthImpactCalculatorProps {
   baseRevenue: number[];
   baseEbitda: number[];
-  onApply: (results: { deltaRevenue: number[]; deltaEbitda: number[]; deltaRunway: number }) => void;
+  onApply: (results: { deltaRevenue: number[]; deltaEbitda: number[]; deltaRunway: number }, inputs: { growthDelta: number; pricingDelta: number; cacDelta: number; churnDelta: number }) => void;
 }
 
 export function GrowthImpactCalculator({
@@ -347,7 +350,7 @@ export function GrowthImpactCalculator({
           <Button
             size="sm"
             className="w-full"
-            onClick={() => onApply(results)}
+            onClick={() => onApply(results, { growthDelta, pricingDelta, cacDelta, churnDelta })}
           >
             Apply to Model
           </Button>
