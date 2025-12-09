@@ -147,12 +147,13 @@ export function BoardSidebar() {
             target="_blank"
             rel="noopener noreferrer"
             className={cn(
-              'w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all duration-200',
-              'text-white hover:bg-white/5',
+              'w-full flex items-center gap-2.5 rounded-[var(--nav-item-radius)] transition-all duration-200',
+              'text-[hsl(var(--nav-text-default))] hover:bg-[hsl(var(--nav-item-hover-bg))]',
               'text-[13px] font-medium'
             )}
+            style={{ padding: 'var(--nav-item-padding-y) var(--nav-item-padding-x)' }}
           >
-            <Icon className="w-4 h-4 flex-shrink-0 text-white/80" />
+            <Icon className="w-4 h-4 flex-shrink-0 text-[hsl(var(--nav-text-muted))]" />
             <span className="flex-1 truncate">{item.label}</span>
           </a>
         </SidebarMenuItem>
@@ -167,17 +168,17 @@ export function BoardSidebar() {
             to={item.path}
             data-tour={item.id === 'dashboard' ? 'nav-dashboard' : item.id === 'swot' ? 'nav-swot' : undefined}
             className={cn(
-              'w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all duration-200',
+              'w-full flex items-center gap-2.5 rounded-[var(--nav-item-radius)] transition-all duration-200',
               'text-[13px] font-medium tracking-normal',
-              'hover:bg-white/5',
-              isActive 
-                ? 'bg-white/[0.08] text-white font-semibold hover:bg-white/[0.12]' 
-                : 'text-white'
+              'text-[hsl(var(--nav-text-default))]',
+              'hover:bg-[hsl(var(--nav-item-hover-bg))]',
+              isActive && 'bg-[hsl(var(--nav-item-active-bg))] font-semibold'
             )}
+            style={{ padding: 'var(--nav-item-padding-y) var(--nav-item-padding-x)' }}
           >
             <Icon className={cn(
               "w-4 h-4 flex-shrink-0",
-              item.isAI ? "text-yellow-400" : isActive ? "text-white" : "text-white/80"
+              item.isAI ? "text-yellow-400" : isActive ? "text-[hsl(var(--nav-text-default))]" : "text-[hsl(var(--nav-text-muted))]"
             )} />
             <span className="flex-1 truncate">{item.label}</span>
           </Link>
@@ -192,15 +193,16 @@ export function BoardSidebar() {
           onClick={() => handleNavigation(item)}
           data-tour={item.id === 'dashboard' ? 'nav-dashboard' : item.id === 'swot' ? 'nav-swot' : undefined}
           className={cn(
-            'w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all duration-200',
-            'text-white hover:bg-white/5',
+            'w-full flex items-center gap-2.5 rounded-[var(--nav-item-radius)] transition-all duration-200',
+            'text-[hsl(var(--nav-text-default))] hover:bg-[hsl(var(--nav-item-hover-bg))]',
             'text-[13px] font-medium',
-            isActive && 'bg-white/[0.08] font-semibold hover:bg-white/[0.12]'
+            isActive && 'bg-[hsl(var(--nav-item-active-bg))] font-semibold'
           )}
+          style={{ padding: 'var(--nav-item-padding-y) var(--nav-item-padding-x)' }}
         >
           <Icon className={cn(
             "w-4 h-4 flex-shrink-0",
-            item.isAI ? "text-yellow-400" : isActive ? "text-white" : "text-white/80"
+            item.isAI ? "text-yellow-400" : isActive ? "text-[hsl(var(--nav-text-default))]" : "text-[hsl(var(--nav-text-muted))]"
           )} />
           <span className="flex-1 truncate">{item.label}</span>
         </SidebarMenuButton>
@@ -210,7 +212,7 @@ export function BoardSidebar() {
 
   const renderSection = (title: string, items: NavItem[], className?: string) => (
     <SidebarGroup className={cn("py-1", className)}>
-      <SidebarGroupLabel className="text-[11px] font-semibold text-white/60 uppercase tracking-wide px-3 mb-0.5">
+      <SidebarGroupLabel className="text-[11px] font-semibold text-[hsl(var(--nav-text-muted))] uppercase tracking-wider px-3 mb-0.5">
         {title}
       </SidebarGroupLabel>
       <SidebarMenu className="space-y-0">
