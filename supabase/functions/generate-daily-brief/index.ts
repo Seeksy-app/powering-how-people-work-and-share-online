@@ -84,6 +84,12 @@ serve(async (req) => {
     ).join('\n\n');
 
     const today = new Date().toISOString().split('T')[0];
+    const formattedDate = new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
     const systemPrompt = AUDIENCE_PROMPTS[audienceType as keyof typeof AUDIENCE_PROMPTS] || AUDIENCE_PROMPTS.ceo;
 
     // Generate brief using Lovable AI
@@ -99,9 +105,9 @@ serve(async (req) => {
           { role: 'system', content: systemPrompt },
           { 
             role: 'user', 
-            content: `Generate today's (${today}) competitive intelligence brief based on these recent competitor updates:\n\n${updatesContext || 'No recent updates available. Provide general industry insights based on your knowledge of the podcast/creator economy space.'}\n\nReturn your response as JSON with this structure:
+            content: `Generate today's (${formattedDate}) competitive intelligence brief based on these recent competitor updates:\n\n${updatesContext || 'No recent updates available. Provide general industry insights based on your knowledge of the podcast/creator economy space.'}\n\nIMPORTANT: Do NOT include the date in the title - the date will be displayed separately in the UI.\n\nReturn your response as JSON with this structure:
 {
-  "title": "Brief title",
+  "title": "Brief title without date",
   "summary": "Executive summary paragraph",
   "competitive_insights": [{"competitor": "name", "insight": "key insight", "impact": "high/medium/low"}],
   "market_trends": [{"trend": "description", "implication": "what it means for Seeksy"}],
