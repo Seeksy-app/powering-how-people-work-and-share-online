@@ -28,6 +28,17 @@ body {
     --background: 0 0% 100%;
     --foreground: 0 0% 10%;
 
+    /* Navigation theme tokens */
+    --nav-bg: 220 40% 8%;
+    --nav-text-default: 0 0% 100%;
+    --nav-text-muted: 0 0% 100%;
+    --nav-text-disabled: 0 0% 100%;
+    --nav-item-active-bg: 0 0% 100%;
+    --nav-item-hover-bg: 0 0% 100%;
+    --nav-item-radius: 8px;
+    --nav-item-padding-x: 14px;
+    --nav-item-padding-y: 10px;
+
     --card: 0 0% 100%;
     --card-foreground: 0 0% 10%;
 
