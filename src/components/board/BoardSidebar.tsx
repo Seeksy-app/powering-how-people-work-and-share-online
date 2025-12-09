@@ -167,10 +167,10 @@ export function BoardSidebar() {
             to={item.path}
             data-tour={item.id === 'dashboard' ? 'nav-dashboard' : item.id === 'swot' ? 'nav-swot' : undefined}
             className={cn(
-              'w-full flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200',
-              'text-white hover:bg-slate-800/40',
-              'text-sm font-medium',
-              isActive && 'bg-blue-500/30 font-semibold hover:bg-blue-500/40'
+              'w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all duration-200',
+              'text-slate-200 hover:bg-slate-800/40 hover:text-white',
+              'text-[13px] font-medium tracking-normal',
+              isActive && 'bg-blue-500/30 text-white font-semibold hover:bg-blue-500/40'
             )}
           >
             <Icon className={cn(
@@ -208,7 +208,7 @@ export function BoardSidebar() {
 
   const renderSection = (title: string, items: NavItem[], className?: string) => (
     <SidebarGroup className={cn("py-1", className)}>
-      <SidebarGroupLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-0.5">
+      <SidebarGroupLabel className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide px-3 mb-0.5">
         {title}
       </SidebarGroupLabel>
       <SidebarMenu className="space-y-0">
@@ -218,7 +218,7 @@ export function BoardSidebar() {
   );
 
   return (
-    <Sidebar collapsible="none" className="border-r border-slate-700/50 bg-slate-900 w-[16rem] flex-shrink-0">
+    <Sidebar collapsible="none" className="border-r border-slate-700/50 bg-slate-900 w-[16rem] flex-shrink-0 antialiased font-sans">
       <SidebarHeader className="p-4 border-b border-slate-700/50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
