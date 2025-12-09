@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Sliders, TrendingUp, CreditCard, DollarSign, Calendar, ArrowLeft, Sparkles, Info, Lock, Unlock, CheckCircle2, ExternalLink, Check } from 'lucide-react';
+import { Sliders, TrendingUp, CreditCard, DollarSign, Calendar, ArrowLeft, Sparkles, Info, Lock, Unlock, CheckCircle2, ExternalLink, Check, Building2, PiggyBank } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCFOAssumptions } from '@/hooks/useCFOAssumptions';
 import { useCFOLockStatus } from '@/hooks/useCFOLockStatus';
@@ -14,6 +14,8 @@ import { GrowthCACCalculator } from '@/components/cfo/calculators/GrowthCACCalcu
 import { SubscriptionRevenueCalculator } from '@/components/cfo/calculators/SubscriptionRevenueCalculator';
 import { AdRevenueCalculator } from '@/components/cfo/calculators/AdRevenueCalculator';
 import { EventsAwardsCalculator } from '@/components/cfo/calculators/EventsAwardsCalculator';
+import { ExpenseCalculator } from '@/components/cfo/calculators/ExpenseCalculator';
+import { CapitalRunwayCalculator } from '@/components/cfo/calculators/CapitalRunwayCalculator';
 import { AssumptionsSummaryPanel } from '@/components/cfo/AssumptionsSummaryPanel';
 
 export default function CFOAssumptionStudio() {
@@ -152,7 +154,7 @@ export default function CFOAssumptionStudio() {
           {/* Left: Calculators */}
           <div>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-              <TabsList className="bg-muted border border-border p-1">
+              <TabsList className="bg-muted border border-border p-1 flex-wrap h-auto gap-1">
                 <TabsTrigger value="growth" className="gap-2 data-[state=active]:bg-background">
                   <TrendingUp className="w-4 h-4" />
                   Growth & CAC
@@ -168,6 +170,14 @@ export default function CFOAssumptionStudio() {
                 <TabsTrigger value="events" className="gap-2 data-[state=active]:bg-background">
                   <Calendar className="w-4 h-4" />
                   Events & Awards
+                </TabsTrigger>
+                <TabsTrigger value="expenses" className="gap-2 data-[state=active]:bg-background">
+                  <Building2 className="w-4 h-4" />
+                  Expenses
+                </TabsTrigger>
+                <TabsTrigger value="capital" className="gap-2 data-[state=active]:bg-background">
+                  <PiggyBank className="w-4 h-4" />
+                  Capital & Runway
                 </TabsTrigger>
               </TabsList>
 
@@ -185,6 +195,14 @@ export default function CFOAssumptionStudio() {
 
               <TabsContent value="events">
                 <EventsAwardsCalculator onSave={handleCalculatorSave} />
+              </TabsContent>
+
+              <TabsContent value="expenses">
+                <ExpenseCalculator onSave={handleCalculatorSave} />
+              </TabsContent>
+
+              <TabsContent value="capital">
+                <CapitalRunwayCalculator onSave={handleCalculatorSave} />
               </TabsContent>
             </Tabs>
           </div>
