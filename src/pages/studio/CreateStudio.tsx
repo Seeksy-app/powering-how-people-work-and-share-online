@@ -47,6 +47,21 @@ export default function CreateStudio() {
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
+  const handleThumbnailUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size must be less than 5MB");
+        return;
+      }
+      if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+        toast.error("Please upload a PNG or JPG image");
+        return;
+      }
+      setThumbnail(file);
+    }
+  };
+
   const handleCreate = async () => {
     if (!studioType || !studioName) {
       toast.error("Please fill in all required fields");
@@ -54,7 +69,7 @@ export default function CreateStudio() {
     }
 
     setIsCreating(true);
-    
+    let createdTemplateId: string | null = null;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -79,19 +94,32 @@ export default function CreateStudio() {
       }
 
       // Create the studio template
-      const { error } = await supabase
+      const { data: templateData, error } = await supabase
         .from('studio_templates')
         .insert({
           user_id: user.id,
           session_name: studioName,
           description: studioDescription || `${studioTypes.find(t => t.id === studioType)?.name} created on ${new Date().toLocaleDateString()}`,
           thumbnail_url: thumbnailUrl,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+      createdTemplateId = templateData?.id;
 
       toast.success("Studio created successfully!");
-      navigate("/studio");
+      
+      // Navigate to the appropriate studio based on type
+      if (studioType === 'video') {
+        navigate(`/studio/video?template=${createdTemplateId}`);
+      } else if (studioType === 'audio') {
+        navigate(`/studio/audio?template=${createdTemplateId}`);
+      } else if (studioType === 'live') {
+        navigate(`/studio/live?template=${createdTemplateId}`);
+      } else {
+        navigate("/studio");
+      }
     } catch (error) {
       console.error("Error creating studio:", error);
       toast.error("Failed to create studio. Please try again.");
@@ -226,11 +254,16 @@ export default function CreateStudio() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label>Studio Thumbnail</Label>
-                  <div 
-                    className="aspect-video border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-all"
-                    onClick={() => {
-                      // Trigger file input
-                    }}
+                  <input
+                    type="file"
+                    id="thumbnail-upload"
+                    accept="image/png,image/jpeg,image/jpg"
+                    className="hidden"
+                    onChange={handleThumbnailUpload}
+                  />
+                  <label 
+                    htmlFor="thumbnail-upload"
+                    className="aspect-video border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary/50 hover:bg-accent/30 transition-all block"
                   >
                     {thumbnail ? (
                       <img 
@@ -249,7 +282,7 @@ export default function CreateStudio() {
                         </div>
                       </>
                     )}
-                  </div>
+                  </label>
                 </div>
 
                 {/* Summary */}

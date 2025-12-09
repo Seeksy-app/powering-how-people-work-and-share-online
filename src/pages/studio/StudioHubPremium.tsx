@@ -314,10 +314,10 @@ export default function StudioHubPremium() {
                 <StudioCard
                   key={studio.id}
                   studio={studio}
-                  onEnter={() => navigate(`/studio/session/${studio.id}`)}
-                  onRecord={() => navigate(`/studio/video?studio=${studio.id}`)}
-                  onEdit={() => navigate(`/studio/edit/${studio.id}`)}
-                  onManageAssets={() => navigate(`/studio/assets/${studio.id}`)}
+                  onEnter={() => navigate(`/studio/video?template=${studio.id}`)}
+                  onRecord={() => navigate(`/studio/video?template=${studio.id}`)}
+                  onEdit={() => navigate(`/studio/templates?edit=${studio.id}`)}
+                  onManageAssets={() => navigate(`/media-library?studio=${studio.id}`)}
                 />
               ))}
               {/* Add new studio card */}
