@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { 
   Download, FileSpreadsheet, FileText, Sparkles, Target, TrendingUp,
   DollarSign, Users, Building2, Briefcase, Calculator, Share2, ArrowLeft, Info,
-  Check, Save
+  Check, Save, AlertTriangle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,7 @@ import { ShareToBoardModal } from '@/components/cfo-v2/ShareToBoardModal';
 import { GlossaryTerm } from '@/components/cfo-v2/CFOGlossary';
 import { AIExplanationCard } from '@/components/cfo-v2/CFOAIExplanations';
 import { CFOScenarioSummary, ScenarioSummaryExport, ScenarioType } from '@/components/cfo-v2/CFOScenarioSummary';
+import { useUserRoles } from '@/hooks/useUserRoles';
 
 // Types
 interface RevenueModel {
@@ -116,12 +117,26 @@ const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 
 export default function CFOStudioV2() {
   const navigate = useNavigate();
+  const { roles, isLoading: rolesLoading } = useUserRoles();
   const [activeTab, setActiveTab] = useState('revenue');
   const [forecastMode, setForecastMode] = useState<'ai' | 'custom'>('custom');
   const [enterpriseEnabled, setEnterpriseEnabled] = useState(true);
   const [activeScenario, setActiveScenario] = useState<ScenarioType>('base');
   const [lastChangedFields, setLastChangedFields] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // Check if user has access (super_admin, platform_owner, or cfo only - not regular admin)
+  const hasAccess = roles.some(role => 
+    ['super_admin', 'platform_owner', 'cfo'].includes(role)
+  );
+
+  // Redirect admin users without proper access
+  useEffect(() => {
+    if (!rolesLoading && !hasAccess) {
+      toast.info('This module is currently under development.');
+      navigate('/admin/financials');
+    }
+  }, [rolesLoading, hasAccess, navigate]);
 
   // Version management
   const { versions, isLoading: versionsLoading, saveVersion, deleteVersion, isSaving } = useCFOProFormaVersions();
@@ -626,6 +641,20 @@ export default function CFOStudioV2() {
       grossMargin: metrics.grossMargin,
     };
   }, [metrics, adjustedCogs, adjustedOpex]);
+
+  // Show loading while checking access
+  if (rolesLoading) {
+    return (
+      <div className="w-full min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render if no access (redirect will happen via useEffect)
+  if (!hasAccess) {
+    return null;
+  }
 
   return (
     <div className="w-full min-h-screen bg-background">
