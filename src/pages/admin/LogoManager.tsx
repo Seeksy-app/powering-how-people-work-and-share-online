@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Sparkles, Upload } from "lucide-react";
 import { SparkIcon } from "@/components/spark/SparkIcon";
-import seeksyLogo from "@/assets/seeksy-logo.png";
+import seeksyLogo from "@/assets/Seeksy_Logo_5.png";
 
 export default function LogoManager() {
   return (
