@@ -14,63 +14,92 @@ interface InviteRequest {
   team_id: string | null;
 }
 
-const generateTeamInviteHTML = (inviterName: string, role: string, dashboardUrl: string) => `
+const generateTeamInviteHTML = (inviterName: string, inviteeName: string, role: string, signupUrl: string) => `
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Seeksy Team</title>
+    <title>Welcome to Seeksy</title>
   </head>
   <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 20px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
       <tr>
         <td align="center">
-          <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
             
-            <!-- Header with gradient -->
+            <!-- Header with Seeksy branding -->
             <tr>
-              <td style="background: linear-gradient(135deg, hsl(207, 100%, 50%) 0%, hsl(45, 100%, 60%) 100%); padding: 40px 30px; text-align: center;">
-                <h1 style="margin: 0 0 10px 0; color: #ffffff; font-size: 36px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">Seeksy</h1>
-                <p style="margin: 0; color: #ffffff; font-size: 20px; opacity: 0.95;">🎉 Welcome to the Team!</p>
+              <td style="background: linear-gradient(135deg, #053877 0%, #2C6BED 100%); padding: 48px 40px; text-align: center;">
+                <h1 style="margin: 0 0 8px 0; color: #ffffff; font-size: 42px; font-weight: 800; letter-spacing: -1px;">Seeksy</h1>
+                <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 16px; font-weight: 500;">Creator & Podcast Platform</p>
               </td>
             </tr>
 
             <!-- Main content -->
             <tr>
-              <td style="padding: 40px 30px;">
-                <p style="margin: 0 0 16px 0; font-size: 18px; color: #111827;">Hey there!</p>
-                <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.7; color: #374151;">
-                  <strong>${inviterName}</strong> just added you to their Seeksy team as a <strong style="color: hsl(207, 100%, 50%);">${role}</strong>. Let's get you set up! 🚀
+              <td style="padding: 48px 40px;">
+                <p style="margin: 0 0 24px 0; font-size: 28px; font-weight: 700; color: #111827;">You're Invited! 🎉</p>
+                
+                <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.7; color: #4B5563;">
+                  Hey${inviteeName ? ' ' + inviteeName : ''},
+                </p>
+                
+                <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 1.7; color: #4B5563;">
+                  <strong style="color: #111827;">${inviterName}</strong> has invited you to join their team on Seeksy as a <strong style="color: #2C6BED;">${role}</strong>.
                 </p>
 
-                <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.7; color: #374151;">
-                  Click below to jump into your dashboard, update your password, and customize your settings.
+                <div style="background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%); border-radius: 12px; padding: 24px; margin: 24px 0;">
+                  <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px;">Your Role</p>
+                  <p style="margin: 0; font-size: 20px; font-weight: 700; color: #053877;">${role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                </div>
+
+                <p style="margin: 0 0 32px 0; font-size: 16px; line-height: 1.7; color: #4B5563;">
+                  Click the button below to create your account and get started:
                 </p>
 
                 <!-- CTA Button -->
-                <table width="100%" cellpadding="0" cellspacing="0" style="margin: 32px 0;">
+                <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
                     <td align="center">
-                      <a href="${dashboardUrl}" style="display: inline-block; background-color: hsl(207, 100%, 50%); color: #ffffff; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 18px; box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);">Let's Go! →</a>
+                      <a href="${signupUrl}" style="display: inline-block; background: linear-gradient(135deg, #053877 0%, #2C6BED 100%); color: #ffffff; padding: 18px 48px; text-decoration: none; border-radius: 12px; font-weight: 700; font-size: 18px; box-shadow: 0 4px 16px rgba(5, 56, 119, 0.3);">
+                        Accept Invitation →
+                      </a>
                     </td>
                   </tr>
                 </table>
 
-                <p style="margin: 24px 0 0 0; font-size: 15px; color: #6b7280; text-align: center;">
-                  Excited to have you on board! 🎊
+                <p style="margin: 32px 0 0 0; font-size: 14px; color: #9CA3AF; text-align: center;">
+                  If you weren't expecting this invitation, you can safely ignore this email.
                 </p>
               </td>
             </tr>
 
             <!-- Footer -->
             <tr>
-              <td style="padding: 20px 30px; text-align: center; background-color: #f9fafb;">
-                <p style="margin: 0 0 4px 0; font-size: 14px; color: #374151; font-weight: 600;">Seeksy</p>
-                <p style="margin: 0; font-size: 12px; color: #9ca3af;">Your all-in-one platform for creators and teams</p>
+              <td style="padding: 24px 40px; background-color: #F9FAFB; border-top: 1px solid #E5E7EB;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td align="center">
+                      <p style="margin: 0 0 8px 0; font-size: 16px; font-weight: 700; color: #053877;">Seeksy</p>
+                      <p style="margin: 0; font-size: 13px; color: #6B7280;">The all-in-one platform for creators, podcasters & teams</p>
+                    </td>
+                  </tr>
+                </table>
               </td>
             </tr>
 
+          </table>
+          
+          <!-- Footer links -->
+          <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; margin-top: 24px;">
+            <tr>
+              <td align="center">
+                <p style="margin: 0; font-size: 12px; color: #9CA3AF;">
+                  © ${new Date().getFullYear()} Seeksy. All rights reserved.
+                </p>
+              </td>
+            </tr>
           </table>
         </td>
       </tr>
@@ -189,28 +218,12 @@ serve(async (req) => {
         console.error("Error creating invitation:", inviteError);
       }
       
-      // Use magic link / invite user via Supabase Auth
+      // Build signup URL with pre-filled email
       const siteUrl = Deno.env.get("SITE_URL") || "https://seeksy.io";
-      const redirectUrl = `${siteUrl}/auth?invited=true&role=${role}`;
+      const signupUrl = `${siteUrl}/auth?email=${encodeURIComponent(email)}&invited=true&role=${role}`;
       
-      // Invite the user - this sends a Supabase Auth invite email
-      const { data: inviteData, error: authInviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-        redirectTo: redirectUrl,
-        data: {
-          full_name: name,
-          invited_role: role,
-          inviter_id: user.id,
-        }
-      });
-      
-      if (authInviteError) {
-        console.error("Auth invite error:", authInviteError);
-        // Fall back to sending a manual email if auth invite fails
-      }
-      
-      // Also send a friendly welcome email via Resend
-      const dashboardUrl = `${siteUrl}/auth?email=${encodeURIComponent(email)}`;
-      const emailHTML = generateTeamInviteHTML(inviterName, role, dashboardUrl);
+      // Send branded welcome email via Resend (skip Supabase's generic invite email)
+      const emailHTML = generateTeamInviteHTML(inviterName, name || '', role, signupUrl);
       const senderEmail = Deno.env.get("SENDER_EMAIL_HELLO") || "Seeksy <hello@seeksy.io>";
       
       console.log("Attempting to send team invitation email:", {
