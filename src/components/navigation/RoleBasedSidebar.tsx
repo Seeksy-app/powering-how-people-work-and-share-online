@@ -93,6 +93,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Pin, PinOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -118,6 +125,7 @@ import { useSidebarState } from "@/hooks/useSidebarState";
 import { useModuleActivation } from "@/hooks/useModuleActivation";
 import { useNavPreferences, NAV_ITEMS } from "@/hooks/useNavPreferences";
 import { useCustomPackages } from "@/hooks/useCustomPackages";
+import { toast } from "sonner";
 
 interface RoleBasedSidebarProps {
   user?: User | null;
@@ -333,7 +341,7 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
   const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const { activatedModuleIds, isLoading: modulesLoading } = useModuleActivation();
-  const { navConfig, adminNavConfig, isLoading: navLoading } = useNavPreferences();
+  const { navConfig, adminNavConfig, isLoading: navLoading, savePreferences, defaultLandingRoute } = useNavPreferences();
   const { packages: customPackages } = useCustomPackages();
   const [refreshKey, setRefreshKey] = useState(0);
   
@@ -472,6 +480,41 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
   });
   
   const filteredNavigation = shouldShowAdminNav ? sortedAdminNav : [];
+
+  // Collect all admin nav items with their group info for pinning
+  const allAdminNavItems = filteredNavigation.flatMap(group => 
+    group.items.map(item => ({ ...item, groupName: group.group }))
+  );
+
+  // Get pinned items from adminNavConfig  
+  const pinnedItemIds = adminNavConfig.pinned || [];
+  const pinnedItems = pinnedItemIds
+    .map(id => allAdminNavItems.find(item => item.id === id))
+    .filter(Boolean) as (typeof allAdminNavItems[0])[];
+
+  // Handle pin/unpin for admin nav items
+  const handleTogglePin = async (itemId: string, itemLabel: string) => {
+    const currentPinned = [...(adminNavConfig.pinned || [])];
+    const isPinned = currentPinned.includes(itemId);
+    
+    let newPinned: string[];
+    if (isPinned) {
+      newPinned = currentPinned.filter(id => id !== itemId);
+      toast.success(`Unpinned "${itemLabel}"`);
+    } else {
+      newPinned = [...currentPinned, itemId];
+      toast.success(`Pinned "${itemLabel}" to top`);
+    }
+    
+    const newConfig = {
+      ...adminNavConfig,
+      pinned: newPinned
+    };
+    
+    await savePreferences(newConfig, defaultLandingRoute, true);
+  };
+
+  const isItemPinned = (itemId: string) => pinnedItemIds.includes(itemId);
 
   return (
     <Sidebar collapsible="icon">
@@ -632,6 +675,54 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
           </SidebarMenu>
         )}
 
+        {/* Pinned Items Section - Admin only, above the separator */}
+        {shouldShowAdminNav && pinnedItems.length > 0 && (
+          <SidebarGroup className="border-b border-sidebar-border pb-2 mb-2">
+            <SidebarGroupLabel className="text-sidebar-foreground/60 font-medium text-xs px-3 py-1 uppercase tracking-wider">
+              Pinned
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {pinnedItems.map((item) => {
+                  const Icon = ICON_MAP[item.icon] || Grid3x3;
+                  return (
+                    <ContextMenu key={`pinned-${item.id}`}>
+                      <ContextMenuTrigger asChild>
+                        <SidebarMenuItem>
+                          <SidebarMenuButton asChild tooltip={collapsed ? item.label : undefined}>
+                            <NavLink
+                              to={item.path}
+                              className="flex items-center gap-3 transition-all duration-150 text-sidebar-foreground hover:bg-sidebar-accent"
+                              activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium border-l-2 border-sidebar-primary"
+                            >
+                              <Icon className="h-4 w-4 shrink-0" />
+                              {!collapsed && (
+                                <>
+                                  <span className="truncate flex-1">{item.label}</span>
+                                  <Pin className="h-3 w-3 text-amber-500 shrink-0" />
+                                </>
+                              )}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      </ContextMenuTrigger>
+                      <ContextMenuContent className="bg-popover border border-border shadow-lg z-50">
+                        <ContextMenuItem 
+                          onClick={() => handleTogglePin(item.id, item.label)}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <PinOff className="h-4 w-4" />
+                          Unpin from Top
+                        </ContextMenuItem>
+                      </ContextMenuContent>
+                    </ContextMenu>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
         {/* Admin-only collapsible sections */}
         {filteredNavigation.filter(g => g.collapsible).map((group) => {
           const isOpen = openGroups[group.group] ?? true;
@@ -678,19 +769,48 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
                           );
                         }
                         
+                        const isPinnedItem = isItemPinned(item.id);
+                        
                         return (
-                          <SidebarMenuItem key={item.id}>
-                            <SidebarMenuButton asChild tooltip={collapsed ? item.label : undefined}>
-                              <NavLink
-                                to={item.path}
-                                className="flex items-center gap-3 transition-all duration-150 text-sidebar-foreground hover:bg-sidebar-accent"
-                                activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium border-l-2 border-sidebar-primary"
+                          <ContextMenu key={item.id}>
+                            <ContextMenuTrigger asChild>
+                              <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip={collapsed ? item.label : undefined}>
+                                  <NavLink
+                                    to={item.path}
+                                    className="flex items-center gap-3 transition-all duration-150 text-sidebar-foreground hover:bg-sidebar-accent"
+                                    activeClassName="bg-sidebar-primary/15 text-sidebar-primary font-medium border-l-2 border-sidebar-primary"
+                                  >
+                                    <Icon className="h-4 w-4 shrink-0" />
+                                    {!collapsed && (
+                                      <>
+                                        <span className="truncate flex-1">{item.label}</span>
+                                        {isPinnedItem && <Pin className="h-3 w-3 text-amber-500 shrink-0" />}
+                                      </>
+                                    )}
+                                  </NavLink>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent className="bg-popover border border-border shadow-lg z-50">
+                              <ContextMenuItem 
+                                onClick={() => handleTogglePin(item.id, item.label)}
+                                className="flex items-center gap-2 cursor-pointer"
                               >
-                                <Icon className="h-4 w-4 shrink-0" />
-                                {!collapsed && <span className="truncate">{item.label}</span>}
-                              </NavLink>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
+                                {isPinnedItem ? (
+                                  <>
+                                    <PinOff className="h-4 w-4" />
+                                    Unpin from Top
+                                  </>
+                                ) : (
+                                  <>
+                                    <Pin className="h-4 w-4" />
+                                    Pin to Top
+                                  </>
+                                )}
+                              </ContextMenuItem>
+                            </ContextMenuContent>
+                          </ContextMenu>
                         );
                       })}
                     </SidebarMenu>
