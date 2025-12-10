@@ -331,10 +331,8 @@ export default function SeeksyTVHome() {
             className="w-full h-full object-cover object-center"
           />
           
-          {/* Heavy Gradient Overlays for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-[#0a0a14]/70 to-[#0a0a14]/30" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a14]/80 via-transparent to-[#0a0a14]/80" />
-          <div className="absolute inset-0 bg-[#0a0a14]/40" />
+          {/* Light gradient overlay - image is already dark */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-transparent to-transparent" />
         </div>
 
         {/* Hero Content */}
