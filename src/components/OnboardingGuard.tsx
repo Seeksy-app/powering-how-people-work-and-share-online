@@ -68,9 +68,10 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     // Skip onboarding for admin-specific paths even if somehow accessed
     if (isAdminPath) return;
 
-    // Redirect non-admin users to onboarding if not completed
-    // Only redirect if onboarding is explicitly false (not undefined/null)
-    if (onboardingCompleted === false) {
+    // Only redirect if onboarding is EXPLICITLY false
+    // If undefined (data not loaded or no profile yet), don't redirect - let Auth.tsx handle initial routing
+    if (onboardingCompleted === false && accountType === undefined) {
+      // New user without any profile data - redirect to onboarding
       navigate('/onboarding');
     }
   }, [onboardingCompleted, accountType, isLoading, rolesLoading, isAdmin, isBoardMember, navigate, location.pathname]);
