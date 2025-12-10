@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Copy, ExternalLink, FileText, Mail, ArrowRight, Trash2, RotateCcw } from "lucide-react";
+import { Copy, ExternalLink, FileText, Mail, Trash2, RotateCcw } from "lucide-react";
 import { Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmailTrackingPills } from "./EmailTrackingPills";
@@ -255,11 +255,22 @@ export function EmailViewer({
           )}
         </div>
 
+        {/* Message Content */}
+        {email.html_content && (
+          <Card className="p-4">
+            <h3 className="font-medium mb-3">Message</h3>
+            <div 
+              className="border rounded-md p-4 bg-background"
+              dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(email.html_content) }}
+            />
+          </Card>
+        )}
+
         {/* Event Timeline */}
         <Card className="p-4">
           <h3 className="font-medium mb-4">Event Timeline</h3>
           <div className="space-y-3">
-            {eventOrder.map((eventType, index) => {
+            {eventOrder.map((eventType) => {
               const event = events.find((e) => e.event_type === eventType);
               const isCompleted = !!event;
               const displayName = eventType.replace("email.", "");
@@ -269,14 +280,14 @@ export function EmailViewer({
                   <Circle
                     className={cn(
                       "h-3 w-3 fill-current flex-shrink-0",
-                      isCompleted ? getStatusColor(eventType) : "text-muted"
+                      isCompleted ? "text-green-500" : "text-muted"
                     )}
                   />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <span className={cn(
                         "font-medium",
-                        isCompleted ? "text-foreground" : "text-muted-foreground"
+                        isCompleted ? "text-green-600 dark:text-green-400" : "text-muted-foreground"
                       )}>
                         {displayName.charAt(0).toUpperCase() + displayName.slice(1)}
                       </span>
@@ -297,9 +308,6 @@ export function EmailViewer({
                       </div>
                     )}
                   </div>
-                  {index < eventOrder.length - 1 && (
-                    <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  )}
                 </div>
               );
             })}
@@ -343,16 +351,6 @@ export function EmailViewer({
           />
         )}
 
-        {/* Email Preview */}
-        {email.html_content && (
-          <Card className="p-4">
-            <h3 className="font-medium mb-3">Email Preview</h3>
-            <div 
-              className="border rounded-md p-4 bg-background"
-              dangerouslySetInnerHTML={{ __html: sanitizeEmailHtml(email.html_content) }}
-            />
-          </Card>
-        )}
       </div>
 
       {/* Engagement Timeline Panel */}
