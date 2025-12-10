@@ -10,68 +10,97 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface BoardNotification {
   id: string;
   title: string;
   message: string;
-  type: 'proforma_update' | 'document' | 'video' | 'general';
+  type: string;
   read: boolean;
   created_at: string;
 }
 
 export function BoardNotificationBell() {
-  const [notifications, setNotifications] = useState<BoardNotification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const queryClient = useQueryClient();
 
+  // Fetch real notifications from database
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['board-notifications'],
+    queryFn: async (): Promise<BoardNotification[]> => {
+      const { data, error } = await supabase
+        .from('board_notifications' as any)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) {
+        console.error('Error fetching notifications:', error);
+        return [];
+      }
+      
+      return (data || []) as unknown as BoardNotification[];
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Subscribe to realtime updates
   useEffect(() => {
-    fetchNotifications();
-  }, []);
+    const channel = supabase
+      .channel('board-notifications-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'board_notifications'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['board-notifications'] });
+        }
+      )
+      .subscribe();
 
-  const fetchNotifications = async () => {
-    // For now, use mock notifications until we have a proper notifications table
-    const mockNotifications: BoardNotification[] = [
-      {
-        id: '1',
-        title: 'New Pro Forma Published',
-        message: 'CFO has published updated Q4 2025 projections',
-        type: 'proforma_update',
-        read: false,
-        created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      },
-      {
-        id: '2',
-        title: 'Document Added',
-        message: 'Investor Deck Q4 2025 has been uploaded',
-        type: 'document',
-        read: false,
-        created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      },
-      {
-        id: '3',
-        title: 'New Platform Video',
-        message: 'Product demo video is now available',
-        type: 'video',
-        read: true,
-        created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      },
-    ];
-    setNotifications(mockNotifications);
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-  };
+  const markAsReadMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('board_notifications' as any)
+        .update({ read: true })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['board-notifications'] });
+    },
+  });
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+      if (unreadIds.length === 0) return;
+      
+      const { error } = await supabase
+        .from('board_notifications' as any)
+        .update({ read: true })
+        .in('id', unreadIds);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['board-notifications'] });
+    },
+  });
 
-  const getTypeIcon = (type: BoardNotification['type']) => {
+  const getTypeIcon = (type: string) => {
     switch (type) {
       case 'proforma_update':
         return '📊';
@@ -107,7 +136,7 @@ export function BoardNotificationBell() {
               variant="ghost" 
               size="sm" 
               className="text-xs text-primary hover:text-primary/80"
-              onClick={markAllAsRead}
+              onClick={() => markAllAsReadMutation.mutate()}
             >
               Mark all read
             </Button>
@@ -127,7 +156,7 @@ export function BoardNotificationBell() {
               {notifications.map((notification) => (
                 <button
                   key={notification.id}
-                  onClick={() => markAsRead(notification.id)}
+                  onClick={() => markAsReadMutation.mutate(notification.id)}
                   className={`w-full flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors text-left ${
                     !notification.read ? 'bg-primary/5' : ''
                   }`}
