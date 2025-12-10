@@ -8,12 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { useFinancialCalculationEngine } from '@/hooks/useFinancialCalculationEngine';
 import { useCFOMasterModel } from '@/hooks/useCFOMasterModel';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUp, ArrowDown, Brain, Calculator, TrendingUp, DollarSign, CreditCard, Wallet, ArrowLeft, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CFONotesCard } from '@/components/cfo/CFONotesCard';
 
 function formatCurrency(value: number): string {
   if (Math.abs(value) >= 1000000) {
@@ -369,24 +369,8 @@ export default function BoardFinancialStatements() {
         </Tabs>
       </Card>
 
-      {/* CFO Notes Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="w-5 h-5" />
-            CFO Notes
-          </CardTitle>
-          <CardDescription>Additional context and commentary from the CFO</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="Add notes about financial performance, assumptions, or key considerations for the board..."
-            value={cfoNotes}
-            onChange={(e) => setCfoNotes(e.target.value)}
-            className="min-h-[100px]"
-          />
-        </CardContent>
-      </Card>
+      {/* CFO Notes Section - Read Only for Board */}
+      <CFONotesCard pageKey="financial_statements" readOnly />
 
       {/* AI Insights Panel */}
       <Card className="border-yellow-500/20 bg-yellow-500/5">
