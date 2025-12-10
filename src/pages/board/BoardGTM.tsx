@@ -1,8 +1,7 @@
 import { useState } from 'react';
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Target } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MarketOverviewTab } from '@/components/board/gtm/MarketOverviewTab';
 import { GTMStrategyTab } from '@/components/board/gtm/GTMStrategyTab';
@@ -11,7 +10,7 @@ import { KeyMetricsTab } from '@/components/board/gtm/KeyMetricsTab';
 import { ChannelsTab } from '@/components/board/gtm/ChannelsTab';
 import { ROICalculatorTab } from '@/components/board/gtm/ROICalculatorTab';
 import { SWOTAnalysisTab } from '@/components/board/gtm/SWOTAnalysisTab';
-
+import { BoardPageHeader } from '@/components/board/BoardPageHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const tabContentVariants = {
@@ -26,18 +25,12 @@ export default function BoardGTM() {
 
   return (
     <div className="space-y-6 w-full">
-        {/* Header */}
-        <div>
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-md">
-              <Target className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">GTM Strategy</h1>
-              <p className="text-slate-500">Go-to-market plan, channels & acquisition strategy</p>
-            </div>
-          </div>
-        </div>
+        {/* Sticky Header */}
+        <BoardPageHeader
+          icon={<Target className="w-5 h-5 text-white" />}
+          title="GTM Strategy"
+          subtitle="Go-to-market plan, channels & acquisition strategy"
+        />
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

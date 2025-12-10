@@ -10,10 +10,11 @@ import { Button } from '@/components/ui/button';
 import { useFinancialCalculationEngine } from '@/hooks/useFinancialCalculationEngine';
 import { useCFOMasterModel } from '@/hooks/useCFOMasterModel';
 import { useNavigate } from 'react-router-dom';
+import { BoardPageHeader } from '@/components/board/BoardPageHeader';
 import { 
   Brain, TrendingUp, TrendingDown, AlertTriangle, 
   CheckCircle2, Target, Users, DollarSign, Zap,
-  ArrowUp, ArrowDown, Minus, RefreshCw, ArrowLeft,
+  ArrowUp, ArrowDown, Minus, RefreshCw,
   HelpCircle, Lightbulb
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -224,21 +225,19 @@ export default function BoardCompanyHealth() {
   };
   
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Brain className="w-6 h-6 text-yellow-500" />
-            Company Health
-          </h1>
-          <p className="text-muted-foreground">AI-generated state of the company analysis</p>
-        </div>
-        <Button variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
-          <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
-          Refresh Analysis
-        </Button>
-      </div>
+    <div className="space-y-6">
+      {/* Sticky Header */}
+      <BoardPageHeader
+        icon={<Brain className="w-5 h-5 text-white" />}
+        title="Company Health"
+        subtitle="AI-generated state of the company analysis"
+        actions={
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={cn("w-4 h-4 mr-2", isRefreshing && "animate-spin")} />
+            Refresh
+          </Button>
+        }
+      />
 
       {/* Overall Health Status */}
       <Card className={cn(
