@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { WelcomeBanner } from '@/components/board/WelcomeBanner';
+import { BoardPageHeader } from '@/components/board/BoardPageHeader';
 import { BoardFloatingAIButton } from '@/components/board/BoardFloatingAIButton';
 import { BoardAISlidePanel } from '@/components/board/BoardAISlidePanel';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -116,8 +116,12 @@ export default function BoardDashboard() {
 
   return (
     <div className="space-y-6 w-full">
-      {/* Welcome Banner with integrated search, notifications, AI */}
-      <WelcomeBanner firstName={firstName} onOpenAIPanel={handleOpenAIPanel} />
+      {/* Sticky Header with integrated search, notifications, AI, Glossary */}
+      <BoardPageHeader 
+        title={firstName ? `Welcome, ${firstName}` : 'Welcome'}
+        subtitle="Board overview"
+        onOpenAIPanel={handleOpenAIPanel}
+      />
 
       {/* Featured Investor Video - Static investor media, not tied to data mode */}
       <Card className="bg-white border-slate-100 shadow-sm rounded-xl overflow-hidden">

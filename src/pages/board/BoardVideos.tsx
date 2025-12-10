@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Video, ArrowLeft, Lock, Check, Play, Clock, Tag } from 'lucide-react';
+import { Video, Lock, Check, Play, Clock, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useVideoProgress, useAllVideoProgress } from '@/hooks/useVideoProgress';
@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { BoardPageHeader } from '@/components/board/BoardPageHeader';
 
 // Video Player component with loading state
 function VideoPlayer({ videoRef, video }: { videoRef: React.RefObject<HTMLVideoElement>; video: DemoVideo }) {
@@ -175,17 +176,13 @@ export default function BoardVideos() {
   };
 
   return (
-    <div className="w-full">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-md">
-            <Video className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Platform Videos</h1>
-            <p className="text-slate-500">Product demos & presentations</p>
-          </div>
-        </div>
+    <div className="w-full space-y-6">
+        {/* Sticky Header */}
+        <BoardPageHeader
+          icon={<Video className="w-5 h-5 text-white" />}
+          title="Platform Videos"
+          subtitle="Product demos & presentations"
+        />
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Video Player */}

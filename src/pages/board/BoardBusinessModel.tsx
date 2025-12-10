@@ -5,8 +5,9 @@ import { useBoardDataMode } from '@/contexts/BoardDataModeContext';
 import { DataModeLabel, DataModeBadge } from '@/components/board/DataModeToggle';
 import { BoardFloatingAIButton } from '@/components/board/BoardFloatingAIButton';
 import { BoardAISlidePanel } from '@/components/board/BoardAISlidePanel';
+import { BoardPageHeader } from '@/components/board/BoardPageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, ArrowLeft, DollarSign, TrendingUp, Layers, Podcast, Sparkles, Building, Users } from 'lucide-react';
+import { Building2, DollarSign, TrendingUp, Layers, Podcast, Sparkles, Building, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -118,15 +119,12 @@ export default function BoardBusinessModel() {
 
   return (
     <div className="w-full space-y-6">
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md">
-            <Building2 className="w-7 h-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Business Model</h1>
-            <p className="text-slate-500">Revenue streams & monetization strategy</p>
-          </div>
-        </div>
+        {/* Sticky Header */}
+        <BoardPageHeader
+          icon={<Building2 className="w-5 h-5 text-white" />}
+          title="Business Model"
+          subtitle="Revenue streams & monetization strategy"
+        />
 
         <DataModeLabel />
 

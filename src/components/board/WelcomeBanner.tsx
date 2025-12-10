@@ -6,6 +6,7 @@ import { BoardSearch } from './BoardSearch';
 import { BoardNotificationBell } from './BoardNotificationBell';
 import { DataModePill } from '@/components/data-mode/DataModePill';
 import { DailyBriefButton } from '@/components/daily-brief/DailyBriefButton';
+import { GlossaryButton } from './GlossaryModal';
 
 interface WelcomeBannerProps {
   firstName?: string;
@@ -43,6 +44,9 @@ export function WelcomeBanner({ firstName, onOpenAIPanel }: WelcomeBannerProps) 
       {/* Right: Actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
         <DataModePill />
+        
+        {/* Glossary */}
+        <GlossaryButton />
         
         {/* Ask Seeksy Button */}
         <Button
