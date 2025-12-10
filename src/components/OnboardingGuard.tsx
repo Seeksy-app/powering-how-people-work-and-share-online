@@ -76,13 +76,14 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
     }
   }, [onboardingCompleted, accountType, isLoading, rolesLoading, isAdmin, isBoardMember, navigate, location.pathname]);
 
-  // Board routes bypass the loading spinner - they should render immediately
+  // Board routes render immediately without any loading state or guards
   const isBoardRoute = location.pathname.startsWith('/board');
   if (isBoardRoute) {
     return <>{children}</>;
   }
 
   // Show loading spinner only while actively loading (with timeout protection)
+  // But never for board routes
   if (isLoading || rolesLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">

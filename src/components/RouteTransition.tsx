@@ -154,7 +154,13 @@ export function RouteTransition({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Use location.pathname as key to force complete remount of children
+  // Board routes render children directly without any wrapper that could cause remounts
+  const isBoardRoute = location.pathname.startsWith('/board');
+  if (isBoardRoute) {
+    return <>{children}</>;
+  }
+
+  // Use location.pathname as key to force complete remount of children (non-board routes)
   // Wrap in page-container for fade-in animation
   return (
     <div key={location.pathname + location.search} className="page-container min-h-screen bg-background">
