@@ -320,7 +320,7 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { activatedModuleIds, isLoading: modulesLoading } = useModuleActivation();
-  const { navConfig, isLoading: navLoading } = useNavPreferences();
+  const { navConfig, adminNavConfig, isLoading: navLoading } = useNavPreferences();
   const { packages: customPackages } = useCustomPackages();
   const [refreshKey, setRefreshKey] = useState(0);
   
@@ -398,13 +398,36 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
       return aSort - bSort;
     });
 
+  // Helper to check if an admin nav group is hidden based on adminNavConfig
+  // The modal generates IDs like: admin_group_${group.toLowerCase().replace(/[^a-z0-9]/g, '_')}
+  const isAdminGroupHidden = (groupName: string): boolean => {
+    const generatedId = `admin_group_${groupName.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    return adminNavConfig.hidden.includes(generatedId);
+  };
+
   // Use permission-filtered navigation for admin routes/users (combines role + permission checks)
   // On admin routes, if permission nav is empty but roles are still loading, use full config
   // This prevents the empty sidebar flash
   const adminNavFromConfig = shouldShowAdminNav && permissionFilteredNav.length === 0 && (rolesLoading || rbacLoading)
     ? NAVIGATION_CONFIG.navigation.filter(g => g.collapsible)
     : permissionFilteredNav;
-  const filteredNavigation = shouldShowAdminNav ? adminNavFromConfig : [];
+  
+  // Apply adminNavConfig hidden preferences to filter out hidden groups
+  const filteredByPreferences = adminNavFromConfig.filter(group => !isAdminGroupHidden(group.group));
+  
+  // Sort by adminNavConfig.order
+  const sortedAdminNav = [...filteredByPreferences].sort((a, b) => {
+    const aId = `admin_group_${a.group.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    const bId = `admin_group_${b.group.toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+    const aIndex = adminNavConfig.order.indexOf(aId);
+    const bIndex = adminNavConfig.order.indexOf(bId);
+    // Items not in order go to the end
+    const aSort = aIndex === -1 ? 9999 : aIndex;
+    const bSort = bIndex === -1 ? 9999 : bIndex;
+    return aSort - bSort;
+  });
+  
+  const filteredNavigation = shouldShowAdminNav ? sortedAdminNav : [];
 
   return (
     <Sidebar collapsible="icon">
