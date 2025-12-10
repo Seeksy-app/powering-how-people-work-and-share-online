@@ -1,175 +1,162 @@
+/**
+ * Firecrawl-inspired TopNavBar
+ * Clean, minimal design with: Team selector, Search, Help, Docs, Notifications, Upgrade
+ */
+
 import { useState, useEffect } from "react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationsBell } from "@/components/NotificationsBell";
-import { AccountTypeSwitcher } from "@/components/AccountTypeSwitcher";
-import { StartOnboardingButton } from "@/components/onboarding/StartOnboardingButton";
 import { DataModePill } from "@/components/data-mode/DataModePill";
-import { DailyBriefButton } from "@/components/daily-brief/DailyBriefButton";
 import { GlossaryButton } from "@/components/board/GlossaryModal";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, RefreshCw, Settings } from "lucide-react";
-import { SparkIcon } from "@/components/spark/SparkIcon";
+import { HelpCircle, FileText, ChevronDown, Sparkles, ExternalLink, ArrowUpRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useLocation, useNavigate, Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 export function TopNavBar() {
-  const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [userInitials, setUserInitials] = useState("U");
+  const navigate = useNavigate();
+  const [teamName, setTeamName] = useState("Personal Workspace");
 
   useEffect(() => {
     const fetchProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Try avatar_url first, then fall back to account_avatar_url
         const { data: profile } = await supabase
           .from('profiles')
-          .select('avatar_url, account_avatar_url, full_name, account_full_name')
+          .select('full_name, account_full_name')
           .eq('id', user.id)
           .single();
         
         if (profile) {
-          // Use whichever avatar is available
-          const avatar = profile.avatar_url || profile.account_avatar_url;
-          setAvatarUrl(avatar);
           const name = profile.full_name || profile.account_full_name;
-          const initials = name?.[0]?.toUpperCase() || 
-            user.email?.[0]?.toUpperCase() || 'U';
-          setUserInitials(initials);
+          if (name) {
+            setTeamName(`${name.split(' ')[0]}'s Workspace`);
+          }
         }
       }
     };
     fetchProfile();
-
-    // Listen for profile updates
-    const handleProfileUpdate = () => {
-      fetchProfile();
-    };
-    window.addEventListener('profile-updated', handleProfileUpdate);
-
-    // Subscribe to realtime changes on profiles table
-    const channel = supabase
-      .channel('profile-changes')
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'profiles' },
-        () => {
-          fetchProfile();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      window.removeEventListener('profile-updated', handleProfileUpdate);
-      supabase.removeChannel(channel);
-    };
   }, []);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast({ title: "Logged out successfully" });
-      navigate("/auth");
-    } catch (error) {
-      toast({
-        title: "Logout failed",
-        description: "Please try again",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRefresh = () => {
-    window.location.reload();
-  };
 
   const openAIChat = () => {
     document.dispatchEvent(new Event('open-spark-assistant'));
   };
 
+  const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/cfo');
+  const isBoardRoute = location.pathname.startsWith('/board');
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[hsl(var(--header-background))] backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--header-background))]/95">
-      <div className="flex h-14 items-center gap-4 px-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleRefresh}
-          title="Refresh"
-          className="flex-shrink-0 text-[hsl(var(--header-foreground))] hover:bg-white/10"
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-        <SidebarTrigger className="flex-shrink-0 text-[hsl(var(--header-foreground))]" />
-        
-        <div className="flex-1 flex items-center justify-between gap-4">
-          <GlobalSearch />
-          
-          <div className="flex items-center gap-2">
-            {/* Glossary for Admin routes */}
-            {location.pathname.startsWith('/admin') || location.pathname.startsWith('/cfo') ? (
-              <GlossaryButton />
-            ) : null}
-            
-            {/* Data Mode Pill */}
-            <DataModePill />
-            
-            {/* Ask Spark Button - Santa mascot with gold styling */}
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex h-14 items-center justify-between gap-4 px-4">
+        {/* Left: Team/Workspace Selector - Firecrawl style */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              size="icon"
-              onClick={openAIChat}
-              title="Ask Spark"
-              className="hover:bg-white/10 p-1"
+              size="sm"
+              className="gap-2 font-medium text-foreground hover:bg-accent"
             >
-              <SparkIcon variant="holiday" size={28} animated />
+              <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center">
+                <span className="text-xs font-bold text-primary">
+                  {teamName[0]?.toUpperCase()}
+                </span>
+              </div>
+              <span className="hidden sm:inline">{teamName}</span>
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </Button>
-            
-            <StartOnboardingButton />
-            <DailyBriefButton audienceType="ceo" variant="ghost" size="sm" />
-            <AccountTypeSwitcher />
-            <ThemeToggle />
-            <NotificationsBell />
-            
-            {/* User Avatar Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full text-[hsl(var(--header-foreground))] hover:bg-white/10 p-0">
-                  <Avatar className="h-8 w-8 border-2 border-white/20">
-                    <AvatarImage src={avatarUrl ? `${avatarUrl}?t=${Date.now()}` : undefined} alt="Profile" />
-                    <AvatarFallback className="bg-primary/20 text-[hsl(var(--header-foreground))] text-xs font-medium">
-                      {userInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => {
-                  // Route to admin settings if on admin routes, otherwise regular settings
-                  const isAdminRoute = location.pathname.startsWith('/admin');
-                  navigate(isAdminRoute ? '/admin/profile-settings' : '/settings');
-                }}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuItem className="font-medium">
+              {teamName}
+              <Badge variant="secondary" className="ml-auto text-[10px]">Current</Badge>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/settings/workspace')}>
+              Workspace Settings
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Center: Global Search - Firecrawl has search in sidebar, we keep it in top bar */}
+        <div className="flex-1 max-w-xl mx-4">
+          <GlobalSearch />
+        </div>
+
+        {/* Right: Actions - Firecrawl style */}
+        <div className="flex items-center gap-1">
+          {/* Data Mode Pill */}
+          <DataModePill />
+
+          {/* Notifications */}
+          <NotificationsBell />
+
+          {/* Help - Firecrawl style */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <HelpCircle className="h-4 w-4" />
+                <span className="hidden sm:inline">Help</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={openAIChat}>
+                <Sparkles className="h-4 w-4 mr-2 text-primary" />
+                Ask AI Assistant
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/support">
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Help Center
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href="mailto:support@seeksy.io" target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Contact Support
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Docs - Firecrawl style */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 hidden sm:flex"
+            asChild
+          >
+            <Link to="/docs">
+              <FileText className="h-4 w-4" />
+              Docs
+            </Link>
+          </Button>
+
+          {/* Glossary for Admin/CFO routes */}
+          {(isAdminRoute || isBoardRoute) && <GlossaryButton />}
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
+
+          {/* Upgrade CTA - Firecrawl style */}
+          <Button
+            size="sm"
+            className="gap-1.5 bg-primary hover:bg-primary/90"
+            onClick={() => navigate('/settings/billing')}
+          >
+            <ArrowUpRight className="h-4 w-4" />
+            <span className="hidden sm:inline">Upgrade</span>
+          </Button>
         </div>
       </div>
     </header>
