@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Sparkles } from "lucide-react";
 import { SparkIcon } from "@/components/spark/SparkIcon";
 import { LogoUploader } from "@/components/admin/LogoUploader";
-import seeksyLogo from "@/assets/seeksy-logo.png";
+import seeksyLogo from "@/assets/Seeksy_Logo_5.png";
 
 export default function LogoManagerV2() {
   const [mainLogoUrl, setMainLogoUrl] = useState(seeksyLogo);
