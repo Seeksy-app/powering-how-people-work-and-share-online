@@ -5353,6 +5353,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cfo_notes: {
+        Row: {
+          id: string
+          notes: string | null
+          page_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          page_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          page_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       cfo_proforma_versions: {
         Row: {
           assumptions: Json

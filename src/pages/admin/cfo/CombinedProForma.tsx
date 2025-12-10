@@ -11,6 +11,7 @@ import ProFormaFinancialTables from "@/components/cfo/proforma/ProFormaFinancial
 import ProFormaCharts from "@/components/cfo/proforma/ProFormaCharts";
 import ProFormaAssumptions from "@/components/cfo/proforma/ProFormaAssumptions";
 import { useProFormaData, ProFormaAssumptions as AssumptionsType } from "@/hooks/useProFormaData";
+import { CFONotesCard } from "@/components/cfo/CFONotesCard";
 
 const CombinedProForma = () => {
   const navigate = useNavigate();
@@ -182,6 +183,9 @@ const CombinedProForma = () => {
 
               {/* Financial Tables */}
               <ProFormaFinancialTables data={financialData} />
+              
+              {/* CFO Notes - Editable for Admin */}
+              <CFONotesCard pageKey="financial_statements" />
             </TabsContent>
 
             <TabsContent value="charts">
