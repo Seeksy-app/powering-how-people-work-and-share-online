@@ -74,7 +74,7 @@ export const NAVIGATION_CONFIG: {
           "id": "admin_email_signatures",
           "label": "Signatures",
           "icon": "pen-tool",
-          "path": "/admin/email-client/signatures",
+          "path": "/admin/signatures",
           "roles": ["admin", "super_admin", "cmo", "cco"]
         },
         {
