@@ -75,22 +75,10 @@ export default function SeeksyTVHome() {
   const [loadingPosters, setLoadingPosters] = useState<Set<string>>(new Set());
 
   // Generate posters on mount - generate ALL 12 thumbnails
+  // NOTE: We don't cache base64 images in localStorage as they exceed quota limits
   useEffect(() => {
     const generatePosters = async () => {
-      const cacheKey = "seeksy-tv-posters-v3";
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          // Only use cache if we have all 12 posters
-          if (Object.keys(parsed).length >= 12) {
-            setPosterImages(parsed);
-            return;
-          }
-        } catch {}
-      }
-
-      // Generate ALL posters for complete coverage
+      // Generate ALL posters for complete coverage (no caching - base64 is too large)
       for (const item of demoThumbnails) {
         if (posterImages[item.id]) continue;
         
@@ -102,11 +90,7 @@ export default function SeeksyTVHome() {
           });
 
           if (!error && data?.imageUrl) {
-            setPosterImages(prev => {
-              const updated = { ...prev, [item.id]: data.imageUrl };
-              localStorage.setItem(cacheKey, JSON.stringify(updated));
-              return updated;
-            });
+            setPosterImages(prev => ({ ...prev, [item.id]: data.imageUrl }));
           }
         } catch (err) {
           console.error("Failed to generate poster:", err);
