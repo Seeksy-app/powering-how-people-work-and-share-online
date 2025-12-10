@@ -226,8 +226,8 @@ export function BoardSidebar() {
     if (filteredItems.length === 0 && searchQuery.trim()) return null;
     
     return (
-      <SidebarGroup className={cn("py-0.5", className)}>
-        <SidebarGroupLabel className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 mb-0">
+      <SidebarGroup className={cn("py-0", className)}>
+        <SidebarGroupLabel className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 mb-0 py-1">
           {title}
         </SidebarGroupLabel>
         <SidebarMenu className="space-y-0">
