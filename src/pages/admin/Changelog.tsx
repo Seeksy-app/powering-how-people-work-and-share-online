@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Megaphone, Star, Zap, Bug, Sparkles, Plus, X } from "lucide-react";
+import { Megaphone, Star, Zap, Bug, Sparkles, Plus, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useUnreadUpdates } from "@/hooks/useUnreadUpdates";
 
 interface PlatformUpdate {
   id: string;
@@ -48,6 +49,9 @@ export default function AdminChangelog() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [newItem, setNewItem] = useState("");
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const { unreadCount, markAllAsRead } = useUnreadUpdates();
+  
   const [form, setForm] = useState({
     version: "",
     title: "",
@@ -69,6 +73,30 @@ export default function AdminChangelog() {
       return data as PlatformUpdate[];
     }
   });
+
+  // Fetch read status
+  useQuery({
+    queryKey: ['user-update-reads'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+      
+      const { data } = await supabase
+        .from('user_update_reads')
+        .select('update_id')
+        .eq('user_id', user.id);
+      
+      setReadIds(new Set(data?.map(r => r.update_id) || []));
+      return data;
+    }
+  });
+
+  // Mark all as read when visiting the page
+  useEffect(() => {
+    if (updates?.length) {
+      markAllAsRead.mutate(updates.map(u => u.id));
+    }
+  }, [updates]);
 
   const createMutation = useMutation({
     mutationFn: async (update: typeof form) => {
@@ -117,7 +145,12 @@ export default function AdminChangelog() {
             <Megaphone className="h-6 w-6 text-orange-600 dark:text-orange-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">What's New</h1>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              What's New
+              {unreadCount > 0 && (
+                <Badge variant="destructive" className="text-xs">{unreadCount} new</Badge>
+              )}
+            </h1>
             <p className="text-muted-foreground">Latest updates and improvements to Seeksy</p>
           </div>
         </div>
@@ -229,12 +262,15 @@ export default function AdminChangelog() {
       ) : (
         <div className="space-y-6">
           {updates?.map((entry) => (
-            <Card key={entry.id}>
+            <Card key={entry.id} className={!readIds.has(entry.id) ? "border-primary/50 bg-primary/5" : ""}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <CardTitle className="text-lg">{entry.title}</CardTitle>
                     {getTypeBadge(entry.type)}
+                    {!readIds.has(entry.id) && (
+                      <Badge variant="secondary" className="text-xs">New</Badge>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {getVisibilityBadges(entry.visibility)}
