@@ -78,9 +78,22 @@ import {
   Mail,
   Instagram,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Play,
   Package,
+  LogOut,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -317,12 +330,43 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
   const location = useLocation();
   const { roles, isLoading: rolesLoading, isAdmin } = useUserRoles();
   const { activeAccountType } = useAccountType();
-  const { state } = useSidebar();
+  const { state, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const { activatedModuleIds, isLoading: modulesLoading } = useModuleActivation();
   const { navConfig, adminNavConfig, isLoading: navLoading } = useNavPreferences();
   const { packages: customPackages } = useCustomPackages();
   const [refreshKey, setRefreshKey] = useState(0);
+  
+  // User info for bottom section
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [userInitials, setUserInitials] = useState<string>("U");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  
+  // Fetch user info for bottom section
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        setUserEmail(authUser.email || "");
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("avatar_url, account_avatar_url, full_name, account_full_name")
+          .eq("id", authUser.id)
+          .single();
+        if (profile) {
+          setAvatarUrl(profile.avatar_url || profile.account_avatar_url);
+          const name = profile.full_name || profile.account_full_name;
+          setUserInitials(name?.[0]?.toUpperCase() || authUser.email?.[0]?.toUpperCase() || "U");
+        }
+      }
+    };
+    fetchUser();
+  }, []);
+  
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
   
   // Use permission-based navigation filtering for admin nav
   const { navigation: permissionFilteredNav, canAccessPath, isLoading: rbacLoading } = useRoleBasedNavigation();
@@ -659,20 +703,97 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
 
       </SidebarContent>
       
-      {/* Sticky AI Chat Footer - always visible */}
-      <div className="border-t border-sidebar-border p-3 bg-sidebar mt-auto">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton 
-              tooltip={collapsed ? "Ask Seeksy" : undefined}
-              onClick={() => document.dispatchEvent(new Event('open-spark-assistant'))}
-              className="flex items-center gap-3 transition-all duration-150 cursor-pointer text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+      {/* Firecrawl-style Bottom Section: AI Chat + What's New + User + Collapse */}
+      <div className="border-t border-sidebar-border bg-sidebar mt-auto">
+        {/* Ask Seeksy - AI Chat */}
+        <div className="p-3 pb-0">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                tooltip={collapsed ? "Ask Seeksy" : undefined}
+                onClick={() => document.dispatchEvent(new Event('open-spark-assistant'))}
+                className="flex items-center gap-3 transition-all duration-150 cursor-pointer text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              >
+                <SparkIcon variant="holiday" size={20} className="shrink-0" />
+                {!collapsed && <span className="truncate text-amber-600 font-medium">Ask Seeksy</span>}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
+        
+        {/* What's New Card - Firecrawl style */}
+        {!collapsed && (
+          <div className="p-3 pb-0">
+            <button
+              onClick={() => navigate('/changelog')}
+              className="w-full flex items-center gap-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-950/30 hover:bg-orange-100 dark:hover:bg-orange-950/50 transition-colors border border-orange-200/50 dark:border-orange-800/30"
             >
-              <SparkIcon variant="holiday" size={20} className="shrink-0" />
-              {!collapsed && <span className="truncate text-amber-600 font-medium">Ask Seeksy</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+              <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                <Megaphone className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-sidebar-foreground">What's New</span>
+                  <span className="text-xs font-medium text-orange-600 dark:text-orange-400">(3)</span>
+                </div>
+                <p className="text-xs text-muted-foreground">View our latest updates</p>
+              </div>
+            </button>
+          </div>
+        )}
+        
+        {/* User Account - Firecrawl style */}
+        <div className="p-3 pt-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={`w-full flex items-center gap-3 p-2 rounded-lg hover:bg-sidebar-accent transition-colors ${collapsed ? 'justify-center' : ''}`}
+              >
+                <Avatar className="h-8 w-8 border border-sidebar-border">
+                  <AvatarImage src={avatarUrl || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-medium">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                {!collapsed && (
+                  <span className="flex-1 text-left text-sm text-sidebar-foreground truncate">
+                    {userEmail}
+                  </span>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem onClick={() => navigate(shouldShowAdminNav ? '/admin/profile-settings' : '/settings')}>
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Collapse Button - Firecrawl style */}
+        <div className="p-3 pt-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleSidebar}
+            className={`w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent ${collapsed ? 'justify-center px-2' : ''}`}
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <>
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Collapse
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </Sidebar>
   );
