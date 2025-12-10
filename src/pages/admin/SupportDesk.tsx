@@ -3,11 +3,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Headphones, Search, Clock, CheckCircle2, AlertCircle, User } from "lucide-react";
+import { Headphones, Search, Clock, CheckCircle2, AlertCircle, User, Plus } from "lucide-react";
 import { useState } from "react";
+import CreateTicketModal from "@/components/helpdesk/CreateTicketModal";
 
 export default function SupportDesk() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const tickets = [
     { id: "TKT-001234", customer: "John Doe", subject: "Account access issue", priority: "high", status: "open", time: "2 hours ago" },
@@ -39,7 +41,8 @@ export default function SupportDesk() {
             Manage customer tickets and support requests
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setIsCreateModalOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
           Create Ticket
         </Button>
       </div>
@@ -109,6 +112,11 @@ export default function SupportDesk() {
           <p className="text-muted-foreground text-left py-8">Resolved tickets will appear here</p>
         </TabsContent>
       </Tabs>
+
+      <CreateTicketModal 
+        open={isCreateModalOpen} 
+        onOpenChange={setIsCreateModalOpen} 
+      />
     </div>
   );
 }
