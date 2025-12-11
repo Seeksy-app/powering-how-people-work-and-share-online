@@ -4421,6 +4421,33 @@ export type Database = {
         }
         Relationships: []
       }
+      calculator_results: {
+        Row: {
+          calculator_type: string
+          created_at: string | null
+          id: string
+          input_data: Json
+          result_data: Json
+          user_id: string | null
+        }
+        Insert: {
+          calculator_type: string
+          created_at?: string | null
+          id?: string
+          input_data: Json
+          result_data: Json
+          user_id?: string | null
+        }
+        Update: {
+          calculator_type?: string
+          created_at?: string | null
+          id?: string
+          input_data?: Json
+          result_data?: Json
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       calendar_connections: {
         Row: {
           access_token: string
@@ -6028,6 +6055,120 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      claim_partner_assignments: {
+        Row: {
+          assignment_reason: string | null
+          claim_session_id: string
+          id: string
+          partner_id: string
+          sent_at: string | null
+          status: string | null
+        }
+        Insert: {
+          assignment_reason?: string | null
+          claim_session_id: string
+          id?: string
+          partner_id: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          assignment_reason?: string | null
+          claim_session_id?: string
+          id?: string
+          partner_id?: string
+          sent_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "claim_partner_assignments_claim_session_id_fkey"
+            columns: ["claim_session_id"]
+            isOneToOne: false
+            referencedRelation: "claim_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "claim_partner_assignments_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "claim_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      claim_partners: {
+        Row: {
+          contact_email: string
+          created_at: string | null
+          id: string
+          intake_webhook_url: string | null
+          is_active: boolean | null
+          is_default: boolean | null
+          name: string
+          specialties: Json | null
+          states_served: Json | null
+        }
+        Insert: {
+          contact_email: string
+          created_at?: string | null
+          id?: string
+          intake_webhook_url?: string | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name: string
+          specialties?: Json | null
+          states_served?: Json | null
+        }
+        Update: {
+          contact_email?: string
+          created_at?: string | null
+          id?: string
+          intake_webhook_url?: string | null
+          is_active?: boolean | null
+          is_default?: boolean | null
+          name?: string
+          specialties?: Json | null
+          states_served?: Json | null
+        }
+        Relationships: []
+      }
+      claim_sessions: {
+        Row: {
+          ai_chat_log: Json | null
+          created_at: string | null
+          id: string
+          intake_data: Json | null
+          session_type: string | null
+          status: string | null
+          summary_notes: Json | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_chat_log?: Json | null
+          created_at?: string | null
+          id?: string
+          intake_data?: Json | null
+          session_type?: string | null
+          status?: string | null
+          summary_notes?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_chat_log?: Json | null
+          created_at?: string | null
+          id?: string
+          intake_data?: Json | null
+          session_type?: string | null
+          status?: string | null
+          summary_notes?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       client_tickets: {
         Row: {
@@ -23755,6 +23896,48 @@ export type Database = {
           source?: string
           status?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      veteran_profiles: {
+        Row: {
+          branch_of_service: string | null
+          created_at: string | null
+          has_active_claim: boolean | null
+          has_intent_to_file: boolean | null
+          id: string
+          last_claim_stage: string | null
+          service_end_date: string | null
+          service_start_date: string | null
+          service_status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          branch_of_service?: string | null
+          created_at?: string | null
+          has_active_claim?: boolean | null
+          has_intent_to_file?: boolean | null
+          id?: string
+          last_claim_stage?: string | null
+          service_end_date?: string | null
+          service_start_date?: string | null
+          service_status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          branch_of_service?: string | null
+          created_at?: string | null
+          has_active_claim?: boolean | null
+          has_intent_to_file?: boolean | null
+          id?: string
+          last_claim_stage?: string | null
+          service_end_date?: string | null
+          service_start_date?: string | null
+          service_status?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }

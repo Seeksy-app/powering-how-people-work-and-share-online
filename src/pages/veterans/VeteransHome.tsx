@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, FileText, MessageSquare, Shield, Clock, DollarSign } from "lucide-react";
+import { Calculator, FileText, MessageSquare, Shield, Clock, DollarSign, Award } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BenefitsOfRatingModal } from "@/components/veterans/BenefitsOfRatingModal";
+import { VeteransFaq } from "@/components/veterans/VeteransFaq";
+import { Helmet } from "react-helmet";
 
 export default function VeteransHome() {
   const tools = [
@@ -28,7 +31,7 @@ export default function VeteransHome() {
     },
     {
       title: "AI Claims Agent",
-      description: "Get personalized guidance on filing your VA disability claim with Intent to File",
+      description: "Get personalized guidance on filing your VA disability claim with Intent to File support",
       icon: MessageSquare,
       href: "/veterans/claims-agent",
       color: "text-orange-500",
@@ -38,23 +41,27 @@ export default function VeteransHome() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Military & Federal Benefits Hub | Seeksy</title>
+        <meta name="description" content="Your all-in-one guide to maximizing federal and VA benefits — calculators, claim prep, and AI-powered support." />
+      </Helmet>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10 py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6">
               <Shield className="w-4 h-4" />
-              <span className="text-sm font-medium">Veteran Benefits Made Simple</span>
+              <span className="text-sm font-medium">Military & Federal Benefits Hub</span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 text-balance">
               Maximize Your{" "}
-              <span className="text-primary">Federal Benefits</span>
+              <span className="text-primary">Federal&nbsp;Benefits</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Free calculators and AI-powered guidance to help veterans and federal employees 
-              understand and claim the benefits they've earned.
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-balance">
+              Free calculators and AI-powered guidance to help service members, veterans, and federal employees understand and claim the benefits they've&nbsp;earned.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -99,7 +106,7 @@ export default function VeteransHome() {
                     </div>
                     {tool.featured && (
                       <span className="text-xs font-semibold bg-primary text-primary-foreground px-2 py-1 rounded">
-                        NEW
+                        AI-POWERED
                       </span>
                     )}
                   </div>
@@ -124,8 +131,8 @@ export default function VeteransHome() {
                   <Clock className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Preserve Your Date</h3>
-                <p className="text-muted-foreground">
-                  Lock in today's date for potential retroactive pay while you gather evidence
+                <p className="text-muted-foreground text-balance">
+                  Lock in today's date for potential retroactive pay while you gather&nbsp;evidence
                 </p>
               </div>
               
@@ -134,8 +141,8 @@ export default function VeteransHome() {
                   <DollarSign className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">Maximize Benefits</h3>
-                <p className="text-muted-foreground">
-                  Get up to 1 year of retroactive benefits from your Intent to File date
+                <p className="text-muted-foreground text-balance">
+                  Get up to 1 year of retroactive benefits from your Intent to File&nbsp;date
                 </p>
               </div>
               
@@ -144,11 +151,63 @@ export default function VeteransHome() {
                   <FileText className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="font-semibold text-lg mb-2">No Risk</h3>
-                <p className="text-muted-foreground">
-                  Filing intent costs nothing and gives you time to prepare your claim properly
+                <p className="text-muted-foreground text-balance">
+                  Filing intent costs nothing and gives you time to prepare your claim&nbsp;properly
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits of Rating Section */}
+      <section className="py-16 container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          <Card className="overflow-hidden">
+            <div className="md:flex">
+              <div className="md:w-1/2 p-8 md:p-10 flex flex-col justify-center">
+                <div className="inline-flex items-center gap-2 bg-amber-500/10 text-amber-600 px-3 py-1 rounded-full mb-4 w-fit">
+                  <Award className="w-4 h-4" />
+                  <span className="text-sm font-medium">Unlock More</span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                  Benefits of Having a VA Disability Rating
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  A disability rating does more than provide monthly compensation. It can unlock healthcare, family support, and lifetime&nbsp;benefits.
+                </p>
+                <BenefitsOfRatingModal />
+              </div>
+              <div className="md:w-1/2 bg-gradient-to-br from-amber-500/20 to-orange-500/20 p-8 md:p-10 flex items-center justify-center">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="bg-background/80 backdrop-blur rounded-lg p-4">
+                    <p className="text-2xl font-bold text-primary">Tax-Free</p>
+                    <p className="text-sm text-muted-foreground">Monthly Pay</p>
+                  </div>
+                  <div className="bg-background/80 backdrop-blur rounded-lg p-4">
+                    <p className="text-2xl font-bold text-primary">VA Health</p>
+                    <p className="text-sm text-muted-foreground">Care Access</p>
+                  </div>
+                  <div className="bg-background/80 backdrop-blur rounded-lg p-4">
+                    <p className="text-2xl font-bold text-primary">Home Loan</p>
+                    <p className="text-sm text-muted-foreground">Fee Waiver</p>
+                  </div>
+                  <div className="bg-background/80 backdrop-blur rounded-lg p-4">
+                    <p className="text-2xl font-bold text-primary">Job</p>
+                    <p className="text-sm text-muted-foreground">Preference</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 bg-muted/50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-3xl mx-auto">
+            <VeteransFaq />
           </div>
         </div>
       </section>
@@ -160,9 +219,8 @@ export default function VeteransHome() {
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
               Ready to Start Your Claim?
             </h2>
-            <p className="text-primary-foreground/80 mb-6 max-w-xl mx-auto">
-              Our AI Claims Agent will walk you through the entire process, help you understand 
-              your symptoms, and connect you with experts who can file on your behalf.
+            <p className="text-primary-foreground/80 mb-6 max-w-xl mx-auto text-balance">
+              Our AI Claims Agent will walk you through the process step by step, help you describe your conditions in plain language, and connect you with trusted partners who can file on your&nbsp;behalf.
             </p>
             <Button asChild size="lg" variant="secondary" className="text-lg">
               <Link to="/veterans/claims-agent">
