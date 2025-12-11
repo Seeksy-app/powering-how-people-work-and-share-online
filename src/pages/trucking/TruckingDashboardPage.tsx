@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import TruckingLayout, { truckingTheme } from "@/components/trucking/TruckingLayout";
-import { TruckingCard, TruckingCardHeader, TruckingStatCard } from "@/components/trucking/TruckingCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Package, UserCheck, Phone, Plus, ArrowRight } from "lucide-react";
+import { Package, UserCheck, Phone, Plus, ArrowRight, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { TruckingPageWrapper, TruckingContentCard, TruckingEmptyState, TruckingStatCardLight } from "@/components/trucking/TruckingPageWrapper";
 
 interface LoadStats {
   openLoads: number;
   leadsToday: number;
   callsToday: number;
+  confirmedLoads: number;
 }
 
 interface Load {
@@ -38,7 +38,7 @@ interface Lead {
 }
 
 export default function TruckingDashboardPage() {
-  const [stats, setStats] = useState<LoadStats>({ openLoads: 0, leadsToday: 0, callsToday: 0 });
+  const [stats, setStats] = useState<LoadStats>({ openLoads: 0, leadsToday: 0, callsToday: 0, confirmedLoads: 0 });
   const [hotLoads, setHotLoads] = useState<Load[]>([]);
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,14 +52,16 @@ export default function TruckingDashboardPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [loadsResult, leadsResult, callsResult] = await Promise.all([
+      const [loadsResult, confirmedResult, leadsResult, callsResult] = await Promise.all([
         supabase.from("trucking_loads").select("id", { count: "exact" }).eq("owner_id", user.id).eq("status", "open"),
+        supabase.from("trucking_loads").select("id", { count: "exact" }).eq("owner_id", user.id).eq("status", "booked"),
         supabase.from("trucking_carrier_leads").select("id", { count: "exact" }).eq("owner_id", user.id).gte("created_at", new Date().toISOString().split("T")[0]),
         supabase.from("trucking_call_logs").select("id", { count: "exact" }).eq("owner_id", user.id).gte("created_at", new Date().toISOString().split("T")[0]),
       ]);
 
       setStats({
         openLoads: loadsResult.count || 0,
+        confirmedLoads: confirmedResult.count || 0,
         leadsToday: leadsResult.count || 0,
         callsToday: callsResult.count || 0,
       });
@@ -90,209 +92,176 @@ export default function TruckingDashboardPage() {
   };
 
   const getStatusBadge = (status: string) => {
-    const colors: Record<string, { bg: string; text: string }> = {
-      open: { bg: `${truckingTheme.accent.green}20`, text: truckingTheme.accent.green },
-      booked: { bg: `${truckingTheme.accent.blue}20`, text: truckingTheme.accent.blue },
-      interested: { bg: `${truckingTheme.accent.yellow}20`, text: truckingTheme.accent.yellow },
-      countered: { bg: "#F9731620", text: "#F97316" },
-      declined: { bg: `${truckingTheme.accent.red}20`, text: truckingTheme.accent.red },
+    const colors: Record<string, string> = {
+      open: "bg-green-100 text-green-700",
+      booked: "bg-blue-100 text-blue-700",
+      interested: "bg-yellow-100 text-yellow-700",
+      countered: "bg-orange-100 text-orange-700",
+      declined: "bg-red-100 text-red-700",
     };
-    return colors[status] || { bg: "#6B728020", text: "#6B7280" };
+    return colors[status] || "bg-slate-100 text-slate-700";
   };
 
   if (loading) {
     return (
-      <TruckingLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div 
-            className="animate-spin rounded-full h-8 w-8 border-b-2"
-            style={{ borderColor: truckingTheme.accent.blue }}
-          />
-        </div>
-      </TruckingLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
     );
   }
 
   return (
-    <TruckingLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 
-              className="text-2xl sm:text-3xl font-semibold tracking-tight"
-              style={{ color: truckingTheme.text.primary }}
-            >
-              Dashboard
-            </h1>
-            <p className="text-sm mt-1" style={{ color: truckingTheme.text.secondary }}>
-              Overview of your loads and leads
-            </p>
+    <TruckingPageWrapper 
+      title="Dashboard" 
+      description="Overview of your loads and leads"
+      action={
+        <Link to="/trucking/loads">
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Load
+          </Button>
+        </Link>
+      }
+    >
+      {/* Stats Cards - 2x2 Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <TruckingStatCardLight 
+          label="Open Loads" 
+          value={stats.openLoads} 
+          icon={<Package className="h-6 w-6 text-blue-600" />}
+        />
+        <TruckingStatCardLight 
+          label="New Leads Today" 
+          value={stats.leadsToday} 
+          icon={<UserCheck className="h-6 w-6 text-green-600" />}
+        />
+        <TruckingStatCardLight 
+          label="AI Calls Today" 
+          value={stats.callsToday} 
+          icon={<Phone className="h-6 w-6 text-amber-600" />}
+        />
+        <TruckingStatCardLight 
+          label="Confirmed Loads" 
+          value={stats.confirmedLoads} 
+          icon={<CheckCircle className="h-6 w-6 text-purple-600" />}
+        />
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Hot Loads */}
+        <TruckingContentCard noPadding>
+          <div className="flex items-center justify-between p-5 border-b border-slate-200">
+            <div>
+              <h3 className="font-semibold text-slate-900">Hot Loads</h3>
+              <p className="text-sm text-slate-500">Open loads ready for carriers</p>
+            </div>
+            <Link to="/trucking/loads">
+              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                View all
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
           </div>
-          <Link to="/trucking/loads">
-            <Button 
-              className="rounded-full text-white"
-              style={{ backgroundColor: truckingTheme.accent.blue }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Load
-            </Button>
-          </Link>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-4">
-          <TruckingStatCard 
-            label="Open Loads" 
-            value={stats.openLoads} 
-            icon={<Package className="h-6 w-6" style={{ color: truckingTheme.accent.blue }} />}
-            accentColor={truckingTheme.accent.blue}
-          />
-          <TruckingStatCard 
-            label="New Leads Today" 
-            value={stats.leadsToday} 
-            icon={<UserCheck className="h-6 w-6" style={{ color: truckingTheme.accent.green }} />}
-            accentColor={truckingTheme.accent.green}
-          />
-          <TruckingStatCard 
-            label="AI Calls Today" 
-            value={stats.callsToday} 
-            icon={<Phone className="h-6 w-6" style={{ color: truckingTheme.accent.yellow }} />}
-            accentColor={truckingTheme.accent.yellow}
-          />
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Hot Loads */}
-          <TruckingCard>
-            <TruckingCardHeader 
-              title="Hot Loads" 
-              description="Your open loads ready for carriers"
+          {hotLoads.length === 0 ? (
+            <TruckingEmptyState
+              icon={<Package className="h-6 w-6 text-slate-400" />}
+              title="No open loads yet"
+              description="Add your first load so the AI can start taking calls for you."
               action={
                 <Link to="/trucking/loads">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-slate-300 hover:text-white hover:bg-white/10"
-                  >
-                    View all
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Add Load</Button>
                 </Link>
               }
             />
-            {hotLoads.length === 0 ? (
-              <div className="text-center py-8" style={{ color: truckingTheme.text.muted }}>
-                No open loads. Add your first load to get started.
-              </div>
-            ) : (
-              <div className="overflow-x-auto -mx-5 sm:-mx-6 px-5 sm:px-6">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-b" style={{ borderColor: truckingTheme.card.border }}>
-                      <TableHead style={{ color: truckingTheme.text.muted }}>Load #</TableHead>
-                      <TableHead style={{ color: truckingTheme.text.muted }}>Lane</TableHead>
-                      <TableHead style={{ color: truckingTheme.text.muted }}>Pickup</TableHead>
-                      <TableHead style={{ color: truckingTheme.text.muted }}>Rate</TableHead>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-slate-100">
+                    <TableHead className="text-slate-500 font-medium">Load #</TableHead>
+                    <TableHead className="text-slate-500 font-medium">Lane</TableHead>
+                    <TableHead className="text-slate-500 font-medium">Pickup</TableHead>
+                    <TableHead className="text-slate-500 font-medium text-right">Rate</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {hotLoads.map((load) => (
+                    <TableRow key={load.id} className="border-b border-slate-50 hover:bg-slate-50">
+                      <TableCell className="font-medium text-slate-900">{load.load_number}</TableCell>
+                      <TableCell className="text-slate-600">
+                        {load.origin_city}, {load.origin_state} → {load.destination_city}, {load.destination_state}
+                      </TableCell>
+                      <TableCell className="text-slate-600">{load.pickup_date || "—"}</TableCell>
+                      <TableCell className="text-right font-medium text-slate-900">
+                        ${load.target_rate?.toLocaleString() || "—"}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {hotLoads.map((load) => (
-                      <TableRow 
-                        key={load.id} 
-                        className="border-b hover:bg-white/5"
-                        style={{ borderColor: truckingTheme.card.border }}
-                      >
-                        <TableCell className="font-medium" style={{ color: truckingTheme.text.primary }}>
-                          {load.load_number}
-                        </TableCell>
-                        <TableCell style={{ color: truckingTheme.text.secondary }}>
-                          {load.origin_city}, {load.origin_state} → {load.destination_city}, {load.destination_state}
-                        </TableCell>
-                        <TableCell style={{ color: truckingTheme.text.secondary }}>{load.pickup_date}</TableCell>
-                        <TableCell style={{ color: truckingTheme.accent.yellow }}>
-                          ${load.target_rate?.toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </TruckingCard>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TruckingContentCard>
 
-          {/* Recent Leads */}
-          <TruckingCard>
-            <TruckingCardHeader 
-              title="Recent Leads" 
-              description="Carriers interested in your loads"
-              action={
-                <Link to="/trucking/leads">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-slate-300 hover:text-white hover:bg-white/10"
-                  >
-                    View all
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </Link>
-              }
+        {/* Recent Leads */}
+        <TruckingContentCard noPadding>
+          <div className="flex items-center justify-between p-5 border-b border-slate-200">
+            <div>
+              <h3 className="font-semibold text-slate-900">Recent Leads</h3>
+              <p className="text-sm text-slate-500">Carriers interested in your loads</p>
+            </div>
+            <Link to="/trucking/leads">
+              <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                View all
+                <ArrowRight className="h-4 w-4 ml-1" />
+              </Button>
+            </Link>
+          </div>
+          {recentLeads.length === 0 ? (
+            <TruckingEmptyState
+              icon={<UserCheck className="h-6 w-6 text-slate-400" />}
+              title="No leads yet"
+              description="Carriers will appear here when they call your AITrucking line about a load."
             />
-            {recentLeads.length === 0 ? (
-              <div className="text-center py-8" style={{ color: truckingTheme.text.muted }}>
-                No leads yet. Carriers will appear here when they call.
-              </div>
-            ) : (
-              <div className="overflow-x-auto -mx-5 sm:-mx-6 px-5 sm:px-6">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-b" style={{ borderColor: truckingTheme.card.border }}>
-                      <TableHead style={{ color: truckingTheme.text.muted }}>Carrier</TableHead>
-                      <TableHead style={{ color: truckingTheme.text.muted }}>Load</TableHead>
-                      <TableHead style={{ color: truckingTheme.text.muted }}>Rate</TableHead>
-                      <TableHead style={{ color: truckingTheme.text.muted }}>Status</TableHead>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-slate-100">
+                    <TableHead className="text-slate-500 font-medium">Carrier</TableHead>
+                    <TableHead className="text-slate-500 font-medium">Load</TableHead>
+                    <TableHead className="text-slate-500 font-medium">Rate</TableHead>
+                    <TableHead className="text-slate-500 font-medium">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentLeads.map((lead) => (
+                    <TableRow key={lead.id} className="border-b border-slate-50 hover:bg-slate-50">
+                      <TableCell>
+                        <div className="font-medium text-slate-900">
+                          {lead.company_name || lead.contact_name}
+                        </div>
+                        <div className="text-xs text-slate-500">{lead.phone}</div>
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        {lead.trucking_loads?.load_number || "—"}
+                      </TableCell>
+                      <TableCell className="text-slate-600">
+                        ${lead.rate_offered?.toLocaleString() || "—"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusBadge(lead.status)}>
+                          {lead.status}
+                        </Badge>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentLeads.map((lead) => {
-                      const statusColors = getStatusBadge(lead.status);
-                      return (
-                        <TableRow 
-                          key={lead.id}
-                          className="border-b hover:bg-white/5"
-                          style={{ borderColor: truckingTheme.card.border }}
-                        >
-                          <TableCell>
-                            <div className="font-medium" style={{ color: truckingTheme.text.primary }}>
-                              {lead.company_name || lead.contact_name}
-                            </div>
-                            <div className="text-xs" style={{ color: truckingTheme.text.muted }}>{lead.phone}</div>
-                          </TableCell>
-                          <TableCell style={{ color: truckingTheme.text.secondary }}>
-                            {lead.trucking_loads?.load_number || "—"}
-                          </TableCell>
-                          <TableCell style={{ color: truckingTheme.text.secondary }}>
-                            ${lead.rate_offered?.toLocaleString() || "—"}
-                          </TableCell>
-                          <TableCell>
-                            <Badge 
-                              className="border-0"
-                              style={{ backgroundColor: statusColors.bg, color: statusColors.text }}
-                            >
-                              {lead.status}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </TruckingCard>
-        </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TruckingContentCard>
       </div>
-    </TruckingLayout>
+    </TruckingPageWrapper>
   );
 }

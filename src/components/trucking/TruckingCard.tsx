@@ -1,6 +1,19 @@
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { truckingTheme } from "./TruckingLayout";
+
+// Card theme colors
+const cardTheme = {
+  bg: '#0b1730',
+  border: '#1a2745',
+  text: {
+    primary: '#F9FAFB',
+    secondary: '#9CA3AF',
+    muted: '#6B7280',
+  },
+  accent: {
+    blue: '#3B82F6',
+  },
+};
 
 interface TruckingCardProps {
   children: ReactNode;
@@ -23,8 +36,8 @@ export function TruckingCard({ children, className, padding = "md" }: TruckingCa
         className
       )}
       style={{ 
-        backgroundColor: truckingTheme.card.bg, 
-        border: `1px solid ${truckingTheme.card.border}` 
+        backgroundColor: cardTheme.bg, 
+        border: `1px solid ${cardTheme.border}` 
       }}
     >
       {children}
@@ -42,11 +55,11 @@ export function TruckingCardHeader({ title, description, action }: TruckingCardH
   return (
     <div className="flex items-center justify-between mb-4">
       <div>
-        <h3 className="text-lg font-medium" style={{ color: truckingTheme.text.primary }}>
+        <h3 className="text-lg font-medium" style={{ color: cardTheme.text.primary }}>
           {title}
         </h3>
         {description && (
-          <p className="text-sm mt-0.5" style={{ color: truckingTheme.text.muted }}>
+          <p className="text-sm mt-0.5" style={{ color: cardTheme.text.muted }}>
             {description}
           </p>
         )}
@@ -68,16 +81,16 @@ export function TruckingStatCard({ label, value, icon, accentColor }: TruckingSt
     <TruckingCard>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium" style={{ color: truckingTheme.text.muted }}>
+          <p className="text-sm font-medium" style={{ color: cardTheme.text.muted }}>
             {label}
           </p>
-          <p className="text-3xl font-bold mt-1" style={{ color: truckingTheme.text.primary }}>
+          <p className="text-3xl font-bold mt-1" style={{ color: cardTheme.text.primary }}>
             {value}
           </p>
         </div>
         <div 
           className="h-12 w-12 rounded-xl flex items-center justify-center"
-          style={{ backgroundColor: `${accentColor || truckingTheme.accent.blue}15` }}
+          style={{ backgroundColor: `${accentColor || cardTheme.accent.blue}15` }}
         >
           {icon}
         </div>

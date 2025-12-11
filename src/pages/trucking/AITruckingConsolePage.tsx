@@ -1,18 +1,15 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import TruckingLayout from "@/components/trucking/TruckingLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Phone, PhoneIncoming, PhoneOutgoing, Play, MessageSquare, Clock, User, CheckCircle, XCircle, TrendingUp, ArrowLeft } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Phone, CheckCircle, XCircle, TrendingUp, Network } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { TruckingPageWrapper, TruckingContentCard, TruckingEmptyState, TruckingStatCardLight } from "@/components/trucking/TruckingPageWrapper";
 
 interface CallLog {
   id: string;
@@ -34,15 +31,14 @@ interface CallLog {
 }
 
 export default function AITruckingConsolePage() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all_calls");
+  const [dateFilter, setDateFilter] = useState("today");
   const [selectedCall, setSelectedCall] = useState<CallLog | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { toast } = useToast();
 
   // Fetch call logs with filters
   const { data: callLogs = [], isLoading } = useQuery({
-    queryKey: ['trucking-call-logs', activeTab],
+    queryKey: ['trucking-call-logs', activeTab, dateFilter],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
@@ -52,6 +48,18 @@ export default function AITruckingConsolePage() {
         .select(`*, trucking_loads(load_number)`)
         .eq('owner_id', user.id)
         .order('call_started_at', { ascending: false });
+
+      // Date filter
+      const now = new Date();
+      if (dateFilter === "today") {
+        query = query.gte("call_started_at", now.toISOString().split("T")[0]);
+      } else if (dateFilter === "7days") {
+        const weekAgo = new Date(now.setDate(now.getDate() - 7));
+        query = query.gte("call_started_at", weekAgo.toISOString());
+      } else if (dateFilter === "30days") {
+        const monthAgo = new Date(now.setDate(now.getDate() - 30));
+        query = query.gte("call_started_at", monthAgo.toISOString());
+      }
 
       if (activeTab === 'successful_calls') {
         query = query.eq('outcome', 'lead_created');
@@ -65,7 +73,7 @@ export default function AITruckingConsolePage() {
     }
   });
 
-  // Fetch analytics for today
+  // Fetch analytics
   const { data: analytics } = useQuery({
     queryKey: ['trucking-call-analytics'],
     queryFn: async () => {
@@ -92,20 +100,14 @@ export default function AITruckingConsolePage() {
   });
 
   const getOutcomeBadge = (outcome: string | null) => {
-    switch (outcome) {
-      case 'lead_created':
-        return <Badge className="bg-green-500/20 text-green-600 border-green-500/30">Lead Created</Badge>;
-      case 'caller_hung_up':
-        return <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">Hung Up</Badge>;
-      case 'no_load_found':
-        return <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30">No Load</Badge>;
-      case 'error':
-        return <Badge className="bg-red-500/20 text-red-600 border-red-500/30">Error</Badge>;
-      case 'call_completed':
-        return <Badge className="bg-blue-500/20 text-blue-600 border-blue-500/30">Completed</Badge>;
-      default:
-        return <Badge variant="outline">{outcome || 'Pending'}</Badge>;
-    }
+    const styles: Record<string, string> = {
+      lead_created: "bg-green-100 text-green-700",
+      caller_hung_up: "bg-yellow-100 text-yellow-700",
+      no_load_found: "bg-orange-100 text-orange-700",
+      error: "bg-red-100 text-red-700",
+      call_completed: "bg-blue-100 text-blue-700",
+    };
+    return styles[outcome || ""] || "bg-slate-100 text-slate-600";
   };
 
   const formatDuration = (seconds: number | null, start?: string | null, end?: string | null) => {
@@ -129,198 +131,195 @@ export default function AITruckingConsolePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/trucking/dashboard')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">AI Call Console</h1>
-            <p className="text-muted-foreground">Monitor Jess's call activity and performance</p>
-          </div>
-        </div>
-
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Calls (Today)</CardTitle>
-              <Phone className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{analytics?.totalCalls || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Leads Created</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{analytics?.successfulLeads || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Incomplete Calls</CardTitle>
-              <XCircle className="h-4 w-4 text-yellow-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{analytics?.incompleteCalls || 0}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Success Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{analytics?.successRate || 0}%</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Call Logs Table */}
-        <Card>
-          <CardHeader>
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList>
-                <TabsTrigger value="all_calls">All Calls</TabsTrigger>
-                <TabsTrigger value="successful_calls">Successful</TabsTrigger>
-                <TabsTrigger value="incomplete_calls">Incomplete</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : callLogs.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Phone className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No calls yet</p>
-                <p className="text-sm mt-2">Calls will appear here when carriers contact Jess</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Caller</TableHead>
-                    <TableHead>Load</TableHead>
-                    <TableHead>Outcome</TableHead>
-                    <TableHead>Duration</TableHead>
-                    <TableHead>Reason</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {callLogs.map((call) => (
-                    <TableRow 
-                      key={call.id} 
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleRowClick(call)}
-                    >
-                      <TableCell>
-                        {call.call_started_at 
-                          ? format(new Date(call.call_started_at), 'MMM d, h:mm a')
-                          : call.created_at 
-                            ? format(new Date(call.created_at), 'MMM d, h:mm a')
-                            : '—'}
-                      </TableCell>
-                      <TableCell className="font-mono">{call.carrier_phone || '—'}</TableCell>
-                      <TableCell>{call.trucking_loads?.load_number || '—'}</TableCell>
-                      <TableCell>{getOutcomeBadge(call.outcome)}</TableCell>
-                      <TableCell>
-                        {formatDuration(call.duration_seconds, call.call_started_at, call.call_ended_at)}
-                      </TableCell>
-                      <TableCell className="max-w-[200px] truncate text-muted-foreground">
-                        {call.failure_reason || '—'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Call Detail Drawer */}
-        <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-          <SheetContent className="w-[400px] sm:w-[540px]">
-            <SheetHeader>
-              <SheetTitle>Call Details</SheetTitle>
-            </SheetHeader>
-            {selectedCall && (
-              <div className="mt-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-muted-foreground">Caller</label>
-                    <p className="font-mono font-medium">{selectedCall.carrier_phone || '—'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-muted-foreground">Direction</label>
-                    <p className="capitalize">{selectedCall.call_direction || 'Inbound'}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="text-sm text-muted-foreground">Outcome</label>
-                  <div className="mt-1">{getOutcomeBadge(selectedCall.outcome)}</div>
-                </div>
-                
-                <div>
-                  <label className="text-sm text-muted-foreground">Language</label>
-                  <p>{selectedCall.language === 'es' ? 'Spanish' : 'English'}</p>
-                </div>
-                
-                <div>
-                  <label className="text-sm text-muted-foreground">Duration</label>
-                  <p>{formatDuration(selectedCall.duration_seconds, selectedCall.call_started_at, selectedCall.call_ended_at)}</p>
-                </div>
-                
-                <div>
-                  <label className="text-sm text-muted-foreground">Summary</label>
-                  <p className="text-sm mt-1 p-3 bg-muted rounded-lg">
-                    {selectedCall.summary || 'No summary available'}
-                  </p>
-                </div>
-                
-                {selectedCall.failure_reason && (
-                  <div>
-                    <label className="text-sm text-muted-foreground">Failure Reason</label>
-                    <p className="text-sm text-yellow-600 mt-1">{selectedCall.failure_reason}</p>
-                  </div>
-                )}
-                
-                {selectedCall.recording_url && (
-                  <div>
-                    <label className="text-sm text-muted-foreground">Recording</label>
-                    <audio controls className="w-full mt-2">
-                      <source src={selectedCall.recording_url} type="audio/mpeg" />
-                    </audio>
-                  </div>
-                )}
-                
-                {selectedCall.transcript_url && (
-                  <div>
-                    <Button variant="outline" asChild className="w-full">
-                      <a href={selectedCall.transcript_url} target="_blank" rel="noopener noreferrer">
-                        View Full Transcript
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </SheetContent>
-        </Sheet>
+    <TruckingPageWrapper 
+      title="AI Call Console" 
+      description="Review calls handled by the AI"
+      action={
+        <Select value={dateFilter} onValueChange={setDateFilter}>
+          <SelectTrigger className="w-32 bg-white border-slate-200">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="7days">Last 7 days</SelectItem>
+            <SelectItem value="30days">Last 30 days</SelectItem>
+          </SelectContent>
+        </Select>
+      }
+    >
+      {/* Analytics Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <TruckingStatCardLight 
+          label="Total Calls (Today)" 
+          value={analytics?.totalCalls || 0} 
+          icon={<Phone className="h-6 w-6 text-slate-500" />}
+        />
+        <TruckingStatCardLight 
+          label="Leads Created" 
+          value={analytics?.successfulLeads || 0} 
+          icon={<CheckCircle className="h-6 w-6 text-green-600" />}
+        />
+        <TruckingStatCardLight 
+          label="Incomplete Calls" 
+          value={analytics?.incompleteCalls || 0} 
+          icon={<XCircle className="h-6 w-6 text-yellow-600" />}
+        />
+        <TruckingStatCardLight 
+          label="Success Rate" 
+          value={`${analytics?.successRate || 0}%`} 
+          icon={<TrendingUp className="h-6 w-6 text-blue-600" />}
+        />
       </div>
-    </div>
+
+      {/* Call Logs Table */}
+      <TruckingContentCard noPadding>
+        <div className="p-4 border-b border-slate-200">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-slate-100">
+              <TabsTrigger value="all_calls" className="data-[state=active]:bg-white">All Calls</TabsTrigger>
+              <TabsTrigger value="successful_calls" className="data-[state=active]:bg-white">Successful</TabsTrigger>
+              <TabsTrigger value="incomplete_calls" className="data-[state=active]:bg-white">Incomplete</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+          </div>
+        ) : callLogs.length === 0 ? (
+          <TruckingEmptyState
+            icon={<Network className="h-6 w-6 text-slate-400" />}
+            title="No AI calls yet"
+            description="Once your number is live, new calls will show up here automatically."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-slate-200">
+                  <TableHead className="text-slate-500 font-medium">Time</TableHead>
+                  <TableHead className="text-slate-500 font-medium">Caller</TableHead>
+                  <TableHead className="text-slate-500 font-medium">Load</TableHead>
+                  <TableHead className="text-slate-500 font-medium">Language</TableHead>
+                  <TableHead className="text-slate-500 font-medium">Outcome</TableHead>
+                  <TableHead className="text-slate-500 font-medium">Duration</TableHead>
+                  <TableHead className="text-slate-500 font-medium">Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {callLogs.map((call) => (
+                  <TableRow 
+                    key={call.id} 
+                    className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer"
+                    onClick={() => handleRowClick(call)}
+                  >
+                    <TableCell className="text-slate-600">
+                      {call.call_started_at 
+                        ? format(new Date(call.call_started_at), 'MMM d, h:mm a')
+                        : call.created_at 
+                          ? format(new Date(call.created_at), 'MMM d, h:mm a')
+                          : '—'}
+                    </TableCell>
+                    <TableCell className="font-mono text-slate-900">{call.carrier_phone || '—'}</TableCell>
+                    <TableCell className="text-slate-600">{call.trucking_loads?.load_number || '—'}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
+                        {call.language === 'es' ? 'Spanish' : 'English'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getOutcomeBadge(call.outcome)}>
+                        {call.outcome?.replace("_", " ") || 'Pending'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-slate-600">
+                      {formatDuration(call.duration_seconds, call.call_started_at, call.call_ended_at)}
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate text-slate-500">
+                      {call.failure_reason || call.summary || '—'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </TruckingContentCard>
+
+      {/* Call Detail Drawer */}
+      <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <SheetContent className="w-[400px] sm:w-[540px]">
+          <SheetHeader>
+            <SheetTitle>Call Details</SheetTitle>
+          </SheetHeader>
+          {selectedCall && (
+            <div className="mt-6 space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-slate-500">Caller</label>
+                  <p className="font-mono font-medium text-slate-900">{selectedCall.carrier_phone || '—'}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-slate-500">Direction</label>
+                  <p className="capitalize text-slate-900">{selectedCall.call_direction || 'Inbound'}</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm text-slate-500">Outcome</label>
+                <div className="mt-1">
+                  <Badge className={getOutcomeBadge(selectedCall.outcome)}>
+                    {selectedCall.outcome?.replace("_", " ") || 'Pending'}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-slate-500">Language</label>
+                  <p className="text-slate-900">{selectedCall.language === 'es' ? 'Spanish' : 'English'}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-slate-500">Duration</label>
+                  <p className="text-slate-900">{formatDuration(selectedCall.duration_seconds, selectedCall.call_started_at, selectedCall.call_ended_at)}</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-sm text-slate-500">Summary</label>
+                <p className="text-sm mt-1 p-3 bg-slate-50 rounded-lg text-slate-700">
+                  {selectedCall.summary || 'No summary available'}
+                </p>
+              </div>
+              
+              {selectedCall.failure_reason && (
+                <div>
+                  <label className="text-sm text-slate-500">Failure Reason</label>
+                  <p className="text-sm text-yellow-600 mt-1">{selectedCall.failure_reason}</p>
+                </div>
+              )}
+              
+              {selectedCall.recording_url && (
+                <div>
+                  <label className="text-sm text-slate-500">Recording</label>
+                  <audio controls className="w-full mt-2">
+                    <source src={selectedCall.recording_url} type="audio/mpeg" />
+                  </audio>
+                </div>
+              )}
+              
+              {selectedCall.transcript_url && (
+                <Button variant="outline" asChild className="w-full">
+                  <a href={selectedCall.transcript_url} target="_blank" rel="noopener noreferrer">
+                    View Full Transcript
+                  </a>
+                </Button>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    </TruckingPageWrapper>
   );
 }
