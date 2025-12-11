@@ -76,7 +76,7 @@ export function VenueAuthModal({ open, onOpenChange }: VenueAuthModalProps) {
         });
 
         onOpenChange(false);
-        navigate("/venues/dashboard");
+        navigate("/venueOS/dashboard");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: formData.email,
@@ -91,7 +91,7 @@ export function VenueAuthModal({ open, onOpenChange }: VenueAuthModalProps) {
         });
 
         onOpenChange(false);
-        navigate("/venues/dashboard");
+        navigate("/venueOS/dashboard");
       }
     } catch (error: any) {
       toast({

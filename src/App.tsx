@@ -710,7 +710,7 @@ const AppContent = () => {
   const isCampaignRoute = location.pathname.startsWith('/campaign-staff');
   
   // VenueOS is completely standalone - no Seeksy UI
-  const isVenueRoute = location.pathname.startsWith('/venues') || location.pathname === '/invest/venueos';
+  const isVenueRoute = location.pathname.startsWith('/venueOS') || location.pathname === '/invest/venueos';
   
   // Hide sidebar in tour mode or on special routes
   const shouldShowSidebar = user && !isStudioRoute && !isClipsStudioRoute && !isTourMode && !isOnboardingComplete && !isVeteransRoute && !isCampaignRoute && !isVenueRoute;
@@ -825,19 +825,19 @@ const AppContent = () => {
               <Route path="/campaign-staff/donations" element={<CampaignDonationsPage />} />
               
               {/* VenueOS Routes */}
-              <Route path="/venues" element={<VenueLandingPage />} />
-              <Route path="/venues/onboarding" element={<VenueLayout><VenueOnboardingWizard /></VenueLayout>} />
-              <Route path="/venues/dashboard" element={<VenueLayout><VenueDashboard /></VenueLayout>} />
-              <Route path="/venues/bookings" element={<VenueLayout><VenueBookingsPage /></VenueLayout>} />
-              <Route path="/venues/calendar" element={<VenueLayout><VenueCalendarPage /></VenueLayout>} />
-              <Route path="/venues/inventory" element={<VenueLayout><VenueInventoryPage /></VenueLayout>} />
-              <Route path="/venues/clients" element={<VenueLayout><VenueClientsPage /></VenueLayout>} />
-              <Route path="/venues/events" element={<VenueLayout><VenueEventsPage /></VenueLayout>} />
-              <Route path="/venues/influencers" element={<VenueLayout><VenueInfluencersPage /></VenueLayout>} />
-              <Route path="/venues/ai-manager" element={<VenueLayout><VenueAIManagerPage /></VenueLayout>} />
-              <Route path="/venues/studio" element={<VenueLayout><VenueMediaStudio /></VenueLayout>} />
-              <Route path="/venues/settings" element={<VenueLayout><VenueSettingsPage /></VenueLayout>} />
-              <Route path="/venues/widget/:venueSlug" element={<VenueBookingWidget />} />
+              <Route path="/venueOS" element={<VenueLandingPage />} />
+              <Route path="/venueOS/onboarding" element={<VenueLayout><VenueOnboardingWizard /></VenueLayout>} />
+              <Route path="/venueOS/dashboard" element={<VenueLayout><VenueDashboard /></VenueLayout>} />
+              <Route path="/venueOS/bookings" element={<VenueLayout><VenueBookingsPage /></VenueLayout>} />
+              <Route path="/venueOS/calendar" element={<VenueLayout><VenueCalendarPage /></VenueLayout>} />
+              <Route path="/venueOS/inventory" element={<VenueLayout><VenueInventoryPage /></VenueLayout>} />
+              <Route path="/venueOS/clients" element={<VenueLayout><VenueClientsPage /></VenueLayout>} />
+              <Route path="/venueOS/events" element={<VenueLayout><VenueEventsPage /></VenueLayout>} />
+              <Route path="/venueOS/influencers" element={<VenueLayout><VenueInfluencersPage /></VenueLayout>} />
+              <Route path="/venueOS/ai-manager" element={<VenueLayout><VenueAIManagerPage /></VenueLayout>} />
+              <Route path="/venueOS/studio" element={<VenueLayout><VenueMediaStudio /></VenueLayout>} />
+              <Route path="/venueOS/settings" element={<VenueLayout><VenueSettingsPage /></VenueLayout>} />
+              <Route path="/venueOS/widget/:venueSlug" element={<VenueBookingWidget />} />
               
               {/* VenueOS Investor Page */}
               <Route path="/invest/venueos" element={<VenueOSInvestPage />} />

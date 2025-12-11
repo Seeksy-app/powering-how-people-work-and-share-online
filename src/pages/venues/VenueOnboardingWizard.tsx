@@ -171,7 +171,7 @@ export default function VenueOnboardingWizard() {
       }
 
       toast.success("Welcome to VenueOS!");
-      navigate("/venues/dashboard");
+      navigate("/venueOS/dashboard");
     } catch (error) {
       console.error("Onboarding error:", error);
       toast.error("Something went wrong. Please try again.");

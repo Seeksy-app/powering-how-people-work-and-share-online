@@ -217,7 +217,7 @@ export function AIBookingAssistantModal({ open, onOpenChange, venueId, isDemoMod
                 className="w-full"
                 onClick={() => {
                   onOpenChange(false);
-                  navigate('/venues/bookings');
+                  navigate('/venueOS/bookings');
                 }}
               >
                 Open Bookings

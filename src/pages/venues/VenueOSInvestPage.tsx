@@ -110,7 +110,7 @@ export default function VenueOSInvestPage() {
       <header className="sticky top-0 z-50 backdrop-blur-md bg-white/90 border-b">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            <Link to="/venues" className="flex items-center gap-2">
+            <Link to="/venueOS" className="flex items-center gap-2">
               <div className="h-9 w-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: colors.primary }}>
                 <span className="text-white font-bold text-lg">V</span>
               </div>
@@ -119,7 +119,7 @@ export default function VenueOSInvestPage() {
               </span>
             </Link>
             <div className="flex items-center gap-4">
-              <Link to="/venues">
+              <Link to="/venueOS">
                 <Button variant="ghost">View Product</Button>
               </Link>
               <Button style={{ backgroundColor: colors.primary }}>
@@ -152,7 +152,7 @@ export default function VenueOSInvestPage() {
               Request Deck
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Link to="/venues">
+            <Link to="/venueOS">
               <Button size="lg" variant="outline" className="text-lg px-8">
                 Try Demo
               </Button>

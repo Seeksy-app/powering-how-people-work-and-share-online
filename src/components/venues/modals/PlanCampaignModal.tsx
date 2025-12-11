@@ -79,7 +79,7 @@ export function PlanCampaignModal({ open, onOpenChange, venueId, isDemoMode = tr
       setSelectedChannels([]);
       onOpenChange(false);
       onSuccess?.();
-      navigate('/venues/influencers');
+      navigate('/venueOS/influencers');
     } catch (error: any) {
       console.error('Error creating campaign:', error);
       toast.error(error.message || "Failed to create campaign");
