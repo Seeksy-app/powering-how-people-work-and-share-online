@@ -69,6 +69,7 @@ import CarriersPage from "./pages/trucking/CarriersPage";
 import TruckingSettingsPage from "./pages/trucking/TruckingSettingsPage";
 import AITruckingConsolePage from "./pages/trucking/AITruckingConsolePage";
 import TruckingContactsPage from "./pages/trucking/TruckingContactsPage";
+import TruckingLayout from "./components/trucking/TruckingLayout";
 import AdminMeetings from "./pages/admin/AdminMeetings";
 import AdminMeetingsDashboard from "./pages/admin/meetings/AdminMeetingsDashboard";
 import AdminMeetingTypes from "./pages/admin/meetings/AdminMeetingTypes";
@@ -771,6 +772,26 @@ const AppContent = () => {
     );
   }
 
+  // Render AITrucking Platform separately - completely standalone
+  if (isTruckingRoute) {
+    return (
+      <Routes>
+        <Route path="/trucking" element={<TruckingLandingPage />} />
+        <Route path="/trucking/login" element={<TruckingAuthPage />} />
+        <Route path="/trucking/signup" element={<TruckingAuthPage />} />
+        <Route path="/trucking/dashboard" element={<TruckingLayout><TruckingDashboardPage /></TruckingLayout>} />
+        <Route path="/trucking/loads" element={<TruckingLayout><LoadsPage /></TruckingLayout>} />
+        <Route path="/trucking/leads" element={<TruckingLayout><CarrierLeadsPage /></TruckingLayout>} />
+        <Route path="/trucking/carriers" element={<TruckingLayout><CarriersPage /></TruckingLayout>} />
+        <Route path="/trucking/settings" element={<TruckingLayout><TruckingSettingsPage /></TruckingLayout>} />
+        <Route path="/trucking/console" element={<TruckingLayout><AITruckingConsolePage /></TruckingLayout>} />
+        <Route path="/trucking/ai-console" element={<TruckingLayout><AITruckingConsolePage /></TruckingLayout>} />
+        <Route path="/trucking/profile" element={<TruckingLayout><TruckingProfilePage /></TruckingLayout>} />
+        <Route path="/trucking/contacts" element={<TruckingLayout><TruckingContactsPage /></TruckingLayout>} />
+      </Routes>
+    );
+  }
+
   return (
     <GlobalDataModeProvider>
     <RoleProvider>
@@ -1446,19 +1467,6 @@ const AppContent = () => {
           <Route path="/docs/zoom-integration" element={<ZoomIntegration />} />
           <Route path="/videos" element={<PublicVideosPage />} />
           
-          {/* AITrucking Routes */}
-          <Route path="/trucking" element={<TruckingLandingPage />} />
-          <Route path="/trucking/login" element={<TruckingAuthPage />} />
-          <Route path="/trucking/signup" element={<TruckingAuthPage />} />
-          <Route path="/trucking/dashboard" element={<TruckingDashboardPage />} />
-          <Route path="/trucking/loads" element={<LoadsPage />} />
-          <Route path="/trucking/leads" element={<CarrierLeadsPage />} />
-          <Route path="/trucking/carriers" element={<CarriersPage />} />
-          <Route path="/trucking/settings" element={<TruckingSettingsPage />} />
-          <Route path="/trucking/console" element={<AITruckingConsolePage />} />
-          <Route path="/trucking/ai-console" element={<AITruckingConsolePage />} />
-          <Route path="/trucking/profile" element={<TruckingProfilePage />} />
-          <Route path="/trucking/contacts" element={<TruckingContactsPage />} />
           
             <Route path="/tickets" element={<ClientTickets />} />
             <Route path="/proposals" element={<Proposals />} />
