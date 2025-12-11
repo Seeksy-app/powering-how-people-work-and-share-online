@@ -39,16 +39,16 @@ interface VenueLayoutProps {
 }
 
 const navItems = [
-  { path: "/venues/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/venues/bookings", label: "Bookings", icon: CalendarSearch },
-  { path: "/venues/calendar", label: "Calendar", icon: CalendarClock },
-  { path: "/venues/inventory", label: "Inventory", icon: Boxes },
-  { path: "/venues/clients", label: "Clients", icon: Users },
-  { path: "/venues/events", label: "Events", icon: PartyPopper },
-  { path: "/venues/influencers", label: "Influencers", icon: Megaphone },
-  { path: "/venues/ai-manager", label: "AI Manager", icon: Bot },
-  { path: "/venues/studio", label: "Media Studio", icon: Video },
-  { path: "/venues/settings", label: "Settings", icon: Settings },
+  { path: "/venueOS/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { path: "/venueOS/bookings", label: "Bookings", icon: CalendarSearch },
+  { path: "/venueOS/calendar", label: "Calendar", icon: CalendarClock },
+  { path: "/venueOS/inventory", label: "Inventory", icon: Boxes },
+  { path: "/venueOS/clients", label: "Clients", icon: Users },
+  { path: "/venueOS/events", label: "Events", icon: PartyPopper },
+  { path: "/venueOS/influencers", label: "Influencers", icon: Megaphone },
+  { path: "/venueOS/ai-manager", label: "AI Manager", icon: Bot },
+  { path: "/venueOS/studio", label: "Media Studio", icon: Video },
+  { path: "/venueOS/settings", label: "Settings", icon: Settings },
 ];
 
 export function VenueLayout({ children }: VenueLayoutProps) {
@@ -69,7 +69,7 @@ export function VenueLayout({ children }: VenueLayoutProps) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/venues");
+    navigate("/venueOS");
   };
 
   const SidebarContent = () => (
@@ -111,7 +111,7 @@ export function VenueLayout({ children }: VenueLayoutProps) {
       >
         {/* Logo + Collapse Toggle */}
         <div className="p-4 border-b border-white/10 flex items-center justify-between">
-          <Link to="/venues" className="flex items-center gap-2">
+          <Link to="/venueOS" className="flex items-center gap-2">
             <div 
               className="h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0"
               style={{ backgroundColor: colors.secondary }}
@@ -174,7 +174,7 @@ export function VenueLayout({ children }: VenueLayoutProps) {
           borderColor: "rgba(255,255,255,0.1)"
         }}
       >
-        <Link to="/venues" className="flex items-center gap-2 flex-1">
+        <Link to="/venueOS" className="flex items-center gap-2 flex-1">
           <div 
             className="h-8 w-8 rounded-lg flex items-center justify-center"
             style={{ backgroundColor: colors.secondary }}
