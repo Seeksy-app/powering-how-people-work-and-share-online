@@ -119,7 +119,7 @@ export function CalculatorLayout({
                             Access your calculations from any device and track your benefit estimates over time.
                           </p>
                           <Button asChild size="sm" className="mt-3">
-                            <Link to="/auth">Sign Up Free</Link>
+                            <Link to="/veterans/auth">Sign Up Free</Link>
                           </Button>
                         </div>
                       </div>
@@ -230,7 +230,7 @@ export function CalculatorLayout({
               Save to browser only
             </Button>
             <Button asChild>
-              <Link to="/auth">
+              <Link to="/veterans/auth">
                 <LogIn className="w-4 h-4 mr-2" />
                 Create Account
               </Link>

@@ -24015,6 +24015,74 @@ export type Database = {
         }
         Relationships: []
       }
+      veteran_chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          notes: Json | null
+          quick_replies: Json | null
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          notes?: Json | null
+          quick_replies?: Json | null
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          notes?: Json | null
+          quick_replies?: Json | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "veteran_chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "veteran_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      veteran_conversations: {
+        Row: {
+          context_json: Json | null
+          created_at: string
+          id: string
+          is_archived: boolean | null
+          last_message_at: string | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          context_json?: Json | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          context_json?: Json | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          last_message_at?: string | null
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       veteran_leads: {
         Row: {
           branch_of_service: string | null
