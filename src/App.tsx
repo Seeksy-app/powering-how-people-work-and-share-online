@@ -524,6 +524,7 @@ import BoardMilestones from "./pages/board/BoardMilestones";
 import BoardTeamOrg from "./pages/board/BoardTeamOrg";
 import BoardSettings from "./pages/board/BoardSettings";
 import BoardSalesOpportunities from "./pages/board/BoardSalesOpportunities";
+import BoardMemberJoin from "./pages/board/BoardMemberJoin";
 import BoardInvestorPortal from "./pages/investor/InvestorPortal";
 import InvestOpportunityPage from "./pages/invest/InvestOpportunityPage";
 import VeteranBenefitsOpportunity from "./pages/invest/VeteranBenefitsOpportunity";
@@ -1225,6 +1226,7 @@ const AppContent = () => {
             <Route path="knowledge/:slug" element={<BoardKnowledgeArticle />} />
             <Route path="sales-opportunities" element={<BoardSalesOpportunities />} />
           </Route>
+          <Route path="/board/join" element={<BoardMemberJoin />} />
           <Route path="/investor/:token" element={<BoardInvestorPortal />} />
           <Route path="/invest/:slug" element={<InvestOpportunityPage />} />
           <Route path="/invest/veteran-benefits" element={<VeteranBenefitsOpportunity />} />
