@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatPhoneNumber } from "@/utils/phoneFormat";
+import { TruckingPageWrapper, TruckingContentCard } from "@/components/trucking/TruckingPageWrapper";
 
 interface Settings {
   id?: string;
@@ -86,88 +85,88 @@ export default function TruckingSettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Configure your AITrucking preferences</p>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>AI Caller Settings</CardTitle>
-          <CardDescription>Configure how your AI assistant introduces itself to carriers</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <TruckingPageWrapper 
+      title="Settings" 
+      description="Configure your AITrucking preferences"
+    >
+      <div className="max-w-2xl space-y-6">
+        <TruckingContentCard>
+          <div className="space-y-1 mb-5">
+            <h3 className="font-semibold text-slate-900">AI Caller Settings</h3>
+            <p className="text-sm text-slate-500">Configure how your AI assistant introduces itself to carriers</p>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>AI Caller Name</Label>
+              <Label className="text-slate-700">AI Caller Name</Label>
               <Input
                 value={settings.ai_caller_name}
                 onChange={(e) => setSettings({ ...settings, ai_caller_name: e.target.value })}
                 placeholder="Christy"
+                className="mt-1"
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 "Hi, this is [Name] with..."
               </p>
             </div>
             <div>
-              <Label>Company Name</Label>
+              <Label className="text-slate-700">Company Name</Label>
               <Input
                 value={settings.ai_caller_company_name}
                 onChange={(e) => setSettings({ ...settings, ai_caller_company_name: e.target.value })}
                 placeholder="Dispatch"
+                className="mt-1"
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 "...on behalf of [Company]"
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </TruckingContentCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>Where to send lead alerts and escalations</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Notification Email</Label>
-            <Input
-              type="email"
-              value={settings.notification_email}
-              onChange={(e) => setSettings({ ...settings, notification_email: e.target.value })}
-              placeholder="you@company.com"
-            />
+        <TruckingContentCard>
+          <div className="space-y-1 mb-5">
+            <h3 className="font-semibold text-slate-900">Notifications</h3>
+            <p className="text-sm text-slate-500">Where to send lead alerts and escalations</p>
           </div>
-          <div>
-            <Label>SMS Number (optional)</Label>
-            <Input
-              type="tel"
-              value={settings.notification_sms_number}
-              onChange={(e) => setSettings({ ...settings, notification_sms_number: formatPhoneNumber(e.target.value) })}
-              placeholder="405-444-4444"
-            />
+          <div className="space-y-4">
+            <div>
+              <Label className="text-slate-700">Notification Email</Label>
+              <Input
+                type="email"
+                value={settings.notification_email}
+                onChange={(e) => setSettings({ ...settings, notification_email: e.target.value })}
+                placeholder="you@company.com"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-slate-700">SMS Number (optional)</Label>
+              <Input
+                type="tel"
+                value={settings.notification_sms_number}
+                onChange={(e) => setSettings({ ...settings, notification_sms_number: formatPhoneNumber(e.target.value) })}
+                placeholder="405-444-4444"
+                className="mt-1"
+              />
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </TruckingContentCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Demo Mode</CardTitle>
-          <CardDescription>Test the AI without making real calls</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <TruckingContentCard>
+          <div className="space-y-1 mb-5">
+            <h3 className="font-semibold text-slate-900">Demo Mode</h3>
+            <p className="text-sm text-slate-500">Test the AI without making real calls</p>
+          </div>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Demo Mode Enabled</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="font-medium text-slate-900">Demo Mode Enabled</p>
+              <p className="text-sm text-slate-500">
                 When enabled, the AI console will simulate calls instead of using real telephony
               </p>
             </div>
@@ -176,34 +175,32 @@ export default function TruckingSettingsPage() {
               onCheckedChange={(checked) => setSettings({ ...settings, demo_mode_enabled: checked })}
             />
           </div>
-        </CardContent>
-      </Card>
+        </TruckingContentCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Twilio Integration</CardTitle>
-          <CardDescription>Connect your Twilio phone number for real calls</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 border rounded-lg bg-muted/50">
-            <p className="text-sm text-muted-foreground">
+        <TruckingContentCard>
+          <div className="space-y-1 mb-5">
+            <h3 className="font-semibold text-slate-900">Twilio Integration</h3>
+            <p className="text-sm text-slate-500">Connect your Twilio phone number for real calls</p>
+          </div>
+          <div className="p-4 border border-slate-200 rounded-xl bg-slate-50">
+            <p className="text-sm text-slate-600">
               To receive real carrier calls, configure your Twilio phone number's webhook to point to:
             </p>
-            <code className="block mt-2 p-2 bg-background rounded text-xs break-all">
+            <code className="block mt-2 p-3 bg-white rounded-lg text-xs text-slate-800 break-all border border-slate-200">
               {`${window.location.origin}/functions/v1/ai-trucking-call-router`}
             </code>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-slate-500 mt-2">
               Set the HTTP method to POST and configure "A call comes in" to use this webhook.
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </TruckingContentCard>
 
-      <div className="flex justify-end">
-        <Button onClick={saveSettings} disabled={saving}>
-          {saving ? "Saving..." : "Save Settings"}
-        </Button>
+        <div className="flex justify-end">
+          <Button onClick={saveSettings} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+            {saving ? "Saving..." : "Save Settings"}
+          </Button>
+        </div>
       </div>
-    </div>
+    </TruckingPageWrapper>
   );
 }

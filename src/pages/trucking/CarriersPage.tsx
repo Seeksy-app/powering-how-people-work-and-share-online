@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Phone, Mail } from "lucide-react";
+import { Plus, Edit, Trash2, Phone, Mail, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatPhoneNumber } from "@/utils/phoneFormat";
+import { TruckingPageWrapper, TruckingContentCard, TruckingEmptyState } from "@/components/trucking/TruckingPageWrapper";
 
 interface Carrier {
   id: string;
@@ -145,26 +146,24 @@ export default function CarriersPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Carriers</h1>
-          <p className="text-muted-foreground">Your carrier directory</p>
-        </div>
+    <TruckingPageWrapper 
+      title="Carriers" 
+      description="Your carrier directory"
+      action={
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
               <Plus className="h-4 w-4 mr-2" />
               Add Carrier
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>{editingCarrier ? "Edit Carrier" : "Add Carrier"}</DialogTitle>
               <DialogDescription>Add carrier details to your directory</DialogDescription>
@@ -176,6 +175,7 @@ export default function CarriersPage() {
                   value={formData.company_name}
                   onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                   required
+                  className="mt-1"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -185,6 +185,7 @@ export default function CarriersPage() {
                     value={formData.mc_number}
                     onChange={(e) => setFormData({ ...formData, mc_number: e.target.value })}
                     placeholder="MC-123456"
+                    className="mt-1"
                   />
                 </div>
                 <div>
@@ -193,6 +194,7 @@ export default function CarriersPage() {
                     value={formData.dot_number}
                     onChange={(e) => setFormData({ ...formData, dot_number: e.target.value })}
                     placeholder="1234567"
+                    className="mt-1"
                   />
                 </div>
               </div>
@@ -201,6 +203,7 @@ export default function CarriersPage() {
                 <Input
                   value={formData.contact_name}
                   onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                  className="mt-1"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -211,6 +214,7 @@ export default function CarriersPage() {
                     onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
                     type="tel"
                     placeholder="405-444-4444"
+                    className="mt-1"
                   />
                 </div>
                 <div>
@@ -219,6 +223,7 @@ export default function CarriersPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     type="email"
+                    className="mt-1"
                   />
                 </div>
               </div>
@@ -228,6 +233,7 @@ export default function CarriersPage() {
                   value={formData.equipment_types}
                   onChange={(e) => setFormData({ ...formData, equipment_types: e.target.value })}
                   placeholder="Dry Van, Reefer, Flatbed"
+                  className="mt-1"
                 />
               </div>
               <div>
@@ -235,70 +241,89 @@ export default function CarriersPage() {
                 <Textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="mt-1"
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
                 {editingCarrier ? "Update Carrier" : "Add Carrier"}
               </Button>
             </form>
           </DialogContent>
         </Dialog>
-      </div>
-
-      <Card>
-        <CardContent className="p-0">
-          {carriers.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              No carriers yet. Add carriers to your directory.
-            </div>
-          ) : (
+      }
+    >
+      <TruckingContentCard noPadding>
+        {carriers.length === 0 ? (
+          <TruckingEmptyState
+            icon={<Users className="h-6 w-6 text-slate-400" />}
+            title="No carriers yet"
+            description="Add carriers you like working with to your directory."
+            action={
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => setDialogOpen(true)}>
+                Add Carrier
+              </Button>
+            }
+          />
+        ) : (
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>MC / DOT</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Equipment</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="border-b border-slate-200">
+                  <TableHead className="text-slate-500 font-medium">Company</TableHead>
+                  <TableHead className="text-slate-500 font-medium">MC / DOT</TableHead>
+                  <TableHead className="text-slate-500 font-medium">Contact</TableHead>
+                  <TableHead className="text-slate-500 font-medium">Equipment</TableHead>
+                  <TableHead className="text-slate-500 font-medium text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {carriers.map((carrier) => (
-                  <TableRow key={carrier.id}>
-                    <TableCell className="font-medium">{carrier.company_name}</TableCell>
+                  <TableRow key={carrier.id} className="border-b border-slate-100 hover:bg-slate-50">
+                    <TableCell className="font-medium text-slate-900">{carrier.company_name}</TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {carrier.mc_number && <div>MC# {carrier.mc_number}</div>}
-                        {carrier.dot_number && <div className="text-muted-foreground">DOT# {carrier.dot_number}</div>}
+                        {carrier.mc_number && <div className="text-slate-900">MC# {carrier.mc_number}</div>}
+                        {carrier.dot_number && <div className="text-slate-500">DOT# {carrier.dot_number}</div>}
+                        {!carrier.mc_number && !carrier.dot_number && <span className="text-slate-400">—</span>}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div>
-                        <div>{carrier.contact_name || "—"}</div>
-                        <div className="text-xs text-muted-foreground">{carrier.phone}</div>
-                      </div>
+                      <div className="text-slate-900">{carrier.contact_name || "—"}</div>
+                      <div className="text-xs text-slate-500">{carrier.phone}</div>
                     </TableCell>
-                    <TableCell>{carrier.equipment_types || "—"}</TableCell>
+                    <TableCell>
+                      {carrier.equipment_types ? (
+                        <div className="flex flex-wrap gap-1">
+                          {carrier.equipment_types.split(",").map((type, i) => (
+                            <Badge key={i} variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-xs">
+                              {type.trim()}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         {carrier.phone && (
-                          <Button variant="ghost" size="icon" asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" asChild>
                             <a href={`tel:${carrier.phone}`}>
                               <Phone className="h-4 w-4" />
                             </a>
                           </Button>
                         )}
                         {carrier.email && (
-                          <Button variant="ghost" size="icon" asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" asChild>
                             <a href={`mailto:${carrier.email}`}>
                               <Mail className="h-4 w-4" />
                             </a>
                           </Button>
                         )}
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(carrier)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600" onClick={() => handleEdit(carrier)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(carrier.id)}>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-red-600" onClick={() => handleDelete(carrier.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -307,9 +332,9 @@ export default function CarriersPage() {
                 ))}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+        )}
+      </TruckingContentCard>
+    </TruckingPageWrapper>
   );
 }
