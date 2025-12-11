@@ -46,7 +46,7 @@ export default function VeteransDashboard() {
       setUser(currentUser ?? null);
 
       if (!currentUser) {
-        navigate('/veterans/auth');
+        navigate('/yourbenefits/auth');
         return;
       }
 
@@ -88,7 +88,7 @@ export default function VeteransDashboard() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
       if (!session?.user) {
-        navigate('/veterans/auth');
+        navigate('/yourbenefits/auth');
       }
     });
 
@@ -107,21 +107,21 @@ export default function VeteransDashboard() {
       title: "VA Compensation Calculator",
       description: "Estimate your monthly benefits",
       icon: DollarSign,
-      href: "/veterans/calculators/va-compensation",
+      href: "/yourbenefits/calculators/va-compensation",
       color: "text-green-500 bg-green-500/10",
     },
     {
       title: "Military Buy-Back",
       description: "Calculate service credit costs",
       icon: Calculator,
-      href: "/veterans/calculators/military-buyback",
+      href: "/yourbenefits/calculators/military-buyback",
       color: "text-blue-500 bg-blue-500/10",
     },
     {
       title: "TSP Growth Calculator",
       description: "Project your retirement savings",
       icon: TrendingUp,
-      href: "/veterans/calculators/tsp-growth",
+      href: "/yourbenefits/calculators/tsp-growth",
       color: "text-purple-500 bg-purple-500/10",
     },
   ];
@@ -242,7 +242,7 @@ export default function VeteransDashboard() {
                   <CardDescription>Quick access to benefit tools</CardDescription>
                 </div>
                 <Button asChild variant="ghost" size="sm">
-                  <Link to="/veterans#calculators-section">View All</Link>
+                  <Link to="/yourbenefits#calculators-section">View All</Link>
                 </Button>
               </CardHeader>
               <CardContent>

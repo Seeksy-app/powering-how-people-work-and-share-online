@@ -466,8 +466,8 @@ export default function ClaimsAgent() {
       <header className="border-b bg-card flex-shrink-0 px-4 py-3">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <div className="flex items-center gap-3">
-            <Link to="/veterans" className="text-sm text-muted-foreground hover:text-foreground">
-              ← Veterans Home
+            <Link to="/yourbenefits" className="text-sm text-muted-foreground hover:text-foreground">
+              ← Benefits Home
             </Link>
           </div>
           <Button 
@@ -475,7 +475,7 @@ export default function ClaimsAgent() {
             size="sm" 
             asChild
           >
-            <Link to="/veterans#calculators-section">
+            <Link to="/yourbenefits#calculators-section">
               <Calculator className="w-4 h-4 mr-2" />
               Calculators
             </Link>

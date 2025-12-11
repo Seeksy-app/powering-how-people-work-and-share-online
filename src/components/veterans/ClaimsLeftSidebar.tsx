@@ -35,7 +35,7 @@ export function ClaimsLeftSidebar({ currentStep, onHandoffClick, onCalculatorsCl
                 Monthly Compensation
               </Button>
             </Link>
-            <Link to="/veterans">
+            <Link to="/yourbenefits">
               <Button variant="outline" size="sm" className="w-full text-sm">
                 View All Calculators
               </Button>

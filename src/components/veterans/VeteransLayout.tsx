@@ -73,11 +73,11 @@ export function VeteransLayout({ children }: VeteransLayoutProps) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/veterans');
+    navigate('/yourbenefits');
   };
 
   const handleNewConversation = () => {
-    navigate('/veterans/claims-agent?new=true');
+    navigate('/yourbenefits/claims-agent?new=true');
   };
 
   const handleDeleteConversation = async (id: string, e: React.MouseEvent) => {
@@ -114,15 +114,15 @@ export function VeteransLayout({ children }: VeteransLayoutProps) {
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </Button>
             )}
-            <Link to="/veterans" className="flex items-center gap-2">
+            <Link to="/yourbenefits" className="flex items-center gap-2">
               <Shield className="w-6 h-6 text-primary" />
-              <span className="font-semibold">Veterans Benefits Hub</span>
+              <span className="font-semibold">Military & Federal Benefits Hub</span>
             </Link>
           </div>
           
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
-              <Link to="/veterans#calculators-section">
+              <Link to="/yourbenefits#calculators-section">
                 <Calculator className="w-4 h-4 mr-2" />
                 Calculators
               </Link>
@@ -141,10 +141,10 @@ export function VeteransLayout({ children }: VeteransLayoutProps) {
             ) : (
               <>
                 <Button asChild variant="ghost" size="sm">
-                  <Link to="/veterans/auth">Login</Link>
+                  <Link to="/yourbenefits/auth">Login</Link>
                 </Button>
                 <Button asChild size="sm">
-                  <Link to="/veterans/auth">Sign Up Free</Link>
+                  <Link to="/yourbenefits/auth">Sign Up Free</Link>
                 </Button>
               </>
             )}
@@ -183,7 +183,7 @@ export function VeteransLayout({ children }: VeteransLayoutProps) {
                         {conversations.map((convo) => (
                           <Link
                             key={convo.id}
-                            to={`/veterans/claims-agent?conversation=${convo.id}`}
+                            to={`/yourbenefits/claims-agent?conversation=${convo.id}`}
                             className="group flex items-center justify-between p-2 rounded-md hover:bg-muted text-sm"
                           >
                             <div className="flex-1 min-w-0">
@@ -275,7 +275,7 @@ export function VeteransLayout({ children }: VeteransLayoutProps) {
                         {conversations.map((convo) => (
                           <Link
                             key={convo.id}
-                            to={`/veterans/claims-agent?conversation=${convo.id}`}
+                            to={`/yourbenefits/claims-agent?conversation=${convo.id}`}
                             className="block p-2 rounded-md hover:bg-muted text-sm"
                             onClick={() => setMobileMenuOpen(false)}
                           >
