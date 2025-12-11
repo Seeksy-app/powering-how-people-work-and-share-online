@@ -9,14 +9,16 @@ import {
   Copy, 
   Check,
   Eye,
-  Pencil,
+  ChevronDown,
   Key,
   Video,
-  DollarSign
+  DollarSign,
+  Calendar
 } from "lucide-react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { OpportunityEditModal } from "@/components/board/OpportunityEditModal";
+import { OpportunityInlineEditor } from "@/components/board/OpportunityInlineEditor";
+import { format } from "date-fns";
 
 interface SalesOpportunity {
   id: string;
@@ -30,6 +32,9 @@ interface SalesOpportunity {
   status: string;
   is_featured: boolean;
   access_code: string | null;
+  expires_at: string | null;
+  require_nda_board: boolean;
+  require_nda_recipient: boolean;
   projected_revenue_year1: number | null;
   projected_revenue_year2: number | null;
   projected_revenue_year3: number | null;
@@ -39,7 +44,7 @@ interface SalesOpportunity {
 
 export default function BoardSalesOpportunities() {
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
-  const [editingOpportunity, setEditingOpportunity] = useState<SalesOpportunity | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data: opportunities, isLoading } = useQuery({
     queryKey: ["board-sales-opportunities"],
@@ -71,6 +76,10 @@ export default function BoardSalesOpportunities() {
       default:
         return "bg-gray-400";
     }
+  };
+
+  const toggleExpanded = (id: string) => {
+    setExpandedId(expandedId === id ? null : id);
   };
 
   if (isLoading) {
@@ -137,10 +146,10 @@ export default function BoardSalesOpportunities() {
                     Protected
                   </Badge>
                 )}
-                {opportunity.video_url && (
+                {opportunity.expires_at && (
                   <Badge variant="outline" className="text-xs">
-                    <Video className="w-3 h-3 mr-1" />
-                    Video
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {format(new Date(opportunity.expires_at), "MMM d")}
                   </Badge>
                 )}
               </div>
@@ -177,10 +186,10 @@ export default function BoardSalesOpportunities() {
                   variant="default"
                   size="sm"
                   className="flex-1"
-                  onClick={() => setEditingOpportunity(opportunity)}
+                  onClick={() => toggleExpanded(opportunity.id)}
                 >
-                  <Pencil className="w-4 h-4 mr-1" />
-                  Edit
+                  <ChevronDown className={`w-4 h-4 mr-1 transition-transform ${expandedId === opportunity.id ? "rotate-180" : ""}`} />
+                  {expandedId === opportunity.id ? "Collapse" : "Edit"}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -208,6 +217,14 @@ export default function BoardSalesOpportunities() {
         ))}
       </div>
 
+      {/* Inline Editor (displayed below the grid) */}
+      {expandedId && opportunities && (
+        <OpportunityInlineEditor
+          opportunity={opportunities.find(o => o.id === expandedId)!}
+          onClose={() => setExpandedId(null)}
+        />
+      )}
+
       {/* Empty State */}
       {opportunities?.length === 0 && (
         <Card className="p-12 text-center">
@@ -219,15 +236,6 @@ export default function BoardSalesOpportunities() {
             Sales opportunities will appear here once created by admins.
           </p>
         </Card>
-      )}
-
-      {/* Edit Modal */}
-      {editingOpportunity && (
-        <OpportunityEditModal
-          opportunity={editingOpportunity}
-          open={!!editingOpportunity}
-          onOpenChange={(open) => !open && setEditingOpportunity(null)}
-        />
       )}
     </div>
   );

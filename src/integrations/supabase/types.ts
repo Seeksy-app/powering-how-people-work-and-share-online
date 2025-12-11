@@ -16604,6 +16604,92 @@ export type Database = {
         }
         Relationships: []
       }
+      opportunity_proformas: {
+        Row: {
+          addressable_market: string | null
+          assumptions: Json | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          ebitda_year1: number | null
+          ebitda_year2: number | null
+          ebitda_year3: number | null
+          expenses_year1: number | null
+          expenses_year2: number | null
+          expenses_year3: number | null
+          id: string
+          is_default: boolean | null
+          market_size: string | null
+          metrics: Json | null
+          name: string
+          opportunity_id: string
+          revenue_year1: number | null
+          revenue_year2: number | null
+          revenue_year3: number | null
+          status: string | null
+          target_market: string | null
+          updated_at: string
+        }
+        Insert: {
+          addressable_market?: string | null
+          assumptions?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ebitda_year1?: number | null
+          ebitda_year2?: number | null
+          ebitda_year3?: number | null
+          expenses_year1?: number | null
+          expenses_year2?: number | null
+          expenses_year3?: number | null
+          id?: string
+          is_default?: boolean | null
+          market_size?: string | null
+          metrics?: Json | null
+          name: string
+          opportunity_id: string
+          revenue_year1?: number | null
+          revenue_year2?: number | null
+          revenue_year3?: number | null
+          status?: string | null
+          target_market?: string | null
+          updated_at?: string
+        }
+        Update: {
+          addressable_market?: string | null
+          assumptions?: Json | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          ebitda_year1?: number | null
+          ebitda_year2?: number | null
+          ebitda_year3?: number | null
+          expenses_year1?: number | null
+          expenses_year2?: number | null
+          expenses_year3?: number | null
+          id?: string
+          is_default?: boolean | null
+          market_size?: string | null
+          metrics?: Json | null
+          name?: string
+          opportunity_id?: string
+          revenue_year1?: number | null
+          revenue_year2?: number | null
+          revenue_year3?: number | null
+          status?: string | null
+          target_market?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_proformas_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "sales_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permission_audit_log: {
         Row: {
           action: string
@@ -19079,14 +19165,18 @@ export type Database = {
           demo_url: string | null
           description: string | null
           display_order: number | null
+          expires_at: string | null
           id: string
           is_featured: boolean | null
           key_metrics: Json | null
           market_size: string | null
           name: string
+          nda_text: string | null
           projected_revenue_year1: number | null
           projected_revenue_year2: number | null
           projected_revenue_year3: number | null
+          require_nda_board: boolean | null
+          require_nda_recipient: boolean | null
           revenue_model: string | null
           site_url: string | null
           slug: string
@@ -19105,14 +19195,18 @@ export type Database = {
           demo_url?: string | null
           description?: string | null
           display_order?: number | null
+          expires_at?: string | null
           id?: string
           is_featured?: boolean | null
           key_metrics?: Json | null
           market_size?: string | null
           name: string
+          nda_text?: string | null
           projected_revenue_year1?: number | null
           projected_revenue_year2?: number | null
           projected_revenue_year3?: number | null
+          require_nda_board?: boolean | null
+          require_nda_recipient?: boolean | null
           revenue_model?: string | null
           site_url?: string | null
           slug: string
@@ -19131,14 +19225,18 @@ export type Database = {
           demo_url?: string | null
           description?: string | null
           display_order?: number | null
+          expires_at?: string | null
           id?: string
           is_featured?: boolean | null
           key_metrics?: Json | null
           market_size?: string | null
           name?: string
+          nda_text?: string | null
           projected_revenue_year1?: number | null
           projected_revenue_year2?: number | null
           projected_revenue_year3?: number | null
+          require_nda_board?: boolean | null
+          require_nda_recipient?: boolean | null
           revenue_model?: string | null
           site_url?: string | null
           slug?: string
@@ -19188,6 +19286,45 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "sales_opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_opportunity_proformas: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          opportunity_id: string
+          proforma_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          opportunity_id: string
+          proforma_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          opportunity_id?: string
+          proforma_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_opportunity_proformas_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "sales_opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_opportunity_proformas_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "opportunity_proformas"
             referencedColumns: ["id"]
           },
         ]
