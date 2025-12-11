@@ -4,8 +4,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, MessageSquare, Send, Loader2, ExternalLink, AlertCircle, ChevronRight, Eye, ClipboardList, Shield } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { ArrowLeft, MessageSquare, Send, Loader2, ExternalLink, AlertCircle, ChevronRight, Eye, ClipboardList, Shield, LogIn, UserPlus, Calculator } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ClaimsIntakeFlow, IntakeData } from "@/components/veterans/ClaimsIntakeFlow";
@@ -53,6 +54,16 @@ FORMATTING RULES:
 3. After asking a question, add "For example:" with 1-3 very short sample answers
 4. Split long explanations into numbered steps
 5. Be encouraging and supportive — many veterans find this process overwhelming
+6. ALWAYS end your response with 2-4 suggested follow-up prompts for the user
+
+CRITICAL: At the END of EVERY response, include suggested prompts in this exact format:
+<prompts>["First suggestion", "Second suggestion", "Third suggestion"]</prompts>
+
+These should be short, helpful next-step suggestions like:
+- "Tell me about Intent to File"
+- "What conditions can I claim?"
+- "How do I gather evidence?"
+- "I have questions about my rating"
 
 Your goals:
 1. Help veterans understand what benefits they may be entitled to
@@ -101,6 +112,7 @@ const SAMPLE_MESSAGES: Message[] = [
   {
     role: "assistant",
     content: "Thanks for sharing, Mike! I can see you're interested in filing your first VA claim. Let's talk about the symptoms or conditions you'd like to claim.\n\nWhat health issues have you experienced that you believe are connected to your military service?\n\nFor example: back pain, hearing loss, knee problems, headaches, or PTSD.",
+    quickReplies: ["Back pain", "Hearing loss / Tinnitus", "PTSD / Mental health", "Joint pain", "Other condition"]
   },
   {
     role: "user",
@@ -114,6 +126,7 @@ const SAMPLE_MESSAGES: Message[] = [
 ];
 
 export default function ClaimsAgent() {
+  const navigate = useNavigate();
   const [intakeComplete, setIntakeComplete] = useState(false);
   const [intakeData, setIntakeData] = useState<IntakeData | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -129,7 +142,26 @@ export default function ClaimsAgent() {
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
   const [leadForm, setLeadForm] = useState({ name: "", email: "", phone: "" });
   const [error, setError] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+  const [authForm, setAuthForm] = useState({ email: "", password: "" });
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const calculatorsRef = useRef<HTMLDivElement>(null);
+
+  // Check auth state
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
@@ -143,10 +175,10 @@ export default function ClaimsAgent() {
 
   // Show save prompt after 8 messages
   useEffect(() => {
-    if (messageCount === 8 && !showSavePrompt) {
+    if (messageCount === 8 && !showSavePrompt && !user) {
       setShowSavePrompt(true);
     }
-  }, [messageCount, showSavePrompt]);
+  }, [messageCount, showSavePrompt, user]);
 
   const handleIntakeComplete = (data: IntakeData) => {
     setIntakeData(data);
@@ -193,6 +225,31 @@ export default function ClaimsAgent() {
     return { cleanContent: content, note: null };
   };
 
+  const extractPrompts = (content: string): { cleanContent: string; prompts: string[] } => {
+    const promptsMatch = content.match(/<prompts>\s*(\[.*?\])\s*<\/prompts>/s);
+    if (promptsMatch) {
+      try {
+        const prompts = JSON.parse(promptsMatch[1]);
+        const cleanContent = content.replace(/<prompts>[\s\S]*?<\/prompts>/g, '').trim();
+        return { cleanContent, prompts: Array.isArray(prompts) ? prompts : [] };
+      } catch {
+        return { cleanContent: content, prompts: [] };
+      }
+    }
+    return { cleanContent: content, prompts: [] };
+  };
+
+  // Clean up any raw JSON that might appear in messages
+  const cleanMessageContent = (content: string): string => {
+    // Remove any JSON-like structures that look like notes
+    let cleaned = content.replace(/\{"category":\s*"[^"]*",\s*"value":\s*"[^"]*"\}/g, '');
+    // Remove multiple spaces and trim
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    // Remove trailing punctuation if content ends awkwardly
+    cleaned = cleaned.replace(/\s*[,;]\s*$/, '');
+    return cleaned;
+  };
+
   const getQuickRepliesForContext = (messageContent: string): string[] | undefined => {
     const lowerContent = messageContent.toLowerCase();
     
@@ -208,7 +265,7 @@ export default function ClaimsAgent() {
     if (lowerContent.includes("step") || lowerContent.includes("next")) {
       return QUICK_REPLY_TEMPLATES.nextSteps;
     }
-    return undefined;
+    return QUICK_REPLY_TEMPLATES.navigation;
   };
 
   const sendMessage = async (messageText?: string) => {
@@ -254,8 +311,16 @@ export default function ClaimsAgent() {
         return;
       }
 
-      const rawMessage = response.data?.message || "I'm sorry, I couldn't process that. Could you try again?";
-      const { cleanContent, note } = extractNotes(rawMessage);
+      let rawMessage = response.data?.message || "I'm sorry, I couldn't process that. Could you try again?";
+      
+      // Extract notes
+      const { cleanContent: contentAfterNotes, note } = extractNotes(rawMessage);
+      
+      // Extract prompts
+      const { cleanContent: contentAfterPrompts, prompts } = extractPrompts(contentAfterNotes);
+      
+      // Clean any remaining JSON artifacts
+      const finalContent = cleanMessageContent(contentAfterPrompts);
       
       if (note) {
         // Deduplicate notes
@@ -265,8 +330,9 @@ export default function ClaimsAgent() {
         });
       }
       
-      const quickReplies = getQuickRepliesForContext(cleanContent);
-      setMessages(prev => [...prev, { role: "assistant", content: cleanContent, quickReplies }]);
+      // Use extracted prompts or fall back to context-based quick replies
+      const quickReplies = prompts.length > 0 ? prompts : getQuickRepliesForContext(finalContent);
+      setMessages(prev => [...prev, { role: "assistant", content: finalContent, quickReplies }]);
       
       if (notes.length >= 2 && currentStep === 2) {
         setCurrentStep(3);
@@ -362,6 +428,47 @@ export default function ClaimsAgent() {
     }
   };
 
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAuthLoading(true);
+    
+    try {
+      if (authMode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email: authForm.email,
+          password: authForm.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/veterans/claims-agent`
+          }
+        });
+        if (error) throw error;
+        toast.success("Account created! Check your email to confirm.");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: authForm.email,
+          password: authForm.password,
+        });
+        if (error) throw error;
+        toast.success("Welcome back!");
+      }
+      setShowAuthModal(false);
+      setAuthForm({ email: "", password: "" });
+    } catch (error: any) {
+      toast.error(error.message || "Authentication failed");
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Signed out successfully");
+  };
+
+  const scrollToCalculators = () => {
+    calculatorsRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       {/* Header */}
@@ -384,21 +491,65 @@ export default function ClaimsAgent() {
               </div>
             </div>
             
-            {intakeComplete && (
-              <div className="hidden md:flex items-center gap-1 text-xs">
-                <span className={`px-2 py-1 rounded ${currentStep >= 1 ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'}`}>
-                  1. Intake
-                </span>
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                <span className={`px-2 py-1 rounded ${currentStep >= 2 ? 'bg-orange-500/10 text-orange-600' : 'bg-muted text-muted-foreground'}`}>
-                  2. Conditions
-                </span>
-                <ChevronRight className="w-3 h-3 text-muted-foreground" />
-                <span className={`px-2 py-1 rounded ${currentStep >= 3 ? 'bg-orange-500/10 text-orange-600' : 'bg-muted text-muted-foreground'}`}>
-                  3. Filing Options
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-3">
+              {/* Calculator anchor button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={scrollToCalculators}
+                className="hidden md:flex"
+              >
+                <Calculator className="w-4 h-4 mr-2" />
+                Calculators
+              </Button>
+
+              {/* Auth buttons */}
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground hidden md:inline">
+                    {user.email}
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={handleLogout}>
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Login
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    onClick={() => { setAuthMode('signup'); setShowAuthModal(true); }}
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Sign Up
+                  </Button>
+                </div>
+              )}
+              
+              {intakeComplete && (
+                <div className="hidden lg:flex items-center gap-1 text-xs">
+                  <span className={`px-2 py-1 rounded ${currentStep >= 1 ? 'bg-green-500/10 text-green-600' : 'bg-muted text-muted-foreground'}`}>
+                    1. Intake
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  <span className={`px-2 py-1 rounded ${currentStep >= 2 ? 'bg-orange-500/10 text-orange-600' : 'bg-muted text-muted-foreground'}`}>
+                    2. Conditions
+                  </span>
+                  <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                  <span className={`px-2 py-1 rounded ${currentStep >= 3 ? 'bg-orange-500/10 text-orange-600' : 'bg-muted text-muted-foreground'}`}>
+                    3. Filing Options
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -422,94 +573,107 @@ export default function ClaimsAgent() {
           <ClaimsIntakeFlow onComplete={handleIntakeComplete} onShowSample={handleShowSample} />
         </div>
       ) : (
-        <div className="flex-1 flex overflow-hidden">
-          {/* Left Sidebar */}
-          <div className="hidden lg:block w-[300px] border-r bg-card/50 flex-shrink-0 overflow-auto">
-            <ClaimsLeftSidebar 
-              currentStep={currentStep} 
-              onHandoffClick={() => setShowHandoffModal(true)} 
-            />
-          </div>
-
-          {/* Chat Area */}
-          <div className="flex-1 flex flex-col min-w-0">
-            {/* Messages */}
-            <div className="flex-1 overflow-auto px-6 py-6">
-              <div className="max-w-[800px] mx-auto space-y-6">
-                {messages.map((message, index) => (
-                  <ClaimsChatMessage
-                    key={index}
-                    role={message.role}
-                    content={message.content}
-                    quickReplies={message.quickReplies}
-                    onQuickReply={handleQuickReply}
-                    isLatest={index === messages.length - 1}
-                    isLoading={isLoading}
-                  />
-                ))}
-                
-                {isLoading && (
-                  <div className="flex gap-3">
-                    <div className="w-9 h-9 rounded-full bg-orange-500/10 flex items-center justify-center">
-                      <Loader2 className="w-5 h-5 text-orange-600 animate-spin" />
-                    </div>
-                    <div className="bg-muted/50 rounded-2xl rounded-bl-md px-4 py-3">
-                      <p className="text-muted-foreground text-sm">Thinking...</p>
-                    </div>
-                  </div>
-                )}
-                
-                {error && (
-                  <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-lg">
-                    <AlertCircle className="w-4 h-4" />
-                    {error}
-                  </div>
-                )}
-                
-                <div ref={messagesEndRef} />
+        <div className="flex-1 overflow-hidden">
+          <ResizablePanelGroup direction="horizontal" className="h-full">
+            {/* Left Sidebar */}
+            <ResizablePanel defaultSize={22} minSize={15} maxSize={35} className="hidden lg:block">
+              <div className="h-full border-r bg-card/50 overflow-auto">
+                <ClaimsLeftSidebar 
+                  currentStep={currentStep} 
+                  onHandoffClick={() => setShowHandoffModal(true)}
+                  onCalculatorsClick={scrollToCalculators}
+                />
               </div>
-            </div>
+            </ResizablePanel>
             
-            {/* Save Prompt */}
-            {showSavePrompt && (
-              <ClaimsSavePrompt 
-                onSave={handleSaveConversation}
-                onDismiss={() => setShowSavePrompt(false)}
-              />
-            )}
+            <ResizableHandle className="hidden lg:flex" />
 
-            {/* Input Area */}
-            <div className="flex-shrink-0 px-6 pb-4">
-              <div className="max-w-[800px] mx-auto">
-                <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="relative">
-                  <Input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Type your message..."
-                    disabled={isLoading || showingSample}
-                    className="pr-12 py-6 text-[15px] rounded-xl shadow-md border-muted-foreground/20"
+            {/* Chat Area */}
+            <ResizablePanel defaultSize={56} minSize={35}>
+              <div className="h-full flex flex-col min-w-0">
+                {/* Messages */}
+                <div className="flex-1 overflow-auto px-6 py-6">
+                  <div className="max-w-[800px] mx-auto space-y-6">
+                    {messages.map((message, index) => (
+                      <ClaimsChatMessage
+                        key={index}
+                        role={message.role}
+                        content={message.content}
+                        quickReplies={message.quickReplies}
+                        onQuickReply={handleQuickReply}
+                        isLatest={index === messages.length - 1}
+                        isLoading={isLoading}
+                      />
+                    ))}
+                    
+                    {isLoading && (
+                      <div className="flex gap-3">
+                        <div className="w-9 h-9 rounded-full bg-orange-500/10 flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 text-orange-600 animate-spin" />
+                        </div>
+                        <div className="bg-muted/50 rounded-2xl rounded-bl-md px-4 py-3">
+                          <p className="text-muted-foreground text-sm">Thinking...</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {error && (
+                      <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-lg">
+                        <AlertCircle className="w-4 h-4" />
+                        {error}
+                      </div>
+                    )}
+                    
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
+                
+                {/* Save Prompt */}
+                {showSavePrompt && (
+                  <ClaimsSavePrompt 
+                    onSave={handleSaveConversation}
+                    onDismiss={() => setShowSavePrompt(false)}
                   />
-                  <Button
-                    type="submit"
-                    size="icon"
-                    disabled={!input.trim() || isLoading || showingSample}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-orange-600 hover:bg-orange-700"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </form>
-              </div>
-            </div>
-          </div>
+                )}
 
-          {/* Right Sidebar - Desktop */}
-          <div className="hidden xl:block w-[300px] border-l bg-card/50 flex-shrink-0 overflow-hidden">
-            <ClaimsRightSidebar 
-              notes={notes} 
-              intakeData={intakeData || undefined}
-              userName={userName}
-            />
-          </div>
+                {/* Input Area */}
+                <div className="flex-shrink-0 px-6 pb-4">
+                  <div className="max-w-[800px] mx-auto">
+                    <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="relative">
+                      <Input
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder="Type your message..."
+                        disabled={isLoading || showingSample}
+                        className="pr-12 py-6 text-[15px] rounded-xl shadow-md border-muted-foreground/20"
+                      />
+                      <Button
+                        type="submit"
+                        size="icon"
+                        disabled={!input.trim() || isLoading || showingSample}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-orange-600 hover:bg-orange-700"
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </ResizablePanel>
+            
+            <ResizableHandle className="hidden xl:flex" />
+
+            {/* Right Sidebar - Desktop */}
+            <ResizablePanel defaultSize={22} minSize={15} maxSize={35} className="hidden xl:block">
+              <div className="h-full border-l bg-card/50 overflow-hidden">
+                <ClaimsRightSidebar 
+                  notes={notes} 
+                  intakeData={intakeData || undefined}
+                  userName={userName}
+                />
+              </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
 
           {/* Mobile Notes Button */}
           <div className="xl:hidden">
@@ -535,6 +699,102 @@ export default function ClaimsAgent() {
           </div>
         </div>
       )}
+
+      {/* Calculator Anchor Target */}
+      <div ref={calculatorsRef} />
+
+      {/* Auth Modal */}
+      <Dialog open={showAuthModal} onOpenChange={setShowAuthModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {authMode === 'signup' ? (
+                <>
+                  <UserPlus className="w-5 h-5 text-orange-600" />
+                  Create Your Free Account
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-5 h-5 text-orange-600" />
+                  Welcome Back
+                </>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              {authMode === 'signup' 
+                ? "Save your progress and access your benefits information anytime."
+                : "Sign in to continue where you left off."
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleAuth} className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="auth-email">Email</Label>
+              <Input
+                id="auth-email"
+                type="email"
+                value={authForm.email}
+                onChange={(e) => setAuthForm(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="your@email.com"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="auth-password">Password</Label>
+              <Input
+                id="auth-password"
+                type="password"
+                value={authForm.password}
+                onChange={(e) => setAuthForm(prev => ({ ...prev, password: e.target.value }))}
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-orange-600 hover:bg-orange-700"
+              disabled={isAuthLoading}
+            >
+              {isAuthLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : authMode === 'signup' ? (
+                "Create Account"
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+          </form>
+          
+          <div className="text-center text-sm text-muted-foreground">
+            {authMode === 'signup' ? (
+              <>
+                Already have an account?{" "}
+                <button 
+                  type="button"
+                  className="text-orange-600 hover:underline"
+                  onClick={() => setAuthMode('login')}
+                >
+                  Sign in
+                </button>
+              </>
+            ) : (
+              <>
+                Don't have an account?{" "}
+                <button 
+                  type="button"
+                  className="text-orange-600 hover:underline"
+                  onClick={() => setAuthMode('signup')}
+                >
+                  Create one
+                </button>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Handoff Modal */}
       <Dialog open={showHandoffModal} onOpenChange={setShowHandoffModal}>
