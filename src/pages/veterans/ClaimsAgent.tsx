@@ -8,7 +8,7 @@ import { ArrowLeft, MessageSquare, Send, User, Bot, FileText, Shield, Loader2, E
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ClaimsIntakeFlow } from "@/components/veterans/ClaimsIntakeFlow";
+import { ClaimsIntakeFlow, IntakeData } from "@/components/veterans/ClaimsIntakeFlow";
 import { ClaimsNotesPanel, ClaimsNote } from "@/components/veterans/ClaimsNotesPanel";
 
 interface Message {
@@ -16,32 +16,29 @@ interface Message {
   content: string;
 }
 
-interface IntakeData {
-  status: string;
-  branch: string;
-  goal: string;
-}
-
-const GOAL_MESSAGES: Record<string, string> = {
-  intent_to_file: "filing an Intent to File",
-  first_claim: "filing your first VA claim",
-  increase: "filing for an increase",
-  secondary: "filing for a secondary condition",
-  appeal: "appealing a decision",
-  unsure: "understanding your options",
+const CLAIM_STATUS_MESSAGES: Record<string, string> = {
+  not_filed: "getting started with your first claim",
+  need_intent: "filing an Intent to File",
+  has_intent: "continuing after your Intent to File",
+  submitted_claim: "following up on your submitted claim",
+  supplemental: "filing for a supplemental or increase",
+  not_sure: "understanding your options",
 };
 
 const createSystemPrompt = (intakeData: IntakeData, notes: ClaimsNote[]) => {
   const notesContext = notes.length > 0 
     ? `\n\nCurrent collected information:\n${notes.map(n => `- ${n.category}: ${n.value}`).join('\n')}`
     : '';
+  
+  const goalsText = intakeData.primaryGoals.join(", ");
     
   return `You are a VA Claims Agent helping veterans understand and file their disability claims. You are compassionate, knowledgeable, and focused on helping veterans get the benefits they deserve.
 
-The veteran has completed intake with the following information:
+The user has completed intake with the following information:
 - Status: ${intakeData.status}
 - Branch of Service: ${intakeData.branch}
-- Goal: ${intakeData.goal}
+- Claim Status: ${intakeData.claimStatus}
+- Primary Goals: ${goalsText}
 ${notesContext}
 
 Your goals:
@@ -80,7 +77,8 @@ IMPORTANT: At the end of meaningful conversations, offer to generate a claims su
 const SAMPLE_INTAKE: IntakeData = {
   status: "veteran",
   branch: "army",
-  goal: "first_claim",
+  claimStatus: "not_filed",
+  primaryGoals: ["prepare_claim", "file_intent"],
 };
 
 const SAMPLE_NOTES: ClaimsNote[] = [
@@ -151,11 +149,11 @@ export default function ClaimsAgent() {
     setCurrentStep(2);
     setShowingSample(false);
     
-    const goalMessage = GOAL_MESSAGES[data.goal] || "understanding your benefits";
+    const statusMessage = CLAIM_STATUS_MESSAGES[data.claimStatus] || "understanding your benefits";
     setMessages([
       {
         role: "assistant",
-        content: `Great, thank you for that information! I can see you're interested in ${goalMessage}. I'll guide you step by step through this process.\n\nLet's talk about the symptoms or conditions you'd like to claim. What health issues or symptoms have you experienced that you believe are connected to your military service?`
+        content: `Great, thank you for that information! I'll tailor everything we talk about to your situation. I can see you're interested in ${statusMessage}.\n\nLet's start with what's going on with your health or service-connected conditions. What symptoms or issues have you experienced that you believe are connected to your military service?`
       }
     ]);
   };
@@ -269,7 +267,8 @@ export default function ClaimsAgent() {
         ...(intakeData ? [
           `Status: ${intakeData.status}`,
           `Branch: ${intakeData.branch}`,
-          `Goal: ${intakeData.goal}`,
+          `Claim Status: ${intakeData.claimStatus}`,
+          `Goals: ${intakeData.primaryGoals.join(", ")}`,
         ] : []),
         ...notes.map(n => `${n.category}: ${n.value}`),
       ].join("\n");

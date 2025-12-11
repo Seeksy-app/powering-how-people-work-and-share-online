@@ -15,7 +15,8 @@ interface ClaimsNotesPanelProps {
   intakeData?: {
     status: string;
     branch: string;
-    goal: string;
+    claimStatus: string;
+    primaryGoals: string[];
   };
   isMobile?: boolean;
 }
@@ -24,8 +25,9 @@ const STATUS_LABELS: Record<string, string> = {
   veteran: "Veteran",
   active_duty: "Active Duty",
   guard_reserve: "Guard/Reserve",
-  spouse: "Military Spouse",
-  dependent: "Dependent/Caregiver",
+  spouse_caregiver: "Spouse/Caregiver",
+  federal_employee: "Federal Employee",
+  other: "Other",
 };
 
 const BRANCH_LABELS: Record<string, string> = {
@@ -35,15 +37,16 @@ const BRANCH_LABELS: Record<string, string> = {
   air_force: "Air Force",
   space_force: "Space Force",
   coast_guard: "Coast Guard",
+  multiple_other: "Multiple/Other",
 };
 
-const GOAL_LABELS: Record<string, string> = {
-  intent_to_file: "Intent to File",
-  first_claim: "First VA Claim",
-  increase: "Claim Increase",
-  secondary: "Secondary Condition",
-  appeal: "Appeal Decision",
-  unsure: "Needs Guidance",
+const CLAIM_STATUS_LABELS: Record<string, string> = {
+  not_filed: "Not Filed Yet",
+  need_intent: "Needs Intent to File",
+  has_intent: "Has Intent to File",
+  submitted_claim: "Claim Submitted",
+  supplemental: "Supplemental/Increase",
+  not_sure: "Unsure",
 };
 
 function NotesList({ notes, intakeData }: { notes: ClaimsNote[]; intakeData?: ClaimsNotesPanelProps["intakeData"] }) {
