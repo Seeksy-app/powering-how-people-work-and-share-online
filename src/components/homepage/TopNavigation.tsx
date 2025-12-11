@@ -89,12 +89,17 @@ export function TopNavigation() {
           <nav className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-sm">
+                <Sparkles className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-slate-900">
-                Seeksy
-              </span>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-slate-900 leading-tight">
+                  Seeksy
+                </span>
+                <span className="text-[10px] text-slate-500 font-medium -mt-0.5 hidden sm:block">
+                  Connection App
+                </span>
+              </div>
             </Link>
 
             {/* Desktop Navigation */}
