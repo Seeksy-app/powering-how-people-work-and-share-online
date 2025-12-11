@@ -24,12 +24,34 @@ export default function VeteransHome() {
     },
   ];
 
+  const scrollToCalculators = () => {
+    document.getElementById('calculators-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
         <title>Military & Federal Benefits Hub | Seeksy</title>
         <meta name="description" content="Your all-in-one guide to maximizing federal and VA benefits — calculators, claim prep, and AI-powered support." />
       </Helmet>
+
+      {/* Header with Login/Signup */}
+      <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 h-14 flex items-center justify-between">
+          <Link to="/veterans" className="flex items-center gap-2">
+            <Shield className="w-6 h-6 text-primary" />
+            <span className="font-semibold">Veterans Hub</span>
+          </Link>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/auth">Login</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/auth">Sign Up Free</Link>
+            </Button>
+          </div>
+        </div>
+      </header>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10 py-20">
@@ -56,11 +78,9 @@ export default function VeteransHome() {
                   Start Your Claim
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg">
-                <Link to="/veterans/calculators/military-buyback">
-                  <Calculator className="w-5 h-5 mr-2" />
-                  Use Calculators
-                </Link>
+              <Button variant="outline" size="lg" className="text-lg" onClick={scrollToCalculators}>
+                <Calculator className="w-5 h-5 mr-2" />
+                Use Calculators
               </Button>
             </div>
           </div>
@@ -94,7 +114,7 @@ export default function VeteransHome() {
       </section>
 
       {/* Calculators by Category */}
-      <section className="py-16 container mx-auto px-4">
+      <section id="calculators-section" className="py-16 container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Your Benefits Toolkit</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">

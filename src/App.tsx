@@ -524,6 +524,15 @@ import SBPCalculator from "./pages/veterans/calculators/SBPCalculator";
 import COLACalculator from "./pages/veterans/calculators/COLACalculator";
 import VATravelCalculator from "./pages/veterans/calculators/VATravelCalculator";
 import VeteranClaimsAgent from "./pages/veterans/ClaimsAgent";
+import GIBillCalculator from "./pages/veterans/calculators/GIBillCalculator";
+import InsuranceNeedsCalculator from "./pages/veterans/calculators/InsuranceNeedsCalculator";
+import BRSComparisonCalculator from "./pages/veterans/calculators/BRSComparisonCalculator";
+import CHAMPVACalculator from "./pages/veterans/calculators/CHAMPVACalculator";
+import CRSCCalculator from "./pages/veterans/calculators/CRSCCalculator";
+import TRICARECalculator from "./pages/veterans/calculators/TRICARECalculator";
+import VAMeansTestCalculator from "./pages/veterans/calculators/VAMeansTestCalculator";
+import StateTaxBenefitsCalculator from "./pages/veterans/calculators/StateTaxBenefitsCalculator";
+import PropertyTaxExemptionCalculator from "./pages/veterans/calculators/PropertyTaxExemptionCalculator";
 import BoardMemberManagement from "./pages/admin/BoardMemberManagement";
 import { BoardGuard } from "./components/board/BoardGuard";
 import { BoardLayout } from "./components/board/BoardLayout";
@@ -1155,6 +1164,15 @@ const AppContent = () => {
           <Route path="/veterans/calculators/cola" element={<COLACalculator />} />
           <Route path="/veterans/calculators/va-travel" element={<VATravelCalculator />} />
           <Route path="/veterans/claims-agent" element={<VeteranClaimsAgent />} />
+          <Route path="/veterans/calculators/gi-bill" element={<GIBillCalculator />} />
+          <Route path="/veterans/calculators/insurance-needs" element={<InsuranceNeedsCalculator />} />
+          <Route path="/veterans/calculators/brs-comparison" element={<BRSComparisonCalculator />} />
+          <Route path="/veterans/tools/champva-eligibility" element={<CHAMPVACalculator />} />
+          <Route path="/veterans/tools/crsc" element={<CRSCCalculator />} />
+          <Route path="/veterans/tools/tricare-finder" element={<TRICARECalculator />} />
+          <Route path="/veterans/tools/va-means-test" element={<VAMeansTestCalculator />} />
+          <Route path="/veterans/calculators/state-tax-benefits" element={<StateTaxBenefitsCalculator />} />
+          <Route path="/veterans/calculators/property-tax-exemption" element={<PropertyTaxExemptionCalculator />} />
           
           {/* Admin Financials Routes (reuse Board components) */}
           <Route path="/admin/financials/key-metrics" element={<BoardKeyMetrics />} />
