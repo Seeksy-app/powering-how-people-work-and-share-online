@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { CampaignAuthModal } from "@/components/campaigns/CampaignAuthModal";
 import { CampaignHeroNetflix } from "@/components/campaigns/CampaignHeroNetflix";
+import { CampaignSolutionsDropdown } from "@/components/campaigns/CampaignSolutionsDropdown";
 
 // Brand colors from spec
 const colors = {
@@ -189,15 +190,10 @@ export default function CampaignsLandingPage() {
             </Link>
 
             {/* Nav Items */}
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden md:flex items-center gap-4">
+              <CampaignSolutionsDropdown />
               <a href="#how-it-works" className="text-sm font-medium hover:opacity-80" style={{ color: colors.textSecondary }}>
                 How It Works
-              </a>
-              <a href="#tools" className="text-sm font-medium hover:opacity-80" style={{ color: colors.textSecondary }}>
-                AI Tools
-              </a>
-              <a href="#local" className="text-sm font-medium hover:opacity-80" style={{ color: colors.textSecondary }}>
-                For Local Races
               </a>
               <a href="#pricing" className="text-sm font-medium hover:opacity-80" style={{ color: colors.textSecondary }}>
                 Pricing
