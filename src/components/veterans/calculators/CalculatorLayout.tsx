@@ -174,16 +174,7 @@ export function CalculatorLayout({
                   <p className="text-sm text-muted-foreground">Loading...</p>
                 ) : results.length === 0 ? (
                   <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground mb-2">No saved results yet</p>
-                    {!isLoggedIn && (
-                      <p className="text-xs text-muted-foreground">
-                        Results will be saved to your browser. 
-                        <Link to="/auth" className="text-primary hover:underline ml-1">
-                          Sign in
-                        </Link>
-                        {" "}to save across devices.
-                      </p>
-                    )}
+                    <p className="text-sm text-muted-foreground">No saved results yet</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
