@@ -103,8 +103,16 @@ async function handleLookupLoad(supabase: any, body: any) {
   // Format load information for the agent
   const load = loads[0]; // Return first match
   const rateText = formatRate(load);
+  
+  // Calculate rate per mile if we have both values
+  const distanceMiles = load.miles || null;
+  const targetRate = load.target_rate || null;
+  let ratePerMile: number | null = null;
+  if (distanceMiles && distanceMiles > 0 && targetRate && targetRate > 0) {
+    ratePerMile = targetRate / distanceMiles;
+  }
 
-  console.log("[lookup_load] Found load:", load.load_number);
+  console.log("[lookup_load] Found load:", load.load_number, "Miles:", distanceMiles, "Rate/mi:", ratePerMile);
 
   return new Response(
     JSON.stringify({
@@ -119,12 +127,13 @@ async function handleLookupLoad(supabase: any, body: any) {
       delivery_window: `${load.delivery_window_start || 'TBD'} - ${load.delivery_window_end || 'TBD'}`,
       equipment_type: load.equipment_type || 'Dry Van',
       weight_lbs: load.weight_lbs,
-      miles: load.miles,
+      miles: distanceMiles,
       rate: rateText,
-      target_rate: load.target_rate,
+      target_rate: targetRate,
       floor_rate: load.floor_rate,
+      rate_per_mile: ratePerMile ? parseFloat(ratePerMile.toFixed(2)) : null,
       notes: load.notes,
-      message: `Found load ${load.load_number} from ${load.origin_city}, ${load.origin_state} to ${load.destination_city}, ${load.destination_state}. Picks up ${load.pickup_date}, delivers ${load.delivery_date}. ${load.weight_lbs ? load.weight_lbs + ' lbs, ' : ''}${load.equipment_type || 'Dry Van'}. Rate: ${rateText}.`
+      message: buildLoadMessage(load, distanceMiles, targetRate, ratePerMile)
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
@@ -333,4 +342,29 @@ function formatRate(load: any): string {
     return `$${flatRate.toFixed(2)} flat ($${load.target_rate.toFixed(2)}/mile)`;
   }
   return `$${load.target_rate?.toFixed(2) || '0.00'} flat`;
+}
+
+function buildLoadMessage(load: any, distanceMiles: number | null, targetRate: number | null, ratePerMile: number | null): string {
+  let msg = `Found load ${load.load_number} from ${load.origin_city}, ${load.origin_state} to ${load.destination_city}, ${load.destination_state}.`;
+  
+  if (distanceMiles) {
+    msg += ` It's about ${distanceMiles} miles.`;
+  }
+  
+  msg += ` Picks up ${load.pickup_date || 'TBD'}, delivers ${load.delivery_date || 'TBD'}.`;
+  
+  if (load.weight_lbs) {
+    msg += ` ${load.weight_lbs.toLocaleString()} lbs,`;
+  }
+  
+  msg += ` ${load.equipment_type || 'Dry Van'}.`;
+  
+  if (targetRate) {
+    msg += ` The all-in rate is $${targetRate.toFixed(2)}.`;
+    if (ratePerMile) {
+      msg += ` That works out to about $${ratePerMile.toFixed(2)} per mile.`;
+    }
+  }
+  
+  return msg;
 }

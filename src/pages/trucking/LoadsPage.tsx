@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, MapPin, Check, Copy, CheckCircle2, Truck, Flag, Phone, MoreHorizontal } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Check, Copy, CheckCircle2, Truck, Flag, Phone, MoreHorizontal, Calculator, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,6 +103,7 @@ export default function LoadsPage() {
   const [activeTab, setActiveTab] = useState("open");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [loadToDelete, setLoadToDelete] = useState<string | null>(null);
+  const [estimatingMiles, setEstimatingMiles] = useState(false);
   const { toast } = useToast();
   const { getRecentValues, addRecentValue } = useTruckingRecentValues();
   const { labels } = useTruckingFieldLabels();
@@ -477,6 +478,59 @@ export default function LoadsPage() {
     });
   };
 
+  const estimateMiles = async () => {
+    if (!formData.origin_city || !formData.origin_state || !formData.destination_city || !formData.destination_state) {
+      toast({ 
+        title: "Missing addresses", 
+        description: "Please enter pickup and delivery city/state first.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setEstimatingMiles(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('trucking-distance', {
+        body: {
+          pickup: {
+            city: formData.origin_city,
+            state: formData.origin_state,
+            zip: formData.origin_zip || undefined,
+          },
+          delivery: {
+            city: formData.destination_city,
+            state: formData.destination_state,
+            zip: formData.destination_zip || undefined,
+          }
+        }
+      });
+
+      if (error || data?.error) {
+        throw new Error(data?.message || error?.message || 'Distance lookup failed');
+      }
+
+      if (data?.distance_miles) {
+        setFormData(prev => ({ ...prev, miles: data.distance_miles.toString() }));
+        toast({ title: "Distance calculated", description: `${data.distance_miles} miles` });
+      }
+    } catch (error: any) {
+      toast({ 
+        title: "Couldn't estimate miles", 
+        description: "Please check the addresses or enter a value manually.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setEstimatingMiles(false);
+    }
+  };
+
+  const handleDeliveryZipBlur = () => {
+    // Auto-estimate miles if delivery ZIP is filled and miles is empty
+    if (formData.destination_zip && !formData.miles && formData.origin_city && formData.destination_city) {
+      estimateMiles();
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
       open: "bg-green-500/10 text-green-500",
@@ -498,16 +552,23 @@ export default function LoadsPage() {
     );
   }
 
+  const formatRatePerMile = (load: Load) => {
+    if (load.miles && load.miles > 0 && load.target_rate && load.target_rate > 0) {
+      return (load.target_rate / load.miles).toFixed(2);
+    }
+    return null;
+  };
+
   const LoadsTable = ({ loadsData, showConfirmButton = false }: { loadsData: Load[], showConfirmButton?: boolean }) => (
     <Table>
       <TableHeader>
         <TableRow>
           <TableHead>Load #</TableHead>
           <TableHead>Lane</TableHead>
+          <TableHead>Distance</TableHead>
           <TableHead>Pickup</TableHead>
           <TableHead>Equipment</TableHead>
-          <TableHead>Weight</TableHead>
-          <TableHead>Target Rate</TableHead>
+          <TableHead>Rate</TableHead>
           <TableHead>Status</TableHead>
           <TableHead className="text-right">Actions</TableHead>
         </TableRow>
@@ -517,7 +578,10 @@ export default function LoadsPage() {
           <TableRow key={load.id}>
             <TableCell className="font-medium">{load.load_number}</TableCell>
             <TableCell>
-              {load.origin_city}, {load.origin_state} → {load.destination_city}, {load.destination_state}
+              <div>{load.origin_city}, {load.origin_state} → {load.destination_city}, {load.destination_state}</div>
+            </TableCell>
+            <TableCell>
+              {load.miles ? `${load.miles.toLocaleString()} mi` : "—"}
             </TableCell>
             <TableCell>
               <div>{load.pickup_date || "—"}</div>
@@ -532,8 +596,12 @@ export default function LoadsPage() {
               {load.hazmat && <Badge variant="destructive" className="text-xs">HAZMAT</Badge>}
               {load.temp_required && <Badge variant="secondary" className="text-xs">TEMP</Badge>}
             </TableCell>
-            <TableCell>{load.weight_lbs?.toLocaleString() || "—"} lbs</TableCell>
-            <TableCell>${load.target_rate?.toLocaleString() || "—"}</TableCell>
+            <TableCell>
+              <div>${load.target_rate?.toLocaleString() || "—"}</div>
+              {formatRatePerMile(load) && (
+                <div className="text-xs text-muted-foreground">~${formatRatePerMile(load)}/mi</div>
+              )}
+            </TableCell>
             <TableCell>
               <Badge className={getStatusBadge(load.status)}>{load.status}</Badge>
             </TableCell>
@@ -794,6 +862,7 @@ export default function LoadsPage() {
                       onChange={(val) => setFormData({ ...formData, destination_zip: val })}
                       placeholder="ZIP"
                       recentValues={getRecentValues("delivery_zip")}
+                      onBlur={handleDeliveryZipBlur}
                     />
                   </div>
                 </div>
@@ -920,13 +989,32 @@ export default function LoadsPage() {
                     />
                   </div>
                   <div>
-                    <Label>Miles</Label>
-                    <Input
-                      type="number"
-                      value={formData.miles}
-                      onChange={(e) => setFormData({ ...formData, miles: e.target.value })}
-                      placeholder="500"
-                    />
+                    <Label>Distance (miles)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        value={formData.miles}
+                        onChange={(e) => setFormData({ ...formData, miles: e.target.value })}
+                        placeholder="Auto-calculated or enter manually"
+                        className="flex-1"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={estimateMiles}
+                        disabled={estimatingMiles}
+                      >
+                        {estimatingMiles ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Calculator className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Auto-calculated from addresses. You can override if needed.
+                    </p>
                   </div>
                 </div>
                 <div>

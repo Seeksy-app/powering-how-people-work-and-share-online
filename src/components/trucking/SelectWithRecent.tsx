@@ -13,6 +13,7 @@ interface SelectWithRecentProps {
   maxRecent?: number;
   className?: string;
   formatValue?: (value: string) => string;
+  onBlur?: () => void;
 }
 
 export default function SelectWithRecent({
@@ -24,6 +25,7 @@ export default function SelectWithRecent({
   maxRecent = 10,
   className,
   formatValue,
+  onBlur,
 }: SelectWithRecentProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState(value);
@@ -85,6 +87,12 @@ export default function SelectWithRecent({
           value={search}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
+          onBlur={() => {
+            // Delay to allow click on dropdown items
+            setTimeout(() => {
+              onBlur?.();
+            }, 200);
+          }}
           placeholder={placeholder}
           className="pr-16"
         />
