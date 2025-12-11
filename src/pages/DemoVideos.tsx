@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   Play, Clock, Upload, Sparkles, ChevronUp, ChevronDown, ImageIcon, 
-  Loader2, Trash2, Video, ArrowLeft, Pencil
+  Loader2, Trash2, Video, ArrowLeft, Pencil, RefreshCw
 } from "lucide-react";
 import { DemoVideoUpload } from "@/components/demo-videos/DemoVideoUpload";
 import { useToast } from "@/hooks/use-toast";
@@ -92,6 +92,8 @@ export default function DemoVideos() {
   const [generatingThumbnailId, setGeneratingThumbnailId] = useState<string | null>(null);
   const [editingVideo, setEditingVideo] = useState<DemoVideo | null>(null);
   const [editForm, setEditForm] = useState({ title: '', description: '', category: '', is_featured: false });
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -263,6 +265,98 @@ export default function DemoVideos() {
       setGeneratingThumbnailId(null);
     }
   }, [queryClient, toast]);
+
+  // Upload custom thumbnail
+  const handleThumbnailUpload = useCallback(async (file: File) => {
+    if (!editingVideo) return;
+    
+    setUploadingThumbnail(true);
+    try {
+      const fileName = `thumb_${Date.now()}_${editingVideo.id}.${file.name.split('.').pop()}`;
+      const { error: uploadError } = await supabase.storage
+        .from('demo-videos')
+        .upload(fileName, file, { contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('demo-videos')
+        .getPublicUrl(fileName);
+
+      await supabase.from('demo_videos').update({ thumbnail_url: publicUrl }).eq('id', editingVideo.id);
+      
+      // Update local state
+      setEditingVideo({ ...editingVideo, thumbnail_url: publicUrl });
+      
+      queryClient.invalidateQueries({ queryKey: ['demo-videos'] });
+      queryClient.invalidateQueries({ queryKey: ['boardVideos'] });
+      toast({ title: "Thumbnail uploaded!" });
+    } catch (error) {
+      console.error('Thumbnail upload failed:', error);
+      toast({ variant: "destructive", title: "Failed to upload thumbnail" });
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  }, [editingVideo, queryClient, toast]);
+
+  // Regenerate thumbnail for editing video
+  const regenerateThumbnailForEdit = useCallback(async () => {
+    if (!editingVideo) return;
+    
+    setUploadingThumbnail(true);
+    try {
+      const videoEl = document.createElement('video');
+      videoEl.crossOrigin = 'anonymous';
+      videoEl.preload = 'metadata';
+      videoEl.muted = true;
+      videoEl.src = editingVideo.video_url;
+
+      await new Promise((resolve, reject) => {
+        videoEl.onloadedmetadata = () => {
+          videoEl.currentTime = Math.min(2, videoEl.duration * 0.1);
+        };
+        videoEl.onseeked = resolve;
+        videoEl.onerror = reject;
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1280;
+      canvas.height = 720;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+        
+        const blob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((b) => resolve(b!), 'image/jpeg', 0.85);
+        });
+
+        const fileName = `thumb_${Date.now()}_${editingVideo.id}.jpg`;
+        const { error: uploadError } = await supabase.storage
+          .from('demo-videos')
+          .upload(fileName, blob, { contentType: 'image/jpeg' });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('demo-videos')
+          .getPublicUrl(fileName);
+
+        await supabase.from('demo_videos').update({ thumbnail_url: publicUrl }).eq('id', editingVideo.id);
+        
+        // Update local state
+        setEditingVideo({ ...editingVideo, thumbnail_url: publicUrl });
+        
+        queryClient.invalidateQueries({ queryKey: ['demo-videos'] });
+        queryClient.invalidateQueries({ queryKey: ['boardVideos'] });
+        toast({ title: "Thumbnail regenerated!" });
+      }
+    } catch (error) {
+      console.error('Thumbnail generation failed:', error);
+      toast({ variant: "destructive", title: "Failed to generate thumbnail" });
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  }, [editingVideo, queryClient, toast]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -583,6 +677,62 @@ export default function DemoVideos() {
                 checked={editForm.is_featured}
                 onCheckedChange={(checked) => setEditForm(prev => ({ ...prev, is_featured: checked }))}
               />
+            </div>
+            
+            {/* Thumbnail Management */}
+            <div className="space-y-3 pt-2 border-t">
+              <Label>Thumbnail</Label>
+              {editingVideo?.thumbnail_url && (
+                <div className="relative w-full aspect-video rounded-md overflow-hidden bg-slate-100">
+                  <img 
+                    src={editingVideo.thumbnail_url} 
+                    alt="Current thumbnail"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  ref={thumbnailInputRef}
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleThumbnailUpload(file);
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => thumbnailInputRef.current?.click()}
+                  disabled={uploadingThumbnail}
+                >
+                  {uploadingThumbnail ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
+                  Upload Image
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={regenerateThumbnailForEdit}
+                  disabled={uploadingThumbnail}
+                >
+                  {uploadingThumbnail ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                  )}
+                  Regenerate
+                </Button>
+              </div>
             </div>
           </div>
           <DialogFooter>
