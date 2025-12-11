@@ -664,9 +664,44 @@ const AppContent = () => {
   const isTourMode = sessionStorage.getItem("tourMode") === "true";
   const isOnboardingComplete = location.pathname === '/onboarding/complete';
   
+  // Veterans platform is completely standalone - no Seeksy UI
+  const isVeteransRoute = location.pathname.startsWith('/veterans');
+  
   // Hide sidebar in tour mode or on special routes
-  const shouldShowSidebar = user && !isStudioRoute && !isClipsStudioRoute && !isTourMode && !isOnboardingComplete;
-  const shouldShowTopNav = user && !isStudioRoute && !isTourMode && !isOnboardingComplete;
+  const shouldShowSidebar = user && !isStudioRoute && !isClipsStudioRoute && !isTourMode && !isOnboardingComplete && !isVeteransRoute;
+  const shouldShowTopNav = user && !isStudioRoute && !isTourMode && !isOnboardingComplete && !isVeteransRoute;
+
+  // Render Veterans Platform separately - completely standalone
+  if (isVeteransRoute) {
+    return (
+      <Routes>
+        <Route path="/veterans" element={<VeteransHome />} />
+        <Route path="/veterans/auth" element={<VeteransAuth />} />
+        <Route path="/veterans/claims-agent" element={<VeteransLayout><VeteranClaimsAgent /></VeteransLayout>} />
+        <Route path="/veterans/calculators/military-buyback" element={<VeteransLayout><MilitaryBuyBackCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/mra" element={<VeteransLayout><MRACalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/sick-leave" element={<VeteransLayout><SickLeaveCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/va-combined-rating" element={<VeteransLayout><VACombinedRatingCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/va-compensation" element={<VeteransLayout><VACompensationCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/fers-pension" element={<VeteransLayout><FERSPensionCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/tsp-growth" element={<VeteransLayout><TSPGrowthCalculator /></VeteransLayout>} />
+        <Route path="/veterans/tools/separation-readiness" element={<VeteransLayout><SeparationReadinessCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/leave-sellback" element={<VeteransLayout><LeaveSellBackCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/sbp" element={<VeteransLayout><SBPCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/cola" element={<VeteransLayout><COLACalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/va-travel" element={<VeteransLayout><VATravelCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/gi-bill" element={<VeteransLayout><GIBillCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/insurance-needs" element={<VeteransLayout><InsuranceNeedsCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/brs-comparison" element={<VeteransLayout><BRSComparisonCalculator /></VeteransLayout>} />
+        <Route path="/veterans/tools/champva-eligibility" element={<VeteransLayout><CHAMPVACalculator /></VeteransLayout>} />
+        <Route path="/veterans/tools/crsc" element={<VeteransLayout><CRSCCalculator /></VeteransLayout>} />
+        <Route path="/veterans/tools/tricare-finder" element={<VeteransLayout><TRICARECalculator /></VeteransLayout>} />
+        <Route path="/veterans/tools/va-means-test" element={<VeteransLayout><VAMeansTestCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/state-tax-benefits" element={<VeteransLayout><StateTaxBenefitsCalculator /></VeteransLayout>} />
+        <Route path="/veterans/calculators/property-tax-exemption" element={<VeteransLayout><PropertyTaxExemptionCalculator /></VeteransLayout>} />
+      </Routes>
+    );
+  }
 
   return (
     <GlobalDataModeProvider>
@@ -1150,32 +1185,6 @@ const AppContent = () => {
           <Route path="/investor/:token" element={<BoardInvestorPortal />} />
           <Route path="/invest/:slug" element={<InvestOpportunityPage />} />
           <Route path="/invest/veteran-benefits" element={<VeteranBenefitsOpportunity />} />
-          
-          {/* Veterans Platform - Standalone with own layout */}
-          <Route path="/veterans" element={<VeteransHome />} />
-          <Route path="/veterans/auth" element={<VeteransAuth />} />
-          <Route path="/veterans/claims-agent" element={<VeteransLayout><VeteranClaimsAgent /></VeteransLayout>} />
-          <Route path="/veterans/calculators/military-buyback" element={<VeteransLayout><MilitaryBuyBackCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/mra" element={<VeteransLayout><MRACalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/sick-leave" element={<VeteransLayout><SickLeaveCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/va-combined-rating" element={<VeteransLayout><VACombinedRatingCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/va-compensation" element={<VeteransLayout><VACompensationCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/fers-pension" element={<VeteransLayout><FERSPensionCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/tsp-growth" element={<VeteransLayout><TSPGrowthCalculator /></VeteransLayout>} />
-          <Route path="/veterans/tools/separation-readiness" element={<VeteransLayout><SeparationReadinessCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/leave-sellback" element={<VeteransLayout><LeaveSellBackCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/sbp" element={<VeteransLayout><SBPCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/cola" element={<VeteransLayout><COLACalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/va-travel" element={<VeteransLayout><VATravelCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/gi-bill" element={<VeteransLayout><GIBillCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/insurance-needs" element={<VeteransLayout><InsuranceNeedsCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/brs-comparison" element={<VeteransLayout><BRSComparisonCalculator /></VeteransLayout>} />
-          <Route path="/veterans/tools/champva-eligibility" element={<VeteransLayout><CHAMPVACalculator /></VeteransLayout>} />
-          <Route path="/veterans/tools/crsc" element={<VeteransLayout><CRSCCalculator /></VeteransLayout>} />
-          <Route path="/veterans/tools/tricare-finder" element={<VeteransLayout><TRICARECalculator /></VeteransLayout>} />
-          <Route path="/veterans/tools/va-means-test" element={<VeteransLayout><VAMeansTestCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/state-tax-benefits" element={<VeteransLayout><StateTaxBenefitsCalculator /></VeteransLayout>} />
-          <Route path="/veterans/calculators/property-tax-exemption" element={<VeteransLayout><PropertyTaxExemptionCalculator /></VeteransLayout>} />
           
           {/* Admin Financials Routes (reuse Board components) */}
           <Route path="/admin/financials/key-metrics" element={<BoardKeyMetrics />} />
