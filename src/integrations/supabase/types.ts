@@ -4188,6 +4188,30 @@ export type Database = {
         }
         Relationships: []
       }
+      board_member_activity: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       board_members: {
         Row: {
           bio: string | null
