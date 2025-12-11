@@ -326,6 +326,13 @@ import InfluencerProfileSettings from "./pages/InfluencerProfileSettings";
 import InfluencerPortfolio from "./pages/InfluencerPortfolio";
 import Marketing from "./pages/Marketing";
 import DailyBriefPage from "./pages/DailyBriefPage";
+// CampaignStaff.ai
+import CampaignsLandingPage from "./pages/campaigns/CampaignsLandingPage";
+import CampaignDashboard from "./pages/campaigns/CampaignDashboard";
+import CampaignManagerChat from "./pages/campaigns/CampaignManagerChat";
+import CampaignContentStudio from "./pages/campaigns/CampaignContentStudio";
+import CampaignOutreachPage from "./pages/campaigns/CampaignOutreachPage";
+import CampaignSiteBuilder from "./pages/campaigns/CampaignSiteBuilder";
 import EmailSettings from "./pages/EmailSettings";
 import EmailHome from "./pages/EmailHome";
 import EmailCampaigns from "./pages/EmailCampaigns";
@@ -765,6 +772,15 @@ const AppContent = () => {
               <Route path="/creator-growth-blueprint" element={<CreatorGrowthBlueprint />} />
               <Route path="/comparison" element={<Comparison />} />
               <Route path="/credits" element={<Credits />} />
+              
+              {/* CampaignStaff.ai Routes */}
+              <Route path="/campaigns" element={<CampaignsLandingPage />} />
+              <Route path="/campaigns/dashboard" element={<CampaignDashboard />} />
+              <Route path="/campaigns/ai-manager" element={<CampaignManagerChat />} />
+              <Route path="/campaigns/studio" element={<CampaignContentStudio />} />
+              <Route path="/campaigns/outreach" element={<CampaignOutreachPage />} />
+              <Route path="/campaigns/site-builder" element={<CampaignSiteBuilder />} />
+              
               <Route path="/personas" element={<Personas />} />
               <Route path="/voice-certification" element={<VoiceCertification />} />
               <Route path="/voice-tag" element={<VoiceTag />} />
