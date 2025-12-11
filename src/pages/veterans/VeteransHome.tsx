@@ -4,6 +4,7 @@ import { Calculator, FileText, MessageSquare, Shield, Clock, DollarSign, Award, 
 import { Link } from "react-router-dom";
 import { BenefitsOfRatingModal } from "@/components/veterans/BenefitsOfRatingModal";
 import { VeteransFaq } from "@/components/veterans/VeteransFaq";
+import { FloatingBenefitsChat } from "@/components/veterans/FloatingBenefitsChat";
 import { Helmet } from "react-helmet";
 import { CALCULATORS, CALCULATOR_CATEGORIES } from "@/lib/veteranCalculatorRegistry";
 
@@ -393,6 +394,9 @@ export default function VeteransHome() {
           </CardContent>
         </Card>
       </section>
+
+      {/* Floating Chat Widget */}
+      <FloatingBenefitsChat />
     </div>
   );
 }
