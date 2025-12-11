@@ -455,3 +455,6 @@ verify_jwt = false
 
 [functions.veteran-claims-chat]
 verify_jwt = false
+
+[functions.campaign-chat]
+verify_jwt = false
