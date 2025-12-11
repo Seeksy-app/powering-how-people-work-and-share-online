@@ -464,3 +464,6 @@ verify_jwt = true
 
 [functions.ai-trucking-call-router]
 verify_jwt = false
+
+[functions.trucking-distance]
+verify_jwt = false
