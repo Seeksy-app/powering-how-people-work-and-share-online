@@ -199,6 +199,8 @@ serve(async (req) => {
     }
 
     if (invitedUser) {
+      console.log("📧 User exists, adding to team and sending notification email...");
+      
       // User exists, add to team_members table
       if (actualTeamId) {
         const { error: memberError } = await supabaseAdmin
@@ -211,15 +213,72 @@ serve(async (req) => {
 
         // Ignore conflict errors if already a member
         if (memberError && !memberError.message.includes("duplicate")) {
-          throw memberError;
+          console.error("❌ Error adding to team_members:", memberError);
         }
+      }
+
+      // Also send notification email to existing user
+      const resendApiKey = Deno.env.get("RESEND_API_KEY");
+      console.log("🔑 Resend API Key configured:", !!resendApiKey);
+      
+      const resend = new Resend(resendApiKey);
+      
+      // Get inviter's name
+      const { data: inviterProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("full_name, username")
+        .eq("id", user.id)
+        .single();
+      
+      const inviterName = inviterProfile?.full_name || inviterProfile?.username || "A team member";
+      
+      // Track invitation in database
+      const { data: inviteRecord, error: inviteError } = await supabaseAdmin
+        .from("team_invitations")
+        .insert({
+          inviter_id: user.id,
+          team_id: actualTeamId,
+          invitee_email: email,
+          invitee_name: name,
+          role: role,
+          status: "pending",
+        })
+        .select()
+        .single();
+      
+      if (inviteError) {
+        console.error("❌ Error creating invitation record:", inviteError);
+      } else {
+        console.log("✅ Invitation record created:", inviteRecord?.id);
+      }
+      
+      const siteUrl = Deno.env.get("SITE_URL") || "https://seeksy.io";
+      const loginUrl = `${siteUrl}/auth`;
+      
+      const emailHTML = generateTeamInviteHTML(inviterName, name || '', role, loginUrl);
+      const senderEmail = Deno.env.get("SENDER_EMAIL_HELLO") || "Seeksy <hello@seeksy.io>";
+      
+      console.log("📧 Sending notification email to existing user:", email);
+      
+      const { data: emailData, error: emailError } = await resend.emails.send({
+        from: senderEmail,
+        to: [email],
+        subject: "🎉 You've Been Added to a Team on Seeksy!",
+        html: emailHTML,
+      });
+
+      if (emailError) {
+        console.error("❌ Resend email error:", emailError);
+      } else {
+        console.log("✅ Notification email sent successfully:", emailData);
       }
 
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: `User added to team as ${role}`,
-          user_exists: true 
+          message: `User added to team as ${role} and notified via email`,
+          user_exists: true,
+          email_sent: !emailError
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
