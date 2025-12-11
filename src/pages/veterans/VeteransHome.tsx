@@ -38,16 +38,16 @@ export default function VeteransHome() {
       {/* Header with Login/Signup */}
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/veterans" className="flex items-center gap-2">
+          <Link to="/yourbenefits" className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-primary" />
-            <span className="font-semibold">Veterans Hub</span>
+            <span className="font-semibold">Military & Federal Benefits Hub</span>
           </Link>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" size="sm">
-              <Link to="/veterans/auth">Login</Link>
+              <Link to="/yourbenefits/auth">Login</Link>
             </Button>
             <Button asChild size="sm">
-              <Link to="/veterans/auth">Sign Up Free</Link>
+              <Link to="/yourbenefits/auth">Sign Up Free</Link>
             </Button>
           </div>
         </div>
@@ -73,7 +73,7 @@ export default function VeteransHome() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="text-lg">
-                <Link to="/veterans/claims-agent">
+                <Link to="/yourbenefits/claims-agent">
                   <MessageSquare className="w-5 h-5 mr-2" />
                   Start Your Claim
                 </Link>
@@ -94,7 +94,7 @@ export default function VeteransHome() {
       {/* AI Claims Agent Featured */}
       <section className="py-12 container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          <Link to="/veterans/claims-agent">
+          <Link to="/yourbenefits/claims-agent">
             <Card className="border-2 border-primary/30 bg-primary/5 transition-all hover:shadow-lg hover:border-primary/50">
               <CardHeader>
                 <div className="flex items-start justify-between">

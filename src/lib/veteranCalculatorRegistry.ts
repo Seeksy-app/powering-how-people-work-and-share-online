@@ -46,7 +46,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'military_buyback',
     title: 'Military Buy-Back Calculator',
-    route: '/veterans/calculators/military-buyback',
+    route: '/yourbenefits/calculators/military-buyback',
     category: 'Retirement',
     description: 'Estimate the cost and long-term benefit of buying back active-duty time toward a federal retirement.',
     icon: 'DollarSign',
@@ -63,7 +63,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'mra_calculator',
     title: 'Minimum Retirement Age (MRA) Calculator',
-    route: '/veterans/calculators/mra',
+    route: '/yourbenefits/calculators/mra',
     category: 'Retirement',
     description: 'Find your MRA and earliest retirement eligibility window as a federal employee.',
     icon: 'Clock',
@@ -79,7 +79,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'sick_leave_calculator',
     title: 'Sick Leave Credit Calculator',
-    route: '/veterans/calculators/sick-leave',
+    route: '/yourbenefits/calculators/sick-leave',
     category: 'Retirement',
     description: 'Estimate how unused sick leave converts into additional service credit for your FERS retirement.',
     icon: 'Heart',
@@ -96,7 +96,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'va_combined_rating',
     title: 'VA Combined Rating Estimator',
-    route: '/veterans/calculators/va-combined-rating',
+    route: '/yourbenefits/calculators/va-combined-rating',
     category: 'VA Disability',
     description: 'Estimate your combined VA disability rating using the VA\'s "whole person" method.',
     icon: 'Calculator',
@@ -111,7 +111,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'va_compensation_estimator',
     title: 'VA Monthly Compensation Estimator',
-    route: '/veterans/calculators/va-compensation',
+    route: '/yourbenefits/calculators/va-compensation',
     category: 'VA Disability',
     description: 'Estimate monthly VA disability pay based on rating and dependents.',
     icon: 'DollarSign',
@@ -128,7 +128,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'fers_pension_estimator',
     title: 'FERS Pension Estimator',
-    route: '/veterans/calculators/fers-pension',
+    route: '/yourbenefits/calculators/fers-pension',
     category: 'Retirement',
     description: 'Estimate your FERS pension based on High-3 salary, years of service, and applicable multiplier.',
     icon: 'TrendingUp',
@@ -144,7 +144,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'tsp_growth_calculator',
     title: 'TSP Retirement Growth Calculator',
-    route: '/veterans/calculators/tsp-growth',
+    route: '/yourbenefits/calculators/tsp-growth',
     category: 'Retirement',
     description: 'Project your Thrift Savings Plan balance over time with contributions and assumed returns.',
     icon: 'TrendingUp',
@@ -162,7 +162,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'separation_readiness_score',
     title: 'Separation Readiness Score',
-    route: '/veterans/tools/separation-readiness',
+    route: '/yourbenefits/tools/separation-readiness',
     category: 'Transition',
     description: 'Answer a few questions to see how ready you are for separation or retirement.',
     icon: 'CheckCircle',
@@ -180,7 +180,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'leave_sellback_calculator',
     title: 'Military Leave Sell-Back Calculator',
-    route: '/veterans/calculators/leave-sellback',
+    route: '/yourbenefits/calculators/leave-sellback',
     category: 'Transition',
     description: 'Estimate how much you\'ll receive if you sell back unused leave at separation.',
     icon: 'Calendar',
@@ -196,7 +196,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'state_tax_benefits_calculator',
     title: 'State Tax Benefits Estimator',
-    route: '/veterans/calculators/state-tax-benefits',
+    route: '/yourbenefits/calculators/state-tax-benefits',
     category: 'Taxes',
     description: 'Estimate potential state tax savings based on location, retirement income, and disability status.',
     icon: 'MapPin',
@@ -213,7 +213,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'sbp_calculator',
     title: 'Survivor Benefit Plan (SBP) Calculator',
-    route: '/veterans/calculators/sbp',
+    route: '/yourbenefits/calculators/sbp',
     category: 'Protection',
     description: 'Estimate SBP costs and potential survivor benefits for your spouse or dependents.',
     icon: 'Shield',
@@ -229,7 +229,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'insurance_needs_estimator',
     title: 'Life Insurance Needs Estimator',
-    route: '/veterans/calculators/insurance-needs',
+    route: '/yourbenefits/calculators/insurance-needs',
     category: 'Protection',
     description: 'Estimate how much life insurance you may need as you move between SGLI, VGLI, and FEGLI.',
     icon: 'Heart',
@@ -247,7 +247,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'gi_bill_estimator',
     title: 'GI Bill Benefits Estimator',
-    route: '/veterans/calculators/gi-bill',
+    route: '/yourbenefits/calculators/gi-bill',
     category: 'Education',
     description: 'Estimate GI Bill tuition and housing benefits based on service history and school type.',
     icon: 'GraduationCap',
@@ -263,7 +263,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'champva_eligibility_checker',
     title: 'CHAMPVA Eligibility Checker',
-    route: '/veterans/tools/champva-eligibility',
+    route: '/yourbenefits/tools/champva-eligibility',
     category: 'Healthcare',
     description: 'Quick screening to see if you or your family may qualify for CHAMPVA or other VA health benefits.',
     icon: 'Stethoscope',
@@ -279,7 +279,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'crsc_screening_tool',
     title: 'CRSC Screener',
-    route: '/veterans/tools/crsc',
+    route: '/yourbenefits/tools/crsc',
     category: 'VA Disability',
     description: 'Screen for potential eligibility for Combat-Related Special Compensation.',
     icon: 'Award',
@@ -295,7 +295,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'tricare_coverage_finder',
     title: 'TRICARE Coverage Finder',
-    route: '/veterans/tools/tricare-finder',
+    route: '/yourbenefits/tools/tricare-finder',
     category: 'Healthcare',
     description: 'Identify likely TRICARE coverage options based on status, location, and beneficiary type.',
     icon: 'Stethoscope',
@@ -311,7 +311,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'cola_estimator',
     title: 'COLA Growth Estimator',
-    route: '/veterans/calculators/cola',
+    route: '/yourbenefits/calculators/cola',
     category: 'Retirement',
     description: 'Project how annual cost-of-living adjustments may change your retired pay over time.',
     icon: 'TrendingUp',
@@ -327,7 +327,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'brs_vs_legacy_comparison',
     title: 'BRS vs. Legacy Comparison',
-    route: '/veterans/calculators/brs-comparison',
+    route: '/yourbenefits/calculators/brs-comparison',
     category: 'Retirement',
     description: 'Compare potential outcomes between the Blended Retirement System and legacy retirement.',
     icon: 'Scale',
@@ -344,7 +344,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'va_health_means_test_tool',
     title: 'VA Means Test Helper',
-    route: '/veterans/tools/va-means-test',
+    route: '/yourbenefits/tools/va-means-test',
     category: 'Healthcare',
     description: 'Rough screening tool to estimate which VA priority group you may fall into.',
     icon: 'ClipboardCheck',
@@ -361,7 +361,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'va_travel_reimbursement',
     title: 'VA Travel Reimbursement Estimator',
-    route: '/veterans/calculators/va-travel',
+    route: '/yourbenefits/calculators/va-travel',
     category: 'Healthcare',
     description: 'Estimate mileage reimbursement for approved VA healthcare travel.',
     icon: 'Car',
@@ -377,7 +377,7 @@ export const CALCULATORS: CalculatorConfig[] = [
   {
     id: 'property_tax_exemption_finder',
     title: 'Property Tax Exemption Finder',
-    route: '/veterans/tools/property-tax-exemption',
+    route: '/yourbenefits/tools/property-tax-exemption',
     category: 'Taxes',
     description: 'Quickly see if your state offers property tax relief for disabled veterans or surviving spouses.',
     icon: 'Home',

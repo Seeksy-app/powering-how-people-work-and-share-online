@@ -32,7 +32,7 @@ export default function VeteransAuth() {
       if (error) throw error;
 
       toast({ title: "Welcome back!", description: "You're now signed in." });
-      navigate('/veterans/claims-agent');
+      navigate('/yourbenefits/claims-agent');
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -49,7 +49,7 @@ export default function VeteransAuth() {
     setLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/veterans/claims-agent`;
+      const redirectUrl = `${window.location.origin}/yourbenefits/claims-agent`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -77,7 +77,7 @@ export default function VeteransAuth() {
         title: "Account created!", 
         description: "You're now signed in. Let's get started on your benefits." 
       });
-      navigate('/veterans/claims-agent');
+      navigate('/yourbenefits/claims-agent');
     } catch (error: any) {
       toast({
         title: "Signup failed",
@@ -98,15 +98,15 @@ export default function VeteransAuth() {
       {/* Simple Header */}
       <header className="border-b bg-background/95 backdrop-blur">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/veterans" className="flex items-center gap-2">
+          <Link to="/yourbenefits" className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-primary" />
-            <span className="font-semibold">Veterans Benefits Hub</span>
+            <span className="font-semibold">Military & Federal Benefits Hub</span>
           </Link>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-12 max-w-md">
-        <Link to="/veterans" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-8">
+        <Link to="/yourbenefits" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-8">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
         </Link>
