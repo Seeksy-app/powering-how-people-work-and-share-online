@@ -1,15 +1,49 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, FileText, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Shield, FileText, ExternalLink, CheckCircle2, Calculator } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface ClaimsLeftSidebarProps {
   currentStep: number;
   onHandoffClick: () => void;
+  onCalculatorsClick?: () => void;
 }
 
-export function ClaimsLeftSidebar({ currentStep, onHandoffClick }: ClaimsLeftSidebarProps) {
+export function ClaimsLeftSidebar({ currentStep, onHandoffClick, onCalculatorsClick }: ClaimsLeftSidebarProps) {
   return (
     <div className="p-5 space-y-5">
+      {/* Quick Calculator Access */}
+      <Card className="border-0 shadow-sm bg-blue-50 dark:bg-blue-950/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Calculator className="w-5 h-5 text-blue-600" />
+            Benefit Calculators
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-sm text-muted-foreground mb-3">
+            Estimate your benefits with our free tools.
+          </p>
+          <div className="space-y-2">
+            <Link to="/veterans/calculators/va-combined-rating">
+              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+                VA Combined Rating
+              </Button>
+            </Link>
+            <Link to="/veterans/calculators/va-compensation">
+              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+                Monthly Compensation
+              </Button>
+            </Link>
+            <Link to="/veterans">
+              <Button variant="outline" size="sm" className="w-full text-sm">
+                View All Calculators
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">

@@ -18,10 +18,26 @@ export function ClaimsChatMessage({
   isLatest,
   isLoading 
 }: ClaimsChatMessageProps) {
-  // Convert markdown-style bold to strong tags
+  // Convert markdown-style bold to strong tags and clean content
   const formatContent = (text: string) => {
+    let formatted = text;
+    
     // Replace **text** with <strong>text</strong>
-    return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Remove any remaining JSON-like structures that might have slipped through
+    formatted = formatted.replace(/\{"category":\s*"[^"]*",\s*"value":\s*"[^"]*"\}/g, '');
+    
+    // Remove <notes> tags if they somehow appear
+    formatted = formatted.replace(/<notes>[\s\S]*?<\/notes>/g, '');
+    
+    // Remove <prompts> tags if they somehow appear
+    formatted = formatted.replace(/<prompts>[\s\S]*?<\/prompts>/g, '');
+    
+    // Clean up extra whitespace
+    formatted = formatted.replace(/\s+/g, ' ').trim();
+    
+    return formatted;
   };
 
   return (
