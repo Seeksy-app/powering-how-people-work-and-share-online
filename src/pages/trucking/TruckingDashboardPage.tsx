@@ -47,8 +47,11 @@ interface Lead {
   id: string;
   company_name: string;
   contact_name: string;
+  phone: string;
+  mc_number: string;
   status: string;
   created_at: string;
+  load_id: string | null;
 }
 
 export default function TruckingDashboardPage() {
@@ -379,6 +382,13 @@ export default function TruckingDashboardPage() {
                 <Badge className="ml-2 bg-amber-400 text-amber-900 border-0">{openLoads.length}</Badge>
               </TabsTrigger>
               <TabsTrigger 
+                value="pending"
+                className="rounded-full px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              >
+                Pending Loads
+                <Badge className="ml-2 bg-blue-400 text-blue-900 border-0">{pendingLeads.length}</Badge>
+              </TabsTrigger>
+              <TabsTrigger 
                 value="confirmed"
                 className="rounded-full px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
               >
@@ -390,8 +400,47 @@ export default function TruckingDashboardPage() {
         )}
       </div>
 
-      {/* Loads Table */}
-      {viewMode === "loads" ? (
+      {/* Loads / Pending Leads Table */}
+      {viewMode === "loads" && activeTab === "pending" ? (
+        <Card className="bg-white border border-slate-200 overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50 border-b border-slate-200">
+                <TableHead className="font-medium text-slate-600 whitespace-nowrap">Company</TableHead>
+                <TableHead className="font-medium text-slate-600 whitespace-nowrap">MC #</TableHead>
+                <TableHead className="font-medium text-slate-600 whitespace-nowrap">Phone</TableHead>
+                <TableHead className="font-medium text-slate-600 whitespace-nowrap">Status</TableHead>
+                <TableHead className="font-medium text-slate-600 whitespace-nowrap">Created</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pendingLeads.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-2 text-slate-500">
+                      <Phone className="h-10 w-10 text-slate-300" />
+                      <p>No pending leads yet</p>
+                      <p className="text-sm">Leads from AI calls will appear here</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                pendingLeads.map((lead) => (
+                  <TableRow key={lead.id} className="hover:bg-slate-50">
+                    <TableCell className="font-medium">{lead.company_name || "—"}</TableCell>
+                    <TableCell>{lead.mc_number || "—"}</TableCell>
+                    <TableCell>{lead.phone || "—"}</TableCell>
+                    <TableCell>{getStatusBadge(lead.status)}</TableCell>
+                    <TableCell className="text-slate-500 text-sm">
+                      {format(new Date(lead.created_at), "MMM d, h:mm a")}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : viewMode === "loads" ? (
         <Card className="bg-white border border-slate-200 overflow-hidden">
           <Table>
             <TableHeader>
