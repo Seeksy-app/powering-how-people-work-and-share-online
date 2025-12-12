@@ -68,7 +68,7 @@ serve(async (req) => {
       
       const { data: loadData, error: loadError } = await supabase
         .from('trucking_loads')
-        .select('id, owner_id, rate')
+        .select('id, owner_id, load_number')
         .ilike('load_number', `%${normalizedLoadNumber}%`)
         .limit(1)
         .single();
