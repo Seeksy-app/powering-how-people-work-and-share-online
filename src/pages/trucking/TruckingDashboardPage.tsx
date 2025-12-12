@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Package, Plus, MoreHorizontal, Settings, Edit, Trash2, Copy, CheckCircle2, 
-  ChevronDown, ChevronUp, Phone, Users, Search, Sun, Moon 
+  ChevronDown, ChevronUp, Phone, Users, Search, Sun, Moon, Voicemail, Play, Pause
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -52,14 +52,35 @@ interface Lead {
   status: string;
   created_at: string;
   load_id: string | null;
+  negotiated_rate?: number;
   trucking_loads?: {
+    id: string;
     load_number: string;
+    origin_city: string;
+    origin_state: string;
+    destination_city: string;
+    destination_state: string;
+    target_rate: number;
+    equipment_type: string;
+    miles: number;
+    pickup_date: string;
   } | null;
+}
+
+interface CallLog {
+  id: string;
+  carrier_phone: string;
+  call_outcome: string;
+  recording_url?: string;
+  voicemail_transcript?: string;
+  routed_to_voicemail?: boolean;
+  created_at: string;
 }
 
 export default function TruckingDashboardPage() {
   const [loads, setLoads] = useState<Load[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [voicemails, setVoicemails] = useState<CallLog[]>([]);
   const [callsToday, setCallsToday] = useState(0);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"loads" | "leads">("loads");
@@ -69,6 +90,8 @@ export default function TruckingDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [aiCallsEnabled, setAiCallsEnabled] = useState(true);
   const [expandedLoadId, setExpandedLoadId] = useState<string | null>(null);
+  const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
+  const [playingVoicemailId, setPlayingVoicemailId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { theme: appTheme, setTheme } = useTheme();
@@ -79,18 +102,20 @@ export default function TruckingDashboardPage() {
 
   const fetchData = async () => {
     try {
-      const [loadsRes, leadsRes, callsRes] = await Promise.all([
+      const [loadsRes, leadsRes, callsRes, voicemailRes] = await Promise.all([
         supabase.from("trucking_loads").select("*").order("created_at", { ascending: false }),
-        supabase.from("trucking_carrier_leads").select("*, trucking_loads(load_number)").order("created_at", { ascending: false }),
-        supabase.from("trucking_call_logs").select("id").gte("created_at", new Date().toISOString().split("T")[0])
+        supabase.from("trucking_carrier_leads").select("*, trucking_loads(id, load_number, origin_city, origin_state, destination_city, destination_state, target_rate, equipment_type, miles, pickup_date)").order("created_at", { ascending: false }),
+        supabase.from("trucking_call_logs").select("id").gte("created_at", new Date().toISOString().split("T")[0]),
+        supabase.from("trucking_call_logs").select("id, carrier_phone, call_outcome, recording_url, voicemail_transcript, routed_to_voicemail, created_at").eq("routed_to_voicemail", true).order("created_at", { ascending: false }).limit(10)
       ]);
 
       if (loadsRes.error) throw loadsRes.error;
       if (leadsRes.error) throw leadsRes.error;
 
       setLoads((loadsRes.data as Load[]) || []);
-      setLeads((leadsRes.data as Lead[]) || []);
+      setLeads((leadsRes.data as unknown as Lead[]) || []);
       setCallsToday(callsRes.data?.length || 0);
+      setVoicemails((voicemailRes.data as unknown as CallLog[]) || []);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
@@ -333,9 +358,12 @@ export default function TruckingDashboardPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="p-4 bg-white">
+      {/* Stats Cards - Clickable */}
+      <div className="grid grid-cols-5 gap-4">
+        <Card 
+          className={`p-4 bg-white cursor-pointer transition-all hover:shadow-md ${activeTab === 'open' ? 'ring-2 ring-blue-500' : ''}`}
+          onClick={() => setActiveTab("open")}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-500">Open Loads</p>
@@ -346,11 +374,14 @@ export default function TruckingDashboardPage() {
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-white">
+        <Card 
+          className={`p-4 bg-white cursor-pointer transition-all hover:shadow-md ${activeTab === 'pending' ? 'ring-2 ring-amber-500' : ''}`}
+          onClick={() => setActiveTab("pending")}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-500">New Leads Today</p>
-              <p className="text-3xl font-bold text-slate-900">{leads.filter(l => new Date(l.created_at).toDateString() === new Date().toDateString()).length}</p>
+              <p className="text-sm text-slate-500">Pending Leads</p>
+              <p className="text-3xl font-bold text-slate-900">{pendingLeads.length}</p>
             </div>
             <div className="h-12 w-12 rounded-xl bg-amber-100 flex items-center justify-center">
               <Users className="h-6 w-6 text-amber-600" />
@@ -368,7 +399,10 @@ export default function TruckingDashboardPage() {
             </div>
           </div>
         </Card>
-        <Card className="p-4 bg-white">
+        <Card 
+          className={`p-4 bg-white cursor-pointer transition-all hover:shadow-md ${activeTab === 'confirmed' ? 'ring-2 ring-green-500' : ''}`}
+          onClick={() => setActiveTab("confirmed")}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-500">Confirmed Loads</p>
@@ -376,6 +410,20 @@ export default function TruckingDashboardPage() {
             </div>
             <div className="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center">
               <CheckCircle2 className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </Card>
+        <Card 
+          className="p-4 bg-white cursor-pointer transition-all hover:shadow-md"
+          onClick={() => setActiveTab("voicemail")}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-500">Voicemails</p>
+              <p className="text-3xl font-bold text-slate-900">{voicemails.length}</p>
+            </div>
+            <div className="h-12 w-12 rounded-xl bg-purple-100 flex items-center justify-center">
+              <Voicemail className="h-6 w-6 text-purple-600" />
             </div>
           </div>
         </Card>
@@ -401,41 +449,82 @@ export default function TruckingDashboardPage() {
             My Loads
           </Button>
         </div>
-        {viewMode === "loads" && (
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-slate-100 p-1 rounded-full">
-              <TabsTrigger 
-                value="open" 
-                className="rounded-full px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-              >
-                Open
-                <Badge className="ml-2 bg-amber-400 text-amber-900 border-0">{openLoads.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="pending"
-                className="rounded-full px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-              >
-                Pending Loads
-                <Badge className="ml-2 bg-blue-400 text-blue-900 border-0">{pendingLeads.length}</Badge>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="confirmed"
-                className="rounded-full px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
-              >
-                Confirmed
-                <Badge className="ml-2 bg-green-400 text-green-900 border-0">{confirmedLoads.length}</Badge>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="bg-slate-100 p-1 rounded-full">
+            <TabsTrigger 
+              value="open" 
+              className="rounded-full px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              Open
+              <Badge className="ml-2 bg-amber-400 text-amber-900 border-0">{openLoads.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="pending"
+              className="rounded-full px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              Pending
+              <Badge className="ml-2 bg-blue-400 text-blue-900 border-0">{pendingLeads.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="confirmed"
+              className="rounded-full px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              Confirmed
+              <Badge className="ml-2 bg-green-400 text-green-900 border-0">{confirmedLoads.length}</Badge>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="voicemail"
+              className="rounded-full px-4 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              Voicemail
+              <Badge className="ml-2 bg-purple-400 text-purple-900 border-0">{voicemails.length}</Badge>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      {/* Loads / Pending Leads Table */}
-      {viewMode === "loads" && activeTab === "pending" ? (
+      {/* Voicemail Section */}
+      {activeTab === "voicemail" ? (
+        <Card className="bg-white border border-slate-200 overflow-hidden">
+          <div className="p-4 border-b border-slate-200">
+            <h3 className="font-semibold text-slate-900">Voicemails</h3>
+            <p className="text-sm text-slate-500">Listen to voicemails from missed calls</p>
+          </div>
+          {voicemails.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 text-slate-500 py-12">
+              <Voicemail className="h-10 w-10 text-slate-300" />
+              <p>No voicemails yet</p>
+              <p className="text-sm">Voicemails from AI calls will appear here</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {voicemails.map((vm) => (
+                <div key={vm.id} className="p-4 hover:bg-slate-50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-slate-900">{vm.carrier_phone || "Unknown"}</p>
+                      <p className="text-sm text-slate-500">{format(new Date(vm.created_at), "MMM d, h:mm a")}</p>
+                      {vm.voicemail_transcript && (
+                        <p className="text-sm text-slate-600 mt-1 italic">"{vm.voicemail_transcript}"</p>
+                      )}
+                    </div>
+                    {vm.recording_url && (
+                      <audio controls className="h-8">
+                        <source src={vm.recording_url} type="audio/mpeg" />
+                      </audio>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      ) : viewMode === "loads" && activeTab === "pending" ? (
         <Card className="bg-white border border-slate-200 overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50 border-b border-slate-200">
+                <TableHead className="w-8"></TableHead>
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">Load #</TableHead>
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">Company</TableHead>
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">MC #</TableHead>
@@ -448,7 +537,7 @@ export default function TruckingDashboardPage() {
             <TableBody>
               {pendingLeads.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12">
+                  <TableCell colSpan={8} className="text-center py-12">
                     <div className="flex flex-col items-center gap-2 text-slate-500">
                       <Phone className="h-10 w-10 text-slate-300" />
                       <p>No pending leads yet</p>
@@ -458,28 +547,75 @@ export default function TruckingDashboardPage() {
                 </TableRow>
               ) : (
                 pendingLeads.map((lead) => (
-                  <TableRow key={lead.id} className="hover:bg-slate-50">
-                    <TableCell className="font-medium text-blue-600">
-                      {lead.trucking_loads?.load_number || "—"}
-                    </TableCell>
-                    <TableCell className="font-medium">{lead.company_name || "—"}</TableCell>
-                    <TableCell>{lead.mc_number || "—"}</TableCell>
-                    <TableCell>{lead.phone || "—"}</TableCell>
-                    <TableCell>{getStatusBadge(lead.status)}</TableCell>
-                    <TableCell className="text-slate-500 text-sm">
-                      {format(new Date(lead.created_at), "MMM d, h:mm a")}
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        size="sm" 
-                        onClick={() => confirmLead(lead)}
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        <CheckCircle2 className="h-4 w-4 mr-1" />
-                        Confirm
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <>
+                    <TableRow 
+                      key={lead.id} 
+                      className="hover:bg-slate-50 cursor-pointer"
+                      onClick={() => setExpandedLeadId(expandedLeadId === lead.id ? null : lead.id)}
+                    >
+                      <TableCell className="w-8">
+                        {expandedLeadId === lead.id ? (
+                          <ChevronUp className="h-4 w-4 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-slate-400" />
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium text-blue-600">
+                        {lead.trucking_loads?.load_number || "—"}
+                      </TableCell>
+                      <TableCell className="font-medium">{lead.company_name || "—"}</TableCell>
+                      <TableCell>{lead.mc_number || "—"}</TableCell>
+                      <TableCell>{lead.phone || "—"}</TableCell>
+                      <TableCell>{getStatusBadge(lead.status)}</TableCell>
+                      <TableCell className="text-slate-500 text-sm">
+                        {format(new Date(lead.created_at), "MMM d, h:mm a")}
+                      </TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Button 
+                          size="sm" 
+                          onClick={() => confirmLead(lead)}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                          Confirm
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {expandedLeadId === lead.id && lead.trucking_loads && (
+                      <TableRow key={`${lead.id}-details`} className="bg-slate-50">
+                        <TableCell colSpan={8} className="p-4">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <p className="text-slate-500 text-xs">Lane</p>
+                              <p className="font-medium">
+                                {lead.trucking_loads.origin_city}, {lead.trucking_loads.origin_state} → {lead.trucking_loads.destination_city}, {lead.trucking_loads.destination_state}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 text-xs">Equipment</p>
+                              <p className="font-medium">{lead.trucking_loads.equipment_type || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 text-xs">Distance</p>
+                              <p className="font-medium">{lead.trucking_loads.miles ? `${lead.trucking_loads.miles} mi` : "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 text-xs">Pickup</p>
+                              <p className="font-medium">{lead.trucking_loads.pickup_date ? format(new Date(lead.trucking_loads.pickup_date), "MMM d, yyyy") : "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 text-xs">Target Rate</p>
+                              <p className="font-medium">${lead.trucking_loads.target_rate?.toLocaleString() || "—"}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 text-xs">Confirmed Rate</p>
+                              <p className="font-bold text-green-700 text-lg">${lead.negotiated_rate?.toLocaleString() || lead.trucking_loads.target_rate?.toLocaleString() || "—"}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
                 ))
               )}
             </TableBody>
