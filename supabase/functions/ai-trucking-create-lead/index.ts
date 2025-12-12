@@ -18,30 +18,47 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
-    console.log('Received create_lead request:', JSON.stringify(body));
+    console.log('=== CREATE LEAD CALLED ===');
+    console.log('Raw body:', JSON.stringify(body, null, 2));
 
-    // ElevenLabs sends parameters in different possible structures
+    // ElevenLabs sends parameters at top level OR nested
     const params = body.parameters || body;
+    
+    // Extract all possible fields from your ElevenLabs config
     const { 
-      load_number,
-      load_id: provided_load_id, // ElevenLabs might send load_id directly
-      company_name, 
-      mc_number, 
+      load_id,           // From your config (required)
+      load_number,       // Alternative name
+      company_name,      // Required in your config
+      rate_offered,      // Required in your config  
+      contact_number,    // From your config
+      mc_number,
+      phone,
+      action,           // Constant value from your config
+      // Legacy fields for backwards compatibility
       dot_number,
-      contact_name, 
-      phone, 
+      contact_name,
       email,
       truck_type,
       rate_requested,
       notes 
     } = params;
 
-    // Use load_number OR load_id (some configs use one or the other)
-    const searchLoadNumber = load_number || provided_load_id;
-    console.log('Parsed params:', { searchLoadNumber, company_name, contact_name, phone, mc_number });
+    console.log('Parsed params:', { 
+      load_id, 
+      load_number,
+      company_name, 
+      rate_offered, 
+      contact_number, 
+      mc_number, 
+      phone,
+      action 
+    });
 
-    // Find the load by load_number to get the load_id and owner_id
-    let load_id = null;
+    // Use load_id from ElevenLabs (this is actually the load_number string)
+    const searchLoadNumber = load_id || load_number;
+    
+    // Find the load by load_number to get the actual UUID and owner_id
+    let actualLoadId = null;
     let owner_id = null;
     
     if (searchLoadNumber) {
@@ -57,33 +74,40 @@ serve(async (req) => {
         .single();
       
       if (loadData) {
-        load_id = loadData.id;
+        actualLoadId = loadData.id;
         owner_id = loadData.owner_id;
         console.log('Found load:', loadData);
       } else {
-        console.log('Load not found for:', load_number, loadError);
+        console.log('Load not found for:', searchLoadNumber, loadError?.message);
       }
     }
+
+    // Use rate_offered from ElevenLabs, fallback to rate_requested
+    const rateValue = rate_offered || rate_requested;
+    // Use contact_number or phone from ElevenLabs
+    const phoneValue = contact_number || phone;
 
     // Create the lead
     const leadData = {
       owner_id,
-      load_id,
+      load_id: actualLoadId,
       company_name: company_name || null,
       mc_number: mc_number || null,
       dot_number: dot_number || null,
-      contact_name: contact_name || null,
-      phone: phone || null,
+      contact_name: contact_name || company_name || null, // Use company_name as fallback
+      phone: phoneValue || null,
       email: email || null,
       truck_type: truck_type || null,
-      rate_requested: rate_requested ? parseFloat(rate_requested) : null,
-      notes: notes || null,
+      rate_requested: rateValue ? parseFloat(String(rateValue).replace(/[^0-9.]/g, '')) : null,
+      notes: notes || `Rate offered: ${rateValue || 'N/A'}`,
       source: 'ai_voice_agent',
       status: 'new',
       is_confirmed: false,
       requires_callback: true,
       call_source: 'inbound'
     };
+    
+    console.log('Creating lead with data:', JSON.stringify(leadData, null, 2));
 
     console.log('Creating lead with data:', leadData);
 
