@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,12 +6,13 @@ import { Separator } from "@/components/ui/separator";
 import { 
   Play, Pause, Volume2, VolumeX, Maximize, Settings,
   ThumbsUp, Share2, ArrowLeft,
-  Tv, SkipForward, SkipBack, Loader2
+  Tv, SkipForward, SkipBack, Loader2, ExternalLink
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { TVFooter } from "@/components/tv/TVFooter";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdEventTracking, AD_ERROR_CODES } from "@/hooks/useAdEventTracking";
 
 interface AdData {
   id: string;
@@ -23,11 +24,17 @@ interface AdData {
   thumbnail_url?: string | null;
 }
 
+type PlayerMode = 'content' | 'ad';
+
 export default function SeeksyTVWatch() {
   const { videoId } = useParams();
   const navigate = useNavigate();
+  
+  // Single video ref - no dual video elements
   const videoRef = useRef<HTMLVideoElement>(null);
-  const adVideoRef = useRef<HTMLVideoElement>(null);
+  
+  // Player state
+  const [playerMode, setPlayerMode] = useState<PlayerMode>('content');
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState([0]);
@@ -38,16 +45,21 @@ export default function SeeksyTVWatch() {
   const [duration, setDuration] = useState(0);
   
   // Ad states
-  const [playingAd, setPlayingAd] = useState<'pre' | 'post' | null>(null);
+  const [currentAdPosition, setCurrentAdPosition] = useState<'pre' | 'post' | null>(null);
   const [preAd, setPreAd] = useState<AdData | null>(null);
   const [postAd, setPostAd] = useState<AdData | null>(null);
   const [prePlacementId, setPrePlacementId] = useState<string | null>(null);
   const [postPlacementId, setPostPlacementId] = useState<string | null>(null);
-  const skipDelaySeconds = 5; // Configurable skip delay
+  const skipDelaySeconds = 5;
   const [adSkipTimer, setAdSkipTimer] = useState(skipDelaySeconds);
   const [canSkipAd, setCanSkipAd] = useState(false);
   const [viewerSessionId] = useState(() => crypto.randomUUID());
-  const [adError, setAdError] = useState(false);
+  const [adsLoaded, setAdsLoaded] = useState(false);
+  const [adDuration, setAdDuration] = useState(0);
+  const [adCurrentTime, setAdCurrentTime] = useState(0);
+  
+  // Ad event tracking
+  const { logAdEvent, getQuartileFromProgress, getClickRedirectUrl, resetTracking } = useAdEventTracking();
 
   // Check if videoId is a valid UUID
   const isValidUUID = videoId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(videoId);
@@ -73,46 +85,97 @@ export default function SeeksyTVWatch() {
     enabled: !!videoId && isValidUUID
   });
 
-  // Fetch ads for this video - with error fallback
+  const channelId = video?.channel ? (video.channel as { id: string }).id : null;
+
+  // Get current ad context for event logging
+  const getCurrentAdContext = useCallback(() => {
+    const currentAd = currentAdPosition === 'pre' ? preAd : postAd;
+    const currentPlacementId = currentAdPosition === 'pre' ? prePlacementId : postPlacementId;
+    
+    if (!currentAd || !currentPlacementId || !currentAdPosition || !videoId) return null;
+    
+    return {
+      adId: currentAd.id,
+      placementId: currentPlacementId,
+      videoId,
+      channelId,
+      position: currentAdPosition,
+      viewerSessionId,
+      durationSeconds: currentAd.duration_seconds,
+    };
+  }, [currentAdPosition, preAd, postAd, prePlacementId, postPlacementId, videoId, channelId, viewerSessionId]);
+
+  // Fetch ads for this video
   useEffect(() => {
     if (!video) return;
     
     const fetchAds = async () => {
       try {
-        const channelId = video.channel ? (video.channel as { id: string }).id : null;
         const { data, error } = await supabase.functions.invoke('seeksy-tv-get-ads', {
           body: { video_id: videoId, channel_id: channelId }
         });
         
         if (error) {
           console.error('[SeeksyTVWatch] Error fetching ads:', error);
-          // Fallback: just play the content
-          setAdError(true);
+          setAdsLoaded(true);
           return;
         }
         
         if (data?.preAd) {
           setPreAd(data.preAd);
           setPrePlacementId(data.prePlacementId);
-          setPlayingAd('pre');
         }
         if (data?.postAd) {
           setPostAd(data.postAd);
           setPostPlacementId(data.postPlacementId);
         }
+        
+        setAdsLoaded(true);
       } catch (err) {
         console.error('[SeeksyTVWatch] Failed to fetch ads:', err);
-        // Fallback: just play the content without ads
-        setAdError(true);
+        setAdsLoaded(true);
       }
     };
     
     fetchAds();
-  }, [video, videoId]);
+  }, [video, videoId, channelId]);
+
+  // Start pre-roll ad when ads are loaded
+  useEffect(() => {
+    if (adsLoaded && preAd && prePlacementId && videoRef.current) {
+      // Switch to ad mode
+      setPlayerMode('ad');
+      setCurrentAdPosition('pre');
+      videoRef.current.src = preAd.asset_url;
+      videoRef.current.load();
+      
+      const playPromise = videoRef.current.play();
+      if (playPromise) {
+        playPromise.catch(err => {
+          console.warn('[SeeksyTVWatch] Autoplay blocked:', err);
+        });
+      }
+      
+      // Log impression
+      logImpression(preAd.id, prePlacementId, 'pre');
+      
+      // Log start event
+      resetTracking();
+      logAdEvent('start', {
+        adId: preAd.id,
+        placementId: prePlacementId,
+        videoId: videoId!,
+        channelId,
+        position: 'pre',
+        viewerSessionId,
+        durationSeconds: preAd.duration_seconds,
+      });
+    }
+  }, [adsLoaded, preAd, prePlacementId]);
 
   // Ad skip timer
   useEffect(() => {
-    if (playingAd && adSkipTimer > 0) {
+    if (playerMode === 'ad' && adSkipTimer > 0) {
       const timer = setInterval(() => {
         setAdSkipTimer(prev => {
           if (prev <= 1) {
@@ -124,12 +187,11 @@ export default function SeeksyTVWatch() {
       }, 1000);
       return () => clearInterval(timer);
     }
-  }, [playingAd, adSkipTimer]);
+  }, [playerMode, adSkipTimer]);
 
-  // Log impression when ad starts
+  // Log impression
   const logImpression = async (adId: string, placementId: string, position: 'pre' | 'post') => {
     try {
-      const channelId = video?.channel ? (video.channel as { id: string }).id : null;
       await supabase.functions.invoke('seeksy-tv-log-impression', {
         body: {
           ad_id: adId,
@@ -145,49 +207,157 @@ export default function SeeksyTVWatch() {
     }
   };
 
-  const handleAdEnded = () => {
-    if (playingAd === 'pre') {
-      setPlayingAd(null);
-      setCanSkipAd(false);
-      setAdSkipTimer(skipDelaySeconds);
-      // Auto-play main content
-      setTimeout(() => videoRef.current?.play(), 100);
-    } else if (playingAd === 'post') {
-      setPlayingAd(null);
+  // Transition from ad to content
+  const transitionToContent = useCallback(() => {
+    if (!videoRef.current || !video) return;
+    
+    // Directly swap source and play - no unmounting
+    videoRef.current.src = video.video_url;
+    videoRef.current.load();
+    
+    const playPromise = videoRef.current.play();
+    if (playPromise) {
+      playPromise.catch(err => {
+        console.warn('[SeeksyTVWatch] Play blocked:', err);
+      });
     }
-  };
+    
+    // Update state after source swap
+    setPlayerMode('content');
+    setCurrentAdPosition(null);
+    setCanSkipAd(false);
+    setAdSkipTimer(skipDelaySeconds);
+    resetTracking();
+  }, [video, resetTracking]);
 
-  // Handle ad loading errors - fallback to content
-  const handleAdError = () => {
+  // Handle ad ended
+  const handleAdEnded = useCallback(() => {
+    const context = getCurrentAdContext();
+    
+    if (context) {
+      logAdEvent('complete', context);
+    }
+    
+    if (currentAdPosition === 'pre') {
+      transitionToContent();
+    } else if (currentAdPosition === 'post') {
+      setPlayerMode('content');
+      setCurrentAdPosition(null);
+    }
+  }, [currentAdPosition, getCurrentAdContext, logAdEvent, transitionToContent]);
+
+  // Handle ad error - failover to content
+  const handleAdError = useCallback((event: React.SyntheticEvent<HTMLVideoElement>) => {
     console.warn('[SeeksyTVWatch] Ad failed to load, skipping to content');
-    handleAdEnded();
-  };
-
-  const skipAd = () => {
-    if (canSkipAd) {
-      handleAdEnded();
+    
+    const context = getCurrentAdContext();
+    const mediaError = (event.target as HTMLVideoElement).error;
+    
+    let errorCode = AD_ERROR_CODES.UNKNOWN;
+    if (mediaError) {
+      switch (mediaError.code) {
+        case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+        case MediaError.MEDIA_ERR_NETWORK:
+          errorCode = AD_ERROR_CODES.MEDIA_404;
+          break;
+        case MediaError.MEDIA_ERR_DECODE:
+          errorCode = AD_ERROR_CODES.MEDIA_DECODE;
+          break;
+        default:
+          errorCode = AD_ERROR_CODES.UNKNOWN;
+      }
     }
-  };
+    
+    if (context) {
+      logAdEvent('error', context, { errorCode });
+    }
+    
+    // Immediately transition to content - never block
+    transitionToContent();
+  }, [getCurrentAdContext, logAdEvent, transitionToContent]);
 
-  const handleMainVideoEnded = () => {
-    if (postAd && postPlacementId) {
-      setPlayingAd('post');
+  // Handle ad time update for quartile tracking
+  const handleAdTimeUpdate = useCallback(() => {
+    if (playerMode !== 'ad' || !videoRef.current) return;
+    
+    const current = videoRef.current.currentTime;
+    const dur = videoRef.current.duration || 0;
+    
+    setAdCurrentTime(current);
+    
+    const context = getCurrentAdContext();
+    if (context && dur > 0) {
+      const quartile = getQuartileFromProgress(current, dur);
+      if (quartile) {
+        logAdEvent(quartile, context, { atSecond: current });
+      }
+    }
+  }, [playerMode, getCurrentAdContext, getQuartileFromProgress, logAdEvent]);
+
+  // Skip ad
+  const skipAd = useCallback(() => {
+    if (!canSkipAd) return;
+    
+    const context = getCurrentAdContext();
+    if (context) {
+      logAdEvent('skip', context, { atSecond: adCurrentTime });
+    }
+    
+    transitionToContent();
+  }, [canSkipAd, getCurrentAdContext, logAdEvent, adCurrentTime, transitionToContent]);
+
+  // Handle main video ended
+  const handleMainVideoEnded = useCallback(() => {
+    if (postAd && postPlacementId && videoRef.current) {
+      // Switch to post-roll ad
+      setPlayerMode('ad');
+      setCurrentAdPosition('post');
       setCanSkipAd(false);
       setAdSkipTimer(skipDelaySeconds);
-      setTimeout(() => {
-        adVideoRef.current?.play();
-        logImpression(postAd.id, postPlacementId, 'post');
-      }, 100);
+      
+      videoRef.current.src = postAd.asset_url;
+      videoRef.current.load();
+      
+      const playPromise = videoRef.current.play();
+      if (playPromise) {
+        playPromise.catch(err => {
+          console.warn('[SeeksyTVWatch] Post-roll autoplay blocked:', err);
+        });
+      }
+      
+      logImpression(postAd.id, postPlacementId, 'post');
+      
+      resetTracking();
+      logAdEvent('start', {
+        adId: postAd.id,
+        placementId: postPlacementId,
+        videoId: videoId!,
+        channelId,
+        position: 'post',
+        viewerSessionId,
+        durationSeconds: postAd.duration_seconds,
+      });
     }
-  };
+  }, [postAd, postPlacementId, videoId, channelId, viewerSessionId, logAdEvent, resetTracking]);
 
-  // Start pre-roll ad when it loads
-  useEffect(() => {
-    if (playingAd === 'pre' && preAd && prePlacementId && adVideoRef.current) {
-      adVideoRef.current.play();
-      logImpression(preAd.id, prePlacementId, 'pre');
-    }
-  }, [playingAd, preAd, prePlacementId]);
+  // Handle ad click
+  const handleAdClick = useCallback(() => {
+    const currentAd = currentAdPosition === 'pre' ? preAd : postAd;
+    const currentPlacementId = currentAdPosition === 'pre' ? prePlacementId : postPlacementId;
+    
+    if (!currentAd?.click_url) return;
+    
+    // Use redirect endpoint for click tracking
+    const redirectUrl = getClickRedirectUrl(currentAd.id, currentAd.click_url, {
+      placementId: currentPlacementId || undefined,
+      videoId: videoId || undefined,
+      channelId: channelId || undefined,
+      position: currentAdPosition || undefined,
+      sessionId: viewerSessionId,
+    });
+    
+    window.open(redirectUrl, '_blank');
+  }, [currentAdPosition, preAd, postAd, prePlacementId, postPlacementId, getClickRedirectUrl, videoId, channelId, viewerSessionId]);
 
   // Fetch related videos
   const { data: relatedVideos } = useQuery({
@@ -213,7 +383,7 @@ export default function SeeksyTVWatch() {
   };
 
   const handlePlayPause = () => {
-    if (playingAd) return;
+    if (playerMode === 'ad') return;
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
@@ -225,6 +395,11 @@ export default function SeeksyTVWatch() {
   };
 
   const handleTimeUpdate = () => {
+    if (playerMode === 'ad') {
+      handleAdTimeUpdate();
+      return;
+    }
+    
     if (videoRef.current) {
       const current = videoRef.current.currentTime;
       const dur = videoRef.current.duration || 0;
@@ -234,7 +409,7 @@ export default function SeeksyTVWatch() {
   };
 
   const handleProgressChange = (value: number[]) => {
-    if (playingAd) return;
+    if (playerMode === 'ad') return;
     if (videoRef.current && videoRef.current.duration) {
       const newTime = (value[0] / 100) * videoRef.current.duration;
       videoRef.current.currentTime = newTime;
@@ -247,9 +422,6 @@ export default function SeeksyTVWatch() {
     if (videoRef.current) {
       videoRef.current.volume = value[0] / 100;
     }
-    if (adVideoRef.current) {
-      adVideoRef.current.volume = value[0] / 100;
-    }
     setIsMuted(value[0] === 0);
   };
 
@@ -257,15 +429,30 @@ export default function SeeksyTVWatch() {
     if (videoRef.current) {
       videoRef.current.muted = !isMuted;
     }
-    if (adVideoRef.current) {
-      adVideoRef.current.muted = !isMuted;
-    }
     setIsMuted(!isMuted);
   };
 
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
-      setDuration(videoRef.current.duration);
+      if (playerMode === 'ad') {
+        setAdDuration(videoRef.current.duration);
+      } else {
+        setDuration(videoRef.current.duration);
+      }
+    }
+  };
+
+  const handleVideoEnded = () => {
+    if (playerMode === 'ad') {
+      handleAdEnded();
+    } else {
+      handleMainVideoEnded();
+    }
+  };
+
+  const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    if (playerMode === 'ad') {
+      handleAdError(e);
     }
   };
 
@@ -297,7 +484,8 @@ export default function SeeksyTVWatch() {
 
   const channelName = video.channel ? (video.channel as { name: string }).name : video.series_name || "Seeksy TV";
   const channelSlug = video.channel ? (video.channel as { slug: string }).slug : null;
-  const currentAd = playingAd === 'pre' ? preAd : playingAd === 'post' ? postAd : null;
+  const currentAd = currentAdPosition === 'pre' ? preAd : currentAdPosition === 'post' ? postAd : null;
+  const isAdMode = playerMode === 'ad' && currentAd;
 
   return (
     <div className="min-h-screen bg-[#0a0a14] text-white">
@@ -336,26 +524,32 @@ export default function SeeksyTVWatch() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Video Player */}
+            {/* Video Player - Single video element */}
             <div className="relative aspect-video bg-black rounded-xl overflow-hidden mb-4">
-              {/* Ad Video Layer */}
-              {playingAd && currentAd && (
-                <div className="absolute inset-0 z-20">
-                  <video
-                    ref={adVideoRef}
-                    src={currentAd.asset_url}
-                    className="w-full h-full object-contain"
-                    onEnded={handleAdEnded}
-                    onError={handleAdError}
-                    autoPlay
-                    onClick={() => currentAd.click_url && window.open(currentAd.click_url, '_blank')}
-                  />
+              <video
+                ref={videoRef}
+                src={!adsLoaded || !preAd ? video.video_url : undefined}
+                poster={!isAdMode ? (video.thumbnail_url || undefined) : undefined}
+                className="w-full h-full object-contain"
+                onTimeUpdate={handleTimeUpdate}
+                onLoadedMetadata={handleLoadedMetadata}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                onEnded={handleVideoEnded}
+                onError={handleVideoError}
+                onClick={isAdMode ? handleAdClick : handlePlayPause}
+              />
+              
+              {/* Ad overlay */}
+              {isAdMode && (
+                <>
                   {/* Ad label overlay - subtle top-left */}
                   <div className="absolute top-3 left-3 pointer-events-none">
                     <Badge className="bg-amber-500/90 text-white text-xs px-2 py-0.5 font-medium shadow-md">
                       Ad
                     </Badge>
                   </div>
+                  
                   {/* Skip controls - bottom right */}
                   <div className="absolute bottom-4 right-4">
                     {canSkipAd ? (
@@ -368,32 +562,24 @@ export default function SeeksyTVWatch() {
                       </Badge>
                     )}
                   </div>
+                  
                   {/* Click CTA if click_url exists */}
-                  {currentAd.click_url && (
-                    <div className="absolute bottom-4 left-4 pointer-events-none">
-                      <Badge variant="outline" className="bg-black/60 text-white border-white/30 text-xs">
-                        Click to learn more
-                      </Badge>
-                    </div>
+                  {currentAd?.click_url && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleAdClick}
+                      className="absolute bottom-4 left-4 bg-black/60 text-white border-white/30 hover:bg-black/80"
+                    >
+                      <ExternalLink className="h-3 w-3 mr-1" />
+                      Learn more
+                    </Button>
                   )}
-                </div>
+                </>
               )}
-
-              {/* Main Video */}
-              <video
-                ref={videoRef}
-                src={video.video_url}
-                poster={video.thumbnail_url || undefined}
-                className={`w-full h-full object-contain ${playingAd ? 'invisible' : ''}`}
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-                onEnded={handleMainVideoEnded}
-              />
               
-              {/* Play overlay - only show when not playing and no ad */}
-              {!isPlaying && !playingAd && (
+              {/* Play overlay - only show when not playing and not in ad mode */}
+              {!isPlaying && !isAdMode && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                   <button
                     onClick={handlePlayPause}
@@ -405,7 +591,7 @@ export default function SeeksyTVWatch() {
               )}
 
               {/* Controls - hide during ads */}
-              {!playingAd && (
+              {!isAdMode && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
                   {/* Progress bar */}
                   <div className="mb-3">
