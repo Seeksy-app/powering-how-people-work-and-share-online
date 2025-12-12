@@ -267,40 +267,40 @@ export default function StockPurchaseAgreement() {
   };
 
   const handleUseDefaults = () => {
-    // Pre-fill seller info
+    // Pre-fill only seller and chairman info - everything else blank
     setFieldValues(prev => ({
       ...prev,
       seller_name: "Andrew Appleton",
-      seller_email: "appletonab@gmail.com",
-      seller_street: "413 Independence Ave SE",
-      seller_city: "Washington",
-      seller_state: "DC",
-      seller_zip: "20003",
+      seller_email: "",
+      seller_street: "",
+      seller_city: "",
+      seller_state: "",
+      seller_zip: "",
       // Pre-fill chairman info
       chairman_name: "Paul Mujane",
       chairman_title: "Chairman of the Board",
-      chairman_email: "pmajane@gmail.com",
-      // Pre-fill sample purchaser info
-      purchaser_name: "Test Purchaser",
-      purchaser_email: "test@example.com",
-      purchaser_street: "123 Main Street",
-      purchaser_city: "Atlanta",
-      purchaser_state: "GA",
-      purchaser_zip: "30301",
-      // Pre-fill investment details
+      chairman_email: "",
+      // Leave purchaser info blank
+      purchaser_name: "",
+      purchaser_email: "",
+      purchaser_street: "",
+      purchaser_city: "",
+      purchaser_state: "",
+      purchaser_zip: "",
+      // Leave investment details blank
       input_mode: "amount",
-      purchase_amount: 10000,
-      is_sophisticated_investor: true,
-      accredited_net_worth: true,
+      purchase_amount: undefined,
+      is_sophisticated_investor: false,
+      accredited_net_worth: false,
     }));
-    // Set price per share
+    // Leave price per share blank
     setComputedValues(prev => ({
       ...prev,
-      price_per_share: 0.25,
+      price_per_share: undefined,
       rounding_mode: "whole_share",
-      computed_number_of_shares: 40000,
+      computed_number_of_shares: undefined,
     }));
-    toast({ title: "Default test data loaded" });
+    toast({ title: "Defaults loaded (Seller & Chairman only)" });
   };
 
   const handleExport = async (format: 'pdf' | 'docx') => {
