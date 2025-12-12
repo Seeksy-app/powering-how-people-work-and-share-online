@@ -14554,6 +14554,8 @@ export type Database = {
       }
       legal_doc_instances: {
         Row: {
+          chairman_signature_url: string | null
+          chairman_signed_at: string | null
           computed_values_json: Json
           created_at: string
           created_by: string | null
@@ -14574,6 +14576,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          chairman_signature_url?: string | null
+          chairman_signed_at?: string | null
           computed_values_json?: Json
           created_at?: string
           created_by?: string | null
@@ -14594,6 +14598,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          chairman_signature_url?: string | null
+          chairman_signed_at?: string | null
           computed_values_json?: Json
           created_at?: string
           created_by?: string | null

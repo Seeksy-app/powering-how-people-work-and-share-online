@@ -25,6 +25,7 @@ interface FieldValues {
   seller_zip?: string;
   // Chairman of the Board (Agreed & Acknowledged)
   chairman_name?: string;
+  chairman_title?: string;
   chairman_email?: string;
   input_mode?: "amount" | "shares";
   purchase_amount?: number;
@@ -272,6 +273,16 @@ export function LegalDocForm({
                 value={fieldValues.chairman_name || ""}
                 onChange={(e) => onFieldChange("chairman_name", e.target.value)}
                 placeholder="Enter Chairman's full name"
+                disabled={isFinalized}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="chairman_title">Chairman Title</Label>
+              <Input
+                id="chairman_title"
+                value={fieldValues.chairman_title || "Chairman of the Board"}
+                onChange={(e) => onFieldChange("chairman_title", e.target.value)}
+                placeholder="Chairman of the Board"
                 disabled={isFinalized}
               />
             </div>
