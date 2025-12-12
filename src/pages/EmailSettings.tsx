@@ -9,43 +9,79 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { SubscriberListManager } from "@/components/email/SubscriberListManager";
-import { EmailAccountManager } from "@/components/email/EmailAccountManager";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, List, Settings, TrendingUp, Link2, Unlink, RefreshCw, Shield, Bell, ArrowLeft, CheckCircle } from "lucide-react";
+import { 
+  Mail, 
+  Users, 
+  FileSignature, 
+  BarChart3, 
+  Gauge, 
+  ArrowLeft, 
+  CheckCircle, 
+  Star, 
+  Unlink, 
+  Shield, 
+  ChevronDown, 
+  Plus,
+  RefreshCw
+} from "lucide-react";
 import { GoogleVerifiedBadge } from "@/components/ui/google-verified-badge";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import gmailIcon from "@/assets/gmail-icon.png";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function EmailSettings() {
   const [activeTab, setActiveTab] = useState("accounts");
+  const [connecting, setConnecting] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [permissionsDialogOpen, setPermissionsDialogOpen] = useState(false);
+  const [selectedAccountEmail, setSelectedAccountEmail] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
 
-  // Check Gmail connection status
-  const { data: gmailConnection, isLoading: loadingGmail } = useQuery({
-    queryKey: ["gmail-connection"],
+  // Get current user
+  const { data: user } = useQuery({
+    queryKey: ["user"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-      
-      const { data } = await supabase
-        .from("gmail_connections")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      
-      return data;
+      return user;
     },
   });
 
-  // Fetch email signatures for default selection
+  // Fetch connected email accounts
+  const { data: accounts = [], isLoading: loadingAccounts } = useQuery({
+    queryKey: ["email-accounts", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("email_accounts")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+
+  // Fetch email signatures
   const { data: signatures = [] } = useQuery({
     queryKey: ["email-signatures-list"],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
       
       const { data } = await supabase
@@ -56,57 +92,103 @@ export default function EmailSettings() {
       
       return data || [];
     },
+    enabled: !!user,
   });
 
-  const connectGmail = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke("gmail-auth", {
-        body: { returnPath: "/email-settings" },
-      });
+  // Handle OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const success = params.get("success");
+    const error = params.get("error");
 
-      if (error) throw error;
-      if (data?.authUrl) {
-        window.location.href = data.authUrl;
-      }
-    } catch (error) {
+    if (success === "gmail_connected") {
+      toast({ title: "Gmail account connected successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["email-accounts"] });
+      window.history.replaceState({}, "", "/email-settings");
+    } else if (error) {
       toast({
-        title: "Connection failed",
-        description: "Could not initiate Gmail connection",
+        title: error === "oauth_failed" ? "Gmail connection was cancelled" : "Failed to connect Gmail account",
         variant: "destructive",
       });
+      window.history.replaceState({}, "", "/email-settings");
+    }
+  }, [location.search, queryClient, toast]);
+
+  const connectGmail = async () => {
+    if (!user) {
+      toast({ title: "Please log in to connect Gmail", variant: "destructive" });
+      return;
+    }
+    
+    setConnecting(true);
+    try {
+      const response = await supabase.functions.invoke('gmail-auth');
+      const { data, error } = response;
+      
+      if (error) throw error;
+      if (!data?.authUrl) throw new Error('No auth URL returned');
+
+      window.location.href = data.authUrl;
+    } catch (error) {
+      toast({
+        title: "Failed to connect Gmail",
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive",
+      });
+      setConnecting(false);
     }
   };
 
-  const disconnectGmail = useMutation({
-    mutationFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+  const setDefaultAccount = useMutation({
+    mutationFn: async (accountId: string) => {
       if (!user) throw new Error("Not authenticated");
-
-      const { error } = await supabase
-        .from("gmail_connections")
-        .delete()
+      
+      // Unset all defaults first
+      await supabase
+        .from("email_accounts")
+        .update({ is_default: false })
         .eq("user_id", user.id);
-
+      
+      // Set new default
+      const { error } = await supabase
+        .from("email_accounts")
+        .update({ is_default: true })
+        .eq("id", accountId);
+      
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["gmail-connection"] });
-      toast({
-        title: "Disconnected",
-        description: "Gmail has been disconnected from your account",
-      });
+      queryClient.invalidateQueries({ queryKey: ["email-accounts"] });
+      toast({ title: "Default email account updated" });
+    },
+    onError: () => {
+      toast({ title: "Failed to set default account", variant: "destructive" });
+    },
+  });
+
+  const disconnectAccount = useMutation({
+    mutationFn: async (accountId: string) => {
+      const { error } = await supabase
+        .from("email_accounts")
+        .delete()
+        .eq("id", accountId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["email-accounts"] });
+      toast({ title: "Email account disconnected" });
+    },
+    onError: () => {
+      toast({ title: "Failed to disconnect account", variant: "destructive" });
     },
   });
 
   const syncGmail = async () => {
-    toast({
-      title: "Syncing...",
-      description: "Fetching latest emails from Gmail",
-    });
+    toast({ title: "Syncing...", description: "Fetching latest emails from Gmail" });
     
     try {
-      // Sync both inbox and replies
-      const [inboxResult, repliesResult] = await Promise.all([
+      const [inboxResult] = await Promise.all([
         supabase.functions.invoke("sync-gmail-inbox"),
         supabase.functions.invoke("sync-gmail-replies"),
       ]);
@@ -116,33 +198,34 @@ export default function EmailSettings() {
       const newEmails = inboxResult.data?.newEmails || 0;
       toast({
         title: "Sync complete",
-        description: newEmails > 0 
-          ? `Synced ${newEmails} new emails` 
-          : "Your emails are up to date",
+        description: newEmails > 0 ? `Synced ${newEmails} new emails` : "Your emails are up to date",
       });
     } catch (error) {
-      console.error("Sync error:", error);
-      toast({
-        title: "Sync failed",
-        description: "Could not sync emails",
-        variant: "destructive",
-      });
+      toast({ title: "Sync failed", description: "Could not sync emails", variant: "destructive" });
     }
   };
+
+  const openPermissions = (email: string) => {
+    setSelectedAccountEmail(email);
+    setPermissionsDialogOpen(true);
+  };
+
+  const hasAccounts = accounts.length > 0;
 
   return (
     <>
       <Helmet>
-        <title>Email Settings | Seeksy</title>
+        <title>Email Accounts | Seeksy</title>
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-[#F7F7FA] to-[#E0ECF9]">
-        <div className="max-w-[1600px] mx-auto px-8 py-8">
+        <div className="max-w-[1200px] mx-auto px-8 py-8">
+          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-[28px] font-semibold text-foreground">Email Settings</h1>
+              <h1 className="text-[28px] font-semibold text-foreground">Email Accounts</h1>
               <p className="text-[15px] text-muted-foreground mt-1">
-                Manage your email accounts, subscriber lists, and preferences
+                Connect and manage the email addresses you send from in Seeksy
               </p>
             </div>
             <Button variant="outline" onClick={() => navigate("/email")}>
@@ -151,139 +234,209 @@ export default function EmailSettings() {
             </Button>
           </div>
 
+          {/* Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="bg-white p-1 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] h-auto">
+            <TabsList className="bg-white p-1 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] h-auto flex-wrap">
               <TabsTrigger 
                 value="accounts" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-6 py-2.5 rounded-lg"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-5 py-2.5 rounded-lg"
               >
                 <Mail className="h-4 w-4 mr-2" />
-                Email Accounts
+                Accounts
               </TabsTrigger>
               <TabsTrigger 
-                value="lists"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-6 py-2.5 rounded-lg"
+                value="subscribers"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-5 py-2.5 rounded-lg"
               >
-                <List className="h-4 w-4 mr-2" />
+                <Users className="h-4 w-4 mr-2" />
                 Subscriber Lists
               </TabsTrigger>
               <TabsTrigger 
                 value="signatures"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-6 py-2.5 rounded-lg"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-5 py-2.5 rounded-lg"
               >
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Signature & Tracking
+                <FileSignature className="h-4 w-4 mr-2" />
+                Signatures
               </TabsTrigger>
               <TabsTrigger 
-                value="preferences"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-6 py-2.5 rounded-lg"
+                value="tracking"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-5 py-2.5 rounded-lg"
               >
-                <Settings className="h-4 w-4 mr-2" />
-                Preferences
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Tracking
               </TabsTrigger>
               <TabsTrigger 
                 value="deliverability"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-6 py-2.5 rounded-lg"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-5 py-2.5 rounded-lg opacity-60"
                 disabled
               >
-                <TrendingUp className="h-4 w-4 mr-2" />
+                <Gauge className="h-4 w-4 mr-2" />
                 Deliverability
-                <span className="ml-2 text-xs bg-muted px-2 py-0.5 rounded">Coming Soon</span>
+                <Badge variant="secondary" className="ml-2 text-[10px] px-1.5 py-0">Soon</Badge>
               </TabsTrigger>
             </TabsList>
 
+            {/* Accounts Tab */}
             <TabsContent value="accounts" className="mt-6 space-y-6">
-              {/* Gmail Connection Card */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <img src={gmailIcon} alt="Gmail" className="h-5 w-5" />
-                      <CardTitle>Gmail Connection</CardTitle>
+              {/* Connect Gmail CTA - Only show if no accounts OR as smaller button if accounts exist */}
+              {!hasAccounts ? (
+                <Card className="border-dashed border-2">
+                  <CardContent className="py-8 flex flex-col items-center text-center">
+                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center mb-4">
+                      <img src={gmailIcon} alt="Gmail" className="h-8 w-8" />
                     </div>
-                    <GoogleVerifiedBadge variant="pill" />
-                  </div>
-                  <CardDescription>
-                    Securely connect your Gmail account to send and receive emails directly from Seeksy
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {loadingGmail ? (
-                    <div className="text-sm text-muted-foreground">Loading...</div>
-                  ) : gmailConnection ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center border">
-                            <img src={gmailIcon} alt="Gmail" className="h-6 w-6" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{gmailConnection.email}</p>
-                            <p className="text-sm text-muted-foreground">Connected</p>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                          Active
-                        </Badge>
+                    <h3 className="text-lg font-semibold mb-2">Connect a Gmail Account</h3>
+                    <p className="text-muted-foreground text-sm mb-4 max-w-md">
+                      Securely connect your Gmail account to send and receive emails directly from Seeksy.
+                    </p>
+                    <div className="flex items-center gap-2 mb-4">
+                      <GoogleVerifiedBadge variant="pill" />
+                    </div>
+                    <Button onClick={connectGmail} disabled={connecting} size="lg">
+                      <img src={gmailIcon} alt="Gmail" className="h-4 w-4 mr-2" />
+                      {connecting ? "Connecting..." : "Connect Gmail"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : null}
+
+              {/* Connected Email Accounts List */}
+              {loadingAccounts ? (
+                <Card>
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    Loading accounts...
+                  </CardContent>
+                </Card>
+              ) : hasAccounts ? (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">Connected Email Accounts</CardTitle>
+                        <CardDescription>Manage your connected Gmail accounts</CardDescription>
                       </div>
-                      
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm" onClick={syncGmail}>
                           <RefreshCw className="h-4 w-4 mr-2" />
-                          Sync Now
+                          Sync All
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => disconnectGmail.mutate()}
-                          disabled={disconnectGmail.isPending}
-                        >
-                          <Unlink className="h-4 w-4 mr-2" />
-                          Disconnect
+                        <Button variant="outline" size="sm" onClick={connectGmail} disabled={connecting}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          {connecting ? "Connecting..." : "Add Account"}
                         </Button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <ul className="text-sm text-muted-foreground space-y-2">
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          Send emails from your own address
+                  </CardHeader>
+                  <CardContent className="space-y-3 pt-4">
+                    {accounts.map((account) => (
+                      <div
+                        key={account.id}
+                        className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center border shadow-sm">
+                            <img src={gmailIcon} alt="Gmail" className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium">{account.email_address}</p>
+                              {account.is_default && (
+                                <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-[10px]">
+                                  Default
+                                </Badge>
+                              )}
+                              <GoogleVerifiedBadge variant="inline" className="scale-90" />
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {account.display_name || "Connected"}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {!account.is_default && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setDefaultAccount.mutate(account.id)}
+                              disabled={setDefaultAccount.isPending}
+                            >
+                              <Star className="h-4 w-4 mr-1" />
+                              Set Default
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openPermissions(account.email_address)}
+                          >
+                            <Shield className="h-4 w-4 mr-1" />
+                            Permissions
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => disconnectAccount.mutate(account.id)}
+                            disabled={disconnectAccount.isPending}
+                          >
+                            <Unlink className="h-4 w-4 mr-1" />
+                            Disconnect
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ) : null}
+
+              {/* Collapsible Info Section */}
+              <Collapsible open={infoOpen} onOpenChange={setInfoOpen}>
+                <Card>
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors rounded-t-lg">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-base font-medium">
+                          What Connecting Gmail Enables
+                        </CardTitle>
+                        <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${infoOpen ? "rotate-180" : ""}`} />
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <ul className="space-y-3">
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                          <span className="text-sm">Send emails from your own address</span>
                         </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          Receive replies in your Seeksy inbox
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                          <span className="text-sm">Receive replies in Seeksy inbox</span>
                         </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-600" />
-                          Track email opens and clicks
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                          <span className="text-sm">Track email opens and clicks</span>
                         </li>
                       </ul>
-                      <Button onClick={connectGmail} className="gap-2">
-                        <img src={gmailIcon} alt="Gmail" className="h-4 w-4" />
-                        Connect Gmail
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Existing Email Account Manager - Handles additional accounts */}
-              <EmailAccountManager />
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             </TabsContent>
 
-            <TabsContent value="lists" className="mt-6">
+            {/* Subscriber Lists Tab */}
+            <TabsContent value="subscribers" className="mt-6">
               <SubscriberListManager />
             </TabsContent>
 
+            {/* Signatures Tab */}
             <TabsContent value="signatures" className="mt-6 space-y-6">
-              {/* Default Signature */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    <CardTitle>Default Signature</CardTitle>
-                  </div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileSignature className="h-5 w-5" />
+                    Default Signature
+                  </CardTitle>
                   <CardDescription>
                     Choose a default signature for your outgoing emails
                   </CardDescription>
@@ -313,14 +466,16 @@ export default function EmailSettings() {
                   </Button>
                 </CardContent>
               </Card>
+            </TabsContent>
 
-              {/* Email Tracking */}
+            {/* Tracking Tab */}
+            <TabsContent value="tracking" className="mt-6 space-y-6">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    <CardTitle>Email Tracking</CardTitle>
-                  </div>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Email Tracking
+                  </CardTitle>
                   <CardDescription>
                     Track opens and clicks on your outgoing emails
                   </CardDescription>
@@ -349,145 +504,59 @@ export default function EmailSettings() {
               </Card>
             </TabsContent>
 
-
-            <TabsContent value="preferences" className="mt-6 space-y-6">
-              {/* Default Signature */}
+            {/* Deliverability Tab - Placeholder */}
+            <TabsContent value="deliverability" className="mt-6">
               <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    <CardTitle>Email Defaults</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Configure default settings for your emails
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Default Signature</Label>
-                    <Select defaultValue={signatures.find(s => s.is_active)?.id || "none"}>
-                      <SelectTrigger className="w-full max-w-xs">
-                        <SelectValue placeholder="Select a signature" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">No signature</SelectItem>
-                        {signatures.map((sig) => (
-                          <SelectItem key={sig.id} value={sig.id}>
-                            {sig.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">
-                      This signature will be added to all outgoing emails
-                    </p>
-                  </div>
-
-                  <Separator />
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Enable Email Tracking</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Track opens and clicks on all outgoing emails
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Auto-sync Gmail</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Automatically sync new emails every 5 minutes
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Notification Preferences */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
-                    <CardTitle>Email Notifications</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Choose when to receive notifications about your emails
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Email Opens</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Get notified when someone opens your email
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Link Clicks</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Get notified when someone clicks a link in your email
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Replies</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Get notified when you receive a reply
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Bounces</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Get notified when an email bounces
-                      </p>
-                    </div>
-                    <Switch defaultChecked />
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Security */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-5 w-5" />
-                    <CardTitle>Security</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Manage email security settings
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Two-factor for Sensitive Actions</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Require 2FA when deleting emails or changing settings
-                      </p>
-                    </div>
-                    <Switch />
-                  </div>
+                <CardContent className="py-12 text-center">
+                  <Gauge className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Deliverability Insights</h3>
+                  <p className="text-muted-foreground">Coming soon</p>
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
       </div>
+
+      {/* Permissions Dialog */}
+      <Dialog open={permissionsDialogOpen} onOpenChange={setPermissionsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gmail Permissions</DialogTitle>
+            <DialogDescription>
+              Permissions granted for {selectedAccountEmail}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Read Emails</p>
+                <p className="text-xs text-muted-foreground">View and sync your inbox messages</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Send Emails</p>
+                <p className="text-xs text-muted-foreground">Send emails on your behalf</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+              <div>
+                <p className="font-medium text-sm">Manage Labels</p>
+                <p className="text-xs text-muted-foreground">Organize emails with labels</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setPermissionsDialogOpen(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
