@@ -22,6 +22,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+interface StockAgreementInput {
+  agreementDate: string;
+  purchaserName: string;
+  purchaserAddress: string;
+  numberOfShares: number;
+  pricePerShare: number;
+}
+
 interface StockAgreementData {
   agreementDate: string;
   sellerName: string;
@@ -45,7 +53,25 @@ serve(async (req) => {
   }
 
   try {
-    const data: StockAgreementData = await req.json();
+    const input: StockAgreementInput = await req.json();
+    
+    // Transform frontend input to full agreement data with defaults
+    const data: StockAgreementData = {
+      agreementDate: input.agreementDate || new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+      sellerName: "Parade Deck Holdings, Inc.",
+      buyerName: input.purchaserName,
+      companyName: "Parade Deck Holdings, Inc.",
+      numberOfShares: Number(input.numberOfShares) || 0,
+      pricePerShare: Number(input.pricePerShare) || 0.20,
+      totalPrice: (Number(input.numberOfShares) || 0) * (Number(input.pricePerShare) || 0.20),
+      sellerAddress: "7400 Beaufont Springs Drive, Suite 300, Richmond VA 23225",
+      sellerEmail: "info@paradedeck.com",
+      buyerAddress: input.purchaserAddress || "",
+      buyerEmail: "",
+      stockCertificateNumber: "CS-____",
+      chairmanName: "Andrew Appleton",
+      chairmanTitle: "Chairman of the Board",
+    };
 
     const doc = new Document({
       sections: [
