@@ -54,8 +54,44 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
   useEffect(() => {
     if (!open) {
       resetForm();
+    } else if (editingLoadId) {
+      fetchLoad();
     }
-  }, [open]);
+  }, [open, editingLoadId]);
+
+  const fetchLoad = async () => {
+    if (!editingLoadId) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("trucking_loads")
+      .select("*")
+      .eq("id", editingLoadId)
+      .single();
+    
+    if (data && !error) {
+      setFormData({
+        load_number: data.load_number || "",
+        origin_city: data.origin_city || "",
+        origin_state: data.origin_state || "",
+        destination_city: data.destination_city || "",
+        destination_state: data.destination_state || "",
+        pickup_date: data.pickup_date || "",
+        pickup_window_start: data.pickup_window_start || "",
+        pickup_window_end: data.pickup_window_end || "",
+        equipment_type: data.equipment_type || "Dry Van",
+        commodity: data.commodity || "",
+        weight_lbs: data.weight_lbs?.toString() || "",
+        miles: data.miles?.toString() || "",
+        rate_type: (data.rate_type as 'flat' | 'per_ton') || "flat",
+        target_rate: data.target_rate?.toString() || "",
+        floor_rate: data.floor_rate?.toString() || "",
+        desired_rate_per_ton: data.desired_rate_per_ton?.toString() || "",
+        tons: data.tons?.toString() || "",
+        special_instructions: data.special_instructions || "",
+      });
+    }
+    setLoading(false);
+  };
 
   const resetForm = () => {
     setFormData({
@@ -112,10 +148,15 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
         is_active: true,
       };
 
-      const { error } = await supabase.from("trucking_loads").insert(loadData);
-      if (error) throw error;
-
-      toast({ title: "Load created successfully" });
+      if (editingLoadId) {
+        const { error } = await supabase.from("trucking_loads").update(loadData).eq("id", editingLoadId);
+        if (error) throw error;
+        toast({ title: "Load updated successfully" });
+      } else {
+        const { error } = await supabase.from("trucking_loads").insert(loadData);
+        if (error) throw error;
+        toast({ title: "Load created successfully" });
+      }
       onSuccess();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -136,7 +177,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Add New Load</DialogTitle>
+          <DialogTitle>{editingLoadId ? "Edit Load" : "Add New Load"}</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] pr-4">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -369,7 +410,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
                 Cancel
               </Button>
               <Button type="submit" disabled={loading} className="bg-green-500 hover:bg-green-600">
-                {loading ? "Creating..." : "Create Load"}
+                {loading ? (editingLoadId ? "Saving..." : "Creating...") : (editingLoadId ? "Save Changes" : "Create Load")}
               </Button>
             </div>
           </form>

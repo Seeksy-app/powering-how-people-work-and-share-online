@@ -59,6 +59,7 @@ export default function TruckingDashboardPage() {
   const [viewMode, setViewMode] = useState<"loads" | "leads">("loads");
   const [activeTab, setActiveTab] = useState("open");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingLoadId, setEditingLoadId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [aiCallsEnabled, setAiCallsEnabled] = useState(true);
   const [expandedLoadId, setExpandedLoadId] = useState<string | null>(null);
@@ -129,7 +130,8 @@ export default function TruckingDashboardPage() {
   };
 
   const handleEdit = (load: Load) => {
-    navigate(`/trucking/loads?edit=${load.id}`);
+    setEditingLoadId(load.id);
+    setDialogOpen(true);
   };
 
   const handleDuplicate = async (load: Load) => {
@@ -568,14 +570,19 @@ export default function TruckingDashboardPage() {
         </Card>
       )}
 
-      {/* Add Load Dialog */}
+      {/* Add/Edit Load Dialog */}
       <LoadFormDialog 
         open={dialogOpen} 
-        onOpenChange={setDialogOpen} 
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) setEditingLoadId(null);
+        }} 
         onSuccess={() => {
           fetchData();
           setDialogOpen(false);
+          setEditingLoadId(null);
         }}
+        editingLoadId={editingLoadId || undefined}
       />
     </div>
   );
