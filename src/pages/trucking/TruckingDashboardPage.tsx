@@ -242,30 +242,60 @@ export default function TruckingDashboardPage() {
       title="Dashboard" 
       description="Overview of your loads and leads"
       action={
-        <div className="flex items-center gap-3">
+        <Link to="/trucking/loads">
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Load
+          </Button>
+        </Link>
+      }
+    >
+      {/* Prominent AI Status Banner */}
+      <div className={`flex items-center justify-between rounded-xl p-4 ${isAiBusy ? 'bg-amber-50 border border-amber-200' : 'bg-green-50 border border-green-200'}`}>
+        <div className="flex items-center gap-4">
           {isAiBusy ? (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              AI Busy ({callMetrics.activeCallCount}/{callMetrics.maxConcurrentCalls})
-            </div>
+            <>
+              <div className="flex items-center justify-center h-12 w-12 rounded-full bg-amber-100">
+                <Loader2 className="h-6 w-6 text-amber-600 animate-spin" />
+              </div>
+              <div>
+                <div className="font-semibold text-amber-800 text-lg">AI Busy</div>
+                <div className="text-sm text-amber-600">
+                  {callMetrics.activeCallCount} of {callMetrics.maxConcurrentCalls} lines in use
+                </div>
+              </div>
+            </>
           ) : (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
-              </span>
-              AI Live
-            </div>
+            <>
+              <div className="flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
+                <span className="relative flex h-4 w-4">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex h-4 w-4 rounded-full bg-green-500" />
+                </span>
+              </div>
+              <div>
+                <div className="font-semibold text-green-800 text-lg">AI Live — Jess is Ready</div>
+                <div className="text-sm text-green-600">
+                  Answering carrier calls • {callMetrics.totalCallsToday} calls today
+                </div>
+              </div>
+            </>
           )}
+        </div>
+        <div className="flex items-center gap-4">
           <Link to="/trucking/loads">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Load
+            <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100">
+              See All Loads
+            </Button>
+          </Link>
+          <Link to="/trucking/leads">
+            <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100">
+              My Leads
             </Button>
           </Link>
         </div>
-      }
-    >
+      </div>
+
       {/* Compact Earnings Summary */}
       <div className="flex items-center justify-between text-sm text-slate-500 bg-slate-50 rounded-lg px-4 py-2">
         <div className="flex items-center gap-6">
@@ -353,37 +383,47 @@ export default function TruckingDashboardPage() {
               />
             ) : (
               <div className="divide-y divide-slate-100">
+                {/* Header Row */}
+                <div className="grid grid-cols-12 gap-4 px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wide bg-slate-50 border-b border-slate-200">
+                  <div className="col-span-1"></div>
+                  <div className="col-span-4">Load / Route</div>
+                  <div className="col-span-2 text-right">Rate</div>
+                  <div className="col-span-2 text-center">Status</div>
+                  <div className="col-span-2 text-center">Pickup</div>
+                  <div className="col-span-1"></div>
+                </div>
                 {loads.map((load) => (
                   <div key={load.id}>
                     {/* Load Row - Clickable to expand */}
                     <div 
-                      className="flex items-center justify-between p-4 hover:bg-slate-50 cursor-pointer transition-colors"
+                      className="grid grid-cols-12 gap-4 items-center p-4 hover:bg-slate-50 cursor-pointer transition-colors"
                       onClick={() => setExpandedLoadId(expandedLoadId === load.id ? null : load.id)}
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="col-span-1 flex justify-center">
                         {expandedLoadId === load.id ? (
                           <ChevronDown className="h-4 w-4 text-slate-400" />
                         ) : (
                           <ChevronRight className="h-4 w-4 text-slate-400" />
                         )}
-                        <div>
-                          <div className="font-semibold text-slate-900">{load.load_number}</div>
-                          <div className="text-sm text-slate-500 flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {load.origin_city}, {load.origin_state} → {load.destination_city}, {load.destination_state}
-                          </div>
+                      </div>
+                      <div className="col-span-4">
+                        <div className="font-semibold text-slate-900">{load.load_number}</div>
+                        <div className="text-sm text-slate-500 flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {load.origin_city}, {load.origin_state} → {load.destination_city}, {load.destination_state}
                         </div>
                       </div>
-                      <div className="flex items-center gap-6">
-                        <div className="text-right">
-                          <div className="font-semibold text-green-600">${load.target_rate?.toLocaleString() || "—"}</div>
-                          <div className="text-xs text-slate-500">{load.miles} mi</div>
-                        </div>
+                      <div className="col-span-2 text-right">
+                        <div className="font-semibold text-green-600">${load.target_rate?.toLocaleString() || "—"}</div>
+                        <div className="text-xs text-slate-500">{load.miles} mi</div>
+                      </div>
+                      <div className="col-span-2 text-center">
                         <Badge className={getStatusBadge(load.status)}>{load.status}</Badge>
-                        <div className="text-sm text-slate-500 w-16 text-right">
-                          {load.pickup_date ? format(new Date(load.pickup_date), "MMM d") : "—"}
-                        </div>
                       </div>
+                      <div className="col-span-2 text-center text-sm text-slate-600">
+                        {load.pickup_date ? format(new Date(load.pickup_date), "MMM d") : "—"}
+                      </div>
+                      <div className="col-span-1"></div>
                     </div>
                     
                     {/* Expanded Load Details */}
