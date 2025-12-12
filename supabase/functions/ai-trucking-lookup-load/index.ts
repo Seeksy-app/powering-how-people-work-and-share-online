@@ -43,10 +43,14 @@ serve(async (req) => {
 
     // Filter by load number if provided (override base query to search all statuses)
     if (load_number) {
+      // Normalize the load number by removing dashes, spaces, and other non-alphanumeric chars
+      const normalizedLoadNumber = load_number.replace(/[^a-zA-Z0-9]/g, '');
+      console.log('Normalized load_number:', normalizedLoadNumber);
+      
       query = supabase
         .from('trucking_loads')
         .select('*')
-        .ilike('load_number', `%${load_number}%`);
+        .ilike('load_number', `%${normalizedLoadNumber}%`);
     }
 
     // Filter by origin city if provided
