@@ -143,6 +143,7 @@ import AgencyDiscovery from "./pages/AgencyDiscovery";
 import RSSMigrationPage from "./pages/RSSMigrationPage";
 import PaidAdsTerms from "./pages/legal/PaidAdsTerms";
 import StockAgreementGenerator from "./pages/admin/legal/StockAgreementGenerator";
+import LegalTemplatesLibrary from "./pages/admin/legal/LegalTemplatesLibrary";
 import SignedConfirmation from "./pages/legal/SignedConfirmation";
 import DeclinedConfirmation from "./pages/legal/DeclinedConfirmation";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
@@ -1139,6 +1140,7 @@ const AppContent = () => {
             <Route path="/admin/hero-manager" element={<HeroManager />} />
             <Route path="/admin/brand-settings" element={<BrandSettings />} />
             <Route path="/admin/legal" element={<AdminLegal />} />
+            <Route path="/admin/legal/templates" element={<LegalTemplatesLibrary />} />
             <Route path="/admin/legal/generate-docx" element={<StockAgreementGenerator />} />
             <Route path="/admin/conversational-demo" element={<AdminConversationalDemo />} />
             <Route path="/admin/architecture" element={<SeeksyArchitecture />} />
