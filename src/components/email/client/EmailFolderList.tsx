@@ -43,14 +43,14 @@ const getActionItems = (isAdmin: boolean) => [
     id: "signature", 
     label: "Signature & Tracking", 
     icon: BarChart3, 
-    path: isAdmin ? "/admin/signatures" : "/signatures", 
+    path: "/email-settings?tab=signature", 
     defaultToAnalytics: true 
   },
   { 
     id: "settings", 
     label: "Settings", 
     icon: Settings, 
-    path: isAdmin ? "/admin/settings" : "/email-settings" 
+    path: "/email-settings" 
   },
 ];
 
