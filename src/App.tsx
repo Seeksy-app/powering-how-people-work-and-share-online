@@ -146,6 +146,7 @@ import StockPurchaseAgreement from "./pages/legal/StockPurchaseAgreement";
 import LegalTemplatesPage from "./pages/admin/LegalTemplatesPage";
 import LegalInstancesPage from "./pages/admin/LegalInstancesPage";
 import PurchaserAgreementPage from "./pages/legal/PurchaserAgreementPage";
+import ChairmanSignaturePage from "./pages/legal/ChairmanSignaturePage";
 import SubscriptionSettings from "./pages/SubscriptionSettings";
 // Holiday features completely disabled - removed all imports
 import { CommandPaletteProvider } from "./components/command/CommandPaletteProvider";
@@ -922,6 +923,7 @@ const AppContent = () => {
               
               {/* Legal Purchaser Page - Public with token */}
               <Route path="/legal/purchaser/:token" element={<PurchaserAgreementPage />} />
+              <Route path="/legal/chairman/:token" element={<ChairmanSignaturePage />} />
               
               {/* Podcast Studio Flow */}
               <Route path="/podcast-studio" element={<PodcastStudioHome />} />

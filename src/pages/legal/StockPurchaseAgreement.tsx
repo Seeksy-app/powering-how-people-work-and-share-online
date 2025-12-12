@@ -387,11 +387,17 @@ export default function StockPurchaseAgreement() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Signatures</CardTitle>
-                    <CardDescription>Sign the agreement as seller</CardDescription>
+                    <CardDescription>
+                      {instance.seller_signature_url && instance.purchaser_signature_url && instance.chairman_signature_url
+                        ? "All signatures collected - Agreement fully executed"
+                        : "Sign the agreement as seller"
+                      }
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* Seller Signature */}
                     <div>
-                      <p className="text-sm font-medium mb-2">Seller Signature</p>
+                      <p className="text-sm font-medium mb-2">1. Seller Signature</p>
                       {instance.seller_signature_url ? (
                         <div className="border rounded-md p-3 bg-muted/30">
                           <img src={instance.seller_signature_url} alt="Seller Signature" className="max-h-20 mx-auto" />
@@ -407,8 +413,9 @@ export default function StockPurchaseAgreement() {
                       )}
                     </div>
                     <Separator />
+                    {/* Purchaser Signature */}
                     <div>
-                      <p className="text-sm font-medium mb-2">Purchaser Signature</p>
+                      <p className="text-sm font-medium mb-2">2. Purchaser Signature (Buyer)</p>
                       {instance.purchaser_signature_url ? (
                         <div className="border rounded-md p-3 bg-muted/30">
                           <img src={instance.purchaser_signature_url} alt="Purchaser Signature" className="max-h-20 mx-auto" />
@@ -418,7 +425,49 @@ export default function StockPurchaseAgreement() {
                         </div>
                       ) : (
                         <div className="border rounded-md p-4 bg-muted/30 text-center text-sm text-muted-foreground">
-                          Awaiting purchaser signature
+                          Awaiting purchaser signature via invite link
+                        </div>
+                      )}
+                    </div>
+                    <Separator />
+                    {/* Chairman Signature - Only shows when both B/S have signed */}
+                    <div>
+                      <p className="text-sm font-medium mb-2">3. Chairman Signature (Agreed & Acknowledged)</p>
+                      {instance.chairman_signature_url ? (
+                        <div className="border rounded-md p-3 bg-muted/30">
+                          <img src={instance.chairman_signature_url} alt="Chairman Signature" className="max-h-20 mx-auto" />
+                          <p className="text-xs text-center text-muted-foreground mt-2">
+                            Signed {new Date(instance.chairman_signed_at!).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ) : instance.seller_signature_url && instance.purchaser_signature_url ? (
+                        <div className="space-y-2">
+                          <div className="border rounded-md p-4 bg-amber-50 dark:bg-amber-950/30 text-center">
+                            <p className="text-sm text-amber-800 dark:text-amber-200">
+                              Ready for Chairman signature
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {fieldValues.chairman_name ? `${fieldValues.chairman_name} (${fieldValues.chairman_email || 'no email'})` : 'No chairman configured'}
+                            </p>
+                          </div>
+                          {fieldValues.chairman_email && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full"
+                              onClick={() => {
+                                const chairmanLink = `${window.location.origin}/legal/chairman/${instance.invite_token}`;
+                                navigator.clipboard.writeText(chairmanLink);
+                                toast({ title: "Chairman link copied" });
+                              }}
+                            >
+                              Copy Chairman Signature Link
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="border rounded-md p-4 bg-muted/30 text-center text-sm text-muted-foreground">
+                          Awaiting Buyer & Seller signatures first
                         </div>
                       )}
                     </div>
