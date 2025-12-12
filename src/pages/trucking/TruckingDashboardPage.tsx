@@ -168,6 +168,22 @@ export default function TruckingDashboardPage() {
     }
   };
 
+  const handleEditLead = (lead: Lead) => {
+    // For now, just show a toast - can be expanded to open edit dialog
+    toast({ title: "Edit Lead", description: `Editing ${lead.company_name || 'lead'}...` });
+  };
+
+  const handleDeleteLead = async (id: string) => {
+    try {
+      const { error } = await supabase.from("trucking_carrier_leads").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Lead deleted" });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
   const formatRate = (load: Load) => {
     if (load.rate_type === "per_ton" && load.desired_rate_per_ton) {
       const total = load.desired_rate_per_ton * (load.tons || 0);
@@ -571,14 +587,28 @@ export default function TruckingDashboardPage() {
                         {format(new Date(lead.created_at), "MMM d, h:mm a")}
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
-                        <Button 
-                          size="sm" 
-                          onClick={() => confirmLead(lead)}
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                        >
-                          <CheckCircle2 className="h-4 w-4 mr-1" />
-                          Confirm
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => confirmLead(lead)} className="text-green-600">
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Confirm
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditLead(lead)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDeleteLead(lead.id)} className="text-red-600">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                     {expandedLeadId === lead.id && lead.trucking_loads && (

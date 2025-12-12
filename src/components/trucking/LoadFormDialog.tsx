@@ -47,6 +47,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
     target_rate: "",
     floor_rate: "",
     desired_rate_per_ton: "",
+    floor_rate_per_ton: "",
     tons: "",
     special_instructions: "",
   });
@@ -86,6 +87,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
         target_rate: data.target_rate?.toString() || "",
         floor_rate: data.floor_rate?.toString() || "",
         desired_rate_per_ton: data.desired_rate_per_ton?.toString() || "",
+        floor_rate_per_ton: data.floor_rate_per_ton?.toString() || "",
         tons: data.tons?.toString() || "",
         special_instructions: data.special_instructions || "",
       });
@@ -111,6 +113,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
       target_rate: "",
       floor_rate: "",
       desired_rate_per_ton: "",
+      floor_rate_per_ton: "",
       tons: "",
       special_instructions: "",
     });
@@ -142,6 +145,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
         target_rate: formData.target_rate ? parseFloat(formData.target_rate) : null,
         floor_rate: formData.floor_rate ? parseFloat(formData.floor_rate) : null,
         desired_rate_per_ton: formData.desired_rate_per_ton ? parseFloat(formData.desired_rate_per_ton) : null,
+        floor_rate_per_ton: formData.floor_rate_per_ton ? parseFloat(formData.floor_rate_per_ton) : null,
         tons: formData.tons ? parseFloat(formData.tons) : null,
         special_instructions: formData.special_instructions,
         status: "open",
@@ -361,17 +365,30 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="desired_rate_per_ton">Desired Rate ($/ton)</Label>
-                  <Input
-                    id="desired_rate_per_ton"
-                    type="number"
-                    step="0.01"
-                    value={formData.desired_rate_per_ton}
-                    onChange={(e) => setFormData({ ...formData, desired_rate_per_ton: e.target.value })}
-                    placeholder="e.g., 75"
-                  />
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="desired_rate_per_ton">Desired Rate ($/ton)</Label>
+                    <Input
+                      id="desired_rate_per_ton"
+                      type="number"
+                      step="0.01"
+                      value={formData.desired_rate_per_ton}
+                      onChange={(e) => setFormData({ ...formData, desired_rate_per_ton: e.target.value })}
+                      placeholder="e.g., 75"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="floor_rate_per_ton">Floor Rate ($/ton)</Label>
+                    <Input
+                      id="floor_rate_per_ton"
+                      type="number"
+                      step="0.01"
+                      value={formData.floor_rate_per_ton}
+                      onChange={(e) => setFormData({ ...formData, floor_rate_per_ton: e.target.value })}
+                      placeholder="e.g., 65"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="tons">Tons</Label>
