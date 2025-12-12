@@ -20,13 +20,22 @@ interface ExportData {
   accreditedDirector?: boolean;
   accreditedOther?: boolean;
   accreditedOtherText?: string;
+  // Signature fields
+  sellerSignatureUrl?: string;
+  purchaserSignatureUrl?: string;
+  chairmanSignatureUrl?: string;
+  chairmanName?: string;
+  chairmanTitle?: string;
+  sellerSignedAt?: string;
+  purchaserSignedAt?: string;
+  chairmanSignedAt?: string;
 }
 
 /**
  * Replace placeholders in body text with actual values
  */
 function renderBodyText(bodyText: string, data: ExportData): string {
-  return bodyText
+  let text = bodyText
     .replace(/\[PURCHASER_NAME\]/g, data.purchaserName)
     .replace(/\[PURCHASER_EMAIL\]/g, data.purchaserEmail)
     .replace(/\[PURCHASER_ADDRESS\]/g, data.purchaserAddress)
@@ -41,6 +50,16 @@ function renderBodyText(bodyText: string, data: ExportData): string {
     .replace(/\[ \] Individual with income exceeding/g, data.accreditedIncome ? '[X] Individual with income exceeding' : '[ ] Individual with income exceeding')
     .replace(/\[ \] Director, executive officer/g, data.accreditedDirector ? '[X] Director, executive officer' : '[ ] Director, executive officer')
     .replace(/\[ \] Other \(please specify\)/g, data.accreditedOther ? `[X] Other (please specify): ${data.accreditedOtherText || ''}` : '[ ] Other (please specify):');
+  
+  // Replace chairman placeholders if present
+  if (data.chairmanName) {
+    text = text.replace(/\[CHAIRMAN_NAME\]/g, data.chairmanName);
+  }
+  if (data.chairmanTitle) {
+    text = text.replace(/\[CHAIRMAN_TITLE\]/g, data.chairmanTitle);
+  }
+  
+  return text;
 }
 
 /**
@@ -53,6 +72,35 @@ function generateFilename(purchaserName: string, instanceId: string, extension: 
 }
 
 /**
+ * Check if a line should be centered
+ */
+function shouldCenter(line: string): boolean {
+  const trimmed = line.trim().toUpperCase();
+  const centeredPatterns = [
+    /^COMMON STOCK PURCHASE AGREEMENT$/,
+    /^RECITALS$/,
+    /^AGREEMENT$/,
+    /^EXHIBITS?$/,
+    /^EXHIBIT [A-Z]$/,
+    /^STOCK POWER$/,
+    /^JOINDER AGREEMENT$/,
+    /^ACCREDITED INVESTOR/,
+    /^\[SIGNATURE PAGE/,
+    /^\[REMAINDER OF PAGE/,
+    /^\[THIS PAGE INTENTIONALLY/,
+  ];
+  return centeredPatterns.some(p => p.test(trimmed));
+}
+
+/**
+ * Check if a line is a section header (should be bold)
+ */
+function isHeader(line: string): boolean {
+  const trimmed = line.trim();
+  return /^(\d+\.|SECTION|ARTICLE|RECITALS|AGREEMENT|EXHIBIT|STOCK POWER|JOINDER|ACCREDITED|COMMON STOCK|SELLER:|BUYER:|AGREED|IN WITNESS|NOW, THEREFORE)/i.test(trimmed);
+}
+
+/**
  * Export agreement as DOCX with proper page breaks
  */
 export async function exportToDocx(data: ExportData): Promise<void> {
@@ -60,22 +108,19 @@ export async function exportToDocx(data: ExportData): Promise<void> {
   
   const paragraphs: Paragraph[] = [];
   
-  // Title
-  paragraphs.push(
-    new Paragraph({
-      text: "COMMON STOCK PURCHASE AGREEMENT",
-      heading: HeadingLevel.HEADING_1,
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 400 },
-    })
-  );
-  
   const lines = renderedText.split('\n');
+  let skipNextIfDuplicate = '';
   
   for (const line of lines) {
     const trimmedLine = line.trim();
     
-    // Handle page break markers
+    // Skip duplicate titles (body_text may start with title that we already added)
+    if (skipNextIfDuplicate && trimmedLine === skipNextIfDuplicate) {
+      skipNextIfDuplicate = '';
+      continue;
+    }
+    
+    // Handle page break markers - just add one page break, not two
     if (trimmedLine.includes('[THIS PAGE INTENTIONALLY LEFT BLANK]')) {
       paragraphs.push(new Paragraph({ children: [new PageBreak()] }));
       paragraphs.push(
@@ -85,7 +130,6 @@ export async function exportToDocx(data: ExportData): Promise<void> {
           spacing: { before: 4000 },
         })
       );
-      paragraphs.push(new Paragraph({ children: [new PageBreak()] }));
       continue;
     }
     
@@ -97,7 +141,6 @@ export async function exportToDocx(data: ExportData): Promise<void> {
           spacing: { before: 400, after: 400 },
         })
       );
-      paragraphs.push(new Paragraph({ children: [new PageBreak()] }));
       continue;
     }
     
@@ -106,17 +149,16 @@ export async function exportToDocx(data: ExportData): Promise<void> {
       continue;
     }
     
-    // Check if it's a section header
-    const isHeader = /^(\d+\.|SECTION|ARTICLE|EXHIBIT|RECITALS|AGREEMENT)/i.test(trimmedLine);
-    const isCentered = /^(EXHIBIT|RECITALS|AGREEMENT|STOCK POWER|JOINDER AGREEMENT|ACCREDITED INVESTOR)/i.test(trimmedLine);
+    const isCentered = shouldCenter(trimmedLine);
+    const isBold = isHeader(trimmedLine);
     
     paragraphs.push(
       new Paragraph({
         children: [
           new TextRun({
             text: trimmedLine,
-            bold: isHeader,
-            size: isHeader ? 24 : 22,
+            bold: isBold,
+            size: isBold ? 24 : 22,
           }),
         ],
         alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
@@ -163,64 +205,83 @@ export async function exportToPdf(data: ExportData): Promise<void> {
   const pageHeight = pdf.internal.pageSize.getHeight();
   const bottomMargin = 25;
   
-  // Title
-  pdf.setFontSize(14);
-  pdf.setFont('helvetica', 'bold');
-  const title = "COMMON STOCK PURCHASE AGREEMENT";
-  const titleWidth = pdf.getTextWidth(title);
-  pdf.text(title, (pageWidth - titleWidth) / 2, yPosition);
-  yPosition += lineHeight * 3;
-  
-  // Body
   pdf.setFontSize(10);
   pdf.setFont('helvetica', 'normal');
   
   const lines = renderedText.split('\n');
+  let seenTitle = false;
   
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     const trimmedLine = line.trim();
     
-    // Check for page break markers
+    // Skip empty lines at the very end of the document
+    if (i === lines.length - 1 && !trimmedLine) {
+      continue;
+    }
+    
+    // Handle the main title specially - only render once and centered
+    if (trimmedLine === 'COMMON STOCK PURCHASE AGREEMENT') {
+      if (seenTitle) continue; // Skip duplicate
+      seenTitle = true;
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      const titleWidth = pdf.getTextWidth(trimmedLine);
+      pdf.text(trimmedLine, (pageWidth - titleWidth) / 2, yPosition);
+      yPosition += lineHeight * 3;
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      continue;
+    }
+    
+    // Check for intentionally blank page markers - render centered, then continue (no double page break)
     if (trimmedLine.includes('[THIS PAGE INTENTIONALLY LEFT BLANK]')) {
+      // Move to next page first
       pdf.addPage();
       yPosition = pageHeight / 2;
       pdf.setFont('helvetica', 'italic');
       const blankText = "[THIS PAGE INTENTIONALLY LEFT BLANK]";
       const blankWidth = pdf.getTextWidth(blankText);
       pdf.text(blankText, (pageWidth - blankWidth) / 2, yPosition);
-      pdf.addPage();
-      yPosition = margin;
       pdf.setFont('helvetica', 'normal');
+      // Do NOT add another page here - let natural flow continue
+      yPosition = pageHeight; // Force next content to new page
       continue;
     }
     
+    // Handle signature page markers
     if (trimmedLine.includes('[SIGNATURE PAGE') || trimmedLine.includes('[REMAINDER OF PAGE INTENTIONALLY LEFT BLANK]')) {
-      // Add signature page marker and force new page
       pdf.setFont('helvetica', 'italic');
-      const sigText = trimmedLine;
-      const sigWidth = pdf.getTextWidth(sigText);
-      pdf.text(sigText, (pageWidth - sigWidth) / 2, yPosition);
+      const sigWidth = pdf.getTextWidth(trimmedLine);
+      pdf.text(trimmedLine, (pageWidth - sigWidth) / 2, yPosition);
       yPosition += lineHeight * 2;
-      pdf.addPage();
-      yPosition = margin;
       pdf.setFont('helvetica', 'normal');
       continue;
     }
     
+    // Handle empty lines
     if (!trimmedLine) {
       yPosition += lineHeight;
+      // Check page break for empty lines too
+      if (yPosition > pageHeight - bottomMargin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
       continue;
     }
     
-    // Check if it's a section header
-    const isHeader = /^(\d+\.|SECTION|ARTICLE|RECITALS|AGREEMENT|EXHIBIT|STOCK POWER|JOINDER|ACCREDITED)/i.test(trimmedLine);
-    const isCentered = /^(EXHIBIT|RECITALS|AGREEMENT|STOCK POWER|JOINDER AGREEMENT|ACCREDITED INVESTOR)/i.test(trimmedLine);
+    const isCentered = shouldCenter(trimmedLine);
+    const isBold = isHeader(trimmedLine);
     
-    if (isHeader) {
+    if (isBold) {
       pdf.setFont('helvetica', 'bold');
-      yPosition += lineHeight; // Extra space before headers
+      // Check if it's a major section that needs larger font
+      if (/^(EXHIBIT [A-Z]|STOCK POWER|JOINDER AGREEMENT|ACCREDITED INVESTOR)$/i.test(trimmedLine)) {
+        pdf.setFontSize(12);
+      }
     } else {
       pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
     }
     
     // Split long lines
@@ -242,7 +303,9 @@ export async function exportToPdf(data: ExportData): Promise<void> {
       yPosition += lineHeight;
     }
     
-    yPosition += lineHeight * 0.5; // Paragraph spacing
+    // Reset font size after headers
+    pdf.setFontSize(10);
+    yPosition += lineHeight * 0.3; // Paragraph spacing
   }
   
   pdf.save(generateFilename(data.purchaserName, data.instanceId, 'pdf'));

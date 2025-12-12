@@ -298,6 +298,15 @@ export default function StockPurchaseAgreement() {
       accreditedDirector: fieldValues.accredited_director,
       accreditedOther: fieldValues.accredited_other,
       accreditedOtherText: fieldValues.accredited_other_text,
+      // Signature fields from instance
+      sellerSignatureUrl: instance?.seller_signature_url || undefined,
+      purchaserSignatureUrl: instance?.purchaser_signature_url || undefined,
+      chairmanSignatureUrl: instance?.chairman_signature_url || undefined,
+      chairmanName: fieldValues.chairman_name,
+      chairmanTitle: fieldValues.chairman_title,
+      sellerSignedAt: instance?.seller_signed_at || undefined,
+      purchaserSignedAt: instance?.purchaser_signed_at || undefined,
+      chairmanSignedAt: instance?.chairman_signed_at || undefined,
     };
     
     try {
