@@ -372,29 +372,31 @@ export async function exportToPdf(data: ExportData): Promise<void> {
   let seenTitle = false;
   let currentSection = '';
   
+  // Track if we're in the Joinder section (EXHIBIT C) - this is where chairman signature goes
+  let inJoinderSection = false;
+  
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmedLine = line.trim();
     
-    // Track section for signature context - improved chairman detection
+    // Track when we enter Joinder section
+    if (trimmedLine.includes('EXHIBIT C') || trimmedLine === 'JOINDER AGREEMENT') {
+      inJoinderSection = true;
+    }
+    
+    // Track section for signature context
     if (trimmedLine.includes('SELLER:') || trimmedLine.startsWith('SELLER')) {
       currentSection = 'seller';
     } else if (trimmedLine.includes('BUYER:') || trimmedLine.includes('BUYER') || trimmedLine.includes('[PURCHASER_NAME]')) {
       currentSection = 'purchaser';
-    } else if (trimmedLine.includes('PARADE DECK HOLDINGS') || trimmedLine.includes('Chairman') || trimmedLine.includes('Agreed and Acknowledged') || trimmedLine.includes('[CHAIRMAN_NAME]')) {
-      currentSection = 'chairman';
-    } else if (trimmedLine.includes('By:') && data.chairmanName && trimmedLine.includes(data.chairmanName)) {
-      currentSection = 'chairman';
-    } else if (trimmedLine.includes('Name:') && data.chairmanName && trimmedLine.includes(data.chairmanName)) {
-      currentSection = 'chairman';
     } else if (trimmedLine.includes('EXHIBIT A') || trimmedLine.includes('STOCK POWER')) {
       currentSection = 'seller';
     } else if (trimmedLine.includes('EXHIBIT B') || trimmedLine.includes('EXHIBIT C') || trimmedLine.includes('JOINDER')) {
       currentSection = 'purchaser';
     }
     
-    // Insert chairman signature after "By: [Chairman Name]" line (no underline in template)
-    if (currentSection === 'chairman' && trimmedLine.startsWith('By:') && data.chairmanName && trimmedLine.includes(data.chairmanName) && signatureImages.chairman) {
+    // Chairman signature ONLY appears in Joinder section (EXHIBIT C) after "By: [Chairman Name]"
+    if (inJoinderSection && trimmedLine.startsWith('By:') && data.chairmanName && trimmedLine.includes(data.chairmanName) && signatureImages.chairman) {
       // First render the "By:" line
       if (yPosition > pageHeight - bottomMargin) {
         pdf.addPage();
@@ -415,7 +417,7 @@ export async function exportToPdf(data: ExportData): Promise<void> {
       } catch (e) {
         console.error('Failed to add chairman signature image:', e);
       }
-      continue; // Skip the normal rendering of this line since we already rendered it
+      continue;
     }
     
     // Skip empty lines at the very end of the document
@@ -451,12 +453,24 @@ export async function exportToPdf(data: ExportData): Promise<void> {
     }
     
     // Handle signature page markers
-    if (trimmedLine.includes('[SIGNATURE PAGE') || trimmedLine.includes('[REMAINDER OF PAGE INTENTIONALLY LEFT BLANK]')) {
+    if (trimmedLine.includes('[SIGNATURE PAGE')) {
       pdf.setFont('helvetica', 'italic');
       const sigWidth = pdf.getTextWidth(trimmedLine);
       pdf.text(trimmedLine, (pageWidth - sigWidth) / 2, yPosition);
       yPosition += lineHeight * 2;
       pdf.setFont('helvetica', 'normal');
+      continue;
+    }
+    
+    // Handle "[REMAINDER OF PAGE INTENTIONALLY LEFT BLANK]" - render it and force new page
+    if (trimmedLine.includes('[REMAINDER OF PAGE INTENTIONALLY LEFT BLANK]')) {
+      pdf.setFont('helvetica', 'italic');
+      const sigWidth = pdf.getTextWidth(trimmedLine);
+      pdf.text(trimmedLine, (pageWidth - sigWidth) / 2, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      // Force a new page - nothing else should appear on this page
+      pdf.addPage();
+      yPosition = margin;
       continue;
     }
     
