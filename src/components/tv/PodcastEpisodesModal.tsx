@@ -88,27 +88,7 @@ export function PodcastEpisodesModal({
                 {podcast.title}
               </DialogTitle>
               <p className="text-gray-400 text-sm mb-3">by {podcast.author}</p>
-              <div className="flex items-center gap-2">
-                {podcast.websiteUrl && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-white/20 text-white hover:bg-white/10 text-xs"
-                    onClick={() => window.open(podcast.websiteUrl, "_blank")}
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Visit Website
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-amber-500/50 text-amber-400 hover:bg-amber-500/10 text-xs"
-                >
-                  <Heart className="h-3 w-3 mr-1" />
-                  Follow
-                </Button>
-              </div>
+              {/* Buttons removed per request */}
             </div>
           </div>
         </div>

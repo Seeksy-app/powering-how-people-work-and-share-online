@@ -304,7 +304,7 @@ export default function SeeksyTVHome() {
             <nav className="hidden md:flex items-center gap-6">
               <a href="#" className="text-white font-medium hover:text-amber-400 transition-colors">Home</a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors">Shows</a>
-              <a href="#podcasts" className="text-gray-400 hover:text-white transition-colors">Podcasts</a>
+              <a href="#featured-podcasts" className="text-gray-400 hover:text-white transition-colors">Podcasts</a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors">Clips</a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors">Live</a>
               <a href="#" className="text-gray-400 hover:text-white transition-colors">My List</a>
@@ -338,12 +338,14 @@ export default function SeeksyTVHome() {
 
       {/* Netflix-Style Hero with Mosaic Background */}
       <section className="relative w-full min-h-[85vh] overflow-hidden">
-        {/* Hero Background Image */}
-        <div className="absolute inset-0">
+        {/* Hero Background Image - preloaded via link tag for faster loading */}
+        <div className="absolute inset-0 bg-[#0a0a14]">
           <img 
             src={seeksyTVHeroBg} 
             alt="Seeksy TV Shows" 
             className="w-full h-full object-cover object-center"
+            loading="eager"
+            fetchPriority="high"
           />
           
           {/* Light gradient overlay - image is already dark */}
@@ -411,7 +413,7 @@ export default function SeeksyTVHome() {
       {/* Trending Now - Netflix Style with Big Numbers */}
       <section className="py-8">
         <div className="container mx-auto px-4 mb-4">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white justify-start">
             <Flame className="h-6 w-6 text-amber-400" />
             Trending Now
           </h2>
@@ -489,10 +491,10 @@ export default function SeeksyTVHome() {
       </section>
 
       {/* Featured Podcasts */}
-      <section id="podcasts" className="py-8">
+      <section id="featured-podcasts" className="py-8 scroll-mt-24">
         <div className="container mx-auto px-4 mb-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white">
+            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white justify-start">
               <Podcast className="h-6 w-6 text-amber-400" />
               Featured Podcasts
             </h2>
@@ -577,7 +579,7 @@ export default function SeeksyTVHome() {
       {/* Popular Channels Grid */}
       <section className="py-8">
         <div className="container mx-auto px-4 mb-6">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white justify-start">
             <Film className="h-6 w-6 text-amber-400" />
             Popular Channels
           </h2>
@@ -628,7 +630,7 @@ export default function SeeksyTVHome() {
       {/* Trending Creators */}
       <section className="py-8 mb-8">
         <div className="container mx-auto px-4 mb-4">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white justify-start">
             <TrendingUp className="h-6 w-6 text-amber-400" />
             Trending This Week
           </h2>

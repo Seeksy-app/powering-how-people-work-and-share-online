@@ -56,12 +56,12 @@ export default function SeeksyTVPodcasts() {
                   className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:ring-amber-500 h-9"
                 />
               </div>
-              <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
+              <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white hover:bg-white/10">
                 <Bell className="h-5 w-5" />
               </Button>
               <Button 
                 variant="default" 
-                className="bg-amber-500 hover:bg-amber-600 text-white"
+                className="bg-amber-500 hover:bg-amber-600 text-white font-medium"
                 onClick={() => navigate("/auth")}
               >
                 Sign In
