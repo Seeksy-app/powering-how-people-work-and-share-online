@@ -28335,6 +28335,255 @@ export type Database = {
         }
         Relationships: []
       }
+      v_seeksy_tv_ad_clicks_by_placement: {
+        Row: {
+          ad_id: string | null
+          channel_id: string | null
+          clicks: number | null
+          placement_id: string | null
+          video_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seeksy_tv_ad_clicks_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "seeksy_tv_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_clicks_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "tv_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_clicks_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "seeksy_tv_ad_placements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_clicks_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "tv_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_seeksy_tv_ad_event_rollup_by_placement: {
+        Row: {
+          ad_id: string | null
+          channel_id: string | null
+          completes: number | null
+          errors: number | null
+          placement_id: string | null
+          q25: number | null
+          q50: number | null
+          q75: number | null
+          skips: number | null
+          starts: number | null
+          video_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seeksy_tv_ad_events_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "seeksy_tv_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_events_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "tv_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_events_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "seeksy_tv_ad_placements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_events_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "tv_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_seeksy_tv_ad_events_norm: {
+        Row: {
+          ad_id: string | null
+          at_second: number | null
+          channel_id: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          error_code: string | null
+          event_type: string | null
+          id: string | null
+          ip_hash: string | null
+          placement_id: string | null
+          play_key: string | null
+          position: string | null
+          user_id: string | null
+          video_id: string | null
+          viewer_session_id: string | null
+        }
+        Insert: {
+          ad_id?: string | null
+          at_second?: number | null
+          channel_id?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_code?: string | null
+          event_type?: string | null
+          id?: string | null
+          ip_hash?: string | null
+          placement_id?: string | null
+          play_key?: never
+          position?: string | null
+          user_id?: string | null
+          video_id?: string | null
+          viewer_session_id?: string | null
+        }
+        Update: {
+          ad_id?: string | null
+          at_second?: number | null
+          channel_id?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_code?: string | null
+          event_type?: string | null
+          id?: string | null
+          ip_hash?: string | null
+          placement_id?: string | null
+          play_key?: never
+          position?: string | null
+          user_id?: string | null
+          video_id?: string | null
+          viewer_session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seeksy_tv_ad_events_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "seeksy_tv_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_events_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "tv_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_events_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "seeksy_tv_ad_placements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_events_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "tv_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_seeksy_tv_ad_impressions_by_placement: {
+        Row: {
+          ad_id: string | null
+          channel_id: string | null
+          impressions: number | null
+          placement_id: string | null
+          video_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seeksy_tv_ad_impressions_ad_id_fkey"
+            columns: ["ad_id"]
+            isOneToOne: false
+            referencedRelation: "seeksy_tv_ads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_impressions_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "tv_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_impressions_placement_id_fkey"
+            columns: ["placement_id"]
+            isOneToOne: false
+            referencedRelation: "seeksy_tv_ad_placements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seeksy_tv_ad_impressions_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "tv_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_seeksy_tv_ad_kpis: {
+        Row: {
+          clicks: number | null
+          completes: number | null
+          completion_rate: number | null
+          ctr: number | null
+          error_rate: number | null
+          errors: number | null
+          impressions: number | null
+          q25: number | null
+          q50: number | null
+          q75: number | null
+          skip_rate: number | null
+          skips: number | null
+          spend: number | null
+          starts: number | null
+        }
+        Relationships: []
+      }
+      v_seeksy_tv_ad_metrics_by_placement: {
+        Row: {
+          ad_id: string | null
+          channel_id: string | null
+          clicks: number | null
+          completes: number | null
+          completion_rate: number | null
+          cpm: number | null
+          ctr: number | null
+          error_rate: number | null
+          errors: number | null
+          impressions: number | null
+          placement_id: string | null
+          q25: number | null
+          q50: number | null
+          q75: number | null
+          skip_rate: number | null
+          skips: number | null
+          spend: number | null
+          starts: number | null
+          video_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_to_system_list: {
