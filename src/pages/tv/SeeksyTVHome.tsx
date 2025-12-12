@@ -7,12 +7,14 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { 
   Search, Bell, Tv, Radio, Scissors, 
   Star, TrendingUp, Sparkles, Film,
-  Flame, Clock, Award, Play, ChevronRight
+  Flame, Clock, Award, Play, ChevronRight, Podcast
 } from "lucide-react";
 import { TVFooter } from "@/components/tv/TVFooter";
 import { TVHeroPlayer } from "@/components/tv/TVHeroPlayer";
 import { TVContentRow } from "@/components/tv/TVContentRow";
 import { TVCreatorCard } from "@/components/tv/TVCreatorCard";
+import { PodcastEpisodesModal } from "@/components/tv/PodcastEpisodesModal";
+import { useFeaturedPodcasts, FeaturedPodcast } from "@/hooks/useFeaturedPodcasts";
 import americanWarriorsPoster from "@/assets/tv/american-warriors.png";
 import personalBrandPoster from "@/assets/tv/poster-personal-brand.png";
 import echoesOfMidnightPoster from "@/assets/tv/poster-echoes-midnight.png";
@@ -32,17 +34,17 @@ const categories = [
 // Demo content for placeholders - American Warriors is ALWAYS first and links to channel with all episodes
 const demoThumbnails = [
   { id: "channel-american-warriors", title: "American Warriors", gradient: "from-blue-800 to-slate-900", imageUrl: americanWarriorsPoster, linkType: "channel", channelSlug: "american-warriors", priority: 1 },
-  { id: "demo-2", title: "Building a Personal Brand", gradient: "from-blue-600 to-cyan-600", imageUrl: personalBrandPoster, linkType: "none", priority: 10 },
-  { id: "demo-3", title: "Echoes of Midnight", gradient: "from-green-600 to-teal-600", imageUrl: echoesOfMidnightPoster, linkType: "none" },
-  { id: "demo-4", title: "Meditation for Professionals", gradient: "from-orange-600 to-red-600", imageUrl: meditationPoster, linkType: "none" },
-  { id: "demo-5", title: "Midnight Echoes Live", gradient: "from-pink-600 to-purple-600", imageUrl: midnightEchoesLivePoster, linkType: "none" },
-  { id: "demo-6", title: "Fight Night Live", gradient: "from-gray-700 to-gray-900", imageUrl: fightNightPoster, linkType: "none" },
-  { id: "demo-7", title: "Startup Stories", gradient: "from-amber-600 to-orange-600", linkType: "none" },
-  { id: "demo-8", title: "Design Systems", gradient: "from-indigo-600 to-blue-600", linkType: "none" },
-  { id: "demo-9", title: "Health & Science", gradient: "from-teal-600 to-green-600", linkType: "none" },
-  { id: "demo-10", title: "Leadership", gradient: "from-red-600 to-pink-600", linkType: "none" },
-  { id: "demo-11", title: "Marketing Pro", gradient: "from-cyan-600 to-blue-600", linkType: "none" },
-  { id: "demo-12", title: "AI Frontiers", gradient: "from-violet-600 to-purple-600", linkType: "none" },
+  { id: "demo-2", title: "Building a Personal Brand", gradient: "from-blue-600 to-cyan-600", imageUrl: personalBrandPoster, linkType: "watch", priority: 10 },
+  { id: "demo-3", title: "Echoes of Midnight", gradient: "from-green-600 to-teal-600", imageUrl: echoesOfMidnightPoster, linkType: "watch" },
+  { id: "demo-4", title: "Meditation for Professionals", gradient: "from-orange-600 to-red-600", imageUrl: meditationPoster, linkType: "watch" },
+  { id: "demo-5", title: "Midnight Echoes Live", gradient: "from-pink-600 to-purple-600", imageUrl: midnightEchoesLivePoster, linkType: "watch" },
+  { id: "demo-6", title: "Fight Night Live", gradient: "from-gray-700 to-gray-900", imageUrl: fightNightPoster, linkType: "watch" },
+  { id: "demo-7", title: "Startup Stories", gradient: "from-amber-600 to-orange-600", linkType: "watch" },
+  { id: "demo-8", title: "Design Systems", gradient: "from-indigo-600 to-blue-600", linkType: "watch" },
+  { id: "demo-9", title: "Health & Science", gradient: "from-teal-600 to-green-600", linkType: "watch" },
+  { id: "demo-10", title: "Leadership", gradient: "from-red-600 to-pink-600", linkType: "watch" },
+  { id: "demo-11", title: "Marketing Pro", gradient: "from-cyan-600 to-blue-600", linkType: "watch" },
+  { id: "demo-12", title: "AI Frontiers", gradient: "from-violet-600 to-purple-600", linkType: "watch" },
 ];
 
 const demoEpisodes = [
@@ -253,6 +255,13 @@ export default function SeeksyTVHome() {
     }
   });
 
+  // Featured podcasts from CSV
+  const { podcasts: featuredPodcasts, isLoading: podcastsLoading } = useFeaturedPodcasts(6);
+  
+  // Podcast modal state
+  const [selectedPodcast, setSelectedPodcast] = useState<FeaturedPodcast | null>(null);
+  const [podcastModalOpen, setPodcastModalOpen] = useState(false);
+
   // Use demo content when no real content exists
   const displayTrending = trendingContent?.length ? trendingContent : demoEpisodes;
   const displayEpisodes = latestEpisodes?.length ? latestEpisodes : demoEpisodes;
@@ -425,16 +434,16 @@ export default function SeeksyTVHome() {
             const handleClick = () => {
               if (demoItem?.linkType === "channel" && demoItem?.channelSlug) {
                 navigate(`/tv/channel/${demoItem.channelSlug}`);
-              } else if (demoItem?.linkType !== "none" && item.id && !item.id.startsWith('ep-')) {
-                navigate(`/tv/watch/${item.id}`);
+              } else {
+                // All other items now navigate to watch page
+                navigate(`/tv/watch/${demoItem?.id || item.id}`);
               }
-              // For linkType "none", do nothing on click
             };
             
             return (
               <div 
                 key={isAmericanWarriors ? 'american-warriors' : item.id}
-                className={`shrink-0 w-48 md:w-56 group relative ${demoItem?.linkType !== "none" ? "cursor-pointer" : ""}`}
+                className="shrink-0 w-48 md:w-56 group relative cursor-pointer"
                 onClick={handleClick}
               >
                 {/* Big Rank Number */}
@@ -479,25 +488,74 @@ export default function SeeksyTVHome() {
         </div>
       </section>
 
-      {/* Featured Creators */}
+      {/* Featured Podcasts */}
       <section className="py-8">
         <div className="container mx-auto px-4 mb-4">
-          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white">
-            <Star className="h-6 w-6 text-amber-400" />
-            Featured Creators
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 text-white">
+              <Podcast className="h-6 w-6 text-amber-400" />
+              Featured Podcasts
+            </h2>
+            <Button 
+              variant="ghost" 
+              className="text-amber-400 hover:text-amber-300 hover:bg-white/5"
+              onClick={() => navigate("/tv/browse?type=podcasts")}
+            >
+              See More <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
         </div>
         <div className="flex gap-4 overflow-x-auto px-4 pb-4 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
-          {displayCreators.map((creator) => (
-            <TVCreatorCard
-              key={creator.id}
-              {...creator}
-              onClick={() => navigate(`/tv/channel/${creator.slug || creator.id}`)}
-              variant="featured"
-            />
-          ))}
+          {podcastsLoading ? (
+            <div className="text-gray-400 text-sm">Loading podcasts...</div>
+          ) : featuredPodcasts.length > 0 ? (
+            featuredPodcasts.map((podcast) => (
+              <div 
+                key={podcast.id}
+                className="shrink-0 w-48 group cursor-pointer"
+                onClick={() => {
+                  setSelectedPodcast(podcast);
+                  setPodcastModalOpen(true);
+                }}
+              >
+                <div className="aspect-square rounded-xl overflow-hidden ring-2 ring-transparent group-hover:ring-amber-500/50 transition-all shadow-lg">
+                  {podcast.imageUrl ? (
+                    <img 
+                      src={podcast.imageUrl} 
+                      alt={podcast.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white/60 bg-gradient-to-br from-primary/20 to-primary/40">
+                      {podcast.title.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <h3 className="mt-3 font-semibold text-white group-hover:text-amber-400 transition-colors line-clamp-1">
+                  {podcast.title}
+                </h3>
+                <p className="text-sm text-gray-400 line-clamp-1">{podcast.author}</p>
+              </div>
+            ))
+          ) : (
+            displayCreators.map((creator) => (
+              <TVCreatorCard
+                key={creator.id}
+                {...creator}
+                onClick={() => navigate(`/tv/channel/${creator.slug || creator.id}`)}
+                variant="featured"
+              />
+            ))
+          )}
         </div>
       </section>
+
+      {/* Podcast Episodes Modal */}
+      <PodcastEpisodesModal
+        open={podcastModalOpen}
+        onOpenChange={setPodcastModalOpen}
+        podcast={selectedPodcast}
+      />
 
       {/* Latest Episodes */}
       <TVContentRow
