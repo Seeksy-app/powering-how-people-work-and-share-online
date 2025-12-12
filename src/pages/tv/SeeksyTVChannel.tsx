@@ -13,6 +13,8 @@ import {
 import { Tv } from "lucide-react";
 import { TVFooter } from "@/components/tv/TVFooter";
 import americanWarriorsLogo from "@/assets/american-warriors-logo.png";
+import awAvatar from "@/assets/aw-avatar.png";
+import awHero from "@/assets/aw-hero.png";
 
 export default function SeeksyTVChannel() {
   const { channelId } = useParams();
@@ -77,7 +79,8 @@ export default function SeeksyTVChannel() {
   
   // Check if this is American Warriors channel for custom styling
   const isAmericanWarriors = channelId === "american-warriors" || channel.slug === "american-warriors";
-  const avatarImage = isAmericanWarriors ? americanWarriorsLogo : channel.avatar_url;
+  const avatarImage = isAmericanWarriors ? awAvatar : channel.avatar_url;
+  const heroImage = isAmericanWarriors ? awHero : channel.cover_url;
 
   return (
     <div className="min-h-screen bg-[#0a0a14] text-white">
@@ -115,14 +118,11 @@ export default function SeeksyTVChannel() {
       {/* Cover Image / Backdrop */}
       <div className="relative h-64 md:h-80">
         <div className={`absolute inset-0 ${isAmericanWarriors ? 'bg-gradient-to-r from-[#1a3a5c] via-[#2d5a87] to-[#053877]' : 'bg-gradient-to-r from-[#053877] to-[#2C6BED]'}`}>
-          {channel.cover_url ? (
-            <img src={channel.cover_url} alt="" className="w-full h-full object-cover opacity-50" />
-          ) : isAmericanWarriors ? (
-            /* American Warriors special backdrop with flag-like gradient */
-            <div className="w-full h-full bg-gradient-to-br from-[#8b4513]/30 via-[#1a3a5c]/60 to-[#2d5a87] opacity-80" />
+          {heroImage ? (
+            <img src={heroImage} alt="" className="w-full h-full object-cover" />
           ) : null}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a14] to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a14] via-[#0a0a14]/50 to-transparent" />
       </div>
 
       {/* Creator Info */}
@@ -161,10 +161,10 @@ export default function SeeksyTVChannel() {
                 >
                   {isFollowing ? "Following" : "Follow"}
                 </Button>
-                <Button variant="outline" size="icon" className="border-white/20 text-white hover:bg-white/10">
+                <Button variant="outline" size="icon" className="border-white/20 bg-white/10 text-white hover:bg-white/20">
                   <Bell className="h-4 w-4" />
                 </Button>
-                <Button variant="outline" size="icon" className="border-white/20 text-white hover:bg-white/10">
+                <Button variant="outline" size="icon" className="border-white/20 bg-white/10 text-white hover:bg-white/20">
                   <Share2 className="h-4 w-4" />
                 </Button>
               </div>
