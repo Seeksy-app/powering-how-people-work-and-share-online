@@ -317,10 +317,10 @@ export default function PendingInvestments() {
 
   const getStatusBadge = (status: string, signwellStatus?: string) => {
     if (signwellStatus === "sent" || status === "pending_signatures") {
-      return <Badge className="bg-amber-100 text-amber-700 border-amber-200"><Send className="h-3 w-3 mr-1" /> Awaiting Signatures</Badge>;
+      return <Badge className="bg-green-100 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" /> Active</Badge>;
     }
     if (signwellStatus === "partially_signed") {
-      return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" /> Partially Signed</Badge>;
+      return <Badge className="bg-green-100 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" /> Active</Badge>;
     }
     if (status === "completed") {
       return <Badge variant="default"><CheckCircle className="h-3 w-3 mr-1" /> Completed</Badge>;
@@ -328,8 +328,8 @@ export default function PendingInvestments() {
     if (status === "declined") {
       return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Declined</Badge>;
     }
-    // Pending status = Not Shared yet
-    return <Badge variant="outline" className="bg-muted/50 text-muted-foreground"><FileX className="h-3 w-3 mr-1" /> Not Shared</Badge>;
+    // Pending status = Editable
+    return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
   };
 
   const handleCopyLink = (investment: PendingInvestment) => {
@@ -339,7 +339,12 @@ export default function PendingInvestments() {
   };
 
   const handleDelete = async (investment: PendingInvestment) => {
-    if (!confirm(`Are you sure you want to delete the application for ${investment.recipient_name || investment.field_values_json.purchaser_name}?`)) {
+    // Only allow deletion of pending investments
+    if (investment.status !== "pending") {
+      toast.error("Only pending applications can be deleted. This application has already been shared.");
+      return;
+    }
+    if (!confirm(`Are you sure you want to delete the application for ${investment.recipient_name || investment.field_values_json.purchaser_name}? This cannot be undone.`)) {
       return;
     }
     try {
@@ -623,15 +628,17 @@ export default function PendingInvestments() {
                                 View
                               </Button>
                             )}
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDelete(inv)}
-                              title="Delete application"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {inv.status === "pending" && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDelete(inv)}
+                                title="Delete application"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
