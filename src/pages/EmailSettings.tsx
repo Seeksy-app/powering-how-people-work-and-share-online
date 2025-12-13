@@ -24,7 +24,11 @@ import {
   Shield, 
   Plus,
   RefreshCw,
-  Save
+  Save,
+  TrendingUp,
+  Send,
+  Eye,
+  MousePointer
 } from "lucide-react";
 import { GoogleVerifiedBadge } from "@/components/ui/google-verified-badge";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -302,6 +306,13 @@ export default function EmailSettings() {
                 Tracking
               </TabsTrigger>
               <TabsTrigger 
+                value="analytics"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-5 py-2.5 rounded-lg"
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger 
                 value="deliverability"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1e3a8a] data-[state=active]:to-[#1e40af] data-[state=active]:text-white px-5 py-2.5 rounded-lg opacity-60"
                 disabled
@@ -537,6 +548,115 @@ export default function EmailSettings() {
                     </div>
                     <Switch defaultChecked />
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="mt-6 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Email Tracking Analytics
+                  </CardTitle>
+                  <CardDescription>
+                    Track opens, clicks, and engagement
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="border-2 border-dashed border-primary/20">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-lg bg-primary/10">
+                            <Send className="h-6 w-6 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-3xl font-bold">0</p>
+                            <p className="text-sm text-muted-foreground">Total Events</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-2 border-dashed border-primary/20">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-lg bg-green-100">
+                            <Eye className="h-6 w-6 text-green-600" />
+                          </div>
+                          <div>
+                            <p className="text-3xl font-bold">0</p>
+                            <p className="text-sm text-muted-foreground">Opens</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-2 border-dashed border-primary/20">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-lg bg-blue-100">
+                            <MousePointer className="h-6 w-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-3xl font-bold">0</p>
+                            <p className="text-sm text-muted-foreground">Clicks</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Sub-tabs */}
+                  <Tabs defaultValue="overview" className="w-full">
+                    <TabsList className="grid w-full grid-cols-5 max-w-lg">
+                      <TabsTrigger value="overview">Overview</TabsTrigger>
+                      <TabsTrigger value="clicks">Clicks</TabsTrigger>
+                      <TabsTrigger value="activity">Activity</TabsTrigger>
+                      <TabsTrigger value="delivery">Delivery</TabsTrigger>
+                      <TabsTrigger value="notifications">Notifications</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="overview" className="mt-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg">Email Activity</CardTitle>
+                          <CardDescription>Opens and clicks over time</CardDescription>
+                        </CardHeader>
+                        <CardContent className="h-48 flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
+                          No activity data yet
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                    <TabsContent value="clicks" className="mt-4">
+                      <Card>
+                        <CardContent className="py-8 text-center text-muted-foreground">
+                          No click data available
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                    <TabsContent value="activity" className="mt-4">
+                      <Card>
+                        <CardContent className="py-8 text-center text-muted-foreground">
+                          No activity data available
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                    <TabsContent value="delivery" className="mt-4">
+                      <Card>
+                        <CardContent className="py-8 text-center text-muted-foreground">
+                          No delivery data available
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                    <TabsContent value="notifications" className="mt-4">
+                      <Card>
+                        <CardContent className="py-8 text-center text-muted-foreground">
+                          No notifications configured
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </TabsContent>
