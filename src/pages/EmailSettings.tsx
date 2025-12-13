@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Helmet } from "react-helmet";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { SubscriberListManager } from "@/components/email/SubscriberListManager";
+import { SignatureAnalytics } from "@/components/signatures/SignatureAnalytics";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Mail, 
@@ -25,14 +26,10 @@ import {
   Plus,
   RefreshCw,
   Save,
-  TrendingUp,
-  Send,
-  Eye,
-  MousePointer
+  TrendingUp
 } from "lucide-react";
 import { GoogleVerifiedBadge } from "@/components/ui/google-verified-badge";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
 import gmailIcon from "@/assets/gmail-icon.png";
 import {
   Dialog,
@@ -81,17 +78,17 @@ export default function EmailSettings() {
     enabled: !!user,
   });
 
-  // Fetch email signatures
+  // Fetch email signatures (full data for analytics)
   const { data: signatures = [] } = useQuery({
-    queryKey: ["email-signatures-list"],
+    queryKey: ["email-signatures-full", user?.id],
     queryFn: async () => {
       if (!user) return [];
       
       const { data } = await supabase
         .from("email_signatures")
-        .select("id, name, is_active")
+        .select("*")
         .eq("user_id", user.id)
-        .order("name");
+        .order("created_at", { ascending: false });
       
       return data || [];
     },
@@ -553,112 +550,8 @@ export default function EmailSettings() {
             </TabsContent>
 
             {/* Analytics Tab */}
-            <TabsContent value="analytics" className="mt-6 space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5" />
-                    Email Tracking Analytics
-                  </CardTitle>
-                  <CardDescription>
-                    Track opens, clicks, and engagement
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Stats Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card className="border-2 border-dashed border-primary/20">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center gap-4">
-                          <div className="p-3 rounded-lg bg-primary/10">
-                            <Send className="h-6 w-6 text-primary" />
-                          </div>
-                          <div>
-                            <p className="text-3xl font-bold">0</p>
-                            <p className="text-sm text-muted-foreground">Total Events</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-2 border-dashed border-primary/20">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center gap-4">
-                          <div className="p-3 rounded-lg bg-green-100">
-                            <Eye className="h-6 w-6 text-green-600" />
-                          </div>
-                          <div>
-                            <p className="text-3xl font-bold">0</p>
-                            <p className="text-sm text-muted-foreground">Opens</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="border-2 border-dashed border-primary/20">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center gap-4">
-                          <div className="p-3 rounded-lg bg-blue-100">
-                            <MousePointer className="h-6 w-6 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="text-3xl font-bold">0</p>
-                            <p className="text-sm text-muted-foreground">Clicks</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Sub-tabs */}
-                  <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-5 max-w-lg">
-                      <TabsTrigger value="overview">Overview</TabsTrigger>
-                      <TabsTrigger value="clicks">Clicks</TabsTrigger>
-                      <TabsTrigger value="activity">Activity</TabsTrigger>
-                      <TabsTrigger value="delivery">Delivery</TabsTrigger>
-                      <TabsTrigger value="notifications">Notifications</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="overview" className="mt-4">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Email Activity</CardTitle>
-                          <CardDescription>Opens and clicks over time</CardDescription>
-                        </CardHeader>
-                        <CardContent className="h-48 flex items-center justify-center text-muted-foreground border-2 border-dashed rounded-lg">
-                          No activity data yet
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                    <TabsContent value="clicks" className="mt-4">
-                      <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                          No click data available
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                    <TabsContent value="activity" className="mt-4">
-                      <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                          No activity data available
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                    <TabsContent value="delivery" className="mt-4">
-                      <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                          No delivery data available
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                    <TabsContent value="notifications" className="mt-4">
-                      <Card>
-                        <CardContent className="py-8 text-center text-muted-foreground">
-                          No notifications configured
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
+            <TabsContent value="analytics" className="mt-6">
+              <SignatureAnalytics signatures={signatures} />
             </TabsContent>
 
             {/* Deliverability Tab - Placeholder */}
