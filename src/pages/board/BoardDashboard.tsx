@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { BoardPageHeader } from '@/components/board/BoardPageHeader';
 import { BoardFloatingAIButton } from '@/components/board/BoardFloatingAIButton';
 import { BoardAISlidePanel } from '@/components/board/BoardAISlidePanel';
+import { MarketIntelligenceWidget } from '@/components/market-intelligence/MarketIntelligenceWidget';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
@@ -212,33 +213,46 @@ export default function BoardDashboard() {
         </CardContent>
       </Card>
 
-      {/* Quick Links Grid */}
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-4">Quick Access</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickLinks.map((link) => {
-            const Icon = link.icon;
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className="block"
-              >
-                <Card className="bg-background border-border hover:border-primary/30 hover:shadow-md transition-all cursor-pointer group rounded-xl h-full">
-                  <CardContent className="p-4">
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${link.gradient} flex items-center justify-center mb-3 shadow-sm`}>
-                      <Icon className="w-5 h-5 text-white" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground mb-0.5">{link.title}</h3>
-                    <p className="text-xs text-muted-foreground truncate">{link.description}</p>
-                    <span className="text-xs text-primary group-hover:translate-x-1 transition-transform inline-flex items-center font-medium mt-2">
-                      View <ArrowRight className="w-3 h-3 ml-1" />
-                    </span>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+      {/* Quick Links + Market Intelligence Grid */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Quick Links */}
+        <div className="lg:col-span-2">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Quick Access</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            {quickLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className="block"
+                >
+                  <Card className="bg-background border-border hover:border-primary/30 hover:shadow-md transition-all cursor-pointer group rounded-xl h-full">
+                    <CardContent className="p-4">
+                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${link.gradient} flex items-center justify-center mb-3 shadow-sm`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-sm font-semibold text-foreground mb-0.5">{link.title}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{link.description}</p>
+                      <span className="text-xs text-primary group-hover:translate-x-1 transition-transform inline-flex items-center font-medium mt-2">
+                        View <ArrowRight className="w-3 h-3 ml-1" />
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Market Intelligence Widget */}
+        <div>
+          <MarketIntelligenceWidget 
+            audience="board" 
+            title="Market Intelligence"
+            limit={5}
+            showRefresh={true}
+          />
         </div>
       </div>
 
