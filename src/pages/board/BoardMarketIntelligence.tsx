@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Globe, TrendingUp, Users, DollarSign, Target, Zap } from 'lucide-react';
+import { MarketIntelligenceWidget } from '@/components/market-intelligence/MarketIntelligenceWidget';
 
 const marketOverview = [
   { 
@@ -165,6 +166,14 @@ export default function BoardMarketIntelligence() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Market Intelligence from Web Sources */}
+      <MarketIntelligenceWidget 
+        audience="board"
+        title="Live Market Intelligence"
+        limit={10}
+        showRefresh={true}
+      />
 
       <p className="text-xs text-muted-foreground text-center">
         Intelligence data synced from R&D feeds • Last updated: {new Date().toLocaleDateString()}

@@ -4,11 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Globe, TrendingUp, Users, BarChart2, Mic, ShoppingBag, 
   Headphones, Sparkles, ChevronRight, FileText, ExternalLink,
-  ArrowUpRight, ArrowDownRight
+  ArrowUpRight, ArrowDownRight, Settings2
 } from "lucide-react";
+import { MarketIntelligenceAdmin } from "@/components/market-intelligence/MarketIntelligenceAdmin";
+import { MarketIntelligenceWidget } from "@/components/market-intelligence/MarketIntelligenceWidget";
 
 // Insight card data
 const economicInsights = [
@@ -153,9 +156,10 @@ const trendIndicators = [
 export default function MarketIntelligence() {
   const [selectedReport, setSelectedReport] = useState<typeof marketReports[0] | null>(null);
   const [selectedCompetitor, setSelectedCompetitor] = useState<{ name: string; description: string } | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <div className="p-6 space-y-8 max-w-7xl mx-auto animate-fade-in">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -166,6 +170,25 @@ export default function MarketIntelligence() {
           Last updated: Dec 2024
         </Badge>
       </div>
+
+      {/* Tabs for Overview vs Source Management */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="overview" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="live" className="gap-2">
+            <Globe className="h-4 w-4" />
+            Live Intelligence
+          </TabsTrigger>
+          <TabsTrigger value="sources" className="gap-2">
+            <Settings2 className="h-4 w-4" />
+            Manage Sources
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-8 mt-6">
 
       {/* Economic Snapshot Row */}
       <div className="space-y-3">
@@ -315,6 +338,31 @@ export default function MarketIntelligence() {
           ))}
         </div>
       </div>
+      </TabsContent>
+
+        {/* Live Intelligence Tab */}
+        <TabsContent value="live" className="mt-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <MarketIntelligenceWidget 
+              audience="ceo"
+              title="CEO Strategic Signals"
+              limit={8}
+              showRefresh={true}
+            />
+            <MarketIntelligenceWidget 
+              audience="cfo"
+              title="CFO Market Benchmarks"
+              limit={8}
+              showRefresh={true}
+            />
+          </div>
+        </TabsContent>
+
+        {/* Source Management Tab */}
+        <TabsContent value="sources" className="mt-6">
+          <MarketIntelligenceAdmin />
+        </TabsContent>
+      </Tabs>
 
       {/* Report Modal */}
       <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
