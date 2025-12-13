@@ -88,14 +88,12 @@ export const BlogSubscriptionGate = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isGated, dismissed, subscribed, showGate, gateImpression, isAdmin]);
 
-  const trackGateEvent = (eventType: 'impression' | 'subscribe' | 'dismiss') => {
+  const trackGateEvent = (eventType: 'impression' | 'dismiss') => {
     console.log(`[BlogGate] Event: ${eventType} for post ${postId}`);
     
     // Push GTM events
     if (eventType === 'impression') {
       gtmEvents.subscriptionGateShown(postId, postTitle);
-    } else if (eventType === 'subscribe') {
-      gtmEvents.subscriptionCompleted(postId, postTitle, 'blog_gate');
     }
   };
 
@@ -105,31 +103,44 @@ export const BlogSubscriptionGate = ({
 
     setIsSubmitting(true);
     try {
-      // Add to newsletter subscribers
-      const { error } = await supabase
-        .from('newsletter_subscribers')
-        .upsert({ 
-          email, 
-          subscribed_at: new Date().toISOString(),
+      // Call Edge Function instead of direct Supabase insert (bypasses RLS)
+      const response = await supabase.functions.invoke('subscribe-newsletter', {
+        body: { email, source: 'blog_gate' }
+      });
+
+      if (response.error) throw response.error;
+      
+      const data = response.data;
+      if (!data?.success) {
+        throw new Error(data?.error || 'Subscription failed');
+      }
+
+      // Fire GA conversion event ONLY on success
+      const emailDomain = email.split('@')[1] || 'unknown';
+      gtmEvents.subscriptionCompleted(postId, postTitle, 'blog_gate');
+      
+      // Also push raw dataLayer event with context
+      if (typeof window !== 'undefined' && window.dataLayer) {
+        window.dataLayer.push({
+          event: 'subscription_completed',
+          page_path: window.location.pathname,
+          timestamp: new Date().toISOString(),
+          email_domain: emailDomain,
           source: 'blog_gate'
-        }, { 
-          onConflict: 'email' 
         });
+      }
 
-      if (error && error.code !== '23505') throw error;
-
-      trackGateEvent('subscribe');
       setSubscribed(true);
       setShowGate(false);
       toast({
         title: 'Subscribed!',
         description: 'You now have full access to all articles.',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Subscribe error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to subscribe. Please try again.',
+        description: error.message || 'Failed to subscribe. Please try again.',
         variant: 'destructive',
       });
     } finally {
