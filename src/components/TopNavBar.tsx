@@ -19,7 +19,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { HelpCircle, FileText, ChevronDown, Sparkles, ExternalLink, Settings, LogOut, User, BookOpen, MessageCircle, Pin, PinOff, Megaphone } from "lucide-react";
+import { HelpCircle, FileText, ChevronDown, Sparkles, Settings, LogOut, User, BookOpen, MessageCircle, Pin, PinOff, Megaphone, Mail } from "lucide-react";
 import { useUnreadUpdates } from "@/hooks/useUnreadUpdates";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,7 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { usePinnedHeaderItems, getHeaderItems, HeaderItemId } from "@/hooks/usePinnedHeaderItems";
+import { GlossaryModal } from "@/components/board/GlossaryModal";
 
 export function TopNavBar() {
   const location = useLocation();
@@ -37,6 +38,7 @@ export function TopNavBar() {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [glossaryOpen, setGlossaryOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -86,7 +88,7 @@ export function TopNavBar() {
 
   const handleHeaderItemClick = (item: ReturnType<typeof getHeaderItems>[0]) => {
     if (item.action === 'glossary') {
-      document.dispatchEvent(new Event('open-glossary'));
+      setGlossaryOpen(true);
     } else if (item.route) {
       navigate(item.route);
     }
@@ -231,16 +233,16 @@ export function TopNavBar() {
               ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link to="/helpdesk">
+                <Link to={isAdminRoute ? "/admin/helpdesk" : "/helpdesk"}>
                   <HelpCircle className="h-4 w-4 mr-2" />
                   Help Center
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <a href="mailto:support@seeksy.io" target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-4 w-4 mr-2" />
+                <Link to="/submit-ticket">
+                  <Mail className="h-4 w-4 mr-2" />
                   Contact Support
-                </a>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -286,6 +288,9 @@ export function TopNavBar() {
           </DropdownMenu>
         </div>
       </div>
+      
+      {/* Global Glossary Modal */}
+      <GlossaryModal open={glossaryOpen} onOpenChange={setGlossaryOpen} />
     </header>
   );
 }

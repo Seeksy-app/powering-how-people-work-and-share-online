@@ -36,8 +36,7 @@ export function usePinnedHeaderItems() {
 
 export const getHeaderItems = (isAdmin: boolean): HeaderItem[] => [
   { id: 'knowledge-hub', label: 'Knowledge Hub', route: isAdmin ? '/admin/knowledge-base' : '/knowledge-hub' },
-  { id: 'daily-brief', label: 'Daily Brief', route: isAdmin ? '/admin/daily-brief' : '/daily-brief' },
-  { id: 'docs', label: 'Docs', route: '/board/docs' },
+  { id: 'daily-brief', label: 'Daily Brief', route: isAdmin ? '/admin/daily-brief' : '/creator/daily-brief' },
   { id: 'glossary', label: 'Glossary', action: 'glossary' },
 ];
 
