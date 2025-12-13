@@ -68,6 +68,7 @@ interface InvestorSettings {
   is_active: boolean;
   confidentiality_notice: string;
   minimum_investment: number;
+  has_investor_access: boolean; // True if any investor verified email (activates the offer)
 }
 
 interface AccessLog {
@@ -142,18 +143,33 @@ export default function PendingInvestments() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      const mapped = (data || []).map((d: any) => ({
-        id: d.id,
-        name: d.name || "Default Application",
-        slug: d.slug,
-        price_per_share: Number(d.price_per_share),
-        price_per_share_tier2: d.price_per_share_tier2 ? Number(d.price_per_share_tier2) : null,
-        tier2_start_date: d.tier2_start_date || null,
-        allowed_emails: d.allowed_emails || [],
-        is_active: d.is_active ?? true,
-        confidentiality_notice: d.confidentiality_notice || "",
-        minimum_investment: Number(d.minimum_investment) || 100,
-      }));
+      
+      // Check which slugs have investor access (email verified)
+      const { data: accessLogs } = await supabase
+        .from("investor_application_access_logs")
+        .select("email");
+      
+      const accessedEmails = new Set((accessLogs || []).map(l => l.email?.toLowerCase()));
+      
+      const mapped = (data || []).map((d: any) => {
+        // Check if any allowed email has accessed (offer is activated)
+        const allowedEmails = (d.allowed_emails || []).map((e: string) => e.toLowerCase());
+        const hasAccess = allowedEmails.some((email: string) => accessedEmails.has(email));
+        
+        return {
+          id: d.id,
+          name: d.name || "Default Application",
+          slug: d.slug,
+          price_per_share: Number(d.price_per_share),
+          price_per_share_tier2: d.price_per_share_tier2 ? Number(d.price_per_share_tier2) : null,
+          tier2_start_date: d.tier2_start_date || null,
+          allowed_emails: d.allowed_emails || [],
+          is_active: d.is_active ?? true,
+          confidentiality_notice: d.confidentiality_notice || "",
+          minimum_investment: Number(d.minimum_investment) || 100,
+          has_investor_access: hasAccess,
+        };
+      });
       setAllSettings(mapped);
       if (mapped.length > 0 && !selectedSettingsId) {
         setSelectedSettingsId(mapped[0].id);
@@ -268,7 +284,12 @@ export default function PendingInvestments() {
     }
   };
 
-  const deleteApplication = async (appId: string, appName: string) => {
+  const deleteApplication = async (appId: string, appName: string, isActive: boolean) => {
+    // Block deletion if offer is activated (investor has accessed)
+    if (isActive) {
+      toast.error("Cannot delete an active offer. Create a new version instead.");
+      return;
+    }
     if (!confirm(`Are you sure you want to delete "${appName}"? This cannot be undone.`)) {
       return;
     }
@@ -317,19 +338,26 @@ export default function PendingInvestments() {
 
   const getStatusBadge = (status: string, signwellStatus?: string) => {
     if (signwellStatus === "sent" || status === "pending_signatures") {
-      return <Badge className="bg-green-100 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" /> Active</Badge>;
+      return <Badge className="bg-purple-100 text-purple-700 border-purple-200"><Send className="h-3 w-3 mr-1" /> Sent for Signature</Badge>;
     }
     if (signwellStatus === "partially_signed") {
-      return <Badge className="bg-green-100 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" /> Active</Badge>;
+      return <Badge className="bg-purple-100 text-purple-700 border-purple-200"><Clock className="h-3 w-3 mr-1" /> Partially Signed</Badge>;
     }
-    if (status === "completed") {
-      return <Badge variant="default"><CheckCircle className="h-3 w-3 mr-1" /> Completed</Badge>;
+    if (status === "completed" || signwellStatus === "completed") {
+      return <Badge variant="default" className="bg-green-100 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" /> Signed</Badge>;
     }
     if (status === "declined") {
       return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Declined</Badge>;
     }
-    // Pending status = Editable
-    return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
+    // Pending status = Submitted (investor submitted, awaiting admin action)
+    return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="h-3 w-3 mr-1" /> Submitted</Badge>;
+  };
+  
+  const getOfferStatusBadge = (hasInvestorAccess: boolean) => {
+    if (hasInvestorAccess) {
+      return <Badge className="bg-green-100 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" /> Active</Badge>;
+    }
+    return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200"><FileText className="h-3 w-3 mr-1" /> Draft</Badge>;
   };
 
   const handleCopyLink = (investment: PendingInvestment) => {
@@ -589,9 +617,7 @@ export default function PendingInvestments() {
                         <TableCell className="text-muted-foreground">—</TableCell>
                         <TableCell>${app.price_per_share.toFixed(2)}/share</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                            <FileText className="h-3 w-3 mr-1" /> Ready to Share
-                          </Badge>
+                          {getOfferStatusBadge(app.has_investor_access)}
                         </TableCell>
                         <TableCell className="text-muted-foreground">—</TableCell>
                         <TableCell className="text-right">
@@ -607,26 +633,43 @@ export default function PendingInvestments() {
                             >
                               <Copy className="h-4 w-4" />
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => {
-                                setSelectedSettingsId(app.id);
-                                setActiveTab("settings");
-                              }}
-                              title="Edit settings"
-                            >
-                              <Settings className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => deleteApplication(app.id, app.name)}
-                              title="Delete application"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            {!app.has_investor_access && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setSelectedSettingsId(app.id);
+                                    setActiveTab("settings");
+                                  }}
+                                  title="Edit settings"
+                                >
+                                  <Settings className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => deleteApplication(app.id, app.name, app.has_investor_access)}
+                                  title="Delete application"
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                            {app.has_investor_access && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedSettingsId(app.id);
+                                  setActiveTab("settings");
+                                }}
+                                title="View settings (locked)"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -840,17 +883,19 @@ export default function PendingInvestments() {
                           onClick={() => setSelectedSettingsId(app.id)}
                         >
                           {app.name}
-                          {app.is_active && <Badge variant="secondary" className="ml-2 text-xs">Active</Badge>}
+                          {app.has_investor_access && <Badge variant="secondary" className="ml-2 text-xs">Active</Badge>}
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                          onClick={() => deleteApplication(app.id, app.name)}
-                          title="Delete application"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        {!app.has_investor_access && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            onClick={() => deleteApplication(app.id, app.name, app.has_investor_access)}
+                            title="Delete application"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -859,6 +904,22 @@ export default function PendingInvestments() {
                       Link: <code className="bg-muted px-1 rounded">/invest/apply/{settings.slug}</code>
                     </p>
                   )}
+                </div>
+              )}
+
+              {/* Locked Warning for Active Offers */}
+              {settings?.has_investor_access && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-amber-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-amber-800">Offer is Active (Locked)</p>
+                      <p className="text-sm text-amber-700 mt-1">
+                        An investor has verified their email for this offer. Core terms (price per share, allowed emails) cannot be changed. 
+                        To modify terms, create a new offer.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -872,6 +933,7 @@ export default function PendingInvestments() {
                     onChange={(e) => updateSettings({ name: e.target.value })}
                     placeholder="e.g., Series A Round"
                     className="max-w-sm"
+                    disabled={settings.has_investor_access}
                   />
                 </div>
               )}
@@ -909,6 +971,7 @@ export default function PendingInvestments() {
                       min="0.0001"
                       value={settings?.price_per_share || ""}
                       onChange={(e) => updateSettings({ price_per_share: parseFloat(e.target.value) || 0 })}
+                      disabled={settings?.has_investor_access}
                     />
                     <p className="text-xs text-muted-foreground">
                       Active price shown to investors
@@ -925,6 +988,7 @@ export default function PendingInvestments() {
                       value={settings?.price_per_share_tier2 || ""}
                       onChange={(e) => updateSettings({ price_per_share_tier2: parseFloat(e.target.value) || null })}
                       placeholder="Optional"
+                      disabled={settings?.has_investor_access}
                     />
                     <p className="text-xs text-muted-foreground">
                       Price after tier date
@@ -940,6 +1004,7 @@ export default function PendingInvestments() {
                     value={settings?.tier2_start_date || ""}
                     onChange={(e) => updateSettings({ tier2_start_date: e.target.value || null })}
                     className="max-w-xs"
+                    disabled={settings?.has_investor_access}
                   />
                   <p className="text-xs text-muted-foreground">
                     On this date, the Future PPS becomes active
@@ -958,6 +1023,7 @@ export default function PendingInvestments() {
                   value={settings?.minimum_investment || ""}
                   onChange={(e) => updateSettings({ minimum_investment: parseFloat(e.target.value) || 0 })}
                   className="max-w-xs"
+                  disabled={settings?.has_investor_access}
                 />
                 <p className="text-xs text-muted-foreground">
                   Investors must invest at least this amount
@@ -973,34 +1039,38 @@ export default function PendingInvestments() {
                   </p>
                 </div>
                 
-                <div className="flex gap-2">
-                  <Input
-                    type="email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="investor@example.com"
-                    className="max-w-sm"
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmail())}
-                  />
-                  <Button type="button" variant="outline" onClick={addEmail}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add
-                  </Button>
-                </div>
+                {!settings?.has_investor_access && (
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="investor@example.com"
+                      className="max-w-sm"
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmail())}
+                    />
+                    <Button type="button" variant="outline" onClick={addEmail}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add
+                    </Button>
+                  </div>
+                )}
 
                 {settings?.allowed_emails && settings.allowed_emails.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {settings.allowed_emails.map((email) => (
                       <Badge key={email} variant="secondary" className="pl-3 pr-1 py-1">
                         {email}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 w-5 p-0 ml-2 hover:bg-destructive/20"
-                          onClick={() => removeEmail(email)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                        {!settings?.has_investor_access && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-5 w-5 p-0 ml-2 hover:bg-destructive/20"
+                            onClick={() => removeEmail(email)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        )}
                       </Badge>
                     ))}
                   </div>
@@ -1016,22 +1086,29 @@ export default function PendingInvestments() {
                   onChange={(e) => updateSettings({ confidentiality_notice: e.target.value })}
                   rows={4}
                   placeholder="Enter the confidentiality disclosure text..."
+                  disabled={settings?.has_investor_access}
                 />
                 <p className="text-xs text-muted-foreground">
                   This notice is shown before users can access the application form
                 </p>
               </div>
 
-              <Button onClick={saveSettings} disabled={savingSettings}>
-                {savingSettings ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Settings"
-                )}
-              </Button>
+              {!settings?.has_investor_access ? (
+                <Button onClick={saveSettings} disabled={savingSettings}>
+                  {savingSettings ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Settings"
+                  )}
+                </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  This offer is locked. Create a new offer to change terms.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
