@@ -23981,7 +23981,7 @@ export type Database = {
           status?: string | null
           title: string
           updated_at?: string | null
-          user_id: string
+          user_id?: string
         }
         Update: {
           assigned_to?: string | null
