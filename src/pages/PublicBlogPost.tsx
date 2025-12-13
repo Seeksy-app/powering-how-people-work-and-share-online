@@ -7,13 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Calendar, Eye, Share2 } from "lucide-react";
 import { format } from "date-fns";
+import { Helmet } from "react-helmet";
 import { BlogMarkdownContent } from "@/components/blog/BlogMarkdownContent";
 import { BlogRightRail } from "@/components/blog/BlogRightRail";
 import { BlogSources } from "@/components/blog/BlogSources";
 import { BlogKeepReading } from "@/components/blog/BlogKeepReading";
 import { BlogSubscriptionGate } from "@/components/blog/BlogSubscriptionGate";
-import { useMemo } from "react";
+import { useMemo, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { gtmEvents, createScrollTracker } from "@/utils/gtm";
 
 interface Source {
   title: string;
@@ -118,6 +120,32 @@ const PublicBlogPost = () => {
     }
   }, [post?.sources]);
 
+  // SEO meta data
+  const seoTitle = post ? `${decodeHtmlEntities(post.title)} | Seeksy Blog` : 'Seeksy Blog';
+  const seoDescription = post?.seo_description || post?.excerpt || 'Read this article on the Seeksy Blog';
+  const seoKeywords = post?.seo_keywords?.join(', ') || '';
+  const canonicalUrl = `https://seeksy.io/blog/${slug}`;
+  const ogImage = post?.featured_image_url || 'https://lovable.dev/opengraph-image-p98pqg.png';
+
+  // Scroll depth tracking for GTM
+  useEffect(() => {
+    if (!post?.id || !post?.title) return;
+    
+    const scrollHandler = createScrollTracker(post.id, post.title, (milestone) => {
+      console.log(`[GTM] Scroll milestone: ${milestone}%`);
+    });
+    
+    window.addEventListener('scroll', scrollHandler, { passive: true });
+    return () => window.removeEventListener('scroll', scrollHandler);
+  }, [post?.id, post?.title]);
+
+  // Page view event
+  useEffect(() => {
+    if (post?.id) {
+      gtmEvents.pageView({ page_path: `/blog/${slug}`, page_title: post.title });
+    }
+  }, [post?.id, slug]);
+
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast({
@@ -153,7 +181,32 @@ const PublicBlogPost = () => {
   const isGated = post.is_subscription_gated !== false;
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription.slice(0, 160)} />
+        {seoKeywords && <meta name="keywords" content={seoKeywords} />}
+        <link rel="canonical" href={canonicalUrl} />
+        
+        {/* OpenGraph */}
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription.slice(0, 160)} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:type" content="article" />
+        <meta property="og:image" content={ogImage} />
+        {post?.published_at && (
+          <meta property="article:published_time" content={post.published_at} />
+        )}
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription.slice(0, 160)} />
+        <meta name="twitter:image" content={ogImage} />
+      </Helmet>
+
+      <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="flex gap-8 max-w-[1140px] mx-auto">
           {/* Main Content - max 720px */}
@@ -239,7 +292,7 @@ const PublicBlogPost = () => {
             <Separator className="mb-8" />
 
             {/* Blog Content with subscription gate */}
-            <BlogSubscriptionGate postId={post.id} isGated={isGated}>
+            <BlogSubscriptionGate postId={post.id} postTitle={post.title} isGated={isGated}>
               <BlogMarkdownContent content={post.content} />
               
               {/* Sources Section */}
@@ -281,6 +334,7 @@ const PublicBlogPost = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

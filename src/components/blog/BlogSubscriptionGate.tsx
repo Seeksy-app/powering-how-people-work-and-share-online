@@ -4,9 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Mail, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { gtmEvents } from '@/utils/gtm';
 
 interface BlogSubscriptionGateProps {
   postId: string;
+  postTitle?: string;
   isGated?: boolean;
   children: React.ReactNode;
 }
@@ -15,8 +17,9 @@ const GATE_DISMISSED_KEY = 'blog_gate_dismissed_session';
 
 export const BlogSubscriptionGate = ({ 
   postId, 
+  postTitle = '',
   isGated = true, 
-  children 
+  children
 }: BlogSubscriptionGateProps) => {
   const [showGate, setShowGate] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -85,12 +88,14 @@ export const BlogSubscriptionGate = ({
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isGated, dismissed, subscribed, showGate, gateImpression, isAdmin]);
 
-  const trackGateEvent = async (eventType: 'impression' | 'subscribe' | 'dismiss') => {
-    try {
-      // Could be extended to store in analytics table
-      console.log(`[BlogGate] Event: ${eventType} for post ${postId}`);
-    } catch (error) {
-      console.error('Failed to track gate event:', error);
+  const trackGateEvent = (eventType: 'impression' | 'subscribe' | 'dismiss') => {
+    console.log(`[BlogGate] Event: ${eventType} for post ${postId}`);
+    
+    // Push GTM events
+    if (eventType === 'impression') {
+      gtmEvents.subscriptionGateShown(postId, postTitle);
+    } else if (eventType === 'subscribe') {
+      gtmEvents.subscriptionCompleted(postId, postTitle, 'blog_gate');
     }
   };
 
