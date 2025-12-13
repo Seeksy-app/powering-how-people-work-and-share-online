@@ -128,9 +128,6 @@ export const NAV_ITEMS: NavItem[] = [
     moduleId: 'email',
     subItems: [
       { id: 'email_inbox', label: 'Inbox', path: '/email/inbox' },
-      { id: 'email_scheduled', label: 'Scheduled', path: '/email/scheduled' },
-      { id: 'email_drafts', label: 'Drafts', path: '/email/drafts' },
-      { id: 'email_sent', label: 'Sent', path: '/email/sent' },
       { id: 'email_settings', label: 'Settings', path: '/email-settings' },
     ]
   },
