@@ -35,6 +35,7 @@ interface PendingInvestment {
   status: string;
   purchaser_email: string;
   recipient_name: string;
+  template_id: string;
   field_values_json: {
     purchaser_name?: string;
     purchaser_email?: string;
@@ -340,6 +341,7 @@ export default function PendingInvestments() {
         recipient_name: investment.recipient_name,
         field_values_json: investment.field_values_json,
         computed_values_json: investment.computed_values_json,
+        template_id: investment.template_id,
       };
       const { error } = await supabase
         .from("legal_doc_instances")
