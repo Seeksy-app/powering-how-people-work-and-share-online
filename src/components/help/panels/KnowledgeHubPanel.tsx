@@ -61,16 +61,16 @@ export function KnowledgeHubPanel({ portal, contentKey }: KnowledgeHubPanelProps
   const navigate = useNavigate();
   const { close } = useHelpDrawerStore();
   
-  // Fetch from ai_knowledge_base table
+  // Fetch from knowledge_articles table (correct table with portal-scoped content)
   const { data: dbArticles, isLoading } = useQuery({
-    queryKey: ['kb-articles', portal, searchQuery],
+    queryKey: ['knowledge-articles-panel', portal, searchQuery],
     queryFn: async () => {
       let query = supabase
-        .from('ai_knowledge_base')
-        .select('id, title, content, category, tags, priority')
-        .eq('is_active', true)
-        .eq('category', portal)
-        .order('priority', { ascending: false })
+        .from('knowledge_articles')
+        .select('id, title, content, category, excerpt, key_takeaways')
+        .eq('portal', portal)
+        .eq('is_published', true)
+        .order('created_at', { ascending: false })
         .limit(20);
       
       if (searchQuery) {
@@ -78,7 +78,11 @@ export function KnowledgeHubPanel({ portal, contentKey }: KnowledgeHubPanelProps
       }
       
       const { data } = await query;
-      return data || [];
+      // Map to expected format with tags derived from category
+      return (data || []).map(article => ({
+        ...article,
+        tags: article.key_takeaways?.slice(0, 3) || [article.category]
+      }));
     },
   });
   
@@ -146,7 +150,7 @@ export function KnowledgeHubPanel({ portal, contentKey }: KnowledgeHubPanelProps
               </CardHeader>
               <CardContent className="pt-0">
                 <CardDescription className="text-xs line-clamp-2">
-                  {article.content.slice(0, 150)}...
+                  {(article as any).excerpt || article.content.replace(/^#.*\n/gm, '').slice(0, 150)}...
                 </CardDescription>
                 {article.tags && article.tags.length > 0 && (
                   <div className="flex gap-1 mt-2 flex-wrap">
