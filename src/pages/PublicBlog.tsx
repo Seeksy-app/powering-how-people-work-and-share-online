@@ -13,7 +13,7 @@ import { format } from "date-fns";
 import { Helmet } from "react-helmet";
 import { NewsletterSignupForm } from "@/components/NewsletterSignupForm";
 import { BlogLoadMore } from "@/components/blog/BlogLoadMore";
-import { gtmEvents } from "@/utils/gtm";
+import { gtmEvents, trackRouteChange } from "@/utils/gtm";
 import blogHeroImage from "@/assets/blog-hero.jpg";
 
 interface BlogPost {
@@ -98,9 +98,9 @@ const PublicBlog = () => {
   const featuredPost = allPosts[0];
   const remainingPosts = allPosts.slice(1);
 
-  // Page view tracking
+  // Page view tracking - fires once per route
   useEffect(() => {
-    gtmEvents.pageView({ page_path: '/blog', page_title: 'Seeksy Blog' });
+    trackRouteChange('/blog', 'Seeksy Blog');
   }, []);
 
   // Track view more clicks

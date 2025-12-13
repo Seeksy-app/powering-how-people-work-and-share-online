@@ -15,7 +15,7 @@ import { BlogKeepReading } from "@/components/blog/BlogKeepReading";
 import { BlogSubscriptionGate } from "@/components/blog/BlogSubscriptionGate";
 import { useMemo, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { gtmEvents, createScrollTracker } from "@/utils/gtm";
+import { gtmEvents, createScrollTracker, trackRouteChange } from "@/utils/gtm";
 
 interface Source {
   title: string;
@@ -139,12 +139,12 @@ const PublicBlogPost = () => {
     return () => window.removeEventListener('scroll', scrollHandler);
   }, [post?.id, post?.title]);
 
-  // Page view event
+  // Page view event - fires once per unique route
   useEffect(() => {
-    if (post?.id) {
-      gtmEvents.pageView({ page_path: `/blog/${slug}`, page_title: post.title });
+    if (post?.id && slug) {
+      trackRouteChange(`/blog/${slug}`, post.title);
     }
-  }, [post?.id, slug]);
+  }, [post?.id, slug, post?.title]);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
