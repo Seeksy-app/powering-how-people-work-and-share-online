@@ -258,7 +258,7 @@ export default function EmailSettings() {
         <title>Email Accounts | Seeksy</title>
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-br from-[#F7F7FA] to-[#E0ECF9]">
+      <div className="min-h-screen bg-background">
         <div className="max-w-[1200px] mx-auto px-8 py-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
