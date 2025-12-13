@@ -9,11 +9,21 @@ import { ArrowLeft, Calendar, Eye, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { BlogMarkdownContent } from "@/components/blog/BlogMarkdownContent";
 import { BlogRightRail } from "@/components/blog/BlogRightRail";
+import { BlogSources } from "@/components/blog/BlogSources";
+import { BlogKeepReading } from "@/components/blog/BlogKeepReading";
+import { BlogSubscriptionGate } from "@/components/blog/BlogSubscriptionGate";
 import { useMemo } from "react";
+import { useToast } from "@/hooks/use-toast";
+
+interface Source {
+  title: string;
+  url: string;
+}
 
 const PublicBlogPost = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Helper to decode HTML entities in titles
   const decodeHtmlEntities = (text: string): string => {
@@ -54,21 +64,37 @@ const PublicBlogPost = () => {
     enabled: !!slug,
   });
 
-  // Fetch related posts - prioritize recent posts
+  // Fetch related posts - prioritize same category/tags, then recent
   const { data: relatedPosts, isLoading: relatedLoading } = useQuery({
-    queryKey: ["related-posts", post?.id],
+    queryKey: ["related-posts", post?.id, post?.seo_keywords],
     queryFn: async () => {
       if (!post?.id) return [];
 
-      const { data, error } = await supabase
+      // Try to get posts with matching tags first
+      let query = supabase
         .from("blog_posts")
-        .select("id, title, excerpt, slug, featured_image_url, published_at")
+        .select("id, title, excerpt, slug, featured_image_url, published_at, is_ai_generated, content, seo_keywords")
         .eq("status", "published")
         .neq("id", post.id)
         .order("published_at", { ascending: false })
-        .limit(3);
+        .limit(6);
+
+      const { data, error } = await query;
 
       if (error) throw error;
+      
+      // Sort by tag overlap if we have keywords
+      if (post.seo_keywords && post.seo_keywords.length > 0 && data) {
+        const postKeywords = new Set(post.seo_keywords.map((k: string) => k.toLowerCase()));
+        const scored = data.map(p => {
+          const pKeywords = (p.seo_keywords || []).map((k: string) => k.toLowerCase());
+          const overlap = pKeywords.filter((k: string) => postKeywords.has(k)).length;
+          return { ...p, score: overlap };
+        });
+        scored.sort((a, b) => b.score - a.score);
+        return scored;
+      }
+      
       return data || [];
     },
     enabled: !!post?.id,
@@ -76,6 +102,29 @@ const PublicBlogPost = () => {
 
   // Memoize related posts to avoid refetch loops
   const memoizedRelatedPosts = useMemo(() => relatedPosts || [], [relatedPosts]);
+  
+  // Parse sources from jsonb
+  const sources: Source[] = useMemo(() => {
+    if (!post?.sources) return [];
+    try {
+      const arr = post.sources as unknown as Array<{ title?: string; url?: string }>;
+      if (!Array.isArray(arr)) return [];
+      return arr.filter(s => s && typeof s.url === 'string').map(s => ({
+        title: s.title || s.url || '',
+        url: s.url || ''
+      }));
+    } catch {
+      return [];
+    }
+  }, [post?.sources]);
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast({
+      title: "Link copied",
+      description: "Article link copied to clipboard",
+    });
+  };
 
   if (isLoading) {
     return (
@@ -99,6 +148,9 @@ const PublicBlogPost = () => {
       </div>
     );
   }
+
+  // Check if gated (default true if not specified)
+  const isGated = post.is_subscription_gated !== false;
 
   return (
     <div className="min-h-screen bg-background">
@@ -186,8 +238,21 @@ const PublicBlogPost = () => {
 
             <Separator className="mb-8" />
 
-            {/* Blog Content with proper markdown formatting */}
-            <BlogMarkdownContent content={post.content} />
+            {/* Blog Content with subscription gate */}
+            <BlogSubscriptionGate postId={post.id} isGated={isGated}>
+              <BlogMarkdownContent content={post.content} />
+              
+              {/* Sources Section */}
+              <BlogSources sources={sources} />
+            </BlogSubscriptionGate>
+
+            <Separator className="my-8" />
+
+            {/* Keep Reading Section */}
+            <BlogKeepReading 
+              posts={memoizedRelatedPosts} 
+              currentPostId={post.id} 
+            />
 
             <Separator className="my-8" />
 
@@ -199,9 +264,7 @@ const PublicBlogPost = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                  }}
+                  onClick={handleShare}
                 >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share

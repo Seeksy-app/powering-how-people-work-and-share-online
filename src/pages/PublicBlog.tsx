@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,9 +8,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
-import { Search, Calendar, Eye, ArrowRight, Sparkles, X } from "lucide-react";
+import { Search, Calendar, Eye, ArrowRight, Sparkles, X, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { NewsletterSignupForm } from "@/components/NewsletterSignupForm";
+import { BlogLoadMore } from "@/components/blog/BlogLoadMore";
 import blogHeroImage from "@/assets/blog-hero.jpg";
 
 interface BlogPost {
@@ -31,22 +32,31 @@ interface BlogPost {
   };
 }
 
+const PAGE_SIZE = 12;
+
 const PublicBlog = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const activeTag = searchParams.get("tag");
 
-  const { data: posts, isLoading } = useQuery({
-    queryKey: ["public-blog-posts", searchQuery, activeTag],
-    queryFn: async () => {
+  // Use infinite query for pagination
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["public-blog-posts-infinite", searchQuery, activeTag],
+    queryFn: async ({ pageParam = 0 }) => {
       let query = supabase
         .from("blog_posts")
         .select("*")
         .eq("status", "published")
         .eq("publish_to_master", true)
         .order("master_published_at", { ascending: false })
-        .limit(20);
+        .range(pageParam * PAGE_SIZE, (pageParam + 1) * PAGE_SIZE - 1);
 
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,excerpt.ilike.%${searchQuery}%`);
@@ -72,12 +82,19 @@ const PublicBlog = () => {
         })
       );
 
-      return postsWithProfiles;
+      return {
+        posts: postsWithProfiles,
+        nextPage: postsWithProfiles.length === PAGE_SIZE ? pageParam + 1 : undefined,
+      };
     },
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 0,
   });
 
-  const featuredPost = posts?.[0];
-  const remainingPosts = posts?.slice(1) || [];
+  // Flatten all pages into single array
+  const allPosts = data?.pages.flatMap(page => page.posts) || [];
+  const featuredPost = allPosts[0];
+  const remainingPosts = allPosts.slice(1);
 
   return (
     <div className="min-h-screen bg-background">
@@ -144,7 +161,7 @@ const PublicBlog = () => {
                 <Skeleton className="h-[300px] rounded-xl" />
               </div>
             </div>
-          ) : posts && posts.length > 0 ? (
+          ) : allPosts.length > 0 ? (
             <>
               {/* Featured Post */}
               {featuredPost && (
@@ -285,6 +302,13 @@ const PublicBlog = () => {
                       </Card>
                     ))}
                   </div>
+
+                  {/* View More Button */}
+                  <BlogLoadMore
+                    onLoadMore={() => fetchNextPage()}
+                    isLoading={isFetchingNextPage}
+                    hasMore={!!hasNextPage}
+                  />
                 </div>
               )}
 
