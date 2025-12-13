@@ -4018,8 +4018,10 @@ export type Database = {
           excerpt: string | null
           external_id: string | null
           featured_image_url: string | null
+          generation_batch_id: string | null
           id: string
           is_ai_generated: boolean | null
+          is_subscription_gated: boolean | null
           master_published_at: string | null
           podcast_id: string | null
           publish_to_master: boolean | null
@@ -4031,6 +4033,7 @@ export type Database = {
           slug: string
           source_platform: string | null
           source_rss_url: string | null
+          sources: Json | null
           status: string
           subtitle: string | null
           title: string
@@ -4047,8 +4050,10 @@ export type Database = {
           excerpt?: string | null
           external_id?: string | null
           featured_image_url?: string | null
+          generation_batch_id?: string | null
           id?: string
           is_ai_generated?: boolean | null
+          is_subscription_gated?: boolean | null
           master_published_at?: string | null
           podcast_id?: string | null
           publish_to_master?: boolean | null
@@ -4060,6 +4065,7 @@ export type Database = {
           slug: string
           source_platform?: string | null
           source_rss_url?: string | null
+          sources?: Json | null
           status?: string
           subtitle?: string | null
           title: string
@@ -4076,8 +4082,10 @@ export type Database = {
           excerpt?: string | null
           external_id?: string | null
           featured_image_url?: string | null
+          generation_batch_id?: string | null
           id?: string
           is_ai_generated?: boolean | null
+          is_subscription_gated?: boolean | null
           master_published_at?: string | null
           podcast_id?: string | null
           publish_to_master?: boolean | null
@@ -4089,6 +4097,7 @@ export type Database = {
           slug?: string
           source_platform?: string | null
           source_rss_url?: string | null
+          sources?: Json | null
           status?: string
           subtitle?: string | null
           title?: string
