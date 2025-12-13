@@ -9,10 +9,10 @@ const corsHeaders = {
 // Only admins and editors can generate master blog posts
 const ALLOWED_ROLES = ['admin', 'super_admin', 'editor'];
 
-// Generate an image using Lovable AI
+// Generate an image using Lovable AI (google/gemini-2.5-flash-image-preview)
 async function generateImage(prompt: string, lovableApiKey: string): Promise<string | null> {
   try {
-    console.log('Generating image with prompt:', prompt.substring(0, 100) + '...');
+    console.log('🖼️ Generating image with prompt:', prompt.substring(0, 80) + '...');
     
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -33,23 +33,63 @@ async function generateImage(prompt: string, lovableApiKey: string): Promise<str
     });
 
     if (!response.ok) {
-      console.error('Image generation failed:', response.status);
+      const errorText = await response.text();
+      console.error('❌ Image generation failed:', response.status, errorText);
       return null;
     }
 
     const data = await response.json();
+    console.log('🖼️ Image API response keys:', Object.keys(data));
+    
     const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     
     if (imageUrl) {
-      console.log('Image generated successfully');
+      console.log('✅ Image generated successfully (base64 length:', imageUrl.length, ')');
       return imageUrl;
     }
     
+    console.warn('⚠️ No image URL in response:', JSON.stringify(data).substring(0, 200));
     return null;
   } catch (error) {
-    console.error('Error generating image:', error);
+    console.error('❌ Error generating image:', error);
     return null;
   }
+}
+
+// Safely parse JSON from AI response
+function safeParseJson(content: string): any {
+  // Try to extract JSON from markdown code blocks first
+  const codeBlockMatch = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (codeBlockMatch) {
+    try {
+      return JSON.parse(codeBlockMatch[1].trim());
+    } catch (e) {
+      console.log('Code block JSON parse failed, trying raw content');
+    }
+  }
+  
+  // Try to find JSON object directly
+  const jsonMatch = content.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch (e) {
+      // Try to fix common JSON issues
+      let fixed = jsonMatch[0]
+        .replace(/,\s*}/g, '}') // Remove trailing commas
+        .replace(/,\s*]/g, ']') // Remove trailing commas in arrays
+        .replace(/\n/g, '\\n') // Escape newlines in strings
+        .replace(/\r/g, '\\r'); // Escape carriage returns
+      
+      try {
+        return JSON.parse(fixed);
+      } catch (e2) {
+        console.error('JSON parse failed even after fixes');
+      }
+    }
+  }
+  
+  return null;
 }
 
 serve(async (req) => {
@@ -115,10 +155,20 @@ serve(async (req) => {
 
     console.log(`✅ Blog Generator: Authorized - user=${user.id}, roles=[${roles.join(',')}]`);
 
+    // Fetch existing titles to avoid duplicates
+    const { data: existingPosts } = await supabase
+      .from('blog_posts')
+      .select('title')
+      .order('created_at', { ascending: false })
+      .limit(30);
+    
+    const existingTitles = existingPosts?.map(p => p.title.toLowerCase()) || [];
+    console.log(`📚 Found ${existingTitles.length} existing posts to avoid duplicating`);
+
     // Generate 3 blog posts
     const posts = [];
     for (let i = 0; i < 3; i++) {
-      console.log(`Generating post ${i + 1}/3...`);
+      console.log(`\n📝 Generating post ${i + 1}/3...`);
 
       const topicResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
@@ -131,86 +181,89 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: 'You are a creative content writer for a platform called Seeksy that helps creators, influencers, and entrepreneurs manage their business. Generate engaging blog post topics and content.'
+              content: `You are a creative content writer for Seeksy, a platform for creators, influencers, and entrepreneurs. Generate unique, engaging blog content. 
+              
+IMPORTANT: Return ONLY valid JSON with no markdown formatting, no code blocks, no extra text. Just the raw JSON object.`
             },
             {
               role: 'user',
-              content: `Generate a complete blog post for creators/influencers. Include:
-1. An engaging title (max 80 characters)
-2. A compelling excerpt (max 160 characters)
-3. Full blog content in markdown format (500-800 words)
-4. SEO meta description (max 160 characters)
-5. 5-7 relevant keywords
-6. 2 additional topic tags related to the article content (e.g., "Content Strategy", "Audience Growth", "Podcast Tips")
-7. A short image prompt for a featured header image (describe a professional, abstract illustration suitable for a blog header)
-8. 2-3 inline image prompts that should be placed within the content (describe specific visuals that enhance the article)
+              content: `Generate a UNIQUE blog post for creators/influencers. 
 
-Topic categories to choose from: social media strategy, content creation tips, monetization, personal branding, productivity, technology for creators, marketing insights.
+AVOID these existing topics: ${existingTitles.slice(0, 10).join(', ')}
 
-IMPORTANT: In the content, include markdown image placeholders where inline images should go, using the format: ![Image description](INLINE_IMAGE_1), ![Image description](INLINE_IMAGE_2), etc.
+Requirements:
+1. Title: engaging, max 80 chars, MUST be different from existing titles
+2. Excerpt: compelling summary, max 160 chars  
+3. Content: full markdown article, 500-800 words
+4. SEO description: max 160 chars
+5. Keywords: 5-7 relevant terms
+6. Topic tags: 2 tags like "Content Strategy", "Audience Growth", "Monetization Tips"
+7. Featured image prompt: describe a professional abstract header image (no text, no faces)
+8. Inline image prompts: 2 prompts for images to place in article body
 
-Return ONLY a JSON object with this exact structure:
-{
-  "title": "string",
-  "excerpt": "string",
-  "content": "string (markdown with image placeholders)",
-  "seo_description": "string",
-  "seo_keywords": ["keyword1", "keyword2"],
-  "topic_tags": ["tag1", "tag2"],
-  "featured_image_prompt": "string (short prompt for header image)",
-  "inline_image_prompts": ["prompt1", "prompt2"]
-}`
+Categories: social media strategy, content creation tips, monetization, personal branding, productivity, technology for creators, marketing insights, podcasting, video creation, newsletter growth.
+
+In content, use placeholders: ![description](INLINE_IMAGE_1), ![description](INLINE_IMAGE_2)
+
+Return this exact JSON structure (no markdown, no code blocks):
+{"title":"string","excerpt":"string","content":"markdown string","seo_description":"string","seo_keywords":["k1","k2"],"topic_tags":["t1","t2"],"featured_image_prompt":"string","inline_image_prompts":["p1","p2"]}`
             }
           ],
         }),
       });
 
       if (!topicResponse.ok) {
-        console.error(`AI generation failed for post ${i + 1}:`, await topicResponse.text());
+        console.error(`❌ AI generation failed for post ${i + 1}:`, await topicResponse.text());
         continue;
       }
 
       const topicData = await topicResponse.json();
-      const content = topicData.choices[0].message.content;
+      const content = topicData.choices?.[0]?.message?.content || '';
+      console.log('📄 AI response length:', content.length);
       
-      let blogData;
-      try {
-        const jsonMatch = content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          blogData = JSON.parse(jsonMatch[0]);
-        } else {
-          console.error('No JSON found in AI response');
-          continue;
-        }
-      } catch (e) {
-        console.error('Failed to parse AI response:', e);
+      const blogData = safeParseJson(content);
+      
+      if (!blogData || !blogData.title) {
+        console.error('❌ Failed to parse AI response or missing title');
+        console.log('Raw content preview:', content.substring(0, 300));
         continue;
       }
 
-      // Generate featured image
+      console.log(`📰 Parsed article: "${blogData.title}"`);
+
+      // Generate featured image (REQUIRED)
       let featuredImageUrl = null;
       if (blogData.featured_image_prompt) {
-        const imagePrompt = `Professional blog header image: ${blogData.featured_image_prompt}. Modern, clean design with subtle blue tones (#053877, #2C6BED). Abstract and minimal, suitable for a SaaS blog. High quality, 16:9 aspect ratio.`;
+        const imagePrompt = `Professional blog header illustration: ${blogData.featured_image_prompt}. Modern minimalist design, subtle blue color palette (#053877, #2C6BED), abstract shapes, no text, no human faces, 16:9 aspect ratio, high quality editorial style.`;
         featuredImageUrl = await generateImage(imagePrompt, lovableApiKey);
+      }
+      
+      // If featured image failed, try a generic prompt
+      if (!featuredImageUrl) {
+        console.log('⚠️ Featured image failed, trying fallback prompt...');
+        const fallbackPrompt = `Abstract modern blog header illustration for article about ${blogData.title}. Minimalist design with blue gradient colors, geometric shapes, professional editorial style, no text, no faces, 16:9 aspect ratio.`;
+        featuredImageUrl = await generateImage(fallbackPrompt, lovableApiKey);
       }
 
       // Generate inline images and replace placeholders
-      let finalContent = blogData.content;
+      let finalContent = blogData.content || '';
       if (blogData.inline_image_prompts && Array.isArray(blogData.inline_image_prompts)) {
         for (let j = 0; j < blogData.inline_image_prompts.length; j++) {
-          const inlinePrompt = `Blog illustration: ${blogData.inline_image_prompts[j]}. Clean, professional, modern style. Suitable for inline blog content.`;
+          const inlinePrompt = `Blog illustration: ${blogData.inline_image_prompts[j]}. Clean professional modern style, suitable for inline article content, no text overlay.`;
           const inlineImageUrl = await generateImage(inlinePrompt, lovableApiKey);
           
           if (inlineImageUrl) {
-            // Replace placeholder with actual image URL
             finalContent = finalContent.replace(`INLINE_IMAGE_${j + 1}`, inlineImageUrl);
+            console.log(`✅ Inline image ${j + 1} generated`);
           } else {
             // Remove the placeholder if image generation failed
             finalContent = finalContent.replace(new RegExp(`!\\[[^\\]]*\\]\\(INLINE_IMAGE_${j + 1}\\)`, 'g'), '');
+            console.log(`⚠️ Inline image ${j + 1} failed, removing placeholder`);
           }
         }
       }
 
+      // Generate unique slug with timestamp
       const slug = blogData.title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
@@ -219,7 +272,7 @@ Return ONLY a JSON object with this exact structure:
       // Combine AI Generated tag with topic tags
       const allTags = ['AI Generated', ...(blogData.topic_tags || [])];
 
-      // Author is "Ask Seeksy" for AI posts (stored via is_ai_generated flag)
+      // INSERT new post (never update existing)
       const { data: insertedPost, error: insertError } = await supabase
         .from('blog_posts')
         .insert({
@@ -242,15 +295,15 @@ Return ONLY a JSON object with this exact structure:
         .single();
 
       if (insertError) {
-        console.error(`Failed to insert post ${i + 1}:`, insertError);
+        console.error(`❌ Failed to insert post ${i + 1}:`, insertError);
         continue;
       }
 
       posts.push(insertedPost);
-      console.log(`Successfully created post ${i + 1}: ${blogData.title} (with ${featuredImageUrl ? 'featured image' : 'no featured image'})`);
+      console.log(`✅ Created post ${i + 1}: "${blogData.title}" (image: ${featuredImageUrl ? 'yes' : 'no'})`);
     }
 
-    console.log(`Generated ${posts.length} blog posts successfully`);
+    console.log(`\n🎉 Generated ${posts.length} new blog posts successfully`);
 
     return new Response(
       JSON.stringify({ 
@@ -262,7 +315,7 @@ Return ONLY a JSON object with this exact structure:
     );
 
   } catch (error) {
-    console.error('Error generating master blog posts:', error);
+    console.error('❌ Error generating master blog posts:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { 
