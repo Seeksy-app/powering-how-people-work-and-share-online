@@ -1489,6 +1489,7 @@ const AppContent = () => {
           <Route path="/help/zoom-integration" element={<ZoomIntegration />} />
           <Route path="/docs/zoom-integration" element={<ZoomIntegration />} />
           <Route path="/videos" element={<PublicVideosPage />} />
+          <Route path="/videos/:slug" element={<VideoCollectionPage />} />
           
           
             <Route path="/tickets" element={<ClientTickets />} />
