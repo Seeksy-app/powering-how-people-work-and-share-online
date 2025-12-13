@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { Search, Calendar, Eye, ArrowRight, Sparkles, X, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { Helmet } from "react-helmet";
 import { NewsletterSignupForm } from "@/components/NewsletterSignupForm";
 import { BlogLoadMore } from "@/components/blog/BlogLoadMore";
+import { gtmEvents } from "@/utils/gtm";
 import blogHeroImage from "@/assets/blog-hero.jpg";
 
 interface BlogPost {
@@ -96,9 +98,39 @@ const PublicBlog = () => {
   const featuredPost = allPosts[0];
   const remainingPosts = allPosts.slice(1);
 
+  // Page view tracking
+  useEffect(() => {
+    gtmEvents.pageView({ page_path: '/blog', page_title: 'Seeksy Blog' });
+  }, []);
+
+  // Track view more clicks
+  const handleLoadMore = () => {
+    const currentPage = data?.pages.length || 0;
+    gtmEvents.viewMoreClicked(currentPage);
+    fetchNextPage();
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
+    <>
+      {/* SEO Meta Tags */}
+      <Helmet>
+        <title>Seeksy Blog - Stories from Creators</title>
+        <meta name="description" content="Discover insights, tutorials, and stories from the Seeksy creator community. Expert perspectives on podcasting, content creation, and building your audience." />
+        <meta name="keywords" content="creator economy, podcasting, content creation, creator tools, audience building" />
+        <link rel="canonical" href="https://seeksy.io/blog" />
+        
+        <meta property="og:title" content="Seeksy Blog - Stories from Creators" />
+        <meta property="og:description" content="Discover insights, tutorials, and stories from the Seeksy creator community." />
+        <meta property="og:url" content="https://seeksy.io/blog" />
+        <meta property="og:type" content="website" />
+        
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Seeksy Blog - Stories from Creators" />
+        <meta name="twitter:description" content="Discover insights, tutorials, and stories from the Seeksy creator community." />
+      </Helmet>
+      
+      <div className="min-h-screen bg-background">
+        {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Hero Background Image */}
         <div 
@@ -305,7 +337,7 @@ const PublicBlog = () => {
 
                   {/* View More Button */}
                   <BlogLoadMore
-                    onLoadMore={() => fetchNextPage()}
+                    onLoadMore={handleLoadMore}
                     isLoading={isFetchingNextPage}
                     hasMore={!!hasNextPage}
                   />
@@ -350,6 +382,7 @@ const PublicBlog = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
 
