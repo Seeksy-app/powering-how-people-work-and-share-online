@@ -27637,6 +27637,104 @@ export type Database = {
           },
         ]
       }
+      video_page_access: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          page_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          page_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          page_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_page_access_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "video_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_page_videos: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          page_id: string
+          video_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          page_id: string
+          video_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          page_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_page_videos_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "video_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_page_videos_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "demo_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_pages: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_private: boolean
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_private?: boolean
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       video_post_production_edits: {
         Row: {
           created_at: string
