@@ -13539,6 +13539,8 @@ export type Database = {
           is_active: boolean | null
           minimum_investment: number | null
           price_per_share: number
+          price_per_share_tier2: number | null
+          tier2_start_date: string | null
           updated_at: string
         }
         Insert: {
@@ -13549,6 +13551,8 @@ export type Database = {
           is_active?: boolean | null
           minimum_investment?: number | null
           price_per_share?: number
+          price_per_share_tier2?: number | null
+          tier2_start_date?: string | null
           updated_at?: string
         }
         Update: {
@@ -13559,6 +13563,8 @@ export type Database = {
           is_active?: boolean | null
           minimum_investment?: number | null
           price_per_share?: number
+          price_per_share_tier2?: number | null
+          tier2_start_date?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -56,6 +56,8 @@ interface PendingInvestment {
 interface InvestorSettings {
   id: string;
   price_per_share: number;
+  price_per_share_tier2: number | null;
+  tier2_start_date: string | null;
   allowed_emails: string[];
   is_active: boolean;
   confidentiality_notice: string;
@@ -113,6 +115,8 @@ export default function PendingInvestments() {
         setSettings({
           id: data.id,
           price_per_share: Number(data.price_per_share),
+          price_per_share_tier2: data.price_per_share_tier2 ? Number(data.price_per_share_tier2) : null,
+          tier2_start_date: data.tier2_start_date || null,
           allowed_emails: data.allowed_emails || [],
           is_active: data.is_active ?? true,
           confidentiality_notice: data.confidentiality_notice || "",
@@ -138,6 +142,8 @@ export default function PendingInvestments() {
         .from("investor_application_settings")
         .update({
           price_per_share: settings.price_per_share,
+          price_per_share_tier2: settings.price_per_share_tier2,
+          tier2_start_date: settings.tier2_start_date,
           allowed_emails: settings.allowed_emails,
           is_active: settings.is_active,
           confidentiality_notice: settings.confidentiality_notice,
@@ -435,21 +441,61 @@ export default function PendingInvestments() {
                 />
               </div>
 
-              {/* Price Per Share */}
-              <div className="space-y-2">
-                <Label htmlFor="pps">Price Per Share ($)</Label>
-                <Input
-                  id="pps"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={settings?.price_per_share || ""}
-                  onChange={(e) => setSettings(prev => prev ? { ...prev, price_per_share: parseFloat(e.target.value) || 0 } : null)}
-                  className="max-w-xs"
-                />
-                <p className="text-xs text-muted-foreground">
-                  This will be displayed to investors on the application form
-                </p>
+              {/* Price Per Share - Tier 1 */}
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-base font-medium">Price Per Share</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Configure tiered pricing based on purchase date
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="pps">Current PPS ($)</Label>
+                    <Input
+                      id="pps"
+                      type="number"
+                      step="0.0001"
+                      min="0.0001"
+                      value={settings?.price_per_share || ""}
+                      onChange={(e) => setSettings(prev => prev ? { ...prev, price_per_share: parseFloat(e.target.value) || 0 } : null)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Active price shown to investors
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="pps2">Future PPS ($)</Label>
+                    <Input
+                      id="pps2"
+                      type="number"
+                      step="0.0001"
+                      min="0.0001"
+                      value={settings?.price_per_share_tier2 || ""}
+                      onChange={(e) => setSettings(prev => prev ? { ...prev, price_per_share_tier2: parseFloat(e.target.value) || null } : null)}
+                      placeholder="Optional"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Price after tier date
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tier2Date">Tier 2 Start Date</Label>
+                  <Input
+                    id="tier2Date"
+                    type="date"
+                    value={settings?.tier2_start_date || ""}
+                    onChange={(e) => setSettings(prev => prev ? { ...prev, tier2_start_date: e.target.value || null } : null)}
+                    className="max-w-xs"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    On this date, the Future PPS becomes active
+                  </p>
+                </div>
               </div>
 
               {/* Minimum Investment */}
