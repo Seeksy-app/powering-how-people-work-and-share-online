@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Settings2, LayoutGrid, Sparkles } from "lucide-react";
+import { Settings2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   getGreetingByTime, 
@@ -241,37 +241,21 @@ export function DashboardHero({
             )}
           </div>
 
-          {/* Right: Action buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Right: Action button - icon only */}
+          <div className="flex items-center gap-1 shrink-0">
             <Button
-              variant={timeOfDay === 'night' ? 'secondary' : 'outline'}
-              size="sm"
+              variant="ghost"
+              size="icon"
               onClick={onCustomizeDashboard}
+              title="Customize Dashboard"
               className={cn(
-                "gap-2",
+                "h-8 w-8",
                 timeOfDay === 'night' 
-                  ? 'bg-white/10 hover:bg-white/20 text-white border-white/20' 
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              <LayoutGrid className="h-4 w-4" />
-              <span className="hidden sm:inline">Customize Dashboard</span>
-              <span className="sm:hidden">Widgets</span>
-            </Button>
-            <Button
-              variant={timeOfDay === 'night' ? 'secondary' : 'outline'}
-              size="sm"
-              onClick={onCustomizeNav}
-              className={cn(
-                "gap-2",
-                timeOfDay === 'night' 
-                  ? 'bg-white/10 hover:bg-white/20 text-white border-white/20' 
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-white/70 hover:text-white hover:bg-white/10' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
             >
               <Settings2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Customize Navigation</span>
-              <span className="sm:hidden">Nav</span>
             </Button>
           </div>
         </div>

@@ -444,7 +444,18 @@ export function WorkspaceSidebar() {
         collapsible="icon"
       >
         <SidebarHeader className="p-3 pb-2">
-          {/* Global Navigation first - My Day, My Work, Recents */}
+          {/* Seeksy Santa Logo */}
+          <div className={cn("flex items-center mb-2", isCollapsed ? "justify-center" : "px-2")}>
+            <img 
+              src="/spark/holiday/seeksy-logo-santa.png" 
+              alt="Seeksy" 
+              className={cn(
+                "transition-all duration-200",
+                isCollapsed ? "h-8 w-8" : "h-8"
+              )}
+            />
+          </div>
+          {/* Global Navigation - My Day, My Work, Recents */}
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -693,8 +704,7 @@ export function WorkspaceSidebar() {
 }
 
 /**
- * Creator Help Footer - Uses SPA actions, no page navigation
- * Opens modals/drawers for Knowledge Hub, Daily Brief, Help Center, Contact Support
+ * Creator Help Footer - Settings only (Help items moved to header Help menu)
  */
 function CreatorHelpFooter({ 
   isCollapsed, 
@@ -705,79 +715,9 @@ function CreatorHelpFooter({
   navigate: (path: string) => void;
   isActive: (path: string) => boolean;
 }) {
-  const { handleHelpMenuAction } = useHelpMenuActions();
-  
   return (
     <SidebarFooter className="p-3 pt-2 border-t border-sidebar-border bg-sidebar mt-auto">
       <SidebarMenu>
-        {/* Knowledge Hub - Opens drawer, no navigation */}
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            onClick={() => handleHelpMenuAction('knowledge_hub')}
-            tooltip="Knowledge Hub"
-            className="text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <BookOpen className="h-4 w-4" />
-            {!isCollapsed && <span>Knowledge Hub</span>}
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-
-        {/* Daily Brief - Opens drawer, no navigation */}
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            onClick={() => handleHelpMenuAction('daily_brief')}
-            tooltip="Daily Brief"
-            className="text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <Newspaper className="h-4 w-4" />
-            {!isCollapsed && <span>Daily Brief</span>}
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-
-        {/* Help Center - Opens drawer, no navigation */}
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            onClick={() => handleHelpMenuAction('help_center')}
-            tooltip="Help Center"
-            className="text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <HelpCircle className="h-4 w-4" />
-            {!isCollapsed && <span>Help Center</span>}
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-
-        {/* Contact Support - Opens drawer, no navigation */}
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            onClick={() => handleHelpMenuAction('contact_support')}
-            tooltip="Contact Support"
-            className="text-sidebar-foreground hover:bg-sidebar-accent"
-          >
-            <Mail className="h-4 w-4" />
-            {!isCollapsed && <span>Contact Support</span>}
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        
-        {/* AI Agent / Ask Seeksy - Opens chat panel */}
-        <SidebarMenuItem>
-          <button
-            onClick={() => handleHelpMenuAction('ai_assistant')}
-            className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
-              "hover:bg-sidebar-accent",
-              "border border-transparent hover:border-sidebar-border",
-              isCollapsed && "justify-center px-2"
-            )}
-          >
-            <SparkIcon variant="holiday" size={24} className="flex-shrink-0" />
-            {!isCollapsed && (
-              <span className="text-sidebar-foreground font-semibold text-base">
-                Ask Seeksy
-              </span>
-            )}
-          </button>
-        </SidebarMenuItem>
-        
         {/* Settings - Still navigates to settings page */}
         <SidebarMenuItem>
           <SidebarMenuButton
