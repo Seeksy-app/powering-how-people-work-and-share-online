@@ -494,3 +494,6 @@ verify_jwt = true
 
 [functions.generate-stock-agreement-docx]
 verify_jwt = true
+
+[functions.fetch-market-intelligence]
+verify_jwt = true

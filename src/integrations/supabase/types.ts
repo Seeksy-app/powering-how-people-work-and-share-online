@@ -14950,6 +14950,208 @@ export type Database = {
           },
         ]
       }
+      market_intelligence_cache: {
+        Row: {
+          content_hash: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          query: string | null
+          raw_content: string | null
+          source_id: string | null
+        }
+        Insert: {
+          content_hash?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          query?: string | null
+          raw_content?: string | null
+          source_id?: string | null
+        }
+        Update: {
+          content_hash?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          query?: string | null
+          raw_content?: string | null
+          source_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_intelligence_cache_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "market_intelligence_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_intelligence_insights: {
+        Row: {
+          audience: string[] | null
+          cache_id: string | null
+          created_at: string
+          id: string
+          insight_type: string
+          is_archived: boolean | null
+          is_featured: boolean | null
+          key_points: Json | null
+          metadata: Json | null
+          published_date: string | null
+          relevance_score: number | null
+          source_id: string | null
+          source_name: string | null
+          source_url: string | null
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string[] | null
+          cache_id?: string | null
+          created_at?: string
+          id?: string
+          insight_type: string
+          is_archived?: boolean | null
+          is_featured?: boolean | null
+          key_points?: Json | null
+          metadata?: Json | null
+          published_date?: string | null
+          relevance_score?: number | null
+          source_id?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          summary: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string[] | null
+          cache_id?: string | null
+          created_at?: string
+          id?: string
+          insight_type?: string
+          is_archived?: boolean | null
+          is_featured?: boolean | null
+          key_points?: Json | null
+          metadata?: Json | null
+          published_date?: string | null
+          relevance_score?: number | null
+          source_id?: string | null
+          source_name?: string | null
+          source_url?: string | null
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_intelligence_insights_cache_id_fkey"
+            columns: ["cache_id"]
+            isOneToOne: false
+            referencedRelation: "market_intelligence_cache"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "market_intelligence_insights_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "market_intelligence_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_intelligence_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          job_type: string
+          query: string | null
+          results_count: number | null
+          source_id: string | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_type: string
+          query?: string | null
+          results_count?: number | null
+          source_id?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          job_type?: string
+          query?: string | null
+          results_count?: number | null
+          source_id?: string | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "market_intelligence_jobs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "market_intelligence_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      market_intelligence_sources: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          last_fetched_at: string | null
+          name: string
+          refresh_frequency: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_fetched_at?: string | null
+          name: string
+          refresh_frequency?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          last_fetched_at?: string | null
+          name?: string
+          refresh_frequency?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       market_signals: {
         Row: {
           action_taken: string | null
