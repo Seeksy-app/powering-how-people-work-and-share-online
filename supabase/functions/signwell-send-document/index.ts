@@ -66,32 +66,8 @@ serve(async (req) => {
         placeholder_name: r.role || `Signer ${index + 1}`,
         signing_order: index + 1, // Sequential: Seller=1, Purchaser=2, Chairman=3
       })),
-      // Add fields for each recipient - signature and date
-      // SignWell expects fields as array of arrays (one per file)
-      fields: [
-        recipients.flatMap((r, index) => [
-          {
-            type: "signature",
-            required: true,
-            recipient_id: r.id,
-            page: 1,
-            x: 10,
-            y: 80 + (index * 6),
-            width: 30,
-            height: 5,
-          },
-          {
-            type: "date",
-            required: true,
-            recipient_id: r.id,
-            page: 1,
-            x: 45,
-            y: 80 + (index * 6),
-            width: 15,
-            height: 5,
-          }
-        ])
-      ],
+      // Use auto signature page instead of placing fields manually
+      with_signature_page: true,
       apply_signing_order: true, // Enforce sequential signing
       custom_requester_name: "Seeksy Legal",
       custom_requester_email: "legal@seeksy.io",
@@ -104,9 +80,8 @@ serve(async (req) => {
       metadata: instanceId ? { instanceId } : undefined,
     };
 
-    console.log("Sending to SignWell API...");
+    console.log("Sending to SignWell API with signature page...");
     console.log("Payload recipients:", JSON.stringify(signWellPayload.recipients));
-    console.log("Payload fields count:", signWellPayload.fields.length);
 
     const signWellResponse = await fetch("https://www.signwell.com/api/v1/documents/", {
       method: "POST",
