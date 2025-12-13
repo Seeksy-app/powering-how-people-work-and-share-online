@@ -6,12 +6,12 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, HelpCircle, MessageSquare, FileText, Video, ExternalLink } from 'lucide-react';
 import { PortalType, PORTAL_LABELS } from '@/hooks/useHelpDrawer';
 import { useNavigate } from 'react-router-dom';
 import { useHelpDrawerStore } from '@/hooks/useHelpDrawer';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface HelpCenterPanelProps {
   portal: PortalType;
@@ -60,6 +60,7 @@ const PORTAL_HELP: Record<PortalType, HelpTopic[]> = {
 
 export function HelpCenterPanel({ portal, contentKey }: HelpCenterPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
   const navigate = useNavigate();
   const { close } = useHelpDrawerStore();
   
@@ -72,7 +73,8 @@ export function HelpCenterPanel({ portal, contentKey }: HelpCenterPanelProps) {
   
   const handleViewFullCenter = () => {
     close();
-    const route = portal === 'admin' ? '/admin/helpdesk' : '/helpdesk';
+    // Route to portal-specific knowledge hub, NOT admin helpdesk
+    const route = portal === 'admin' ? '/admin/knowledge-base' : '/knowledge/creator';
     navigate(route);
   };
   
@@ -109,7 +111,11 @@ export function HelpCenterPanel({ portal, contentKey }: HelpCenterPanelProps) {
       
       <div className="space-y-2">
         {filteredTopics.map(topic => (
-          <Card key={topic.id} className="cursor-pointer hover:bg-accent/50 transition-colors">
+          <Card 
+            key={topic.id} 
+            className="cursor-pointer hover:bg-accent/50 transition-colors"
+            onClick={() => setSelectedTopic(topic)}
+          >
             <CardHeader className="pb-2 pt-3 px-4">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded bg-primary/10 text-primary">
@@ -133,6 +139,26 @@ export function HelpCenterPanel({ portal, contentKey }: HelpCenterPanelProps) {
           <p>No help topics found</p>
         </div>
       )}
+      
+      {/* Topic Detail Dialog */}
+      <Dialog open={!!selectedTopic} onOpenChange={() => setSelectedTopic(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-1.5 rounded bg-primary/10 text-primary">
+                {selectedTopic && getIcon(selectedTopic.icon)}
+              </div>
+              {selectedTopic?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="prose prose-sm dark:prose-invert max-w-none">
+            <p>{selectedTopic?.description}</p>
+            <p className="text-muted-foreground text-sm mt-4">
+              For more detailed information, click "Full Help Center" to browse all available resources.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
