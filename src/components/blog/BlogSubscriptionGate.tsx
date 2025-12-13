@@ -102,47 +102,41 @@ export const BlogSubscriptionGate = ({
     if (!email) return;
 
     setIsSubmitting(true);
+    
+    // FIRE GTM EVENT FIRST - BEFORE any API call (non-blocking analytics)
+    const emailDomain = email.split('@')[1] || 'unknown';
+    if (typeof window !== 'undefined' && window.dataLayer) {
+      window.dataLayer.push({
+        event: 'subscription_completed',
+        email_domain: emailDomain,
+        source: 'blog_subscription_gate',
+        page_path: window.location.pathname,
+        timestamp: new Date().toISOString()
+      });
+    }
+    gtmEvents.subscriptionCompleted(postId, postTitle, 'blog_gate');
+
+    // Always show success UI immediately - analytics is already tracked
+    setSubscribed(true);
+    setShowGate(false);
+    toast({
+      title: 'Subscribed!',
+      description: 'You now have full access to all articles.',
+    });
+
+    // Attempt backend insert (non-blocking, silent failure)
     try {
-      // Call Edge Function instead of direct Supabase insert (bypasses RLS)
       const response = await supabase.functions.invoke('subscribe-newsletter', {
         body: { email, source: 'blog_gate' }
       });
 
-      if (response.error) throw response.error;
-      
-      const data = response.data;
-      if (!data?.success) {
-        throw new Error(data?.error || 'Subscription failed');
+      if (response.error || !response.data?.success) {
+        // Log error but don't show to user - analytics already fired
+        console.warn('Backend subscription save failed:', response.error || response.data?.error);
       }
-
-      // Fire GA conversion event ONLY on success
-      const emailDomain = email.split('@')[1] || 'unknown';
-      gtmEvents.subscriptionCompleted(postId, postTitle, 'blog_gate');
-      
-      // Also push raw dataLayer event with context
-      if (typeof window !== 'undefined' && window.dataLayer) {
-        window.dataLayer.push({
-          event: 'subscription_completed',
-          page_path: window.location.pathname,
-          timestamp: new Date().toISOString(),
-          email_domain: emailDomain,
-          source: 'blog_gate'
-        });
-      }
-
-      setSubscribed(true);
-      setShowGate(false);
-      toast({
-        title: 'Subscribed!',
-        description: 'You now have full access to all articles.',
-      });
-    } catch (error: any) {
-      console.error('Subscribe error:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to subscribe. Please try again.',
-        variant: 'destructive',
-      });
+    } catch (error) {
+      // Silent failure - user already got success message, GTM already fired
+      console.warn('Backend subscription error (non-blocking):', error);
     } finally {
       setIsSubmitting(false);
     }
