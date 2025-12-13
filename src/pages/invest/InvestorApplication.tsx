@@ -11,6 +11,8 @@ import { Loader2, CheckCircle, DollarSign, Hash, Lock, Shield } from "lucide-rea
 
 interface InvestorSettings {
   price_per_share: number;
+  price_per_share_tier2: number | null;
+  tier2_start_date: string | null;
   allowed_emails: string[];
   is_active: boolean;
   minimum_investment: number;
@@ -57,6 +59,8 @@ export default function InvestorApplication() {
       if (data) {
         setSettings({
           price_per_share: Number(data.price_per_share),
+          price_per_share_tier2: data.price_per_share_tier2 ? Number(data.price_per_share_tier2) : null,
+          tier2_start_date: data.tier2_start_date || null,
           allowed_emails: data.allowed_emails || [],
           is_active: data.is_active ?? true,
           confidentiality_notice: data.confidentiality_notice || "",
@@ -70,7 +74,26 @@ export default function InvestorApplication() {
     }
   };
 
-  const pricePerShare = settings?.price_per_share || 0.20;
+  // Determine active PPS based on tier date
+  const getActivePricePerShare = () => {
+    if (!settings) return 0.20;
+    
+    // If tier 2 date is set and we're past it, use tier 2 price
+    if (settings.tier2_start_date && settings.price_per_share_tier2) {
+      const tier2Date = new Date(settings.tier2_start_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      tier2Date.setHours(0, 0, 0, 0);
+      
+      if (today >= tier2Date) {
+        return settings.price_per_share_tier2;
+      }
+    }
+    
+    return settings.price_per_share;
+  };
+  
+  const pricePerShare = getActivePricePerShare();
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
