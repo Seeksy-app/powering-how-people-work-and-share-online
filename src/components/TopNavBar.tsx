@@ -1,11 +1,12 @@
 /**
  * Firecrawl-inspired TopNavBar
  * Clean, minimal design with: Team selector, Search, Help, Docs, Notifications
+ * 
+ * Help menu uses portal-scoped modals (no page refresh/redirect)
  */
 
 import { useState, useEffect } from "react";
 import { GlobalSearch } from "@/components/GlobalSearch";
-// ThemeSliderPopover removed temporarily
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { DataModePill } from "@/components/data-mode/DataModePill";
 import { AdminViewSwitcher } from "@/components/admin/AdminViewSwitcher";
@@ -23,22 +24,22 @@ import { HelpCircle, FileText, ChevronDown, Sparkles, Settings, LogOut, User, Bo
 import { useUnreadUpdates } from "@/hooks/useUnreadUpdates";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { supabase } from "@/integrations/supabase/client";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { usePinnedHeaderItems, getHeaderItems, HeaderItemId } from "@/hooks/usePinnedHeaderItems";
-import { GlossaryModal } from "@/components/board/GlossaryModal";
+import { usePinnedHeaderItems, HeaderItemId } from "@/hooks/usePinnedHeaderItems";
+import { useHelpMenuActions, HelpActionKey, PORTAL_LABELS } from "@/hooks/useHelpDrawer";
 
 export function TopNavBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin } = useUserRoles();
   const { pinnedItems, togglePin, isPinned } = usePinnedHeaderItems();
+  const { handleHelpMenuAction, effectivePortal } = useHelpMenuActions();
   const [teamName, setTeamName] = useState("Personal Workspace");
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [glossaryOpen, setGlossaryOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -77,23 +78,15 @@ export function TopNavBar() {
     }
   };
 
-  const openAIChat = () => {
-    document.dispatchEvent(new Event('open-spark-assistant'));
-  };
-
   const isAdminRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/cfo');
   const isBoardRoute = location.pathname.startsWith('/board');
   
-  // Get context-aware header items based on current route
-  const headerItems = getHeaderItems(isAdminRoute);
-
-  const handleHeaderItemClick = (item: ReturnType<typeof getHeaderItems>[0]) => {
-    if (item.action === 'glossary') {
-      setGlossaryOpen(true);
-    } else if (item.route) {
-      navigate(item.route);
-    }
-  };
+  // Help menu items - all open modals/drawers (no navigation)
+  const helpMenuItems: { id: HelpActionKey; label: string; icon: 'book' | 'file' | 'help' | 'mail' }[] = [
+    { id: 'knowledge_hub', label: 'Knowledge Hub', icon: 'book' },
+    { id: 'daily_brief', label: 'Daily Brief', icon: 'file' },
+    { id: 'glossary', label: 'Glossary', icon: 'book' },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -150,29 +143,27 @@ export function TopNavBar() {
           {/* Data Mode Pill */}
           <DataModePill />
 
-          {/* Pinned Header Items */}
-          {headerItems.filter(item => isPinned(item.id)).map(item => (
+          {/* Pinned Header Items - open modals, no navigation */}
+          {helpMenuItems.filter(item => isPinned(item.id as HeaderItemId)).map(item => (
             <Button
               key={item.id}
               variant="ghost"
               size="sm"
-              onClick={() => handleHeaderItemClick(item)}
+              onClick={() => handleHelpMenuAction(item.id)}
               className="gap-2 hidden sm:flex"
             >
-              {item.id === 'knowledge-hub' && <BookOpen className="h-4 w-4" />}
-              {item.id === 'daily-brief' && <FileText className="h-4 w-4" />}
-              {item.id === 'docs' && <FileText className="h-4 w-4" />}
-              {item.id === 'glossary' && <BookOpen className="h-4 w-4" />}
+              {item.icon === 'book' && <BookOpen className="h-4 w-4" />}
+              {item.icon === 'file' && <FileText className="h-4 w-4" />}
               <span className="text-sm font-medium">{item.label}</span>
             </Button>
           ))}
 
-          {/* Ask Seeksy - for Admin routes (styled like Creator header) */}
+          {/* Ask Seeksy - for Admin routes */}
           {isAdminRoute && (
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={openAIChat}
+              onClick={() => handleHelpMenuAction('ai_assistant')}
               className="gap-2 hidden sm:flex"
             >
               <MessageCircle className="h-4 w-4" />
@@ -186,7 +177,7 @@ export function TopNavBar() {
           {/* Notifications */}
           <NotificationsBell />
 
-          {/* Help Dropdown - contains Knowledge Hub, Daily Brief, Docs, Glossary, Ask AI Assistant */}
+          {/* Help Dropdown - ALL items open modals/drawers (no navigation/refresh) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="gap-1.5">
@@ -194,37 +185,39 @@ export function TopNavBar() {
                 <span className="hidden sm:inline">Help</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuItem onClick={openAIChat} className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400">
+            <DropdownMenuContent align="end" className="w-64 bg-background">
+              {/* AI Assistant - opens Spark drawer */}
+              <DropdownMenuItem 
+                onClick={() => handleHelpMenuAction('ai_assistant')} 
+                className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 cursor-pointer"
+              >
                 <Sparkles className="h-4 w-4 mr-2" />
                 Ask AI Assistant
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              {headerItems.map(item => (
+              
+              {/* Portal-scoped help items - all open modals */}
+              {helpMenuItems.map(item => (
                 <DropdownMenuItem 
                   key={item.id}
                   className="flex items-center justify-between group cursor-pointer"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleHeaderItemClick(item);
-                  }}
+                  onClick={() => handleHelpMenuAction(item.id)}
                 >
                   <div className="flex items-center">
-                    {item.id === 'knowledge-hub' && <BookOpen className="h-4 w-4 mr-2" />}
-                    {item.id === 'daily-brief' && <FileText className="h-4 w-4 mr-2" />}
-                    {item.id === 'docs' && <FileText className="h-4 w-4 mr-2" />}
-                    {item.id === 'glossary' && <BookOpen className="h-4 w-4 mr-2" />}
+                    {item.icon === 'book' && <BookOpen className="h-4 w-4 mr-2" />}
+                    {item.icon === 'file' && <FileText className="h-4 w-4 mr-2" />}
                     {item.label}
                   </div>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      togglePin(item.id);
+                      togglePin(item.id as HeaderItemId);
                     }}
                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-muted rounded"
-                    title={isPinned(item.id) ? 'Unpin from header' : 'Pin to header'}
+                    title={isPinned(item.id as HeaderItemId) ? 'Unpin from header' : 'Pin to header'}
                   >
-                    {isPinned(item.id) ? (
+                    {isPinned(item.id as HeaderItemId) ? (
                       <PinOff className="h-3.5 w-3.5 text-muted-foreground" />
                     ) : (
                       <Pin className="h-3.5 w-3.5 text-muted-foreground" />
@@ -233,17 +226,23 @@ export function TopNavBar() {
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to={isAdminRoute ? "/admin/helpdesk" : "/helpdesk"}>
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Help Center
-                </Link>
+              
+              {/* Help Center - opens modal */}
+              <DropdownMenuItem 
+                onClick={() => handleHelpMenuAction('help_center')}
+                className="cursor-pointer"
+              >
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Help Center
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/submit-ticket">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Contact Support
-                </Link>
+              
+              {/* Contact Support - opens modal with portal context */}
+              <DropdownMenuItem 
+                onClick={() => handleHelpMenuAction('contact_support')}
+                className="cursor-pointer"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Contact Support
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -289,9 +288,6 @@ export function TopNavBar() {
           </DropdownMenu>
         </div>
       </div>
-      
-      {/* Global Glossary Modal */}
-      <GlossaryModal open={glossaryOpen} onOpenChange={setGlossaryOpen} />
     </header>
   );
 }
