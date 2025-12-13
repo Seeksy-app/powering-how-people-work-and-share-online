@@ -605,7 +605,7 @@ export function WorkspaceSidebar() {
                                 onClick={() => toggleGroup(groupKey)}
                               >
                                 <GroupIcon className="h-5 w-5" />
-                                {!isCollapsed && <span className="font-bold text-[15px]">{groupName}</span>}
+                                {!isCollapsed && <span className="font-medium text-[15px]">{groupName}</span>}
                               </SidebarMenuButton>
                               
                               {/* Section overflow menu */}
