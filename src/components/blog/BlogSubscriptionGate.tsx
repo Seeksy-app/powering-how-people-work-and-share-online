@@ -180,8 +180,8 @@ export const BlogSubscriptionGate = ({
             }}
           />
           
-          {/* Subscription modal overlay */}
-          <div className="absolute inset-x-0 bottom-0 flex items-end justify-center pb-8 pointer-events-none">
+          {/* Subscription modal overlay - positioned just under the fade start */}
+          <div className="absolute inset-x-0 top-[45%] flex items-start justify-center pointer-events-none">
             <div className="pointer-events-auto bg-card border border-border rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4">
               <button
                 onClick={handleDismiss}
