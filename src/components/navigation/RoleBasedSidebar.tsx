@@ -83,6 +83,11 @@ import {
   Play,
   Package,
   LogOut,
+  MoreHorizontal,
+  ExternalLink,
+  Star,
+  Trash2,
+  FolderInput,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -98,6 +103,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
+  ContextMenuSeparator,
 } from "@/components/ui/context-menu";
 import { Pin, PinOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -792,7 +798,7 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
                         return (
                           <ContextMenu key={item.id}>
                             <ContextMenuTrigger asChild>
-                              <SidebarMenuItem>
+                              <SidebarMenuItem className="group relative">
                                 <SidebarMenuButton asChild tooltip={collapsed ? item.label : undefined}>
                                   <NavLink
                                     to={item.path}
@@ -808,6 +814,62 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
                                     )}
                                   </NavLink>
                                 </SidebarMenuButton>
+                                
+                                {/* Hover dropdown menu - same as Creator sidebar */}
+                                {!collapsed && (
+                                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-6 w-6 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900/30"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-48 bg-popover border shadow-lg z-50">
+                                        <DropdownMenuItem 
+                                          onClick={() => handleTogglePin(item.id, item.label)}
+                                          className="flex items-center gap-2 cursor-pointer"
+                                        >
+                                          {isPinnedItem ? (
+                                            <>
+                                              <PinOff className="h-4 w-4" />
+                                              Unpin from Top
+                                            </>
+                                          ) : (
+                                            <>
+                                              <Star className="h-4 w-4" />
+                                              Pin to top
+                                            </>
+                                          )}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                                          <ExternalLink className="h-4 w-4" />
+                                          Make standalone
+                                        </DropdownMenuItem>
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <DropdownMenuItem className="flex items-center gap-2 cursor-pointer justify-between">
+                                              <div className="flex items-center gap-2">
+                                                <FolderInput className="h-4 w-4" />
+                                                Move to...
+                                              </div>
+                                              <ChevronRight className="h-4 w-4" />
+                                            </DropdownMenuItem>
+                                          </DropdownMenuTrigger>
+                                        </DropdownMenu>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
+                                          <Trash2 className="h-4 w-4" />
+                                          Remove from workspace
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                )}
                               </SidebarMenuItem>
                             </ContextMenuTrigger>
                             <ContextMenuContent className="bg-popover border border-border shadow-lg z-50">
@@ -826,6 +888,15 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
                                     Pin to Top
                                   </>
                                 )}
+                              </ContextMenuItem>
+                              <ContextMenuItem className="flex items-center gap-2 cursor-pointer">
+                                <ExternalLink className="h-4 w-4" />
+                                Make standalone
+                              </ContextMenuItem>
+                              <ContextMenuSeparator />
+                              <ContextMenuItem className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                                Remove from workspace
                               </ContextMenuItem>
                             </ContextMenuContent>
                           </ContextMenu>
