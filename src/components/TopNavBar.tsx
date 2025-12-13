@@ -19,7 +19,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { HelpCircle, FileText, ChevronDown, Sparkles, ExternalLink, Settings, LogOut, User, BookOpen, MessageCircle, Pin, PinOff } from "lucide-react";
+import { HelpCircle, FileText, ChevronDown, Sparkles, ExternalLink, Settings, LogOut, User, BookOpen, MessageCircle, Pin, PinOff, Megaphone } from "lucide-react";
+import { useUnreadUpdates } from "@/hooks/useUnreadUpdates";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate, Link } from "react-router-dom";
@@ -176,6 +177,9 @@ export function TopNavBar() {
             </Button>
           )}
 
+          {/* What's New Button */}
+          <WhatsNewButton isAdminRoute={isAdminRoute} />
+
           {/* Notifications */}
           <NotificationsBell />
 
@@ -284,5 +288,28 @@ export function TopNavBar() {
         </div>
       </div>
     </header>
+  );
+}
+
+// What's New Button Component
+function WhatsNewButton({ isAdminRoute }: { isAdminRoute: boolean }) {
+  const navigate = useNavigate();
+  const { unreadCount } = useUnreadUpdates(isAdminRoute ? 'admin' : 'creator');
+  
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => navigate(isAdminRoute ? '/admin/changelog' : '/changelog')}
+      className="gap-1.5 hidden sm:flex"
+    >
+      <Megaphone className="h-4 w-4" />
+      <span className="text-sm font-medium">What's New</span>
+      {unreadCount > 0 && (
+        <Badge variant="secondary" className="h-5 px-1.5 text-xs bg-primary text-primary-foreground">
+          {unreadCount}
+        </Badge>
+      )}
+    </Button>
   );
 }
