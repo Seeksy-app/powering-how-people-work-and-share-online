@@ -503,3 +503,6 @@ verify_jwt = true
 
 [functions.firecrawl-search]
 verify_jwt = true
+
+[functions.subscribe-newsletter]
+verify_jwt = false
