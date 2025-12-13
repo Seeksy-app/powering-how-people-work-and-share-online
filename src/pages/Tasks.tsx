@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, List, LayoutGrid, User, ArrowUpDown, CheckCircle, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, List, LayoutGrid, User, ArrowUpDown, CheckCircle, Clock, Rows3 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +20,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CategoryManager } from "@/components/tasks/CategoryManager";
 import { CategorySelect } from "@/components/tasks/CategorySelect";
 import { SectionSelect, useSections } from "@/components/tasks/SectionSelect";
+import { TaskSectionsView } from "@/components/tasks/TaskSectionsView";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTaskReminders } from "@/hooks/useTaskReminders";
 import { TaskComments } from "@/components/tasks/TaskComments";
@@ -230,7 +231,7 @@ export default function Tasks() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [viewMode, setViewMode] = useState<"board" | "list">("board");
+  const [viewMode, setViewMode] = useState<"board" | "list" | "sections">("board");
   const [viewModeLoaded, setViewModeLoaded] = useState(false);
   const [sortField, setSortField] = useState<keyof Task | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -294,7 +295,7 @@ export default function Tasks() {
         .single();
       
       if (prefs?.task_view_mode) {
-        setViewMode(prefs.task_view_mode as "board" | "list");
+        setViewMode(prefs.task_view_mode as "board" | "list" | "sections");
       }
       setViewModeLoaded(true);
 
@@ -709,6 +710,36 @@ export default function Tasks() {
       toast({
         title: "Success",
         description: "Task moved",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle moving task to a different section
+  const handleSectionMove = async (taskId: string, newSection: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || task.section === newSection) return;
+
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ section: newSection })
+        .eq("id", taskId);
+
+      if (error) throw error;
+
+      setTasks(tasks.map(t => 
+        t.id === taskId ? { ...t, section: newSection } : t
+      ));
+
+      toast({
+        title: "Success",
+        description: "Task moved to " + newSection,
       });
     } catch (error: any) {
       toast({
@@ -1141,10 +1172,19 @@ export default function Tasks() {
                   
                   <div className="flex items-center border rounded-md">
                     <Button
+                      variant={viewMode === "sections" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("sections")}
+                      className="rounded-r-none"
+                    >
+                      <Rows3 className="h-4 w-4 mr-2" />
+                      Sections
+                    </Button>
+                    <Button
                       variant={viewMode === "board" ? "default" : "ghost"}
                       size="sm"
                       onClick={() => setViewMode("board")}
-                      className="rounded-r-none"
+                      className="rounded-none"
                     >
                       <LayoutGrid className="h-4 w-4 mr-2" />
                       Board
@@ -1163,6 +1203,48 @@ export default function Tasks() {
               </div>
             </CardContent>
           </Card>
+
+      {/* Sections View */}
+      {viewMode === "sections" && (
+        <TaskSectionsView
+          tasks={filteredTasks}
+          sections={sections}
+          onTaskMove={handleSectionMove}
+          onTaskClick={(task) => {
+            setEditingTask(task);
+            setFormData({
+              title: task.title,
+              description: task.description || "",
+              category: task.category,
+              priority: task.priority,
+              status: task.status,
+              section: task.section || "none",
+              assigned_to: task.assigned_to || "unassigned",
+              due_date: task.due_date || "",
+            });
+            setDialogOpen(true);
+          }}
+          onAddTask={(sectionName) => {
+            setEditingTask(null);
+            setFormData({
+              title: "",
+              description: "",
+              category: "general",
+              priority: "medium",
+              status: "todo",
+              section: sectionName,
+              assigned_to: "unassigned",
+              due_date: "",
+            });
+            setDialogOpen(true);
+          }}
+          onAddSection={() => {
+            // Open section manager - trigger via SectionSelect component
+            const event = new CustomEvent('openSectionManager');
+            window.dispatchEvent(event);
+          }}
+        />
+      )}
 
       {/* Board View */}
       {viewMode === "board" && (
