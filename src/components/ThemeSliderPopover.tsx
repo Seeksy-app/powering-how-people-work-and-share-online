@@ -6,41 +6,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Slider } from "@/components/ui/slider";
 import { useTheme } from "next-themes";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 type ThemeLevel = 'light' | 'dark' | 'midnight' | 'system';
 
-const THEME_LEVELS: { value: number; theme: ThemeLevel; icon: typeof Sun; label: string }[] = [
-  { value: 0, theme: 'light', icon: Sun, label: 'Light' },
-  { value: 33, theme: 'dark', icon: SunMedium, label: 'Dark' },
-  { value: 66, theme: 'midnight', icon: CloudMoon, label: 'Midnight' },
-  { value: 100, theme: 'system', icon: Moon, label: 'System' },
+const THEME_OPTIONS: { theme: ThemeLevel; icon: typeof Sun; label: string }[] = [
+  { theme: 'light', icon: Sun, label: 'Light' },
+  { theme: 'dark', icon: SunMedium, label: 'Dark' },
+  { theme: 'midnight', icon: CloudMoon, label: 'Midnight' },
+  { theme: 'system', icon: Moon, label: 'System' },
 ];
-
-function getThemeFromValue(value: number): ThemeLevel {
-  if (value <= 16) return 'light';
-  if (value <= 50) return 'dark';
-  if (value <= 83) return 'midnight';
-  return 'system';
-}
-
-function getValueFromTheme(theme: string | undefined): number {
-  switch (theme) {
-    case 'light': return 0;
-    case 'dark': return 33;
-    case 'midnight': return 66;
-    case 'system': return 100;
-    default: return 0;
-  }
-}
 
 export function ThemeSliderPopover() {
   const { theme, setTheme } = useTheme();
   const [userId, setUserId] = useState<string | null>(null);
-  const [sliderValue, setSliderValue] = useState<number[]>([getValueFromTheme(theme)]);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -53,14 +34,9 @@ export function ThemeSliderPopover() {
     getUserId();
   }, []);
 
-  useEffect(() => {
-    setSliderValue([getValueFromTheme(theme)]);
-  }, [theme]);
-
-  const handleSliderChange = async (value: number[]) => {
-    setSliderValue(value);
-    const newTheme = getThemeFromValue(value[0]);
+  const handleThemeSelect = async (newTheme: ThemeLevel) => {
     setTheme(newTheme);
+    setIsOpen(false);
 
     if (userId) {
       await supabase
@@ -87,11 +63,6 @@ export function ThemeSliderPopover() {
     }
   };
 
-  const getCurrentThemeLabel = () => {
-    const level = THEME_LEVELS.find(l => l.theme === theme);
-    return level?.label || 'System';
-  };
-
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -102,48 +73,32 @@ export function ThemeSliderPopover() {
       </PopoverTrigger>
       <PopoverContent 
         align="end" 
-        className="w-16 p-3 bg-popover border shadow-lg z-50"
+        className="w-auto p-2 bg-popover border shadow-lg z-50"
         side="bottom"
       >
-        <div className="flex flex-col items-center gap-3">
-          {/* Top icon - Light */}
-          <div className={cn(
-            "p-1.5 rounded-md transition-colors",
-            theme === 'light' && "bg-yellow-100 dark:bg-yellow-900/30"
-          )}>
-            <Sun className={cn(
-              "h-4 w-4",
-              theme === 'light' ? "text-yellow-500" : "text-muted-foreground"
-            )} />
-          </div>
-
-          {/* Vertical Slider */}
-          <div className="h-32 flex items-center justify-center">
-            <Slider
-              value={sliderValue}
-              onValueChange={handleSliderChange}
-              max={100}
-              step={1}
-              orientation="vertical"
-              className="h-full"
-            />
-          </div>
-
-          {/* Bottom icon - System/Moon */}
-          <div className={cn(
-            "p-1.5 rounded-md transition-colors",
-            theme === 'system' && "bg-slate-100 dark:bg-slate-800"
-          )}>
-            <Moon className={cn(
-              "h-4 w-4",
-              theme === 'system' ? "text-slate-500" : "text-muted-foreground"
-            )} />
-          </div>
-
-          {/* Current theme label */}
-          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">
-            {getCurrentThemeLabel()}
-          </span>
+        <div className="flex flex-col gap-1">
+          {THEME_OPTIONS.map(({ theme: themeOption, icon: Icon, label }) => (
+            <button
+              key={themeOption}
+              onClick={() => handleThemeSelect(themeOption)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors w-full text-left",
+                theme === themeOption 
+                  ? "bg-accent text-accent-foreground" 
+                  : "hover:bg-muted text-foreground"
+              )}
+            >
+              <Icon className={cn(
+                "h-4 w-4",
+                theme === themeOption && themeOption === 'light' && "text-yellow-500",
+                theme === themeOption && themeOption === 'dark' && "text-orange-400",
+                theme === themeOption && themeOption === 'midnight' && "text-indigo-400",
+                theme === themeOption && themeOption === 'system' && "text-slate-400",
+                theme !== themeOption && "text-muted-foreground"
+              )} />
+              <span>{label}</span>
+            </button>
+          ))}
         </div>
       </PopoverContent>
     </Popover>
