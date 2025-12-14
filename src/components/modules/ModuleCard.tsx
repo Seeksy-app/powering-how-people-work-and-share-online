@@ -138,20 +138,18 @@ export function ModuleCard({
         <div className="flex items-center gap-2 pt-2 border-t border-border/50">
           {isInstalled ? (
             <>
-              <Button
+              <Badge 
                 variant="secondary"
-                size="sm"
-                className="flex-1 gap-1.5 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-0 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50 font-medium"
-                disabled
+                className="gap-1 text-xs bg-emerald-50 text-emerald-700 border-0 dark:bg-emerald-900/30 dark:text-emerald-400 font-medium px-2 py-1"
               >
-                <Check className="h-3.5 w-3.5" />
-                Added
-              </Button>
+                <Check className="h-3 w-3" />
+                Active
+              </Badge>
               {module.route && (
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
-                  className="gap-1.5 text-xs font-medium"
+                  className="flex-1 gap-1.5 text-xs font-medium"
                   onClick={(e) => {
                     e.stopPropagation();
                     onOpen?.();

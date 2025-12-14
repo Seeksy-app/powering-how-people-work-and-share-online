@@ -149,12 +149,8 @@ export function ModuleCenterModal({ isOpen, onClose, defaultToApps = false }: Mo
       return;
     }
 
-    if (installedModuleIds.has(moduleId)) {
-      toast.info("Already added", {
-        description: "This app is already in your workspace.",
-      });
-      return;
-    }
+    // Allow re-adding modules that were previously removed
+    // The installedModuleIds check is now only for UI display, not blocking
 
     setInstallingModules(prev => new Set(prev).add(moduleId));
     
