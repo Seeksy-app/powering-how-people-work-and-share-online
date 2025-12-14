@@ -4939,6 +4939,42 @@ export type Database = {
           },
         ]
       }
+      campaign_lists: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          list_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          list_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          list_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_lists_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "marketing_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_lists_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "subscriber_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_livestream_sessions: {
         Row: {
           campaign_id: string | null
@@ -9643,6 +9679,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cta_definitions: {
+        Row: {
+          auto_lists: string[] | null
+          created_at: string
+          description: string | null
+          event_name: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          auto_lists?: string[] | null
+          created_at?: string
+          description?: string | null
+          event_name: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          auto_lists?: string[] | null
+          created_at?: string
+          description?: string | null
+          event_name?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       custom_link_sections: {
         Row: {
@@ -15326,6 +15395,45 @@ export type Database = {
           tags?: string[] | null
           title?: string
           urgency?: string | null
+        }
+        Relationships: []
+      }
+      marketing_campaigns: {
+        Row: {
+          channel: string
+          content: string | null
+          created_at: string
+          id: string
+          name: string
+          scheduled_at: string | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          scheduled_at?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
