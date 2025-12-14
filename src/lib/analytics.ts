@@ -4,6 +4,7 @@
 declare global {
   interface Window {
     dataLayer: Record<string, unknown>[];
+    trackEvent: (event: string, params?: Record<string, unknown>) => void;
     __scrolled_70?: boolean;
   }
 }
@@ -20,20 +21,32 @@ function pushEvent(event: string, data?: Record<string, unknown>) {
   }
 }
 
+// Global helper for inline usage
+if (typeof window !== 'undefined') {
+  window.trackEvent = (event: string, params: Record<string, unknown> = {}) => {
+    pushEvent(event, params);
+  };
+}
+
 /* ---------- AUTH ---------- */
 export const trackLoginStarted = () => pushEvent('login_started');
-export const trackLoginSuccess = () => pushEvent('login_success');
-export const trackLoginError = () => pushEvent('login_error');
+export const trackLoginSuccess = (data?: { method?: string }) => 
+  pushEvent('login_success', data);
+export const trackLoginError = (data?: { error_type?: string }) => 
+  pushEvent('login_error', data);
 
 export const trackSignupStarted = () => pushEvent('signup_started');
-export const trackSignupSuccess = () => pushEvent('signup_success');
-export const trackSignupError = () => pushEvent('signup_error');
+export const trackSignupSuccess = (data?: { method?: string }) => 
+  pushEvent('signup_success', data);
+export const trackSignupError = (data?: { error_type?: string }) => 
+  pushEvent('signup_error', data);
 
 /* ---------- SUBSCRIPTION ---------- */
 export const trackSubscriptionStarted = () => pushEvent('subscription_started');
 export const trackSubscriptionCompleted = (data?: { email_domain?: string; source?: string }) => 
   pushEvent('subscription_completed', data);
-export const trackSubscriptionError = () => pushEvent('subscription_error');
+export const trackSubscriptionError = (data?: { error_type?: string }) => 
+  pushEvent('subscription_error', data);
 
 /* ---------- CTA ---------- */
 export const trackCtaClicked = (ctaName: string) => 
