@@ -237,9 +237,10 @@ export default function InvestorApplication() {
     const options = [{ value: "0", label: "No add-on" }];
     
     for (let amount = increment; amount <= max; amount += increment) {
+      const addonShares = Math.ceil(amount / (settings.addon_price_per_share || 1));
       options.push({
         value: amount.toString(),
-        label: `$${amount.toLocaleString()} (+${Math.floor(amount / (settings.addon_price_per_share || 1)).toLocaleString()} shares at $${settings.addon_price_per_share?.toFixed(2)})`
+        label: `$${amount.toLocaleString()} (+${addonShares.toLocaleString()} shares at $${settings.addon_price_per_share?.toFixed(2)})`
       });
     }
     
@@ -253,23 +254,23 @@ export default function InvestorApplication() {
   const calculateAddonShares = () => {
     const addonAmount = parseFloat(formData.addonAmount) || 0;
     if (addonAmount <= 0 || !settings?.addon_price_per_share) return 0;
-    return Math.floor(addonAmount / settings.addon_price_per_share);
+    return Math.ceil(addonAmount / settings.addon_price_per_share);
   };
 
   const calculateTotal = () => {
     const mainAmount = investmentMode === "shares" 
-      ? (parseFloat(formData.numberOfShares) || 0) * pricePerShare
-      : parseFloat(formData.investmentAmount) || 0;
+      ? Math.ceil(parseFloat(formData.numberOfShares) || 0) * pricePerShare
+      : Math.ceil(parseFloat(formData.investmentAmount) || 0);
     const addonAmount = parseFloat(formData.addonAmount) || 0;
-    return (mainAmount + addonAmount).toFixed(2);
+    return Math.ceil(mainAmount + addonAmount);
   };
 
   const calculateShares = () => {
     if (investmentMode === "amount") {
       const amount = parseFloat(formData.investmentAmount) || 0;
-      return Math.floor(amount / pricePerShare);
+      return Math.ceil(amount / pricePerShare);
     } else {
-      return parseInt(formData.numberOfShares) || 0;
+      return Math.ceil(parseInt(formData.numberOfShares) || 0);
     }
   };
 
@@ -334,7 +335,7 @@ export default function InvestorApplication() {
     const addonShares = calculateAddonShares();
     const totalShares = calculateTotalShares();
     const addonAmount = parseFloat(formData.addonAmount) || 0;
-    const totalAmount = parseFloat(calculateTotal());
+    const totalAmount = calculateTotal();
     
     if (mainShares <= 0) {
       toast.error("Please enter a valid investment amount or number of shares");
@@ -757,7 +758,7 @@ export default function InvestorApplication() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Total Investment:</span>
-                <span className="font-semibold text-lg">${parseFloat(calculateTotal()).toLocaleString()}</span>
+                <span className="font-semibold text-lg">${calculateTotal().toLocaleString()}</span>
               </div>
             </div>
 

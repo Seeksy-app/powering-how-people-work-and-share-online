@@ -538,16 +538,16 @@ export default function PendingInvestments() {
             message: `Please review and sign the Stock Purchase Agreement for ${numberOfShares} shares at $${pricePerShare.toFixed(2)} per share (Total: $${computedValues.totalAmount}).`,
             recipients: [
               {
-                id: "seller",
-                email: sellerEmail,
-                name: sellerName || "Seeksy, Inc.",
-                role: "Seller",
-              },
-              {
                 id: "purchaser",
                 email: purchaserEmail,
                 name: purchaserName,
                 role: "Purchaser",
+              },
+              {
+                id: "seller",
+                email: sellerEmail,
+                name: sellerName || "Seeksy, Inc.",
+                role: "Seller",
               },
               {
                 id: "chairman",

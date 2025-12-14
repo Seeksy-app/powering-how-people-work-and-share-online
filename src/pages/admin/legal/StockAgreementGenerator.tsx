@@ -166,16 +166,16 @@ export default function StockAgreementGenerator() {
             message: `Please review and sign the Stock Purchase Agreement for ${formData.numberOfShares} shares at $${formData.pricePerShare} per share (Total: $${calculateTotal()}).`,
             recipients: [
               {
-                id: "seller",
-                email: formData.sellerEmail,
-                name: formData.sellerName,
-                role: "Seller",
-              },
-              {
                 id: "purchaser",
                 email: formData.purchaserEmail,
                 name: formData.purchaserName,
                 role: "Purchaser",
+              },
+              {
+                id: "seller",
+                email: formData.sellerEmail,
+                name: formData.sellerName,
+                role: "Seller",
               },
               {
                 id: "chairman",
