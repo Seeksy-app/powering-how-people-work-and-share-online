@@ -432,8 +432,8 @@ export default function InvestorApplication() {
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-2xl font-bold">Application Received</h2>
             <p className="text-muted-foreground">
-              Thank you for your investment application. You will receive a confirmation email 
-              with an e-signature document to sign within 24–48 hours.
+              Thank you for your investment application. You will receive an email shortly 
+              with the final purchase agreement for your review and signature.
             </p>
             <p className="text-sm text-muted-foreground">
               Check your email ({formData.email}) for next steps.
