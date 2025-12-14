@@ -211,26 +211,15 @@ serve(async (req) => {
     };
     
     // Post-process: restore SignWell text tags with CORRECT SignWell syntax
-    // SignWell uses {{s:N}} format where N is the signer index (1-based)
-    // Our signing order: 1=purchaser, 2=seller, 3=chairman
+    // SignWell text_tags expects [[s|recipient_id]] format where recipient_id matches the "id" field
+    // in the recipients array sent to SignWell API
     const restoreSignWellTags = (content: string): string => {
-      // Map tag names to their SignWell signer index based on signing_order in signwell-send-document
-      // Order: Seller=1, Purchaser=2, Chairman=3 (matches recipient array order)
-      const tagIndexMap: Record<string, number> = {
-        'seller': 1,     // signing_order: 1 - Seller signs first
-        'purchaser': 2,  // signing_order: 2 - Purchaser signs second
-        'chairman': 3    // signing_order: 3 - Chairman signs last
-      };
-      
+      // Simply restore the original [[s|role]] format - these must match recipient ids
+      // sent to signwell-send-document: "seller", "purchaser", "chairman"
       return content.replace(/__SIGNWELL_S_([a-zA-Z_]+)__/g, (match, tagName) => {
         const lowerTagName = tagName.toLowerCase();
-        const index = tagIndexMap[lowerTagName];
-        if (index) {
-          // Use full "signature" tag for better SignWell compatibility
-          return `{{signature:${index}}}`;
-        }
-        // Fallback - shouldn't happen but just in case
-        return `{{signature:1}}`;
+        // Restore to [[s|role]] format that SignWell expects with text_tags: true
+        return `[[s|${lowerTagName}]]`;
       });
     };
     

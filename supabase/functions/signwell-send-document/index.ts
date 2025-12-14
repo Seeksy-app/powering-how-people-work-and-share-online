@@ -47,11 +47,17 @@ serve(async (req) => {
     console.log("Recipients:", recipients.map(r => r.email));
 
     // Create document in SignWell with sequential 3-party signing
-    // Order: 1) Seller -> 2) Purchaser -> 3) Chairman
+    // Order: 1) Seller -> 2) Purchaser -> 3) Chairman (Purchaser signs first in our flow)
     // Uses text tags in the document: [[s|seller]], [[s|purchaser]], [[s|chairman]]
+    // The "id" field in recipients MUST match the tag names in the document
     
     // Create a friendly document title (without .docx extension)
     const friendlyDocName = documentName.replace(/\.docx$/i, '').replace(/_/g, ' ');
+    
+    // IMPORTANT: SignWell text_tags expects [[s|recipient_id]] format
+    // The recipient "id" must match what's in the document tags
+    // Our document has: [[s|seller]], [[s|purchaser]], [[s|chairman]]
+    // We want Purchaser to sign FIRST, then Seller, then Chairman
     
     const signWellPayload = {
       test_mode: false,
@@ -65,14 +71,12 @@ serve(async (req) => {
       subject: subject || `Please sign: ${friendlyDocName}`,
       message: message || "Please review and sign this document at your earliest convenience.",
       recipients: recipients.map((r, index) => ({
-        id: r.id,
+        id: r.id,  // Must match [[s|id]] in document - e.g., "seller", "purchaser", "chairman"
         email: r.email,
         name: r.name,
-        signing_order: index + 1, // Sequential: 1=first recipient, 2=second, 3=third
-        // Note: Do NOT include send_email or placeholder_name for non-embedded signing with numeric text tags
-        // Text tags use {{s:N}} format where N matches signing_order
+        signing_order: index + 1, // Sequential based on order in array
       })),
-      // Use text tags for signature placement - document must contain {{s:1}}, {{s:2}}, {{s:3}}
+      // Use text tags for signature placement - document must contain [[s|seller]], [[s|purchaser]], [[s|chairman]]
       text_tags: true,
       apply_signing_order: true, // Enforce sequential signing
       custom_requester_name: sellerName || "Seeksy Legal",

@@ -35,7 +35,7 @@ export default function InvestorApplication() {
   const { slug } = useParams<{ slug?: string }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [investmentMode, setInvestmentMode] = useState<"shares" | "amount">("shares");
+  const [investmentMode, setInvestmentMode] = useState<"shares" | "amount">("amount");
   const [settings, setSettings] = useState<InvestorSettings | null>(null);
   const [loadingSettings, setLoadingSettings] = useState(true);
   
