@@ -231,6 +231,66 @@ async function syncGmailAccount(
         // Check if unread
         const isUnread = messageData.labelIds?.includes('UNREAD') || false;
 
+        // Extract body content
+        let bodyHtml = '';
+        let bodyText = '';
+        
+        const extractBody = (payload: GmailMessage['payload']) => {
+          // Check for direct body on payload
+          if (payload.body?.data) {
+            try {
+              const decoded = atob(payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+              if (payload.mimeType === 'text/html') {
+                bodyHtml = decoded;
+              } else {
+                bodyText = decoded;
+              }
+            } catch (e) {
+              console.error('[sync-gmail-inbox] Error decoding body:', e);
+            }
+          }
+          
+          // Check parts for multipart messages
+          if (payload.parts) {
+            for (const part of payload.parts) {
+              if (part.body?.data) {
+                try {
+                  const decoded = atob(part.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+                  if (part.mimeType === 'text/html') {
+                    bodyHtml = decoded;
+                  } else if (part.mimeType === 'text/plain' && !bodyText) {
+                    bodyText = decoded;
+                  }
+                } catch (e) {
+                  console.error('[sync-gmail-inbox] Error decoding part:', e);
+                }
+              }
+              // Handle nested parts (multipart/alternative inside multipart/mixed)
+              if ((part as any).parts) {
+                for (const nestedPart of (part as any).parts) {
+                  if (nestedPart.body?.data) {
+                    try {
+                      const decoded = atob(nestedPart.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+                      if (nestedPart.mimeType === 'text/html') {
+                        bodyHtml = decoded;
+                      } else if (nestedPart.mimeType === 'text/plain' && !bodyText) {
+                        bodyText = decoded;
+                      }
+                    } catch (e) {
+                      console.error('[sync-gmail-inbox] Error decoding nested part:', e);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        };
+        
+        extractBody(messageData.payload);
+        
+        // If no HTML body, convert plain text to simple HTML
+        const finalBody = bodyHtml || (bodyText ? `<pre style="white-space: pre-wrap; font-family: inherit;">${bodyText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>` : '');
+
         // Insert the message
         const { error: insertError } = await supabase
           .from('inbox_messages')
@@ -243,6 +303,7 @@ async function syncGmailAccount(
             to_address: toHeader,
             subject: subjectHeader,
             snippet: messageData.snippet,
+            body_html: finalBody,
             received_at: receivedAt,
             is_read: !isUnread,
             email_account: emailAddress,

@@ -66,7 +66,7 @@ serve(async (req) => {
         email: r.email,
         name: r.name,
         placeholder_name: r.role || `Signer ${index + 1}`,
-        signing_order: index + 1, // Sequential: Seller=1, Purchaser=2, Chairman=3
+        signing_order: index + 1, // Sequential: Purchaser=1, Seller=2, Chairman=3
       })),
       // Use auto signature page instead of placing fields manually
       with_signature_page: true,
