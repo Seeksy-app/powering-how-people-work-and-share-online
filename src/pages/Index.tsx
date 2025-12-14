@@ -7,6 +7,7 @@ import { TopNavigation } from "@/components/homepage/TopNavigation";
 import { AIPromptHero } from "@/components/homepage/AIPromptHero";
 import { SlidingFeatureTabs } from "@/components/homepage/SlidingFeatureTabs";
 import { BuildWorkspaceSection } from "@/components/homepage/BuildWorkspaceSection";
+import WorkspaceBuilderShowcase from "@/components/homepage/WorkspaceBuilderShowcase";
 import { PlatformPillars } from "@/components/homepage/PlatformPillars";
 import { VerticalFeatureTabs } from "@/components/homepage/VerticalFeatureTabs";
 import { ModuleBuilder, ModuleBuilderHandle } from "@/components/homepage/ModuleBuilder";
@@ -92,8 +93,8 @@ const Index = () => {
         {/* Module Hero Showcase - Obvious.ly style */}
         <ModuleHeroShowcase />
         
-        {/* Build Your Own Workspace */}
-        <BuildWorkspaceSection />
+        {/* Build Your Own Workspace - Animated Showcase */}
+        <WorkspaceBuilderShowcase />
         
         {/* Platform Pillars - Create, Connect, Monetize */}
         <PlatformPillars />
