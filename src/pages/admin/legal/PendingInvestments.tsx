@@ -55,6 +55,10 @@ interface PendingInvestment {
   };
   created_at: string;
   signwell_status?: string;
+  // Signature tracking timestamps
+  seller_signed_at?: string | null;
+  purchaser_signed_at?: string | null;
+  chairman_signed_at?: string | null;
 }
 
 interface InvestorSettings {
@@ -339,21 +343,43 @@ export default function PendingInvestments() {
     updateSettings({ allowed_emails: settings?.allowed_emails.filter(e => e !== email) || [] });
   };
 
-  const getStatusBadge = (status: string, signwellStatus?: string) => {
-    if (signwellStatus === "sent" || status === "pending_signatures") {
-      return <Badge className="bg-purple-100 text-purple-700 border-purple-200"><Send className="h-3 w-3 mr-1" /> Sent for Signature</Badge>;
-    }
-    if (signwellStatus === "partially_signed") {
-      return <Badge className="bg-purple-100 text-purple-700 border-purple-200"><Clock className="h-3 w-3 mr-1" /> Partially Signed</Badge>;
-    }
-    if (status === "completed" || signwellStatus === "completed") {
-      return <Badge variant="default" className="bg-green-100 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" /> Signed</Badge>;
+  const getStatusBadge = (investment: PendingInvestment) => {
+    const { status, signwell_status, seller_signed_at, purchaser_signed_at, chairman_signed_at } = investment;
+    
+    if (status === "completed" || signwell_status === "completed") {
+      return <Badge variant="default" className="bg-green-100 text-green-700 border-green-200"><CheckCircle className="h-3 w-3 mr-1" /> Fully Signed</Badge>;
     }
     if (status === "declined") {
       return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" /> Declined</Badge>;
     }
+    
+    // Show signature progress for partially signed
+    if (signwell_status === "partially_signed" || signwell_status === "sent" || status === "pending_signatures") {
+      const signedCount = [seller_signed_at, purchaser_signed_at, chairman_signed_at].filter(Boolean).length;
+      const signers: string[] = [];
+      if (seller_signed_at) signers.push("Seller");
+      if (purchaser_signed_at) signers.push("Purchaser");
+      if (chairman_signed_at) signers.push("Chairman");
+      
+      if (signedCount === 0) {
+        return <Badge className="bg-purple-100 text-purple-700 border-purple-200"><Send className="h-3 w-3 mr-1" /> Awaiting Seller</Badge>;
+      }
+      
+      const nextSigner = !seller_signed_at ? "Seller" : !purchaser_signed_at ? "Purchaser" : "Chairman";
+      return (
+        <div className="flex flex-col gap-1">
+          <Badge className="bg-purple-100 text-purple-700 border-purple-200">
+            <Clock className="h-3 w-3 mr-1" /> {signedCount}/3 Signed
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            ✓ {signers.join(", ")} • Awaiting: {nextSigner}
+          </span>
+        </div>
+      );
+    }
+    
     // Pending status = Submitted (investor submitted, awaiting admin action)
-    return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="h-3 w-3 mr-1" /> Submitted</Badge>;
+    return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200"><Clock className="h-3 w-3 mr-1" /> Pending</Badge>;
   };
   
   const getOfferStatusBadge = (hasInvestorAccess: boolean) => {
@@ -695,7 +721,7 @@ export default function PendingInvestments() {
                           ${parseFloat(String(inv.computed_values_json.totalAmount) || "0").toLocaleString()}
                         </TableCell>
                         <TableCell>
-                          {getStatusBadge(inv.status, inv.signwell_status)}
+                          {getStatusBadge(inv)}
                         </TableCell>
                         <TableCell>
                           {format(new Date(inv.created_at), "MMM d, yyyy")}
