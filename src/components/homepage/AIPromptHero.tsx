@@ -294,30 +294,29 @@ export function AIPromptHero() {
         </motion.div>
       </div>
 
-      {/* Floating tech icons background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {floatingIcons.map(({ Icon, size, x, y, delay }, i) => (
           <motion.div
             key={i}
-            className="absolute text-primary/10"
+            className="absolute text-primary/30"
             style={{
               left: `${x}%`,
               top: `${y}%`,
             }}
             animate={{
-              y: [0, -15, 0],
-              x: [0, 5, 0],
-              rotate: [0, 10, 0],
-              opacity: [0.08, 0.15, 0.08],
+              y: [0, -20, 0],
+              x: [0, 8, 0],
+              rotate: [0, 15, 0],
+              opacity: [0.2, 0.4, 0.2],
             }}
             transition={{
-              duration: 6 + (i % 3),
+              duration: 5 + (i % 3),
               delay: delay,
               repeat: Infinity,
               ease: "easeInOut",
             }}
           >
-            <Icon size={size} strokeWidth={1.5} />
+            <Icon size={size * 1.5} strokeWidth={1.5} />
           </motion.div>
         ))}
       </div>
