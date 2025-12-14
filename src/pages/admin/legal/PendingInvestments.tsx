@@ -75,6 +75,13 @@ interface InvestorSettings {
   maximum_investment: number | null;
   template_name: string | null; // Selected Word template for this application
   has_investor_access: boolean; // True if any investor verified email (activates the offer)
+  // Add-on pricing fields
+  addon_enabled: boolean;
+  addon_price_per_share: number | null;
+  addon_max_amount: number | null;
+  addon_increment: number | null;
+  addon_start_date: string | null;
+  addon_end_date: string | null;
 }
 
 interface AccessLog {
@@ -176,6 +183,13 @@ export default function PendingInvestments() {
           maximum_investment: d.maximum_investment ? Number(d.maximum_investment) : null,
           template_name: d.template_name || null,
           has_investor_access: hasAccess,
+          // Add-on pricing fields
+          addon_enabled: d.addon_enabled ?? false,
+          addon_price_per_share: d.addon_price_per_share ? Number(d.addon_price_per_share) : null,
+          addon_max_amount: d.addon_max_amount ? Number(d.addon_max_amount) : null,
+          addon_increment: d.addon_increment ? Number(d.addon_increment) : null,
+          addon_start_date: d.addon_start_date || null,
+          addon_end_date: d.addon_end_date || null,
         };
       });
       setAllSettings(mapped);
@@ -246,6 +260,13 @@ export default function PendingInvestments() {
           minimum_investment: settings.minimum_investment,
           maximum_investment: settings.maximum_investment,
           template_name: settings.template_name,
+          // Add-on pricing fields
+          addon_enabled: settings.addon_enabled,
+          addon_price_per_share: settings.addon_price_per_share,
+          addon_max_amount: settings.addon_max_amount,
+          addon_increment: settings.addon_increment,
+          addon_start_date: settings.addon_start_date,
+          addon_end_date: settings.addon_end_date,
         })
         .eq("id", settings.id);
 
@@ -1079,6 +1100,111 @@ export default function PendingInvestments() {
                     Leave empty for no maximum (creates FOMO)
                   </p>
                 </div>
+              </div>
+
+              {/* Add-on Pricing Section */}
+              <div className="border-t pt-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base font-semibold">Add-on Pricing</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Allow investors to purchase additional shares at a discounted price
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings?.addon_enabled || false}
+                    onCheckedChange={(checked) => updateSettings({ addon_enabled: checked })}
+                    disabled={settings?.has_investor_access}
+                  />
+                </div>
+
+                {settings?.addon_enabled && (
+                  <div className="space-y-4 pl-4 border-l-2 border-primary/20">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="addonPPS">Add-on Price Per Share ($)</Label>
+                        <Input
+                          id="addonPPS"
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          value={settings?.addon_price_per_share || ""}
+                          onChange={(e) => updateSettings({ addon_price_per_share: parseFloat(e.target.value) || null })}
+                          placeholder="e.g., 0.20"
+                          disabled={settings?.has_investor_access}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Discounted price for add-on purchases
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="addonMax">Maximum Add-on ($)</Label>
+                        <Input
+                          id="addonMax"
+                          type="number"
+                          step="1"
+                          min="1"
+                          value={settings?.addon_max_amount || ""}
+                          onChange={(e) => updateSettings({ addon_max_amount: parseFloat(e.target.value) || null })}
+                          placeholder="e.g., 5000"
+                          disabled={settings?.has_investor_access}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Max amount investor can add at discounted rate
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="addonIncrement">Increment Amount ($)</Label>
+                      <Input
+                        id="addonIncrement"
+                        type="number"
+                        step="1"
+                        min="1"
+                        value={settings?.addon_increment || ""}
+                        onChange={(e) => updateSettings({ addon_increment: parseFloat(e.target.value) || null })}
+                        placeholder="e.g., 1000"
+                        className="max-w-xs"
+                        disabled={settings?.has_investor_access}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Investors select add-on in fixed increments (e.g., $1K, $2K, $3K...)
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="addonStart">Add-on Start Date</Label>
+                        <Input
+                          id="addonStart"
+                          type="date"
+                          value={settings?.addon_start_date || ""}
+                          onChange={(e) => updateSettings({ addon_start_date: e.target.value || null })}
+                          disabled={settings?.has_investor_access}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          When add-on option becomes available
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="addonEnd">Add-on End Date</Label>
+                        <Input
+                          id="addonEnd"
+                          type="date"
+                          value={settings?.addon_end_date || ""}
+                          onChange={(e) => updateSettings({ addon_end_date: e.target.value || null })}
+                          disabled={settings?.has_investor_access}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Add-on expires at 11:59 PM EST on this date
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Allowed Emails */}

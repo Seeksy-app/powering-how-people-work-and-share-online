@@ -13667,6 +13667,12 @@ export type Database = {
       }
       investor_application_settings: {
         Row: {
+          addon_enabled: boolean | null
+          addon_end_date: string | null
+          addon_increment: number | null
+          addon_max_amount: number | null
+          addon_price_per_share: number | null
+          addon_start_date: string | null
           allowed_emails: string[] | null
           confidentiality_notice: string | null
           created_at: string
@@ -13683,6 +13689,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          addon_enabled?: boolean | null
+          addon_end_date?: string | null
+          addon_increment?: number | null
+          addon_max_amount?: number | null
+          addon_price_per_share?: number | null
+          addon_start_date?: string | null
           allowed_emails?: string[] | null
           confidentiality_notice?: string | null
           created_at?: string
@@ -13699,6 +13711,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          addon_enabled?: boolean | null
+          addon_end_date?: string | null
+          addon_increment?: number | null
+          addon_max_amount?: number | null
+          addon_price_per_share?: number | null
+          addon_start_date?: string | null
           allowed_emails?: string[] | null
           confidentiality_notice?: string | null
           created_at?: string
@@ -14829,6 +14847,7 @@ export type Database = {
       }
       legal_doc_instances: {
         Row: {
+          addon_amount: number | null
           chairman_signature_url: string | null
           chairman_signed_at: string | null
           computed_values_json: Json
@@ -14857,6 +14876,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          addon_amount?: number | null
           chairman_signature_url?: string | null
           chairman_signed_at?: string | null
           computed_values_json?: Json
@@ -14885,6 +14905,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          addon_amount?: number | null
           chairman_signature_url?: string | null
           chairman_signed_at?: string | null
           computed_values_json?: Json
