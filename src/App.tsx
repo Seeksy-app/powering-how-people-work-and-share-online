@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { GlobalDataModeProvider } from "@/contexts/GlobalDataModeContext";
+import { PortalProvider } from "@/contexts/PortalContext";
 import { WorkspaceLayout } from "@/components/layout/WorkspaceLayout";
 import { TourModeWrapper } from "@/components/layout/TourModeWrapper";
 import { NavCustomizationModal } from "@/components/dashboard/NavCustomizationModal";
@@ -1550,12 +1551,14 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <CommandPaletteProvider>
-              <AIAssistantProvider>
-                <AppContent />
-                <AIAssistantPanel />
-              </AIAssistantProvider>
-            </CommandPaletteProvider>
+            <PortalProvider>
+              <CommandPaletteProvider>
+                <AIAssistantProvider>
+                  <AppContent />
+                  <AIAssistantPanel />
+                </AIAssistantProvider>
+              </CommandPaletteProvider>
+            </PortalProvider>
           </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>

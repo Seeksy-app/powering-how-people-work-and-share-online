@@ -1,0 +1,253 @@
+/**
+ * PortalContext - SINGLE SOURCE OF TRUTH for portal mode
+ * 
+ * This context controls which portal the user is currently viewing:
+ * - admin: Platform administration
+ * - creator: Creator workspace
+ * - board: Board member portal
+ * - advertiser: Advertiser dashboard
+ * - subscriber: Subscriber preferences
+ * - public: Public-facing pages (no auth required)
+ * 
+ * RULES:
+ * 1. Portal is derived from route prefix OR explicit user selection
+ * 2. On portal switch, the entire app shell remounts (PortalShell uses key={portal})
+ * 3. No portal-specific state should persist across portal switches
+ */
+
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+
+export type PortalMode = 'admin' | 'creator' | 'board' | 'advertiser' | 'subscriber' | 'public';
+
+interface PortalContextValue {
+  portal: PortalMode;
+  previousPortal: PortalMode | null;
+  setPortal: (portal: PortalMode, navigate?: boolean) => void;
+  switchPortal: (portal: PortalMode) => void;
+  getPortalRoute: (portal: PortalMode) => string;
+  isPortalRoute: (portal: PortalMode) => boolean;
+}
+
+const PortalContext = createContext<PortalContextValue | null>(null);
+
+const PORTAL_STORAGE_KEY = 'seeksy_portal_mode';
+
+// Map route prefixes to portals
+const ROUTE_PORTAL_MAP: Record<string, PortalMode> = {
+  '/admin': 'admin',
+  '/cfo': 'admin',
+  '/board': 'board',
+  '/advertiser': 'advertiser',
+  '/creator': 'creator',
+  '/dashboard': 'creator',
+  '/my-day': 'creator',
+  '/studio': 'creator',
+  '/podcasts': 'creator',
+  '/meetings': 'creator',
+  '/contacts': 'creator',
+  '/crm': 'creator',
+  '/events': 'creator',
+  '/awards': 'creator',
+  '/settings': 'creator',
+  '/email-settings': 'creator',
+  '/subscriber': 'subscriber',
+  '/s/': 'subscriber',
+};
+
+// Portal landing routes
+const PORTAL_ROUTES: Record<PortalMode, string> = {
+  admin: '/admin',
+  creator: '/my-day',
+  board: '/board',
+  advertiser: '/advertiser',
+  subscriber: '/subscriber/preferences',
+  public: '/',
+};
+
+// Public routes that don't require portal context
+const PUBLIC_ROUTES = [
+  '/',
+  '/auth',
+  '/pricing',
+  '/about',
+  '/terms',
+  '/privacy',
+  '/cookies',
+  '/security',
+  '/apps-and-tools',
+  '/blog',
+  '/public',
+  '/videos',
+  '/tv',
+  '/invest',
+  '/onboarding',
+  '/trucking',
+  '/campaign-staff',
+  '/veterans',
+  '/venue',
+];
+
+function derivePortalFromPath(pathname: string): PortalMode {
+  // Check public routes first
+  if (PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))) {
+    return 'public';
+  }
+  
+  // Check route prefix map
+  for (const [prefix, portal] of Object.entries(ROUTE_PORTAL_MAP)) {
+    if (pathname.startsWith(prefix)) {
+      return portal;
+    }
+  }
+  
+  // Default to creator for authenticated but unmatched routes
+  return 'creator';
+}
+
+export function PortalProvider({ children }: { children: React.ReactNode }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
+  // Derive initial portal from current route
+  const [portal, setPortalState] = useState<PortalMode>(() => {
+    const stored = sessionStorage.getItem(PORTAL_STORAGE_KEY) as PortalMode | null;
+    const routePortal = derivePortalFromPath(window.location.pathname);
+    
+    // Route takes precedence over stored value
+    if (routePortal !== 'public' && routePortal !== 'creator') {
+      return routePortal;
+    }
+    
+    return stored || routePortal;
+  });
+  
+  const [previousPortal, setPreviousPortal] = useState<PortalMode | null>(null);
+
+  // Sync portal with route changes
+  useEffect(() => {
+    const routePortal = derivePortalFromPath(location.pathname);
+    
+    // Only update if route definitively indicates a different portal
+    if (routePortal !== 'public' && routePortal !== portal) {
+      if (import.meta.env.DEV) {
+        console.log(`[PortalContext] Route change detected: ${portal} -> ${routePortal} (path: ${location.pathname})`);
+      }
+      setPreviousPortal(portal);
+      setPortalState(routePortal);
+      sessionStorage.setItem(PORTAL_STORAGE_KEY, routePortal);
+    }
+  }, [location.pathname, portal]);
+
+  // Clear portal-specific caches on portal change
+  useEffect(() => {
+    if (previousPortal && previousPortal !== portal) {
+      if (import.meta.env.DEV) {
+        console.log(`[PortalContext] Portal switched: ${previousPortal} -> ${portal}. Clearing caches.`);
+      }
+      
+      // Invalidate queries that might be portal-specific
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const key = query.queryKey;
+          // Invalidate workspace, dashboard, and portal-specific queries
+          return Array.isArray(key) && key.some(k => 
+            typeof k === 'string' && (
+              k.includes('workspace') ||
+              k.includes('dashboard') ||
+              k.includes('sidebar') ||
+              k.includes('nav') ||
+              k.includes('menu')
+            )
+          );
+        }
+      });
+      
+      // Clear any localStorage items that are portal-specific
+      localStorage.removeItem('currentWorkspaceId');
+    }
+  }, [portal, previousPortal, queryClient]);
+
+  const setPortal = useCallback((newPortal: PortalMode, shouldNavigate = false) => {
+    if (newPortal === portal) return;
+    
+    if (import.meta.env.DEV) {
+      console.log(`[PortalContext] setPortal called: ${portal} -> ${newPortal}`);
+    }
+    
+    setPreviousPortal(portal);
+    setPortalState(newPortal);
+    sessionStorage.setItem(PORTAL_STORAGE_KEY, newPortal);
+    
+    if (shouldNavigate) {
+      navigate(PORTAL_ROUTES[newPortal]);
+    }
+  }, [portal, navigate]);
+
+  const switchPortal = useCallback((newPortal: PortalMode) => {
+    if (newPortal === portal) return;
+    
+    if (import.meta.env.DEV) {
+      console.log(`[PortalContext] switchPortal: ${portal} -> ${newPortal}`);
+    }
+    
+    setPreviousPortal(portal);
+    setPortalState(newPortal);
+    sessionStorage.setItem(PORTAL_STORAGE_KEY, newPortal);
+    
+    // Always navigate on explicit switch
+    navigate(PORTAL_ROUTES[newPortal]);
+  }, [portal, navigate]);
+
+  const getPortalRoute = useCallback((targetPortal: PortalMode): string => {
+    return PORTAL_ROUTES[targetPortal];
+  }, []);
+
+  const isPortalRoute = useCallback((targetPortal: PortalMode): boolean => {
+    return portal === targetPortal;
+  }, [portal]);
+
+  const value = useMemo<PortalContextValue>(() => ({
+    portal,
+    previousPortal,
+    setPortal,
+    switchPortal,
+    getPortalRoute,
+    isPortalRoute,
+  }), [portal, previousPortal, setPortal, switchPortal, getPortalRoute, isPortalRoute]);
+
+  return (
+    <PortalContext.Provider value={value}>
+      {children}
+    </PortalContext.Provider>
+  );
+}
+
+export function usePortal(): PortalContextValue {
+  const context = useContext(PortalContext);
+  if (!context) {
+    throw new Error('usePortal must be used within a PortalProvider');
+  }
+  return context;
+}
+
+// Hook for components that need to know if they're in a specific portal
+export function useIsPortal(targetPortal: PortalMode): boolean {
+  const { portal } = usePortal();
+  return portal === targetPortal;
+}
+
+// Hook for debugging - shows portal in dev mode
+export function usePortalDebug() {
+  const { portal, previousPortal } = usePortal();
+  const location = useLocation();
+  
+  return {
+    currentPortal: portal,
+    previousPortal,
+    currentPath: location.pathname,
+    derivedPortal: derivePortalFromPath(location.pathname),
+  };
+}
