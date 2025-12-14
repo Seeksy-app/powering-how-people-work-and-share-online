@@ -254,7 +254,8 @@ export default function InvestorApplication() {
   const calculateAddonShares = () => {
     const addonAmount = parseFloat(formData.addonAmount) || 0;
     if (addonAmount <= 0 || !settings?.addon_price_per_share) return 0;
-    return Math.ceil(addonAmount / settings.addon_price_per_share);
+    // Use floor to prevent giving more shares than paid for
+    return Math.floor(Math.round((addonAmount / settings.addon_price_per_share) * 100) / 100);
   };
 
   const calculateTotal = () => {
@@ -268,9 +269,11 @@ export default function InvestorApplication() {
   const calculateShares = () => {
     if (investmentMode === "amount") {
       const amount = parseFloat(formData.investmentAmount) || 0;
-      return Math.ceil(amount / pricePerShare);
+      // Use floor to prevent giving more shares than paid for
+      // Round to avoid floating-point precision issues
+      return Math.floor(Math.round((amount / pricePerShare) * 100) / 100);
     } else {
-      return Math.ceil(parseInt(formData.numberOfShares) || 0);
+      return Math.floor(parseInt(formData.numberOfShares) || 0);
     }
   };
 
