@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSensors, useSensor, PointerSensor } from "@dnd-kit/core";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
+import { usePortal } from "@/contexts/PortalContext";
+import { trackModuleOpened } from "@/utils/gtm";
 import { WorkspaceSelector } from "./WorkspaceSelector";
 import { MoveToSectionMenu } from "./MoveToSectionMenu";
 import { AddNewDropdown } from "./AddNewDropdown";
@@ -186,6 +188,7 @@ export function WorkspaceSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { state, toggleSidebar } = useSidebar();
+  const { portal } = usePortal();
   const { currentWorkspace, workspaceModules, removeModule, toggleStandalone, togglePinned } = useWorkspace();
   const [moduleRegistry, setModuleRegistry] = useState<ModuleRegistryItem[]>([]);
   const [showModuleCenter, setShowModuleCenter] = useState(false);
@@ -400,7 +403,12 @@ export function WorkspaceSidebar() {
     return (
       <SidebarMenuItem key={module.id} className="group/item relative">
         <SidebarMenuButton
-          onClick={() => module.route && navigate(module.route)}
+          onClick={() => {
+            if (module.route) {
+              trackModuleOpened(module.id, portal);
+              navigate(module.route);
+            }
+          }}
           isActive={module.route ? isActive(module.route) : false}
           tooltip={module.name}
           className={cn(

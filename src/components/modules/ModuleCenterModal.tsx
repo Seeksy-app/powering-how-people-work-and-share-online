@@ -15,6 +15,8 @@ import { IntegrationCard } from "./IntegrationCard";
 import { ModuleDetailDrawer } from "./ModuleDetailDrawer";
 import { CollectionDetailDrawer } from "./CollectionDetailDrawer";
 import { toast } from "sonner";
+import { trackModuleOpened } from "@/utils/gtm";
+import { usePortal } from "@/contexts/PortalContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +41,7 @@ const mainSections = [
 
 export function ModuleCenterModal({ isOpen, onClose, defaultToApps = false }: ModuleCenterModalProps) {
   const navigate = useNavigate();
+  const { portal } = usePortal();
   const { currentWorkspace, workspaceModules, addModule } = useWorkspace();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState<MainSection>(defaultToApps ? "apps" : "collections");
@@ -208,6 +211,7 @@ export function ModuleCenterModal({ isOpen, onClose, defaultToApps = false }: Mo
 
   const handleOpenModule = (module: SeeksyModule) => {
     if (module.route) {
+      trackModuleOpened(module.id, portal);
       navigate(module.route);
       onClose();
     }

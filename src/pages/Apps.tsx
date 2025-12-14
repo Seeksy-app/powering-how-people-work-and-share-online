@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { trackModuleOpened } from "@/utils/gtm";
+import { usePortal } from "@/contexts/PortalContext";
 import {
   Collapsible,
   CollapsibleContent,
@@ -607,8 +609,11 @@ export default function Apps() {
     return categories.find((c) => c.id === categoryId);
   };
 
+  const { portal } = usePortal();
+  
   const handleModuleClick = (module: Module) => {
     if (module.route) {
+      trackModuleOpened(module.id, portal);
       navigate(module.route);
     }
   };

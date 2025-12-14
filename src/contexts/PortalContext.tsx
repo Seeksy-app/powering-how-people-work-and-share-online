@@ -15,9 +15,10 @@
  * 3. No portal-specific state should persist across portal switches
  */
 
-import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { trackPortalChanged } from '@/utils/gtm';
 
 export type PortalMode = 'admin' | 'creator' | 'board' | 'advertiser' | 'subscriber' | 'public';
 
@@ -141,9 +142,14 @@ export function PortalProvider({ children }: { children: React.ReactNode }) {
     }
   }, [location.pathname, portal]);
 
-  // Clear portal-specific caches on portal change
+  // Track portal changes for GTM analytics + clear caches
+  const hasTrackedInitialPortal = useRef(false);
+  
   useEffect(() => {
+    // Fire GTM event on portal change (not on initial mount unless switching)
     if (previousPortal && previousPortal !== portal) {
+      trackPortalChanged(portal, previousPortal);
+      
       if (import.meta.env.DEV) {
         console.log(`[PortalContext] Portal switched: ${previousPortal} -> ${portal}. Clearing caches.`);
       }
