@@ -185,11 +185,26 @@ serve(async (req) => {
     };
     
     const protectSignWellTags = (content: string): string => {
-      // Protect [[s|tagname]] format - simple string replacement, no complex regex
+      // First, protect {{signature:N}} format that's already in the template
+      // These get mangled by docxtemplater even with square bracket delimiters
+      // Handle fragmented XML: {{sig</w:t></w:r><w:r><w:t>nature:1}}
+      for (let i = 1; i <= 3; i++) {
+        // Simple direct replacement first
+        content = content.split(`{{signature:${i}}}`).join(`__SIGNWELL_SIG_${i}__`);
+        
+        // Also handle XML-fragmented versions where Word splits the tag
+        // Pattern: {{ followed by any XML fragments, then signature:N, then }}
+        const fragmentedPattern = new RegExp(
+          `\\{\\{(?:<[^>]*>)*s(?:<[^>]*>)*i(?:<[^>]*>)*g(?:<[^>]*>)*n(?:<[^>]*>)*a(?:<[^>]*>)*t(?:<[^>]*>)*u(?:<[^>]*>)*r(?:<[^>]*>)*e(?:<[^>]*>)*:(?:<[^>]*>)*${i}(?:<[^>]*>)*\\}\\}`,
+          'gi'
+        );
+        content = content.replace(fragmentedPattern, `__SIGNWELL_SIG_${i}__`);
+      }
+      
+      // Also protect [[s|tagname]] format for backwards compatibility
       for (const [tagName, index] of Object.entries(tagIndexMap)) {
         const tag = `[[s|${tagName}]]`;
         content = content.split(tag).join(`__SIGNWELL_SIG_${index}__`);
-        // Also handle uppercase
         content = content.split(tag.toUpperCase()).join(`__SIGNWELL_SIG_${index}__`);
       }
       return content;
