@@ -501,35 +501,8 @@ export function WorkspaceSidebar() {
         className="border-r border-sidebar-border" 
         collapsible="icon"
       >
-        <SidebarHeader className="border-b border-sidebar-border px-4 py-3 bg-sidebar">
-          <div className="flex items-center justify-between w-full gap-2">
-            {!isCollapsed && (
-              <button 
-                onClick={() => navigate('/my-day')}
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
-                title="Go to Dashboard"
-              >
-                <img 
-                  src="/spark/holiday/seeksy-logo-santa.png" 
-                  alt="Seeksy" 
-                  className="h-10 w-10"
-                />
-                <span className="text-sidebar-foreground text-2xl font-bold">Seeksy</span>
-              </button>
-            )}
-            {isCollapsed && (
-              <button 
-                onClick={() => navigate('/my-day')}
-                className="flex items-center justify-center flex-1 hover:opacity-80 transition-opacity cursor-pointer"
-                title="Go to Dashboard"
-              >
-                <img 
-                  src="/spark/holiday/seeksy-logo-santa.png" 
-                  alt="Seeksy" 
-                  className="h-8 w-8"
-                />
-              </button>
-            )}
+        <SidebarHeader className="border-b border-sidebar-border px-2 py-2 bg-sidebar">
+          <div className="flex items-center justify-end w-full gap-1">
             <div className="flex items-center gap-1">
               {/* Customize Nav Icon Button */}
               {!isCollapsed && (
