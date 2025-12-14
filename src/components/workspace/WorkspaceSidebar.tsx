@@ -559,7 +559,7 @@ export function WorkspaceSidebar() {
 
         <SidebarContent>
           {/* Global Navigation - My Day, My Work, Recents */}
-          <SidebarMenu>
+          <SidebarMenu className="pl-2">
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={() => navigate('/my-day')}
@@ -602,11 +602,11 @@ export function WorkspaceSidebar() {
             <>
               <Separator className="my-2 bg-sidebar-border" />
               {!isCollapsed && (
-                <span className="text-xs font-medium text-sidebar-foreground/70 px-2 mb-1 block">
+                <span className="text-xs font-medium text-sidebar-foreground/70 px-4 mb-1 block">
                   Favorites
                 </span>
               )}
-              <SidebarMenu>
+              <SidebarMenu className="pl-2">
                 {pinnedModules.map(module => {
                   const Icon = MODULE_ICONS[module.id] || FolderOpen;
                   return (
@@ -647,24 +647,6 @@ export function WorkspaceSidebar() {
               </SidebarMenu>
             </>
           )}
-
-          <Separator className="my-2 bg-sidebar-border" />
-
-          {/* Workspace Selector below global nav - Monday style */}
-          <div className="flex items-center gap-2 px-2">
-            <div className="flex-1 min-w-0 max-w-[160px]">
-              <WorkspaceSelector />
-            </div>
-            {!isCollapsed && (
-              <AddNewDropdown
-                onAddWorkspace={() => setShowCreateWorkspace(true)}
-                onAddApps={() => {
-                  setModuleCenterDefaultToApps(true);
-                  setShowModuleCenter(true);
-                }}
-              />
-            )}
-          </div>
 
           <Separator className="my-2 bg-sidebar-border" />
 
