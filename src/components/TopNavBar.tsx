@@ -107,29 +107,14 @@ export function TopNavBar() {
           </div>
         ) : (
           // Creator context - show workspace selector
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2 font-medium text-foreground hover:bg-accent"
-              >
-                <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center">
-                  <span className="text-xs font-bold text-primary">
-                    {teamName[0]?.toUpperCase()}
-                  </span>
-                </div>
-                <span className="hidden sm:inline">{teamName}</span>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuItem className="font-medium">
-                {teamName}
-                <Badge variant="secondary" className="ml-auto text-[10px]">Current</Badge>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2 font-medium text-foreground">
+            <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center">
+              <span className="text-xs font-bold text-primary">
+                {teamName[0]?.toUpperCase()}
+              </span>
+            </div>
+            <span className="hidden sm:inline">{teamName}</span>
+          </div>
         )}
 
         {/* Center: Global Search - Firecrawl has search in sidebar, we keep it in top bar */}
