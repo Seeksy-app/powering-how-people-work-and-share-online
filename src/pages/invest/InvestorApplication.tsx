@@ -22,6 +22,13 @@ interface InvestorSettings {
   minimum_investment: number;
   maximum_investment: number | null;
   confidentiality_notice: string;
+  // Add-on pricing fields
+  addon_enabled: boolean;
+  addon_price_per_share: number | null;
+  addon_max_amount: number | null;
+  addon_increment: number | null;
+  addon_start_date: string | null;
+  addon_end_date: string | null;
 }
 
 export default function InvestorApplication() {
@@ -48,7 +55,11 @@ export default function InvestorApplication() {
     numberOfShares: "",
     investmentAmount: "",
     investorCertification: "",
+    addonAmount: "0", // Add-on selection
   });
+
+  // Add-on countdown state
+  const [addonCountdown, setAddonCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   // Countdown state
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -98,6 +109,43 @@ export default function InvestorApplication() {
     return () => clearInterval(interval);
   }, [settings?.tier2_start_date]);
 
+  // Helper to get add-on end time (11:59:59 PM EST on addon_end_date)
+  const getAddonEndTime = (endDateStr: string): Date => {
+    const [year, month, day] = endDateStr.split('-').map(Number);
+    // 11:59:59.999 PM EST = 04:59:59.999 UTC next day
+    return new Date(Date.UTC(year, month - 1, day + 1, 4, 59, 59, 999));
+  };
+
+  // Add-on countdown timer effect
+  useEffect(() => {
+    if (!settings?.addon_enabled || !settings?.addon_end_date) return;
+    
+    const addonEndTime = getAddonEndTime(settings.addon_end_date);
+    const now = new Date();
+    if (now >= addonEndTime) return;
+    
+    const updateAddonCountdown = () => {
+      const now = new Date();
+      const diff = addonEndTime.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setAddonCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      setAddonCountdown({ days, hours, minutes, seconds });
+    };
+    
+    updateAddonCountdown();
+    const interval = setInterval(updateAddonCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [settings?.addon_enabled, settings?.addon_end_date]);
+
   const fetchSettings = async () => {
     try {
       let query = supabase
@@ -124,6 +172,13 @@ export default function InvestorApplication() {
           confidentiality_notice: data.confidentiality_notice || "",
           minimum_investment: Number(data.minimum_investment) || 100,
           maximum_investment: data.maximum_investment ? Number(data.maximum_investment) : null,
+          // Add-on pricing fields
+          addon_enabled: data.addon_enabled ?? false,
+          addon_price_per_share: data.addon_price_per_share ? Number(data.addon_price_per_share) : null,
+          addon_max_amount: data.addon_max_amount ? Number(data.addon_max_amount) : null,
+          addon_increment: data.addon_increment ? Number(data.addon_increment) : null,
+          addon_start_date: data.addon_start_date || null,
+          addon_end_date: data.addon_end_date || null,
         });
       }
     } catch (err) {
@@ -152,17 +207,61 @@ export default function InvestorApplication() {
   
   const pricePerShare = getActivePricePerShare();
 
+  // Check if add-on is currently active (within time window)
+  const isAddonActive = () => {
+    if (!settings?.addon_enabled || !settings?.addon_price_per_share) return false;
+    
+    const now = new Date();
+    
+    // Check start date
+    if (settings.addon_start_date) {
+      const [year, month, day] = settings.addon_start_date.split('-').map(Number);
+      const startTime = new Date(Date.UTC(year, month - 1, day, 5, 0, 0, 0)); // 12:00 AM EST = 5:00 AM UTC
+      if (now < startTime) return false;
+    }
+    
+    // Check end date (11:59:59 PM EST on end date)
+    if (settings.addon_end_date) {
+      const addonEndTime = getAddonEndTime(settings.addon_end_date);
+      if (now >= addonEndTime) return false;
+    }
+    
+    return true;
+  };
+
+  // Generate add-on options based on increment and max
+  const getAddonOptions = () => {
+    if (!settings?.addon_increment || !settings?.addon_max_amount) return [];
+    const increment = settings.addon_increment;
+    const max = settings.addon_max_amount;
+    const options = [{ value: "0", label: "No add-on" }];
+    
+    for (let amount = increment; amount <= max; amount += increment) {
+      options.push({
+        value: amount.toString(),
+        label: `$${amount.toLocaleString()} (+${Math.floor(amount / (settings.addon_price_per_share || 1)).toLocaleString()} shares at $${settings.addon_price_per_share?.toFixed(2)})`
+      });
+    }
+    
+    return options;
+  };
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const calculateAddonShares = () => {
+    const addonAmount = parseFloat(formData.addonAmount) || 0;
+    if (addonAmount <= 0 || !settings?.addon_price_per_share) return 0;
+    return Math.floor(addonAmount / settings.addon_price_per_share);
+  };
+
   const calculateTotal = () => {
-    if (investmentMode === "shares") {
-      const shares = parseFloat(formData.numberOfShares) || 0;
-      return (shares * pricePerShare).toFixed(2);
-    } else {
-      return parseFloat(formData.investmentAmount).toFixed(2) || "0.00";
-    }
+    const mainAmount = investmentMode === "shares" 
+      ? (parseFloat(formData.numberOfShares) || 0) * pricePerShare
+      : parseFloat(formData.investmentAmount) || 0;
+    const addonAmount = parseFloat(formData.addonAmount) || 0;
+    return (mainAmount + addonAmount).toFixed(2);
   };
 
   const calculateShares = () => {
@@ -172,6 +271,10 @@ export default function InvestorApplication() {
     } else {
       return parseInt(formData.numberOfShares) || 0;
     }
+  };
+
+  const calculateTotalShares = () => {
+    return calculateShares() + calculateAddonShares();
   };
 
   const validateEmail = (email: string) => {
@@ -227,9 +330,13 @@ export default function InvestorApplication() {
       return;
     }
     
-    const shares = calculateShares();
+    const mainShares = calculateShares();
+    const addonShares = calculateAddonShares();
+    const totalShares = calculateTotalShares();
+    const addonAmount = parseFloat(formData.addonAmount) || 0;
     const totalAmount = parseFloat(calculateTotal());
-    if (shares <= 0) {
+    
+    if (mainShares <= 0) {
       toast.error("Please enter a valid investment amount or number of shares");
       return;
     }
@@ -240,9 +347,13 @@ export default function InvestorApplication() {
       return;
     }
     
+    // Validate max investment against main investment only (add-on is separate)
+    const mainAmount = investmentMode === "shares" 
+      ? mainShares * pricePerShare
+      : parseFloat(formData.investmentAmount) || 0;
     const maxInvestment = settings?.maximum_investment;
-    if (maxInvestment && totalAmount > maxInvestment) {
-      toast.error(`Maximum investment amount is $${maxInvestment.toLocaleString()} for this tier`);
+    if (maxInvestment && mainAmount > maxInvestment) {
+      toast.error(`Maximum main investment amount is $${maxInvestment.toLocaleString()} for this tier`);
       return;
     }
 
@@ -257,9 +368,13 @@ export default function InvestorApplication() {
           city: formData.city.trim(),
           state: formData.state.trim(),
           zip: formData.zip.trim(),
-          numberOfShares: shares,
+          numberOfShares: totalShares,
+          mainShares: mainShares,
+          addonShares: addonShares,
+          addonAmount: addonAmount,
+          addonPricePerShare: settings?.addon_price_per_share || null,
           pricePerShare: pricePerShare,
-          totalAmount: parseFloat(calculateTotal()),
+          totalAmount: totalAmount,
           investmentMode,
           investorCertification: formData.investorCertification || "Individual with net worth or joint net worth with spouse exceeding $1 million",
         },
@@ -579,13 +694,68 @@ export default function InvestorApplication() {
               )}
             </div>
 
+            {/* Add-on Section */}
+            {isAddonActive() && (
+              <div className="space-y-3 border-2 border-green-500 rounded-lg p-4 bg-green-500/5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-green-500 text-white">Limited Time Offer</Badge>
+                    </div>
+                    <h3 className="font-semibold mt-1">Bonus Add-on Shares</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Purchase additional shares at the discounted rate of ${settings?.addon_price_per_share?.toFixed(2)}/share
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Add-on countdown */}
+                {settings?.addon_end_date && (addonCountdown.days > 0 || addonCountdown.hours > 0 || addonCountdown.minutes > 0) && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    <span className="text-muted-foreground">Offer expires in:</span>
+                    <span className="font-semibold text-amber-600">
+                      {addonCountdown.days}d {addonCountdown.hours}h {addonCountdown.minutes}m {addonCountdown.seconds}s
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label htmlFor="addonAmount">Select Add-on Amount</Label>
+                  <select
+                    id="addonAmount"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={formData.addonAmount}
+                    onChange={(e) => handleChange("addonAmount", e.target.value)}
+                  >
+                    {getAddonOptions().map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             {/* Total Display */}
-            <div className="rounded-lg bg-muted p-4">
+            <div className="rounded-lg bg-muted p-4 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Shares:</span>
+                <span className="text-sm text-muted-foreground">Main Investment Shares:</span>
                 <span className="font-medium">{calculateShares().toLocaleString()}</span>
               </div>
-              <div className="flex justify-between items-center mt-1">
+              {parseFloat(formData.addonAmount) > 0 && (
+                <div className="flex justify-between items-center text-green-600">
+                  <span className="text-sm">Add-on Bonus Shares:</span>
+                  <span className="font-medium">+{calculateAddonShares().toLocaleString()}</span>
+                </div>
+              )}
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Total Shares:</span>
+                <span className="font-bold text-lg">{calculateTotalShares().toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Total Investment:</span>
                 <span className="font-semibold text-lg">${parseFloat(calculateTotal()).toLocaleString()}</span>
               </div>
