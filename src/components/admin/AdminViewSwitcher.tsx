@@ -81,7 +81,7 @@ export function AdminViewSwitcher() {
           <ChevronDown className="h-4 w-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent align="start" className="w-56 z-[200]">
         <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
           Switch View (Session Only)
         </DropdownMenuLabel>
