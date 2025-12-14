@@ -180,6 +180,12 @@ serve(async (req) => {
       // Transferee name for Stock Power (Exhibit A)
       TRANSFEREE_NAME: purchaserName,
       
+      // Page marker placeholders - replace with proper text or empty
+      PAGE_BLANK: "[The remainder of this page is intentionally left blank.]",
+      PAGE_NUMBER: "", // Page numbers are handled by Word, not template
+      BLANK_PAGE: "[This page intentionally left blank.]",
+      REST_OF_PAGE_BLANK: "[The remainder of this page is intentionally left blank.]",
+      
       // Alternative formats users might use (camelCase)
       purchaserName,
       purchaserAddress,
@@ -203,6 +209,8 @@ serve(async (req) => {
       certDirector,
       certSophisticated,
       transfereeName: purchaserName,
+      pageBlank: "[The remainder of this page is intentionally left blank.]",
+      blankPage: "[This page intentionally left blank.]",
     };
 
     console.log("Rendering document with data:", JSON.stringify(templateData, null, 2));
