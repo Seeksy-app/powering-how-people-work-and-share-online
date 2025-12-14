@@ -643,17 +643,17 @@ export default function InvestorApplication() {
                 className="grid grid-cols-2 gap-4"
               >
                 <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors">
-                  <RadioGroupItem value="shares" id="shares" />
-                  <Label htmlFor="shares" className="flex items-center gap-2 cursor-pointer">
-                    <Hash className="h-4 w-4" />
-                    Number of Shares
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors">
                   <RadioGroupItem value="amount" id="amount" />
                   <Label htmlFor="amount" className="flex items-center gap-2 cursor-pointer">
                     <DollarSign className="h-4 w-4" />
                     Investment Amount
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="shares" id="shares" />
+                  <Label htmlFor="shares" className="flex items-center gap-2 cursor-pointer">
+                    <Hash className="h-4 w-4" />
+                    Number of Shares
                   </Label>
                 </div>
               </RadioGroup>
