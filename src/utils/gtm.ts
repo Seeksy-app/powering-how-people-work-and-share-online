@@ -219,8 +219,24 @@ export const trackLoginSuccess = (method: string = 'email') =>
 export const trackLogout = () => 
   trackEvent('logout', {});
 
-export const trackModuleOpened = (moduleName: string) => 
-  trackEvent('module_opened', { module_name: moduleName });
+/**
+ * Track portal switching - fires on portal change
+ * Do NOT include tenant_id or sensitive IDs
+ */
+export const trackPortalChanged = (portal: string, fromPortal?: string | null) => 
+  trackEvent('portal_changed', { 
+    portal, 
+    from_portal: fromPortal || null 
+  });
+
+/**
+ * Track module open - fires on user click to open a module
+ */
+export const trackModuleOpened = (moduleName: string, portal?: string | null) => 
+  trackEvent('module_opened', { 
+    module_name: moduleName, 
+    portal: portal || null 
+  });
 
 export const trackCampaignSent = (campaignId: string, channel: string) => 
   trackEvent('campaign_sent', { campaign_id: campaignId, channel });
