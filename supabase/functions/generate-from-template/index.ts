@@ -173,16 +173,29 @@ serve(async (req) => {
     const zip = new PizZip(templateArray);
     
     // Pre-process: protect SignWell text tags from docxtemplater parsing
-    // Replace [[s|xxx]] with a placeholder that won't be parsed
+    // The tags may be split across XML elements like [[s|se</w:t></w:r><w:r><w:t>ller]]
+    // So we need to find and consolidate them first
     const protectSignWellTags = (content: string): string => {
-      // Protect SignWell signature tags: [[s|xxx]] -> __SIGNWELL_S_xxx__
-      return content.replace(/\[\[s\|([^\]]+)\]\]/g, '__SIGNWELL_S_$1__');
+      // First, try to consolidate split tags by removing XML tags between [[ and ]]
+      // Match opening [[ followed by any content (including XML tags) until ]]
+      const consolidatePattern = /\[\[s\|([^\]]*(?:<[^>]*>[^\]]*)*)\]\]/g;
+      
+      content = content.replace(consolidatePattern, (match, inner) => {
+        // Remove XML tags from the inner content to get the clean tag name
+        const cleanInner = inner.replace(/<[^>]*>/g, '');
+        return `__SIGNWELL_S_${cleanInner}__`;
+      });
+      
+      // Also handle simpler cases where the tag isn't split
+      content = content.replace(/\[\[s\|([a-zA-Z_]+)\]\]/g, '__SIGNWELL_S_$1__');
+      
+      return content;
     };
     
     // Post-process: restore SignWell text tags
     const restoreSignWellTags = (content: string): string => {
       // Restore SignWell signature tags: __SIGNWELL_S_xxx__ -> [[s|xxx]]
-      return content.replace(/__SIGNWELL_S_([^_]+)__/g, '[[s|$1]]');
+      return content.replace(/__SIGNWELL_S_([a-zA-Z_]+)__/g, '[[s|$1]]');
     };
     
     // Pre-process the document.xml to protect SignWell tags
