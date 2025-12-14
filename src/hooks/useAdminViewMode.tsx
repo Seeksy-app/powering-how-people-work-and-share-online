@@ -4,45 +4,39 @@
  * Stored in sessionStorage - resets when browser closes
  */
 
-import { useState, useEffect, useCallback } from 'react';
+/**
+ * useAdminViewMode - Admin view mode switching hook
+ * 
+ * This hook now delegates to PortalContext as the single source of truth.
+ * It provides backward-compatible API for existing AdminViewSwitcher usage.
+ * 
+ * MIGRATION: Components should eventually migrate to usePortal() directly.
+ */
+
+import { useCallback } from 'react';
+import { usePortal, PortalMode } from '@/contexts/PortalContext';
 import { useUserRoles } from './useUserRoles';
 
+// Backward-compatible type alias
 export type ViewMode = 'admin' | 'creator' | 'advertiser' | 'board';
-
-const STORAGE_KEY = 'seeksy_admin_view_mode';
 
 export function useAdminViewMode() {
   const { isAdmin } = useUserRoles();
-  const [viewMode, setViewModeState] = useState<ViewMode>('admin');
+  const { portal, switchPortal, getPortalRoute } = usePortal();
 
-  // Load from sessionStorage on mount
-  useEffect(() => {
-    if (!isAdmin) return;
-    const stored = sessionStorage.getItem(STORAGE_KEY);
-    if (stored && ['admin', 'creator', 'advertiser', 'board'].includes(stored)) {
-      setViewModeState(stored as ViewMode);
-    }
-  }, [isAdmin]);
+  // Map portal to view mode (subset of portal modes that admins can switch to)
+  const viewMode: ViewMode = (['admin', 'creator', 'advertiser', 'board'].includes(portal) 
+    ? portal 
+    : 'admin') as ViewMode;
 
   const setViewMode = useCallback((mode: ViewMode) => {
-    setViewModeState(mode);
-    sessionStorage.setItem(STORAGE_KEY, mode);
-  }, []);
+    // Delegate to portal context - this will trigger hard remount
+    switchPortal(mode as PortalMode);
+  }, [switchPortal]);
 
-  const getRouteForMode = (mode: ViewMode): string => {
-    switch (mode) {
-      case 'admin':
-        return '/admin';
-      case 'creator':
-        return '/my-day';
-      case 'advertiser':
-        return '/advertiser';
-      case 'board':
-        return '/board';
-      default:
-        return '/admin';
-    }
-  };
+  const getRouteForMode = useCallback((mode: ViewMode): string => {
+    return getPortalRoute(mode as PortalMode);
+  }, [getPortalRoute]);
 
   return {
     viewMode,
