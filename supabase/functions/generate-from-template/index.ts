@@ -172,6 +172,27 @@ serve(async (req) => {
     // Load the template with PizZip
     const zip = new PizZip(templateArray);
     
+    // Pre-process: protect SignWell text tags from docxtemplater parsing
+    // Replace [[s|xxx]] with a placeholder that won't be parsed
+    const protectSignWellTags = (content: string): string => {
+      // Protect SignWell signature tags: [[s|xxx]] -> __SIGNWELL_S_xxx__
+      return content.replace(/\[\[s\|([^\]]+)\]\]/g, '__SIGNWELL_S_$1__');
+    };
+    
+    // Post-process: restore SignWell text tags
+    const restoreSignWellTags = (content: string): string => {
+      // Restore SignWell signature tags: __SIGNWELL_S_xxx__ -> [[s|xxx]]
+      return content.replace(/__SIGNWELL_S_([^_]+)__/g, '[[s|$1]]');
+    };
+    
+    // Pre-process the document.xml to protect SignWell tags
+    const docXml = zip.files["word/document.xml"];
+    if (docXml) {
+      let content = docXml.asText();
+      content = protectSignWellTags(content);
+      zip.file("word/document.xml", content);
+    }
+    
     // Create docxtemplater instance with square bracket delimiters
     // and nullGetter to prevent undefined values from appearing
     const doc = new Docxtemplater(zip, {
@@ -278,8 +299,17 @@ serve(async (req) => {
     // Render the document
     doc.render(templateData);
 
+    // Post-process: restore SignWell text tags in the rendered document
+    const renderedZip = doc.getZip();
+    const renderedDocXml = renderedZip.files["word/document.xml"];
+    if (renderedDocXml) {
+      let content = renderedDocXml.asText();
+      content = restoreSignWellTags(content);
+      renderedZip.file("word/document.xml", content);
+    }
+
     // Generate output as base64
-    const output = doc.getZip().generate({
+    const output = renderedZip.generate({
       type: "base64",
       mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     });
