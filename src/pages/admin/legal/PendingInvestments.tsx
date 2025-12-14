@@ -1040,7 +1040,7 @@ export default function PendingInvestments() {
                     disabled={settings?.has_investor_access}
                   />
                   <p className="text-xs text-muted-foreground">
-                    On this date, the Future PPS becomes active
+                    Tier 1 pricing ends at 11:59 PM EST the night before this date
                   </p>
                 </div>
               </div>

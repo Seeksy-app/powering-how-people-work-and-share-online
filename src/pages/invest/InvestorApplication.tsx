@@ -57,17 +57,28 @@ export default function InvestorApplication() {
     fetchSettings();
   }, []);
 
-  // Countdown timer effect
+  // Helper to get tier 2 end time (11:59:59 PM EST on the day BEFORE tier2_start_date)
+  const getTier1EndTime = (tier2DateStr: string): Date => {
+    // tier2_start_date is when Tier 2 STARTS, so Tier 1 ends at 11:59:59 PM EST the day before
+    const [year, month, day] = tier2DateStr.split('-').map(Number);
+    // Create date at 11:59:59 PM EST (UTC-5) on the day BEFORE tier2_start_date
+    // EST is UTC-5, so 11:59:59 PM EST = 04:59:59 AM UTC next day
+    // But we want the END of Tier 1 pricing, which is 11:59:59 PM EST on the day BEFORE tier2_start_date
+    const tier2StartDate = new Date(Date.UTC(year, month - 1, day, 4, 59, 59, 999)); // 11:59:59.999 PM EST = 04:59:59.999 UTC
+    return tier2StartDate;
+  };
+
+  // Countdown timer effect - counts down to 11:59:59 PM EST the night before tier2_start_date
   useEffect(() => {
     if (!settings?.tier2_start_date) return;
     
-    const tier2Date = new Date(settings.tier2_start_date);
-    const today = new Date();
-    if (today >= tier2Date) return; // Already past tier 2 date
+    const tier1EndTime = getTier1EndTime(settings.tier2_start_date);
+    const now = new Date();
+    if (now >= tier1EndTime) return; // Already past tier 1 pricing
     
     const updateCountdown = () => {
       const now = new Date();
-      const diff = tier2Date.getTime() - now.getTime();
+      const diff = tier1EndTime.getTime() - now.getTime();
       
       if (diff <= 0) {
         setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -122,18 +133,16 @@ export default function InvestorApplication() {
     }
   };
 
-  // Determine active PPS based on tier date
+  // Determine active PPS based on tier date (switches at 11:59:59 PM EST the night before tier2_start_date)
   const getActivePricePerShare = () => {
     if (!settings) return 0.20;
     
-    // If tier 2 date is set and we're past it, use tier 2 price
+    // If tier 2 date is set and we're past 11:59:59 PM EST the night before, use tier 2 price
     if (settings.tier2_start_date && settings.price_per_share_tier2) {
-      const tier2Date = new Date(settings.tier2_start_date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      tier2Date.setHours(0, 0, 0, 0);
+      const tier1EndTime = getTier1EndTime(settings.tier2_start_date);
+      const now = new Date();
       
-      if (today >= tier2Date) {
+      if (now >= tier1EndTime) {
         return settings.price_per_share_tier2;
       }
     }
@@ -391,14 +400,12 @@ export default function InvestorApplication() {
     );
   }
 
-  // Check if we're still in tier 1 pricing
+  // Check if we're still in tier 1 pricing (ends at 11:59:59 PM EST the night before tier2_start_date)
   const isTier1Active = () => {
     if (!settings?.tier2_start_date || !settings?.price_per_share_tier2) return true;
-    const tier2Date = new Date(settings.tier2_start_date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    tier2Date.setHours(0, 0, 0, 0);
-    return today < tier2Date;
+    const tier1EndTime = getTier1EndTime(settings.tier2_start_date);
+    const now = new Date();
+    return now < tier1EndTime;
   };
 
   const showCountdown = isTier1Active() && settings?.tier2_start_date && settings?.price_per_share_tier2;
