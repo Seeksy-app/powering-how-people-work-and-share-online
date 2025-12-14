@@ -114,16 +114,45 @@ serve(async (req) => {
       );
     }
 
-    const sendData = JSON.parse(responseText);
+    const createData = JSON.parse(responseText);
 
-    console.log("SignWell document sent:", sendData.id);
+    console.log("SignWell document created:", createData.id);
+
+    // Now send the document to trigger email notifications
+    console.log("Sending document to recipients...");
+    const sendResponse = await fetch(`https://www.signwell.com/api/v1/documents/${createData.id}/send/`, {
+      method: "POST",
+      headers: {
+        "X-Api-Key": SIGNWELL_API_KEY,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!sendResponse.ok) {
+      const sendErrorText = await sendResponse.text();
+      console.error("SignWell send error:", sendErrorText);
+      // Document was created but not sent - return partial success
+      return new Response(
+        JSON.stringify({
+          success: true,
+          documentId: createData.id,
+          status: "created_not_sent",
+          warning: "Document created but emails not sent",
+          recipients: createData.recipients,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const sendData = await sendResponse.json();
+    console.log("SignWell document sent successfully:", sendData);
 
     return new Response(
       JSON.stringify({
         success: true,
-        documentId: sendData.id,
-        status: sendData.status,
-        recipients: sendData.recipients,
+        documentId: createData.id,
+        status: sendData.status || "sent",
+        recipients: sendData.recipients || createData.recipients,
         embeddedSigningUrl: sendData.embedded_signing_url,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
