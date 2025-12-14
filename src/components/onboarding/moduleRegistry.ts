@@ -185,8 +185,8 @@ export const MODULE_REGISTRY: Record<string, RecommendedModule> = {
     category: "integrations",
     priority: "core",
   },
-  "email-settings": {
-    id: "email-settings",
+  "email-signatures": {
+    id: "email-signatures",
     name: "Settings",
     description: "Email settings, signatures, and tracking configuration",
     category: "marketing",

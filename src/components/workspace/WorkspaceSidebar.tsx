@@ -108,7 +108,7 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
   'newsletters': Mail,
   'newsletter': Mail,
   'campaigns': Megaphone, // Marketing campaigns - NOT email
-  'email-settings': Settings,
+  'email-signatures': Mail,
   'signatures': Mail,
   'automations': Zap,
   'ai-automation': Bot,
@@ -249,7 +249,7 @@ export function WorkspaceSidebar() {
             { id: 'tasks', name: 'Tasks', description: 'Manage tasks', icon: 'check', category: 'business', scope: 'workspace', route: '/tasks', display_order: 7 },
             { id: 'ai-agent', name: 'AI Agent', description: 'AI assistant', icon: 'bot', category: 'ai', scope: 'workspace', route: '/ai-agent', display_order: 8 },
             { id: 'email', name: 'Email', description: 'Email inbox', icon: 'mail', category: 'communication', scope: 'workspace', route: '/inbox', display_order: 9 },
-            { id: 'email-settings', name: 'Settings', description: 'Email settings', icon: 'settings', category: 'communication', scope: 'workspace', route: '/email-settings', display_order: 10 },
+            { id: 'email-signatures', name: 'Email Signatures', description: 'Manage signatures', icon: 'edit', category: 'communication', scope: 'workspace', route: '/email-signatures', display_order: 10 },
             { id: 'broadcast-monitoring', name: 'Broadcast Monitoring', description: 'Content protection', icon: 'shield', category: 'identity', scope: 'workspace', route: '/broadcast-monitoring', display_order: 11 },
             { id: 'blog', name: 'Blog', description: 'Write articles', icon: 'file', category: 'content', scope: 'workspace', route: '/blog', display_order: 12 },
             { id: 'proposals', name: 'Proposals', description: 'Create proposals', icon: 'file', category: 'business', scope: 'workspace', route: '/proposals', display_order: 13 },
@@ -501,8 +501,35 @@ export function WorkspaceSidebar() {
         className="border-r border-sidebar-border" 
         collapsible="icon"
       >
-        <SidebarHeader className="border-b border-sidebar-border px-2 py-2 bg-sidebar">
-          <div className="flex items-center justify-end w-full gap-1">
+        <SidebarHeader className="border-b border-sidebar-border px-4 py-3 bg-sidebar">
+          <div className="flex items-center justify-between w-full gap-2">
+            {!isCollapsed && (
+              <button 
+                onClick={() => navigate('/my-day')}
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                title="Go to Dashboard"
+              >
+                <img 
+                  src="/spark/holiday/seeksy-logo-santa.png" 
+                  alt="Seeksy" 
+                  className="h-10 w-10"
+                />
+                <span className="text-sidebar-foreground text-2xl font-bold">Seeksy</span>
+              </button>
+            )}
+            {isCollapsed && (
+              <button 
+                onClick={() => navigate('/my-day')}
+                className="flex items-center justify-center flex-1 hover:opacity-80 transition-opacity cursor-pointer"
+                title="Go to Dashboard"
+              >
+                <img 
+                  src="/spark/holiday/seeksy-logo-santa.png" 
+                  alt="Seeksy" 
+                  className="h-8 w-8"
+                />
+              </button>
+            )}
             <div className="flex items-center gap-1">
               {/* Customize Nav Icon Button */}
               {!isCollapsed && (
@@ -532,7 +559,7 @@ export function WorkspaceSidebar() {
 
         <SidebarContent>
           {/* Global Navigation - My Day, My Work, Recents */}
-          <SidebarMenu className="pl-2">
+          <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={() => navigate('/my-day')}
@@ -575,11 +602,11 @@ export function WorkspaceSidebar() {
             <>
               <Separator className="my-2 bg-sidebar-border" />
               {!isCollapsed && (
-                <span className="text-xs font-medium text-sidebar-foreground/70 px-4 mb-1 block">
+                <span className="text-xs font-medium text-sidebar-foreground/70 px-2 mb-1 block">
                   Favorites
                 </span>
               )}
-              <SidebarMenu className="pl-2">
+              <SidebarMenu>
                 {pinnedModules.map(module => {
                   const Icon = MODULE_ICONS[module.id] || FolderOpen;
                   return (

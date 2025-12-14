@@ -524,8 +524,27 @@ export function RoleBasedSidebar({ user }: RoleBasedSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-2 py-2 bg-sidebar">
-        <div className="flex items-center justify-end w-full gap-1">
+      <SidebarHeader className="border-b border-sidebar-border px-4 py-3 bg-sidebar">
+        <div className="flex items-center justify-between w-full gap-2">
+          {!collapsed && (
+            <button 
+              onClick={handleLogoClick}
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+              title="Go to Dashboard"
+            >
+              <SparkIcon variant="holiday" size={48} animated pose="waving" />
+              <span className="text-sidebar-foreground text-2xl font-bold">Seeksy</span>
+            </button>
+          )}
+          {collapsed && (
+            <button 
+              onClick={handleLogoClick}
+              className="flex items-center justify-center flex-1 hover:opacity-80 transition-opacity cursor-pointer"
+              title="Go to Dashboard"
+            >
+              <SparkIcon variant="holiday" size={32} animated pose="idle" />
+            </button>
+          )}
           <div className="flex items-center gap-1">
             {/* Customize Nav Icon Button */}
             {!collapsed && (
