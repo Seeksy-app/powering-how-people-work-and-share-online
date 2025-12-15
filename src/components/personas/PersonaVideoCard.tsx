@@ -116,7 +116,7 @@ export const PersonaVideoCard = ({
   return (
     <>
       <style>{videoStyles}</style>
-      <div className="w-full aspect-[3/4]">
+      <div className="w-full aspect-[2/3]">
         <motion.div
           ref={cardRef}
           initial={{ opacity: 0, y: 20 }}
