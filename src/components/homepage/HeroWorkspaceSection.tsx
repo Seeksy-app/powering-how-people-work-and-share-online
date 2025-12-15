@@ -8,87 +8,153 @@ export function HeroWorkspaceSection() {
 
   return (
     <section 
-      className="w-full px-4 pt-28 pb-16 md:pt-36 md:pb-24"
+      className="w-full px-6 pt-28 pb-16 md:pt-36 md:pb-24"
       style={{ 
-        minHeight: "85vh",
+        minHeight: "90vh",
         background: "linear-gradient(180deg, hsl(var(--muted)/0.3) 0%, hsl(var(--background)) 100%)",
       }}
     >
-      <div className="mx-auto max-w-[1400px]">
-        <div className="grid lg:grid-cols-[1fr_480px] gap-12 lg:gap-20 items-center">
-          {/* Left - Copy */}
-          <div className="text-left">
-            <p 
-              className="text-sm font-semibold uppercase tracking-widest mb-6"
-              style={{ color: "hsl(var(--primary))" }}
-            >
-              More than just content creation
-            </p>
-            <h1
-              className="font-black tracking-[-2px] mb-6"
-              style={{ 
-                fontSize: "clamp(44px, 6vw, 72px)",
-                lineHeight: 1.05,
-                color: "hsl(var(--foreground))",
-              }}
-            >
-              Build your
-              <br />
-              creator
-              <br />
-              <span style={{ color: "hsl(var(--primary))" }}>workspace.</span>
-            </h1>
-            <p 
-              className="text-lg md:text-xl mb-8 max-w-lg"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              Turn tools on as you need them. Pay only for what you use with credits. No lockouts—your work stays yours.
-            </p>
-            <div className="flex flex-wrap items-center gap-4 mb-6">
-              <Button
-                size="lg"
-                className="rounded-full px-8 h-12 text-base font-semibold"
-                onClick={() => navigate("/auth")}
+      <div className="mx-auto max-w-[1240px]">
+        {/* 2-column grid with independent sizing */}
+        <div 
+          className="grid gap-8 lg:gap-16 items-center"
+          style={{
+            gridTemplateColumns: "1fr",
+          }}
+        >
+          {/* Desktop: Side by side */}
+          <div className="hidden lg:grid gap-16 items-center" style={{ gridTemplateColumns: "minmax(520px, 1fr) minmax(520px, 640px)" }}>
+            {/* Left - Copy (independent sizing) */}
+            <div className="text-left">
+              <p 
+                className="text-xs font-bold uppercase mb-6"
+                style={{ 
+                  letterSpacing: "0.14em",
+                  color: "#2C6BED",
+                }}
               >
-                Start Free
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button
-                size="lg"
-                variant="ghost"
-                className="rounded-full px-6 h-12 text-base font-medium"
-                onClick={() => navigate("/auth")}
+                More than just content creation
+              </p>
+              <h1
+                className="font-black tracking-[-2px] mb-6"
+                style={{ 
+                  fontSize: "64px",
+                  lineHeight: 0.95,
+                  color: "#0B1220",
+                  maxWidth: "14ch",
+                }}
               >
-                <Play className="mr-2 h-4 w-4" />
-                Schedule a Demo
-              </Button>
+                Build your creator{" "}
+                <span style={{ color: "#2C6BED" }}>workspace.</span>
+              </h1>
+              <p 
+                className="text-lg mb-8"
+                style={{ 
+                  lineHeight: "28px",
+                  color: "#4B5563",
+                  maxWidth: "44ch",
+                }}
+              >
+                Turn tools on as you need them. Pay only for what you use with credits. No lockouts—your work stays yours.
+              </p>
+              <div className="flex flex-wrap items-center gap-4 mb-3">
+                <Button
+                  size="lg"
+                  className="rounded-full px-5 h-11 text-base font-semibold"
+                  style={{ background: "#2C6BED" }}
+                  onClick={() => navigate("/auth")}
+                >
+                  Start Free
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full px-5 h-11 text-base font-medium border-gray-200 bg-white"
+                  onClick={() => navigate("/auth")}
+                >
+                  <Play className="mr-2 h-4 w-4" />
+                  Schedule a Demo
+                </Button>
+              </div>
+              <p 
+                className="text-xs"
+                style={{ color: "#6B7280" }}
+              >
+                Start free with 100 credits • No credit card required
+              </p>
             </div>
-            <p 
-              className="text-sm"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              Start free with 100 credits • No credit card required
-            </p>
+
+            {/* Right - Workspace Builder */}
+            <div className="w-full" style={{ maxWidth: "640px" }}>
+              <HeroWorkspaceBuilder />
+            </div>
           </div>
 
-          {/* Right - Workspace Builder */}
-          <div className="flex justify-center lg:justify-end">
-            <div className="w-full max-w-[480px]">
-              <HeroWorkspaceBuilder />
-              {/* AI-powered workspace badge */}
-              <div className="flex justify-center mt-4">
-                <div 
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium"
-                  style={{ 
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    color: "hsl(var(--foreground))",
-                  }}
+          {/* Mobile: Stacked */}
+          <div className="lg:hidden flex flex-col gap-8">
+            {/* Left - Copy */}
+            <div className="text-left">
+              <p 
+                className="text-xs font-bold uppercase mb-4"
+                style={{ 
+                  letterSpacing: "0.14em",
+                  color: "#2C6BED",
+                }}
+              >
+                More than just content creation
+              </p>
+              <h1
+                className="font-black tracking-[-1.5px] mb-5"
+                style={{ 
+                  fontSize: "40px",
+                  lineHeight: 1.0,
+                  color: "#0B1220",
+                }}
+              >
+                Build your creator{" "}
+                <span style={{ color: "#2C6BED" }}>workspace.</span>
+              </h1>
+              <p 
+                className="text-base mb-6"
+                style={{ 
+                  lineHeight: "26px",
+                  color: "#4B5563",
+                }}
+              >
+                Turn tools on as you need them. Pay only for what you use with credits.
+              </p>
+              <div className="flex flex-wrap items-center gap-3 mb-3">
+                <Button
+                  size="default"
+                  className="rounded-full px-5 h-10 text-sm font-semibold"
+                  style={{ background: "#2C6BED" }}
+                  onClick={() => navigate("/auth")}
                 >
-                  <span className="text-base">✨</span>
-                  AI-powered workspace
-                </div>
+                  Start Free
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button
+                  size="default"
+                  variant="outline"
+                  className="rounded-full px-4 h-10 text-sm font-medium border-gray-200"
+                  onClick={() => navigate("/auth")}
+                >
+                  <Play className="mr-2 h-3.5 w-3.5" />
+                  Demo
+                </Button>
               </div>
+              <p 
+                className="text-xs"
+                style={{ color: "#6B7280" }}
+              >
+                Start free with 100 credits • No credit card
+              </p>
+            </div>
+
+            {/* Right - Workspace Builder */}
+            <div className="w-full">
+              <HeroWorkspaceBuilder />
             </div>
           </div>
         </div>
