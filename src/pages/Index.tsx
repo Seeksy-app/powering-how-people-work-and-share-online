@@ -97,23 +97,23 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <TopNavigation />
       <main>
-        {/* 1. Hero - Static, no prompt box */}
+        {/* 1. Hero - Static with Workspace Builder */}
         <HeroStatic />
         
-        {/* 2. Social Proof / Logo Bar */}
-        <LogoBar />
-        
-        {/* 3. Interactive Demo - Prompt box moved here */}
+        {/* 2. Interactive Demo - Chat/Prompt box */}
         <InteractiveDemo />
         
-        {/* 4. Value Pillars - Create, Connect, Monetize */}
+        {/* 3. Personas Section - Videos */}
+        <PersonasSection />
+        
+        {/* 4. Social Proof / Logo Bar */}
+        <LogoBar />
+        
+        {/* 5. Value Pillars - Create, Connect, Monetize */}
         <PlatformPillars />
         
-        {/* 5. Feature Panels - Obviously style with vertical tabs */}
+        {/* 6. Feature Panels - Obviously style with vertical tabs */}
         <ModuleHeroShowcase />
-        
-        {/* 6. Personas Section */}
-        <PersonasSection />
         
         {/* 7. Credits/Pricing Teaser */}
         <CreditsTeaser />
