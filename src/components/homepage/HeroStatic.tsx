@@ -22,7 +22,7 @@ export function HeroStatic() {
           >
             {/* Eyebrow */}
             <span 
-              className="text-sm font-medium tracking-wide uppercase"
+              className="text-base font-semibold tracking-widest uppercase"
               style={{ color: "hsl(var(--primary))" }}
             >
               More than just content creation
@@ -30,10 +30,10 @@ export function HeroStatic() {
 
             {/* Headline */}
             <h1 
-              className="font-extrabold tracking-[-0.5px]"
+              className="font-black tracking-[-1px]"
               style={{ 
-                fontSize: "clamp(40px, 5vw, 64px)",
-                lineHeight: 1.05,
+                fontSize: "clamp(48px, 6vw, 80px)",
+                lineHeight: 1.0,
                 color: "hsl(var(--foreground))",
               }}
             >
@@ -44,7 +44,7 @@ export function HeroStatic() {
 
             {/* Subheadline */}
             <p 
-              className="text-lg leading-relaxed max-w-md"
+              className="text-xl leading-relaxed max-w-lg font-medium"
               style={{ color: "hsl(var(--muted-foreground))" }}
             >
               Turn tools on as you need them. Pay only for what you use with credits. 
