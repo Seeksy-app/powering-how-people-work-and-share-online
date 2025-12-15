@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format, addDays } from "date-fns";
-import { Plus, Calendar, FileText, ChevronDown, ChevronUp, Sparkles, Download, Lock } from "lucide-react";
+import { format } from "date-fns";
+import { Plus, Calendar, ChevronDown, ChevronUp, Sparkles, Download, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,16 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { BoardPageHeader } from "@/components/board/BoardPageHeader";
 import { toast } from "sonner";
 import { DecisionTable } from "@/components/board/DecisionTable";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface DecisionRow {
   Topic: string;
@@ -38,11 +48,24 @@ interface MeetingNote {
   created_at: string;
 }
 
+interface CreateMeetingForm {
+  title: string;
+  meeting_date: string;
+  start_time: string;
+  duration_minutes: number;
+}
+
 export default function BoardMeetingNotes() {
   const queryClient = useQueryClient();
   const [selectedNote, setSelectedNote] = useState<MeetingNote | null>(null);
   const [memoOpen, setMemoOpen] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateMeetingForm>({
+    title: "",
+    meeting_date: format(new Date(), "yyyy-MM-dd"),
+    start_time: "10:00",
+    duration_minutes: 60,
+  });
 
   const { data: notes = [], isLoading } = useQuery({
     queryKey: ["board-meeting-notes"],
@@ -50,57 +73,32 @@ export default function BoardMeetingNotes() {
       const { data, error } = await supabase
         .from("board_meeting_notes")
         .select("*")
-        .order("meeting_date", { ascending: false });
+        .order("meeting_date", { ascending: false })
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return (data || []) as unknown as MeetingNote[];
     },
   });
 
   const createNoteMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (formData: CreateMeetingForm) => {
       const { data: userData } = await supabase.auth.getUser();
-      const tomorrow = addDays(new Date(), 1);
       
+      // Create EMPTY meeting - no prefilled content
       const newNote = {
-        title: "Portfolio Review & Next Steps — Veteran Podcast Network, Parade Deck, Alchify, Seeksy",
-        meeting_date: format(tomorrow, "yyyy-MM-dd"),
-        agenda_items: [
-          "Opening Summary: Goals, Expectations, Takeaways",
-          "Veteran Podcast Network & Veteran Podcast Awards — Sell vs Operate Decision",
-          "ParadeDeck.com & Event Platform Opportunities",
-          "Alchify — Product Readiness & Go-To-Market Ownership",
-          "Seeksy Platform & IP Strategy",
-          "Recurrent Opportunity — Outreach Ownership",
-          "Capital, Time, and Accountability",
-          "Decisions Recap & Next Steps"
-        ],
-        memo: {
-          purpose: "Align board on immediate monetization opportunities, execution ownership, and Q1 priorities across the portfolio.",
-          current_state: [
-            "Veteran Podcast Awards is fully built and ready to launch or sell as a turnkey platform.",
-            "Parade Deck and related event technology have drawn acquisition interest in the $75k–$125k range.",
-            "Alchify is ~75% go-to-market ready; remaining work depends on leadership alignment and marketing execution.",
-            "Seeksy provides modular IP that can be licensed or embedded across all entities."
-          ],
-          key_questions: [
-            "Do we sell or operate Veteran Podcast Awards?",
-            "Do we pursue a Parade Deck / platform transaction now?",
-            "Who owns Alchify go-to-market execution and by when?",
-            "How do we best monetize Seeksy IP without duplication?"
-          ],
-          objective: "Leave the meeting with clear go/no-go decisions, ownership assignments, and a 30-day execution plan."
-        },
-        decision_table: [
-          { Topic: "Veteran Podcast Awards", Option: "Sell Turnkey", Upside: "Immediate capital, minimal execution risk", Risk: "Loss of long-term upside", Decision: "" },
-          { Topic: "Veteran Podcast Awards", Option: "Operate Internally", Upside: "Recurring revenue, brand growth", Risk: "Requires marketing effort and sponsorship sales", Decision: "" },
-          { Topic: "Parade Deck", Option: "Pursue Acquisition / License", Upside: "Covers operating costs, funds Alchify", Risk: "Time to close, deal uncertainty", Decision: "" },
-          { Topic: "Alchify", Option: "Finalize MVP + Launch", Upside: "Validates product, user traction", Risk: "Requires leadership execution", Decision: "" },
-          { Topic: "Recurrent", Option: "Outbound Platform Proposal", Upside: "Cost savings pitch, strategic partnership", Risk: "Sales cycle length", Decision: "" }
-        ],
+        title: formData.title.trim(),
+        meeting_date: formData.meeting_date,
+        agenda_items: [], // Empty - no prefill
+        memo: null, // Empty - no prefill
+        decision_table: [], // Empty - no prefill
+        decisions_summary: null,
+        decisions_summary_generated_at: null,
+        decisions_summary_locked: false,
         status: "active",
         created_by: userData.user?.id,
       };
 
+      // Let DB generate the UUID - do NOT pass id from client
       const { data, error } = await supabase
         .from("board_meeting_notes")
         .insert(newNote)
@@ -112,14 +110,32 @@ export default function BoardMeetingNotes() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["board-meeting-notes"] });
       setSelectedNote(data as unknown as MeetingNote);
-      setIsCreating(false);
-      toast.success("Meeting notes created");
+      setIsCreateModalOpen(false);
+      setCreateForm({
+        title: "",
+        meeting_date: format(new Date(), "yyyy-MM-dd"),
+        start_time: "10:00",
+        duration_minutes: 60,
+      });
+      toast.success("Meeting created");
     },
     onError: (error) => {
-      toast.error("Failed to create meeting notes");
+      toast.error("Failed to create meeting");
       console.error(error);
     },
   });
+
+  const handleCreateMeeting = () => {
+    if (!createForm.title.trim()) {
+      toast.error("Title is required");
+      return;
+    }
+    if (!createForm.meeting_date) {
+      toast.error("Meeting date is required");
+      return;
+    }
+    createNoteMutation.mutate(createForm);
+  };
 
   const updateDecisionMutation = useMutation({
     mutationFn: async ({ noteId, decisionTable }: { noteId: string; decisionTable: any[] }) => {
@@ -217,12 +233,74 @@ export default function BoardMeetingNotes() {
         title="Meeting Notes" 
         subtitle="Board meeting agendas, memos, and decisions"
         actions={
-          <Button onClick={() => createNoteMutation.mutate()} disabled={createNoteMutation.isPending}>
+          <Button onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             New Meeting Notes
           </Button>
         }
       />
+
+      {/* Create Meeting Modal */}
+      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Meeting</DialogTitle>
+            <DialogDescription>
+              Add a new meeting. You can add agenda items and notes after creation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                placeholder="e.g., Portfolio Review & Next Steps"
+                value={createForm.title}
+                onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="meeting_date">Meeting Date *</Label>
+              <Input
+                id="meeting_date"
+                type="date"
+                value={createForm.meeting_date}
+                onChange={(e) => setCreateForm({ ...createForm, meeting_date: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="start_time">Start Time</Label>
+                <Input
+                  id="start_time"
+                  type="time"
+                  value={createForm.start_time}
+                  onChange={(e) => setCreateForm({ ...createForm, start_time: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="duration_minutes">Duration (min)</Label>
+                <Input
+                  id="duration_minutes"
+                  type="number"
+                  min={15}
+                  step={15}
+                  value={createForm.duration_minutes}
+                  onChange={(e) => setCreateForm({ ...createForm, duration_minutes: parseInt(e.target.value) || 60 })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateMeeting} disabled={createNoteMutation.isPending}>
+              {createNoteMutation.isPending ? "Creating..." : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Notes List */}
