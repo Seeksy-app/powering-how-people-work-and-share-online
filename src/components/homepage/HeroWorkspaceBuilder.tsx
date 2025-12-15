@@ -154,12 +154,12 @@ export function HeroWorkspaceBuilder() {
       {/* Store Grid */}
       <div className="mb-4">
         <p 
-          className="text-[10px] font-bold uppercase tracking-wider mb-2"
+          className="text-[10px] font-bold uppercase tracking-wider mb-3"
           style={{ color: "#9CA3AF" }}
         >
-          Seekies Store
+          Seekies
         </p>
-        <div className="grid grid-cols-3 gap-2.5 relative">
+        <div className="grid grid-cols-3 gap-3 relative">
           {modules.map((module) => {
             const isAdded = workspaceModules.includes(module.key);
             const isFlying = animatingModule === module.key;
@@ -168,49 +168,36 @@ export function HeroWorkspaceBuilder() {
             return (
               <motion.div
                 key={module.key}
-                className="relative rounded-2xl p-3 transition-all duration-200 cursor-pointer"
+                className="relative rounded-2xl p-4 transition-all duration-200 cursor-pointer flex flex-col items-center"
                 style={{
-                  background: module.tint,
-                  border: "1px solid #EEF2F7",
-                  opacity: isAdded ? 0.55 : 1,
+                  background: "#FFFFFF",
+                  border: isAdded ? "2px solid #2C6BED" : "1px dashed #E5E7EB",
+                  opacity: isAdded ? 0.6 : 1,
                   transform: isFlying ? "scale(0.95)" : "scale(1)",
                 }}
                 whileHover={!isAdded ? { 
                   scale: 1.02, 
-                  boxShadow: "0 10px 25px rgba(15,23,42,0.08)" 
+                  borderColor: "#2C6BED",
+                  boxShadow: "0 8px 20px rgba(44,107,237,0.12)" 
                 } : {}}
               >
                 {/* Icon bubble */}
                 <div 
-                  className="w-11 h-11 rounded-full flex items-center justify-center mb-2 shadow-sm"
-                  style={{ background: "rgba(255,255,255,0.9)" }}
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-2"
+                  style={{ background: module.tint }}
                 >
                   <Icon 
-                    className="w-5 h-5" 
+                    className="w-6 h-6" 
                     color={module.iconColor}
-                    strokeWidth={2.5} 
+                    strokeWidth={2} 
                   />
                 </div>
                 <p 
-                  className="text-[13px] font-bold truncate"
-                  style={{ color: "#0B1220" }}
+                  className="text-sm font-medium text-center"
+                  style={{ color: isAdded ? "#9CA3AF" : "#374151" }}
                 >
                   {module.label}
                 </p>
-                
-                {/* Added badge */}
-                {isAdded && (
-                  <div 
-                    className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold"
-                    style={{ 
-                      background: "rgba(255,255,255,0.95)",
-                      color: "#059669",
-                    }}
-                  >
-                    <Check className="w-2.5 h-2.5" />
-                    Added
-                  </div>
-                )}
               </motion.div>
             );
           })}
@@ -238,7 +225,7 @@ export function HeroWorkspaceBuilder() {
                     opacity: 0.9,
                     scale: 0.7,
                     x: col === 0 ? 60 : col === 1 ? 0 : -60,
-                    y: 180,
+                    y: 200,
                   }}
                   exit={{ opacity: 0 }}
                   transition={{ 
@@ -248,24 +235,24 @@ export function HeroWorkspaceBuilder() {
                   className="absolute z-50 pointer-events-none"
                   style={{
                     left: `${(col * 33.33) + 5}%`,
-                    top: `${(row * 80) + 8}px`,
+                    top: `${(row * 95) + 8}px`,
                   }}
                 >
                   <div 
-                    className="p-2 rounded-xl shadow-xl"
+                    className="p-2.5 rounded-xl shadow-xl"
                     style={{ 
-                      background: module.tint,
+                      background: "#FFFFFF",
                       border: "2px solid #2C6BED",
                     }}
                   >
                     <div 
-                      className="w-9 h-9 rounded-full flex items-center justify-center"
-                      style={{ background: "rgba(255,255,255,0.9)" }}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ background: module.tint }}
                     >
                       <Icon 
-                        className="w-4 h-4" 
+                        className="w-5 h-5" 
                         color={module.iconColor}
-                        strokeWidth={2.5} 
+                        strokeWidth={2} 
                       />
                     </div>
                   </div>
