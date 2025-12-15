@@ -194,6 +194,12 @@ export default function BoardMeetingNotes() {
         member_questions: [],
       } as unknown as MeetingNote;
       setSelectedNote(typedMeeting);
+      
+      // Generate AI content - keep modal open during generation
+      if (agendaNotes.trim()) {
+        await generateAIContent(meeting.id, meeting.title, agendaNotes);
+      }
+      
       setIsCreateModalOpen(false);
       setCreateForm({
         title: "",
@@ -202,12 +208,7 @@ export default function BoardMeetingNotes() {
         duration_minutes: 45,
         agenda_notes: "",
       });
-      toast.success("Meeting created");
-      
-      // Auto-generate AI content if agenda notes provided
-      if (agendaNotes.trim()) {
-        generateAIContent(meeting.id, meeting.title, agendaNotes);
-      }
+      toast.success("Meeting created with AI-generated content");
     },
     onError: (error) => {
       toast.error("Failed to create meeting");
@@ -253,6 +254,10 @@ export default function BoardMeetingNotes() {
     }
     if (!createForm.meeting_date) {
       toast.error("Meeting date is required");
+      return;
+    }
+    if (!createForm.agenda_notes.trim()) {
+      toast.error("Please add agenda notes so AI can generate the meeting content");
       return;
     }
     createNoteMutation.mutate(createForm);
@@ -467,7 +472,7 @@ export default function BoardMeetingNotes() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="agenda_notes">Agenda Notes</Label>
+              <Label htmlFor="agenda_notes">Agenda Notes *</Label>
               <Textarea
                 id="agenda_notes"
                 placeholder="Enter your agenda topics, key discussion points, and any context for the meeting. AI will structure this into a formal agenda, memo, and decision matrix."
@@ -481,11 +486,11 @@ export default function BoardMeetingNotes() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} disabled={createNoteMutation.isPending || isGenerating}>
               Cancel
             </Button>
-            <Button onClick={handleCreateMeeting} disabled={createNoteMutation.isPending}>
-              {createNoteMutation.isPending ? "Creating..." : "Create Meeting"}
+            <Button onClick={handleCreateMeeting} disabled={createNoteMutation.isPending || isGenerating}>
+              {createNoteMutation.isPending ? "Creating..." : isGenerating ? "AI Generating..." : "Create & Generate with AI"}
             </Button>
           </DialogFooter>
         </DialogContent>
