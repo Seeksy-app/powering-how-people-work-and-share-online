@@ -98,22 +98,15 @@ export default function BoardMeetingNotes() {
     isConnecting: isVideoConnecting,
     isMuted,
     isVideoOff,
-    isRecording,
+    isGeneratingNotes,
     participants,
     localVideoRef,
     audioStream,
     hasActiveRoom,
-    isCapturingAudio,
-    isGeneratingNotes,
     startVideoMeeting,
     joinVideoMeeting,
     toggleMute,
     toggleVideo,
-    startRecording,
-    stopRecording,
-    leaveCall,
-    startAudioCapture,
-    stopAudioCapture,
     endMeetingAndGenerateNotes,
   } = useBoardMeetingVideo(selectedNote?.id || '');
   
@@ -981,22 +974,15 @@ export default function BoardMeetingNotes() {
                   isConnecting={isVideoConnecting}
                   isMuted={isMuted}
                   isVideoOff={isVideoOff}
-                  isRecording={isRecording}
+                  isGeneratingNotes={isGeneratingNotes}
                   participants={participants}
                   localVideoRef={localVideoRef}
                   hasActiveRoom={hasActiveRoom}
                   guestToken={(selectedNote as any).guest_token}
-                  isCapturingAudio={isCapturingAudio}
-                  isGeneratingNotes={isGeneratingNotes}
                   onToggleMute={toggleMute}
                   onToggleVideo={toggleVideo}
-                  onStartRecording={startRecording}
-                  onStopRecording={stopRecording}
-                  onLeaveCall={leaveCall}
                   onStartMeeting={startVideoMeeting}
                   onJoinMeeting={joinVideoMeeting}
-                  onStartAudioCapture={startAudioCapture}
-                  onStopAudioCapture={stopAudioCapture}
                   onEndMeetingAndGenerateNotes={endMeetingAndGenerateNotes}
                 />
               )}
