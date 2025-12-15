@@ -259,32 +259,52 @@ export default function BoardMeetingNotes() {
         decision_table: data.decisions || [],
       };
       
-      console.log("Updating meeting with:", updatePayload);
+      console.log("Updating meeting with payload:", JSON.stringify(updatePayload));
       
-      const { data: updatedMeeting, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from("board_meeting_notes")
         .update(updatePayload as any)
-        .eq("id", meetingId)
-        .select()
-        .single();
+        .eq("id", meetingId);
       
       if (updateError) {
         console.error("Update error:", updateError);
         throw updateError;
       }
       
-      // Update selectedNote with the new data
-      if (updatedMeeting) {
-        setSelectedNote({
-          ...updatedMeeting,
-          agenda_items: (updatedMeeting.agenda_items as unknown as AgendaItem[]) || [],
-          member_questions: (updatedMeeting.member_questions as unknown as MemberQuestion[]) || [],
-          memo: updatedMeeting.memo as MeetingNote['memo'] || null,
-          decision_table: (updatedMeeting.decision_table as unknown as DecisionRow[]) || [],
-        } as MeetingNote);
+      console.log("Update succeeded, now refetching meeting:", meetingId);
+      
+      // Explicitly refetch the meeting to get the updated data
+      const { data: freshMeeting, error: fetchError } = await supabase
+        .from("board_meeting_notes")
+        .select("*")
+        .eq("id", meetingId)
+        .maybeSingle();
+      
+      if (fetchError) {
+        console.error("Refetch error:", fetchError);
+        throw fetchError;
       }
       
-      queryClient.invalidateQueries({ queryKey: ["board-meeting-notes"] });
+      console.log("Refetched meeting data:", freshMeeting ? { 
+        id: freshMeeting.id, 
+        agenda_items_count: (freshMeeting.agenda_items as any[])?.length || 0 
+      } : "null");
+      
+      // Update selectedNote with fresh data from DB
+      if (freshMeeting) {
+        const typedMeeting: MeetingNote = {
+          ...freshMeeting,
+          agenda_items: (freshMeeting.agenda_items as unknown as AgendaItem[]) || [],
+          member_questions: (freshMeeting.member_questions as unknown as MemberQuestion[]) || [],
+          memo: freshMeeting.memo as MeetingNote['memo'] || null,
+          decision_table: (freshMeeting.decision_table as unknown as DecisionRow[]) || [],
+        };
+        console.log("Setting selectedNote with agenda_items:", typedMeeting.agenda_items.length);
+        setSelectedNote(typedMeeting);
+      }
+      
+      // Refresh the meetings list
+      await queryClient.invalidateQueries({ queryKey: ["board-meeting-notes"] });
       toast.success("AI generated agenda, memo, and decision matrix");
     } catch (error) {
       console.error("AI generation failed:", error);
