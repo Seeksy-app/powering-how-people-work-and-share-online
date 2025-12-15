@@ -4617,6 +4617,7 @@ export type Database = {
           ai_notes_status: string | null
           ai_risks_draft: string | null
           ai_summary_draft: string | null
+          audio_file_path: string | null
           audio_file_url: string | null
           audio_transcript: string | null
           created_at: string
@@ -4653,6 +4654,7 @@ export type Database = {
           ai_notes_status?: string | null
           ai_risks_draft?: string | null
           ai_summary_draft?: string | null
+          audio_file_path?: string | null
           audio_file_url?: string | null
           audio_transcript?: string | null
           created_at?: string
@@ -4689,6 +4691,7 @@ export type Database = {
           ai_notes_status?: string | null
           ai_risks_draft?: string | null
           ai_summary_draft?: string | null
+          audio_file_path?: string | null
           audio_file_url?: string | null
           audio_transcript?: string | null
           created_at?: string
