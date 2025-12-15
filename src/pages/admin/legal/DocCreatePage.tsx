@@ -90,15 +90,14 @@ export default function DocCreatePage() {
     mutationFn: async () => {
       if (!user?.id || !selectedTemplateId) throw new Error("Missing data");
 
-      // Create doc instance
+      // Create doc instance - store title in submission_json since table doesn't have title column
       const { data: instance, error } = await supabase
         .from("doc_instances")
         .insert({
           tenant_id: "a0000000-0000-0000-0000-000000000001",
           form_template_id: selectedTemplateId,
-          title: documentTitle,
           status: "draft",
-          submission_json: {},
+          submission_json: { document_title: documentTitle },
           created_by: user.id,
         })
         .select()
