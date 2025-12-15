@@ -261,14 +261,27 @@ export default function BoardMeetingNotes() {
       
       console.log("Updating meeting with:", updatePayload);
       
-      const { error: updateError } = await supabase
+      const { data: updatedMeeting, error: updateError } = await supabase
         .from("board_meeting_notes")
         .update(updatePayload as any)
-        .eq("id", meetingId);
+        .eq("id", meetingId)
+        .select()
+        .single();
       
       if (updateError) {
         console.error("Update error:", updateError);
         throw updateError;
+      }
+      
+      // Update selectedNote with the new data
+      if (updatedMeeting) {
+        setSelectedNote({
+          ...updatedMeeting,
+          agenda_items: (updatedMeeting.agenda_items as unknown as AgendaItem[]) || [],
+          member_questions: (updatedMeeting.member_questions as unknown as MemberQuestion[]) || [],
+          memo: updatedMeeting.memo as MeetingNote['memo'] || null,
+          decision_table: (updatedMeeting.decision_table as unknown as DecisionRow[]) || [],
+        } as MeetingNote);
       }
       
       queryClient.invalidateQueries({ queryKey: ["board-meeting-notes"] });
