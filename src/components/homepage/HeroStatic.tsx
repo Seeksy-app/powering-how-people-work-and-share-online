@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { HeroWorkspaceBuilder } from "./HeroWorkspaceBuilder";
 
 export function HeroStatic() {
   const navigate = useNavigate();
@@ -78,33 +79,14 @@ export function HeroStatic() {
             </p>
           </motion.div>
 
-          {/* Right: Visual Mock */}
+          {/* Right: Workspace Builder */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
             className="relative"
           >
-            <div 
-              className="rounded-[28px] overflow-hidden shadow-2xl"
-              style={{ 
-                background: "linear-gradient(135deg, hsl(var(--primary)/0.1), hsl(var(--secondary)/0.3))",
-                aspectRatio: "4/3",
-              }}
-            >
-              <img 
-                src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=1200&h=900&fit=crop"
-                alt="Creator workspace dashboard"
-                className="w-full h-full object-cover"
-              />
-              {/* Overlay gradient */}
-              <div 
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: "linear-gradient(to top, hsl(var(--background)/0.3), transparent 50%)",
-                }}
-              />
-            </div>
+            <HeroWorkspaceBuilder />
             
             {/* Floating badge */}
             <motion.div
