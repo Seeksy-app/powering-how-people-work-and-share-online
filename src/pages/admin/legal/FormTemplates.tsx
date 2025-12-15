@@ -342,14 +342,14 @@ function CreateTemplateForm({ onSuccess }: { onSuccess: () => void }) {
       const filePath = `form-templates/${fileName}`;
       
       const { error: uploadError } = await supabase.storage
-        .from("legal-docs")
+        .from("legal-templates")
         .upload(filePath, docxFile);
       
       if (uploadError) throw uploadError;
 
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from("legal-docs")
+        .from("legal-templates")
         .getPublicUrl(filePath);
 
       // Get default tenant (seeksy_platform)
