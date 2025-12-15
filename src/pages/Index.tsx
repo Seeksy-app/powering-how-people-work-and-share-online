@@ -11,6 +11,7 @@ import { LogoBar } from "@/components/homepage/LogoBar";
 import { InteractiveDemo } from "@/components/homepage/InteractiveDemo";
 import { PlatformPillars } from "@/components/homepage/PlatformPillars";
 import { ModuleHeroShowcase } from "@/components/homepage/ModuleHeroShowcase";
+import { ModuleBuilder } from "@/components/homepage/ModuleBuilder";
 import { PersonasSection } from "@/components/homepage/PersonasSection";
 import { CreditsTeaser } from "@/components/homepage/CreditsTeaser";
 import { FinalCTA } from "@/components/homepage/FinalCTA";
@@ -114,7 +115,10 @@ const Index = () => {
         {/* 6. Feature Panels - Obviously style with vertical tabs */}
         <ModuleHeroShowcase />
         
-        {/* 7. Credits/Pricing Teaser */}
+        {/* 7. Module Builder - Toggle version */}
+        <ModuleBuilder />
+        
+        {/* 8. Credits/Pricing Teaser */}
         <CreditsTeaser />
         
         {/* 8. Final CTA */}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence, Reorder } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Check, Podcast, Video, Calendar, Mail, Users, BarChart3, MessageSquare, FileText, DollarSign, GripVertical } from "lucide-react";
 
 const modules = [
@@ -24,21 +24,57 @@ const workspaceTemplates = [
 export function HeroWorkspaceBuilder() {
   const [currentTemplateIndex, setCurrentTemplateIndex] = useState(0);
   const [sidebarModules, setSidebarModules] = useState<string[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
+  const [animatingModule, setAnimatingModule] = useState<string | null>(null);
+  const [animationPhase, setAnimationPhase] = useState<'idle' | 'flying' | 'landing'>('idle');
+  const gridRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   const currentTemplate = workspaceTemplates[currentTemplateIndex];
 
+  // Auto-cycle templates
   useEffect(() => {
     const interval = setInterval(() => {
-      if (!isDragging) {
+      if (animationPhase === 'idle') {
         setCurrentTemplateIndex((prev) => (prev + 1) % workspaceTemplates.length);
       }
-    }, 2500);
+    }, 3500);
     return () => clearInterval(interval);
-  }, [isDragging]);
+  }, [animationPhase]);
 
-  // Update sidebar modules when template changes
+  // Animate modules being "dragged" to sidebar when template changes
   useEffect(() => {
-    setSidebarModules(currentTemplate.activeModules.slice(0, 4));
+    const newActiveModules = currentTemplate.activeModules.slice(0, 4);
+    
+    // Clear sidebar first
+    setSidebarModules([]);
+    
+    // Animate each module one by one
+    const animateModules = async () => {
+      for (let i = 0; i < newActiveModules.length; i++) {
+        const moduleKey = newActiveModules[i];
+        
+        // Start flying animation
+        setAnimatingModule(moduleKey);
+        setAnimationPhase('flying');
+        
+        // Wait for fly animation
+        await new Promise(resolve => setTimeout(resolve, 400));
+        
+        // Add to sidebar
+        setSidebarModules(prev => [...prev, moduleKey]);
+        setAnimationPhase('landing');
+        
+        // Wait for landing
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        setAnimatingModule(null);
+        setAnimationPhase('idle');
+        
+        // Small delay before next module
+        await new Promise(resolve => setTimeout(resolve, 150));
+      }
+    };
+    
+    animateModules();
   }, [currentTemplate]);
 
   const activeModules = modules.filter((m) => currentTemplate.activeModules.includes(m.key));
@@ -70,9 +106,10 @@ export function HeroWorkspaceBuilder() {
       </div>
 
       {/* Module Grid */}
-      <div className="grid grid-cols-3 gap-2 mb-5">
+      <div ref={gridRef} className="grid grid-cols-3 gap-2 mb-5 relative">
         {modules.map((module) => {
           const isActive = currentTemplate.activeModules.includes(module.key);
+          const isAnimating = animatingModule === module.key;
           const Icon = module.icon;
           
           return (
@@ -85,9 +122,12 @@ export function HeroWorkspaceBuilder() {
                   ? "bg-card border-primary/30 shadow-md" 
                   : "bg-muted/30 border-border/50 opacity-50"
               }`}
+              style={{
+                opacity: isAnimating ? 0.3 : undefined,
+              }}
             >
               <AnimatePresence>
-                {isActive && (
+                {isActive && !isAnimating && (
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
@@ -106,10 +146,54 @@ export function HeroWorkspaceBuilder() {
             </motion.div>
           );
         })}
+        
+        {/* Flying module animation overlay */}
+        <AnimatePresence>
+          {animatingModule && animationPhase === 'flying' && (() => {
+            const module = modules.find(m => m.key === animatingModule);
+            if (!module) return null;
+            const Icon = module.icon;
+            
+            return (
+              <motion.div
+                key={`flying-${animatingModule}`}
+                initial={{ 
+                  opacity: 1, 
+                  scale: 1,
+                  x: 0,
+                  y: 0,
+                }}
+                animate={{ 
+                  opacity: 1,
+                  scale: 0.8,
+                  x: 120,
+                  y: 180,
+                }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ 
+                  duration: 0.4, 
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+                className="absolute z-50 pointer-events-none"
+                style={{
+                  left: '50%',
+                  top: '30%',
+                }}
+              >
+                <div className="p-3 rounded-xl bg-card border border-primary shadow-xl">
+                  <div className={`w-9 h-9 rounded-lg ${module.color} flex items-center justify-center shadow-md`}>
+                    <Icon className="w-4 h-4 text-white" strokeWidth={2.5} />
+                  </div>
+                  <p className="text-[10px] font-medium text-foreground truncate text-center mt-1">{module.label}</p>
+                </div>
+              </motion.div>
+            );
+          })()}
+        </AnimatePresence>
       </div>
 
       {/* Drag & Drop Sidebar Preview */}
-      <div className="bg-muted/50 rounded-xl p-3">
+      <div ref={sidebarRef} className="bg-muted/50 rounded-xl p-3">
         <div className="flex items-center justify-between mb-2">
           <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
             Your Sidebar
@@ -118,39 +202,34 @@ export function HeroWorkspaceBuilder() {
             ↕ Drag to reorder
           </p>
         </div>
-        <Reorder.Group
-          axis="y"
-          values={sidebarModules}
-          onReorder={setSidebarModules}
-          className="space-y-1.5"
-        >
+        <div className="space-y-1.5 min-h-[120px]">
           <AnimatePresence mode="popLayout">
             {sidebarItems.map((module) => {
               if (!module) return null;
               const Icon = module.icon;
               return (
-                <Reorder.Item
+                <motion.div
                   key={module.key}
-                  value={module.key}
-                  onDragStart={() => setIsDragging(true)}
-                  onDragEnd={() => setIsDragging(false)}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 12 }}
-                  transition={{ duration: 0.18, ease: "easeOut" }}
-                  className="flex items-center gap-2 p-2 bg-card rounded-lg cursor-grab active:cursor-grabbing"
-                  whileDrag={{ scale: 1.02, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+                  initial={{ opacity: 0, x: 20, scale: 0.8 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -20, scale: 0.8 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 25,
+                  }}
+                  className="flex items-center gap-2 p-2 bg-card rounded-lg shadow-sm"
                 >
                   <GripVertical className="w-3 h-3 text-muted-foreground/50" />
                   <div className={`w-7 h-7 rounded-md ${module.color} flex items-center justify-center shadow-sm`}>
                     <Icon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
                   </div>
                   <span className="text-xs font-medium text-foreground">{module.label}</span>
-                </Reorder.Item>
+                </motion.div>
               );
             })}
           </AnimatePresence>
-        </Reorder.Group>
+        </div>
       </div>
 
       {/* Template Indicator */}

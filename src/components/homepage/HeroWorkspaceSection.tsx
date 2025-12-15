@@ -15,9 +15,9 @@ export function HeroWorkspaceSection() {
       }}
     >
       <div className="mx-auto max-w-[1280px]">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left - Copy */}
-          <div className="text-left">
+          <div className="text-left lg:max-w-none">
             <p 
               className="text-sm font-semibold uppercase tracking-widest mb-6"
               style={{ color: "hsl(var(--primary))" }}
@@ -72,8 +72,8 @@ export function HeroWorkspaceSection() {
           </div>
 
           {/* Right - Workspace Builder */}
-          <div className="flex justify-center lg:justify-end">
-            <div className="w-full max-w-[420px]">
+          <div className="flex justify-center lg:justify-center">
+            <div className="w-full max-w-[480px]">
               <HeroWorkspaceBuilder />
               {/* AI-powered workspace badge */}
               <div className="flex justify-center mt-4">
