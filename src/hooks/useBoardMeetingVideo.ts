@@ -49,6 +49,51 @@ export const useBoardMeetingVideo = (meetingNoteId: string) => {
     checkActiveRoom();
   }, [meetingNoteId]);
 
+  // Internal function to start audio capture (used by joinRoom)
+  const startAudioCaptureInternal = useCallback((daily: DailyCall) => {
+    try {
+      const allParticipants = daily.participants();
+      const audioTracks: MediaStreamTrack[] = [];
+      
+      Object.values(allParticipants).forEach((p: any) => {
+        if (p.tracks?.audio?.track) {
+          audioTracks.push(p.tracks.audio.track);
+        }
+      });
+      
+      if (audioTracks.length === 0) {
+        console.log('No audio tracks available yet for capture');
+        return;
+      }
+      
+      const combinedStream = new MediaStream(audioTracks);
+      const recorder = new MediaRecorder(combinedStream, {
+        mimeType: 'audio/webm;codecs=opus',
+      });
+      
+      audioChunksRef.current = [];
+      
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      recorder.onstop = async () => {
+        console.log('Audio capture stopped, saving to storage...');
+        // Save will be handled by endMeetingAndGenerateNotes
+      };
+      
+      recorder.start(1000);
+      mediaRecorderRef.current = recorder;
+      setIsCapturingAudio(true);
+      
+      console.log('Auto-started audio capture with', audioTracks.length, 'tracks');
+    } catch (error) {
+      console.error('Error auto-starting audio capture:', error);
+    }
+  }, []);
+
   // Common function to join a Daily room
   const joinRoom = useCallback(async (roomUrl: string, token: string, roomNameVal: string) => {
     setRoomName(roomNameVal);
@@ -80,7 +125,12 @@ export const useBoardMeetingVideo = (meetingNoteId: string) => {
         setAudioStream(audioOnlyStream);
       }
       
-      toast.success('Joined video meeting');
+      // Auto-start audio capture for AI notes
+      setTimeout(() => {
+        startAudioCaptureInternal(daily);
+      }, 1000);
+      
+      toast.success('Joined video meeting - AI listening started');
     });
 
     daily.on('left-meeting', () => {
@@ -497,10 +547,7 @@ export const useBoardMeetingVideo = (meetingNoteId: string) => {
     isConnecting,
     isMuted,
     isVideoOff,
-    isRecording,
-    isCapturingAudio,
     isGeneratingNotes,
-    aiNotesStatus,
     participants,
     localVideoRef,
     audioStream,
@@ -509,11 +556,6 @@ export const useBoardMeetingVideo = (meetingNoteId: string) => {
     joinVideoMeeting,
     toggleMute,
     toggleVideo,
-    startRecording,
-    stopRecording,
-    leaveCall,
-    startAudioCapture,
-    stopAudioCapture,
     endMeetingAndGenerateNotes,
   };
 };

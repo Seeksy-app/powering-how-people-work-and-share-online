@@ -6,15 +6,11 @@ import {
   MicOff,
   Video,
   VideoOff,
-  PhoneOff,
-  Circle,
   Users,
   Loader2,
   Link2,
   Check,
-  Radio,
   Sparkles,
-  Square,
 } from 'lucide-react';
 import {
   Tooltip,
@@ -37,8 +33,6 @@ interface BoardMeetingVideoProps {
   isConnecting: boolean;
   isMuted: boolean;
   isVideoOff: boolean;
-  isRecording: boolean;
-  isCapturingAudio: boolean;
   isGeneratingNotes: boolean;
   participants: Participant[];
   localVideoRef: React.RefObject<HTMLVideoElement>;
@@ -46,13 +40,8 @@ interface BoardMeetingVideoProps {
   guestToken?: string | null;
   onToggleMute: () => void;
   onToggleVideo: () => void;
-  onStartRecording: () => void;
-  onStopRecording: () => void;
-  onLeaveCall: () => void;
   onStartMeeting: () => void;
   onJoinMeeting: () => void;
-  onStartAudioCapture: () => void;
-  onStopAudioCapture: () => void;
   onEndMeetingAndGenerateNotes: () => void;
 }
 
@@ -61,8 +50,6 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
   isConnecting,
   isMuted,
   isVideoOff,
-  isRecording,
-  isCapturingAudio,
   isGeneratingNotes,
   participants,
   localVideoRef,
@@ -70,13 +57,8 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
   guestToken,
   onToggleMute,
   onToggleVideo,
-  onStartRecording,
-  onStopRecording,
-  onLeaveCall,
   onStartMeeting,
   onJoinMeeting,
-  onStartAudioCapture,
-  onStopAudioCapture,
   onEndMeetingAndGenerateNotes,
 }) => {
   const [linkCopied, setLinkCopied] = React.useState(false);
@@ -159,16 +141,10 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
               {linkCopied ? 'Copied!' : 'Copy Guest Link'}
             </Button>
           )}
-          {isCapturingAudio && (
-            <Badge variant="default" className="bg-green-600 animate-pulse">
-              <Radio className="h-2 w-2 fill-current mr-1" />
-              AI Listening
-            </Badge>
-          )}
-          {isRecording && (
-            <Badge variant="destructive" className="animate-pulse">
-              <Circle className="h-2 w-2 fill-current mr-1" />
-              Recording
+          {isGeneratingNotes && (
+            <Badge variant="default" className="bg-primary animate-pulse">
+              <Sparkles className="h-2 w-2 mr-1" />
+              Generating Notes...
             </Badge>
           )}
         </div>
@@ -274,67 +250,26 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
             <TooltipContent>{isVideoOff ? 'Start Video' : 'Stop Video'}</TooltipContent>
           </Tooltip>
 
-          {/* AI Audio Capture Toggle */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={isCapturingAudio ? 'default' : 'secondary'}
-                size="sm"
-                className={`rounded-full w-10 h-10 ${isCapturingAudio ? 'bg-green-600 hover:bg-green-700' : ''}`}
-                onClick={isCapturingAudio ? onStopAudioCapture : onStartAudioCapture}
-              >
-                <Radio className={`h-4 w-4 ${isCapturingAudio ? 'animate-pulse' : ''}`} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isCapturingAudio ? 'Stop AI Listening' : 'Start AI Listening'}
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={isRecording ? 'default' : 'secondary'}
-                size="sm"
-                className={`rounded-full w-10 h-10 ${isRecording ? 'bg-red-600 hover:bg-red-700' : ''}`}
-                onClick={isRecording ? onStopRecording : onStartRecording}
-              >
-                <Circle className={`h-4 w-4 ${isRecording ? 'fill-current animate-pulse' : ''}`} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{isRecording ? 'Stop Recording' : 'Start Recording'}</TooltipContent>
-          </Tooltip>
-
-          {/* Simple Leave */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="secondary"
-                size="sm"
-                className="rounded-full w-10 h-10"
-                onClick={onLeaveCall}
-              >
-                <PhoneOff className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Leave Call</TooltipContent>
-          </Tooltip>
-
-          {/* End Meeting & Generate Notes */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="default"
-                size="sm"
-                className="ml-2 gap-2 bg-primary hover:bg-primary/90"
-                onClick={onEndMeetingAndGenerateNotes}
-              >
+          {/* End Meeting & Generate Notes - Single Action */}
+          <Button
+            variant="default"
+            size="sm"
+            className="ml-2 gap-2 bg-primary hover:bg-primary/90"
+            onClick={onEndMeetingAndGenerateNotes}
+            disabled={isGeneratingNotes}
+          >
+            {isGeneratingNotes ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
                 <Sparkles className="h-4 w-4" />
-                End & Generate Notes
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>End meeting and generate AI notes</TooltipContent>
-          </Tooltip>
+                End Meeting & Generate Notes
+              </>
+            )}
+          </Button>
         </div>
       </TooltipProvider>
     </div>
