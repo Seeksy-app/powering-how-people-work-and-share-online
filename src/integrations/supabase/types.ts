@@ -4233,6 +4233,132 @@ export type Database = {
         }
         Relationships: []
       }
+      board_meeting_attachments: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          id: string
+          label: string
+          link_url: string | null
+          meeting_id: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          label: string
+          link_url?: string | null
+          meeting_id: string
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          label?: string
+          link_url?: string | null
+          meeting_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_meeting_attachments_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "board_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_meeting_content: {
+        Row: {
+          agenda_checklist_json: Json | null
+          agenda_runofshow_json: Json | null
+          agenda_session_state_json: Json | null
+          ai_agenda_md: string | null
+          board_memo_md: string | null
+          decision_table_json: Json | null
+          id: string
+          initial_agenda_md: string | null
+          meeting_id: string
+          meeting_notes_checklist_json: Json | null
+          meeting_notes_md: string | null
+          post_meeting_decisions_summary_md: string | null
+          updated_at: string
+        }
+        Insert: {
+          agenda_checklist_json?: Json | null
+          agenda_runofshow_json?: Json | null
+          agenda_session_state_json?: Json | null
+          ai_agenda_md?: string | null
+          board_memo_md?: string | null
+          decision_table_json?: Json | null
+          id?: string
+          initial_agenda_md?: string | null
+          meeting_id: string
+          meeting_notes_checklist_json?: Json | null
+          meeting_notes_md?: string | null
+          post_meeting_decisions_summary_md?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agenda_checklist_json?: Json | null
+          agenda_runofshow_json?: Json | null
+          agenda_session_state_json?: Json | null
+          ai_agenda_md?: string | null
+          board_memo_md?: string | null
+          decision_table_json?: Json | null
+          id?: string
+          initial_agenda_md?: string | null
+          meeting_id?: string
+          meeting_notes_checklist_json?: Json | null
+          meeting_notes_md?: string | null
+          post_meeting_decisions_summary_md?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_meeting_content_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: true
+            referencedRelation: "board_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      board_meeting_member_notes: {
+        Row: {
+          id: string
+          meeting_id: string
+          member_user_id: string
+          notes_md: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          meeting_id: string
+          member_user_id: string
+          notes_md?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          meeting_id?: string
+          member_user_id?: string
+          notes_md?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "board_meeting_member_notes_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "board_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       board_meeting_notes: {
         Row: {
           agenda_items: Json
@@ -4298,6 +4424,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      board_meetings: {
+        Row: {
+          created_at: string
+          created_by: string
+          ends_at: string | null
+          id: string
+          location: string | null
+          starts_at: string
+          status: string
+          title: string
+          updated_at: string
+          virtual_link: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          ends_at?: string | null
+          id?: string
+          location?: string | null
+          starts_at: string
+          status?: string
+          title: string
+          updated_at?: string
+          virtual_link?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          ends_at?: string | null
+          id?: string
+          location?: string | null
+          starts_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          virtual_link?: string | null
+        }
+        Relationships: []
       }
       board_member_activity: {
         Row: {
