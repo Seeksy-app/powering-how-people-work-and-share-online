@@ -26,6 +26,7 @@ import {
   HelpCircle,
   BookOpen,
   Briefcase,
+  FileText,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useBoardViewMode } from '@/hooks/useBoardViewMode';
@@ -127,6 +128,12 @@ const resourceItems = [
     label: 'Sales Opportunities',
     icon: Briefcase,
     path: '/board/sales-opportunities',
+  },
+  {
+    id: 'meeting-notes',
+    label: 'Meeting Notes',
+    icon: FileText,
+    path: '/board/meeting-notes',
   },
 ];
 
