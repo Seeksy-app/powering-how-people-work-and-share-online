@@ -1,51 +1,75 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Podcast, Video, Calendar, Mail, Users, BarChart3, MessageSquare, FileText, DollarSign, GripVertical } from "lucide-react";
+import { 
+  Check, 
+  Podcast, 
+  Video, 
+  Calendar, 
+  Mail, 
+  Users, 
+  BarChart3, 
+  MessageSquare, 
+  FileText, 
+  DollarSign, 
+  GripVertical,
+  Sparkles,
+  ChevronDown
+} from "lucide-react";
 
-const modules = [
-  { key: "podcast", label: "Podcast", icon: Podcast, color: "bg-orange-600" },
-  { key: "video", label: "Video", icon: Video, color: "bg-rose-600" },
-  { key: "meetings", label: "Meetings", icon: Calendar, color: "bg-blue-600" },
-  { key: "email", label: "Email", icon: Mail, color: "bg-emerald-600" },
-  { key: "crm", label: "CRM", icon: Users, color: "bg-amber-600" },
-  { key: "analytics", label: "Analytics", icon: BarChart3, color: "bg-cyan-600" },
-  { key: "sms", label: "SMS", icon: MessageSquare, color: "bg-violet-600" },
-  { key: "blog", label: "Blog", icon: FileText, color: "bg-teal-600" },
-  { key: "monetization", label: "Monetize", icon: DollarSign, color: "bg-pink-600" },
+import { LucideIcon } from "lucide-react";
+
+interface SeekieModule {
+  key: string;
+  label: string;
+  icon: LucideIcon;
+  tint: string;
+  iconColor: string;
+}
+
+const modules: SeekieModule[] = [
+  { key: "podcast", label: "Podcast", icon: Podcast, tint: "#FCE7DF", iconColor: "#E06B2D" },
+  { key: "video", label: "Video", icon: Video, tint: "#FDE2E7", iconColor: "#D6456A" },
+  { key: "meetings", label: "Meetings", icon: Calendar, tint: "#E0E7FF", iconColor: "#3B82F6" },
+  { key: "email", label: "Email", icon: Mail, tint: "#E6F7EF", iconColor: "#1F9D67" },
+  { key: "crm", label: "CRM", icon: Users, tint: "#FCEBD6", iconColor: "#D97706" },
+  { key: "analytics", label: "Analytics", icon: BarChart3, tint: "#E6F1FA", iconColor: "#0EA5E9" },
+  { key: "sms", label: "SMS", icon: MessageSquare, tint: "#EEE7FF", iconColor: "#7C3AED" },
+  { key: "blog", label: "Blog", icon: FileText, tint: "#E6F7F5", iconColor: "#0F766E" },
+  { key: "monetize", label: "Monetize", icon: DollarSign, tint: "#FDE2F2", iconColor: "#DB2777" },
 ];
 
 const workspaceTemplates = [
   { name: "Podcaster", activeModules: ["podcast", "email", "crm", "analytics"] },
-  { name: "Creator", activeModules: ["video", "blog", "monetization", "analytics"] },
-  { name: "Agency", activeModules: ["crm", "email", "sms", "meetings", "analytics"] },
+  { name: "Creator", activeModules: ["video", "blog", "monetize", "analytics"] },
+  { name: "Agency", activeModules: ["crm", "email", "sms", "meetings"] },
   { name: "Solo", activeModules: ["podcast", "video", "blog", "email"] },
 ];
 
 export function HeroWorkspaceBuilder() {
   const [currentTemplateIndex, setCurrentTemplateIndex] = useState(0);
-  const [sidebarModules, setSidebarModules] = useState<string[]>([]);
+  const [workspaceModules, setWorkspaceModules] = useState<string[]>([]);
   const [animatingModule, setAnimatingModule] = useState<string | null>(null);
-  const [animationPhase, setAnimationPhase] = useState<'idle' | 'flying' | 'landing'>('idle');
-  const gridRef = useRef<HTMLDivElement>(null);
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  
   const currentTemplate = workspaceTemplates[currentTemplateIndex];
 
   // Auto-cycle templates
   useEffect(() => {
     const interval = setInterval(() => {
-      if (animationPhase === 'idle') {
+      if (!isAnimating) {
         setCurrentTemplateIndex((prev) => (prev + 1) % workspaceTemplates.length);
       }
-    }, 3500);
+    }, 4000);
     return () => clearInterval(interval);
-  }, [animationPhase]);
+  }, [isAnimating]);
 
-  // Animate modules being "dragged" to sidebar when template changes
+  // Animate modules being added when template changes
   useEffect(() => {
-    const newActiveModules = currentTemplate.activeModules.slice(0, 4);
+    const newActiveModules = currentTemplate.activeModules;
     
-    // Clear sidebar first
-    setSidebarModules([]);
+    // Clear workspace first
+    setWorkspaceModules([]);
+    setIsAnimating(true);
     
     // Animate each module one by one
     const animateModules = async () => {
@@ -54,177 +78,312 @@ export function HeroWorkspaceBuilder() {
         
         // Start flying animation
         setAnimatingModule(moduleKey);
-        setAnimationPhase('flying');
         
         // Wait for fly animation
-        await new Promise(resolve => setTimeout(resolve, 400));
+        await new Promise(resolve => setTimeout(resolve, 350));
         
-        // Add to sidebar
-        setSidebarModules(prev => [...prev, moduleKey]);
-        setAnimationPhase('landing');
-        
-        // Wait for landing
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        setAnimatingModule(null);
-        setAnimationPhase('idle');
+        // Add to workspace
+        setWorkspaceModules(prev => [...prev, moduleKey]);
         
         // Small delay before next module
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        setAnimatingModule(null);
       }
+      setIsAnimating(false);
     };
     
     animateModules();
   }, [currentTemplate]);
 
-  const activeModules = modules.filter((m) => currentTemplate.activeModules.includes(m.key));
-  const sidebarItems = sidebarModules.map(key => modules.find(m => m.key === key)).filter(Boolean);
+  const workspaceItems = workspaceModules
+    .map(key => modules.find(m => m.key === key))
+    .filter((m): m is SeekieModule => Boolean(m));
 
   return (
-    <div className="bg-card rounded-3xl shadow-2xl border border-border/50 p-6 md:p-7">
+    <div 
+      className="rounded-3xl p-5"
+      style={{
+        background: "#FFFFFF",
+        border: "1px solid #EEF2F7",
+        boxShadow: "0 20px 60px rgba(15,23,42,0.14)",
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-3">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentTemplate.name}
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.2 }}
           >
-            <h3 className="text-xl font-extrabold text-foreground">
+            <h3 className="text-lg font-bold" style={{ color: "#0B1220" }}>
               {currentTemplate.name} Workspace
             </h3>
-            <p className="text-xs text-muted-foreground">
-              {activeModules.length} modules active
+            <p className="text-xs" style={{ color: "#6B7280" }}>
+              {workspaceModules.length} modules active
             </p>
           </motion.div>
         </AnimatePresence>
-        <button className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
-          <span className="text-base">+</span> Add
+        <button 
+          className="text-sm font-bold flex items-center gap-1"
+          style={{ color: "#2C6BED" }}
+        >
+          + Add
         </button>
       </div>
 
-      {/* Module Grid - Available Seekies */}
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-          Seekies
+      {/* Instruction Bar */}
+      <div 
+        className="rounded-xl px-3 py-2.5 mb-4 flex items-center justify-between"
+        style={{ background: "#F8FAFC" }}
+      >
+        <p className="text-xs" style={{ color: "#6B7280" }}>
+          Drag a Seekie into your workspace
         </p>
+        <div className="flex items-center gap-1">
+          <Sparkles className="w-3 h-3" style={{ color: "#2C6BED" }} />
+          <span className="text-xs font-medium" style={{ color: "#2C6BED" }}>
+            AI-powered
+          </span>
+        </div>
       </div>
-      <div ref={gridRef} className="grid grid-cols-3 gap-2.5 mb-5 relative">
-        {modules.map((module) => {
-          const isInSidebar = sidebarModules.includes(module.key);
-          const isAnimating = animatingModule === module.key;
-          const Icon = module.icon;
-          
-          return (
-            <motion.div
-              key={module.key}
-              layout
-              transition={{ type: "spring", stiffness: 500, damping: 35 }}
-              className={`relative p-3.5 rounded-t-2xl rounded-b-xl border transition-all duration-200 ${
-                isInSidebar
-                  ? "bg-muted/30 border-border/50 opacity-40"
-                  : "bg-card border-primary/20 shadow-md"
-              }`}
-              style={{
-                opacity: isAnimating ? 0.3 : undefined,
-              }}
-            >
-              <div className={`w-10 h-10 rounded-lg ${module.color} flex items-center justify-center mb-2 shadow-md`}>
-                <Icon className="w-5 h-5 text-white" strokeWidth={2.5} />
-              </div>
-              <p className="text-[11px] font-medium text-foreground truncate">{module.label}</p>
-            </motion.div>
-          );
-        })}
-        
-        {/* Flying module animation overlay - from grid to workspace */}
-        <AnimatePresence>
-          {animatingModule && animationPhase === 'flying' && (() => {
-            const module = modules.find(m => m.key === animatingModule);
-            if (!module) return null;
+
+      {/* Store Grid */}
+      <div className="mb-4">
+        <p 
+          className="text-[10px] font-bold uppercase tracking-wider mb-2"
+          style={{ color: "#9CA3AF" }}
+        >
+          Seekies Store
+        </p>
+        <div className="grid grid-cols-3 gap-2.5 relative">
+          {modules.map((module) => {
+            const isAdded = workspaceModules.includes(module.key);
+            const isFlying = animatingModule === module.key;
             const Icon = module.icon;
-            const moduleIndex = modules.findIndex(m => m.key === animatingModule);
-            const col = moduleIndex % 3;
-            const row = Math.floor(moduleIndex / 3);
             
             return (
               <motion.div
-                key={`flying-${animatingModule}`}
-                initial={{ 
-                  opacity: 1, 
-                  scale: 1,
-                  x: 0,
-                  y: 0,
-                }}
-                animate={{ 
-                  opacity: 1,
-                  scale: 0.85,
-                  x: col === 0 ? 40 : col === 1 ? 0 : -40,
-                  y: 220 - (row * 60),
-                }}
-                exit={{ opacity: 0, scale: 0.5 }}
-                transition={{ 
-                  duration: 0.4, 
-                  ease: [0.25, 0.46, 0.45, 0.94],
-                }}
-                className="absolute z-50 pointer-events-none"
+                key={module.key}
+                className="relative rounded-2xl p-3 transition-all duration-200 cursor-pointer"
                 style={{
-                  left: `${(col * 33.33) + 16}%`,
-                  top: `${(row * 33) + 10}%`,
+                  background: module.tint,
+                  border: "1px solid #EEF2F7",
+                  opacity: isAdded ? 0.55 : 1,
+                  transform: isFlying ? "scale(0.95)" : "scale(1)",
                 }}
+                whileHover={!isAdded ? { 
+                  scale: 1.02, 
+                  boxShadow: "0 10px 25px rgba(15,23,42,0.08)" 
+                } : {}}
               >
-                <div className="p-3 rounded-xl bg-card border border-primary shadow-xl">
-                  <div className={`w-10 h-10 rounded-lg ${module.color} flex items-center justify-center shadow-md`}>
-                    <Icon className="w-5 h-5 text-white" strokeWidth={2.5} />
-                  </div>
-                  <p className="text-[11px] font-medium text-foreground truncate text-center mt-1">{module.label}</p>
+                {/* Icon bubble */}
+                <div 
+                  className="w-11 h-11 rounded-full flex items-center justify-center mb-2 shadow-sm"
+                  style={{ background: "rgba(255,255,255,0.9)" }}
+                >
+                  <Icon 
+                    className="w-5 h-5" 
+                    color={module.iconColor}
+                    strokeWidth={2.5} 
+                  />
                 </div>
+                <p 
+                  className="text-[13px] font-bold truncate"
+                  style={{ color: "#0B1220" }}
+                >
+                  {module.label}
+                </p>
+                
+                {/* Added badge */}
+                {isAdded && (
+                  <div 
+                    className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold"
+                    style={{ 
+                      background: "rgba(255,255,255,0.95)",
+                      color: "#059669",
+                    }}
+                  >
+                    <Check className="w-2.5 h-2.5" />
+                    Added
+                  </div>
+                )}
               </motion.div>
             );
-          })()}
-        </AnimatePresence>
+          })}
+          
+          {/* Flying module animation */}
+          <AnimatePresence>
+            {animatingModule && (() => {
+              const module = modules.find(m => m.key === animatingModule);
+              if (!module) return null;
+              const Icon = module.icon;
+              const moduleIndex = modules.findIndex(m => m.key === animatingModule);
+              const col = moduleIndex % 3;
+              const row = Math.floor(moduleIndex / 3);
+              
+              return (
+                <motion.div
+                  key={`flying-${animatingModule}`}
+                  initial={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    x: 0,
+                    y: 0,
+                  }}
+                  animate={{ 
+                    opacity: 0.9,
+                    scale: 0.7,
+                    x: col === 0 ? 60 : col === 1 ? 0 : -60,
+                    y: 180,
+                  }}
+                  exit={{ opacity: 0 }}
+                  transition={{ 
+                    duration: 0.35, 
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                  }}
+                  className="absolute z-50 pointer-events-none"
+                  style={{
+                    left: `${(col * 33.33) + 5}%`,
+                    top: `${(row * 80) + 8}px`,
+                  }}
+                >
+                  <div 
+                    className="p-2 rounded-xl shadow-xl"
+                    style={{ 
+                      background: module.tint,
+                      border: "2px solid #2C6BED",
+                    }}
+                  >
+                    <div 
+                      className="w-9 h-9 rounded-full flex items-center justify-center"
+                      style={{ background: "rgba(255,255,255,0.9)" }}
+                    >
+                      <Icon 
+                        className="w-4 h-4" 
+                        color={module.iconColor}
+                        strokeWidth={2.5} 
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })()}
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Workspace - where modules land */}
-      <div ref={sidebarRef} className="bg-muted/50 rounded-xl p-3">
+      {/* Arrow indicator */}
+      <div className="flex justify-center mb-3">
+        <motion.div
+          animate={{ y: [0, 4, 0] }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+        >
+          <ChevronDown className="w-5 h-5" style={{ color: "#D1D5DB" }} />
+        </motion.div>
+      </div>
+
+      {/* Workspace List */}
+      <div 
+        className="rounded-xl p-3"
+        style={{ background: "#F8FAFC", border: "1px solid #EEF2F7" }}
+      >
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Your Workspace
+          <p 
+            className="text-[10px] font-bold uppercase tracking-wider"
+            style={{ color: "#9CA3AF" }}
+          >
+            My Workspace
           </p>
-          <p className="text-[9px] text-muted-foreground">
+          <p className="text-[10px]" style={{ color: "#9CA3AF" }}>
             ↕ Drag to reorder
           </p>
         </div>
-        <div className="space-y-1.5 min-h-[120px]">
+        <div className="space-y-1.5 min-h-[100px]">
           <AnimatePresence mode="popLayout">
-            {sidebarItems.map((module) => {
-              if (!module) return null;
-              const Icon = module.icon;
-              return (
-                <motion.div
-                  key={module.key}
-                  initial={{ opacity: 0, x: 20, scale: 0.8 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: -20, scale: 0.8 }}
-                  transition={{ 
-                    type: "spring", 
-                    stiffness: 400, 
-                    damping: 25,
-                  }}
-                  className="flex items-center gap-2 p-2 bg-card rounded-lg shadow-sm"
-                >
-                  <GripVertical className="w-3 h-3 text-muted-foreground/50" />
-                  <div className={`w-7 h-7 rounded-md ${module.color} flex items-center justify-center shadow-sm`}>
-                    <Icon className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-                  </div>
-                  <span className="text-xs font-medium text-foreground">{module.label}</span>
-                </motion.div>
-              );
-            })}
+            {workspaceItems.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center justify-center py-6 text-center"
+              >
+                <p className="text-sm font-medium" style={{ color: "#9CA3AF" }}>
+                  Your workspace is empty
+                </p>
+                <p className="text-xs" style={{ color: "#D1D5DB" }}>
+                  Add Seekies from the store above
+                </p>
+              </motion.div>
+            ) : (
+              workspaceItems.map((module) => {
+                const Icon = module.icon;
+                return (
+                  <motion.div
+                    key={module.key}
+                    initial={{ opacity: 0, x: 20, scale: 0.9 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -20, scale: 0.9 }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 400, 
+                      damping: 25,
+                    }}
+                    className="flex items-center gap-2.5 p-2.5 rounded-xl"
+                    style={{ 
+                      background: "#FFFFFF",
+                      border: "1px solid #EEF2F7",
+                      boxShadow: "0 6px 18px rgba(15,23,42,0.06)",
+                    }}
+                  >
+                    <GripVertical 
+                      className="w-3.5 h-3.5 cursor-grab" 
+                      style={{ color: "#D1D5DB" }} 
+                    />
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ background: module.tint }}
+                    >
+                      <Icon 
+                        className="w-4 h-4" 
+                        color={module.iconColor}
+                        strokeWidth={2.5} 
+                      />
+                    </div>
+                    <span 
+                      className="text-sm font-bold flex-1"
+                      style={{ color: "#0B1220" }}
+                    >
+                      {module.label}
+                    </span>
+                    <div 
+                      className="w-2 h-2 rounded-full"
+                      style={{ background: "#2C6BED" }}
+                      title="Pinned"
+                    />
+                  </motion.div>
+                );
+              })
+            )}
           </AnimatePresence>
         </div>
+        
+        {/* Capacity bar */}
+        {workspaceItems.length > 0 && (
+          <div className="mt-3 pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-between text-[10px]">
+              <span style={{ color: "#6B7280" }}>
+                {workspaceItems.length} active • {modules.length - workspaceItems.length} available
+              </span>
+              <span className="font-medium" style={{ color: "#2C6BED" }}>
+                Start with 3 free
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Template Indicator */}
@@ -233,11 +392,13 @@ export function HeroWorkspaceBuilder() {
           <button
             key={idx}
             onClick={() => setCurrentTemplateIndex(idx)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              idx === currentTemplateIndex 
-                ? "bg-primary w-5" 
-                : "bg-muted-foreground/30 w-1.5 hover:bg-muted-foreground/50"
-            }`}
+            className="transition-all duration-300"
+            style={{
+              height: "6px",
+              borderRadius: "999px",
+              width: idx === currentTemplateIndex ? "20px" : "6px",
+              background: idx === currentTemplateIndex ? "#2C6BED" : "#E5E7EB",
+            }}
           />
         ))}
       </div>
