@@ -4,37 +4,53 @@ import { Button } from "@/components/ui/button";
 import { Shuffle, Sparkles, ArrowRight, Coins } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const rotatingStatements = [
-  "Send my podcast guest an invite and schedule a recording...",
-  "Create clips from my latest episode and post to social...",
-  "Build a landing page for my upcoming live event...",
-  "Track my audience growth and send a newsletter update...",
-  "Set up a CRM to manage my brand partnerships...",
-];
-
-// Module-specific prompts for clickable chips
-const modulePrompts: Record<string, string[]> = {
-  crm: [
-    "Import my email list and segment by interest...",
-    "Tag contacts who attended my last event...",
-    "Find my most engaged subscribers...",
-  ],
-  email: [
-    "Send a welcome sequence to new subscribers...",
-    "Draft a newsletter announcing my new course...",
-    "Reply to sponsor inquiries in my inbox...",
-  ],
-  newsletter: [
-    "Create a weekly digest for my audience...",
-    "Set up automated welcome emails...",
-    "Design a premium newsletter template...",
-  ],
-};
-
-const moduleChips = [
-  { key: "crm", label: "CRM" },
-  { key: "email", label: "Email" },
-  { key: "newsletter", label: "Newsletter" },
+// Each statement has associated module chips that match its topic
+const promptData = [
+  {
+    text: "Send my podcast guest an invite and schedule a recording...",
+    chips: ["Podcast", "Studio", "Meetings"],
+    modulePrompts: {
+      Podcast: "Upload my latest episode and generate show notes...",
+      Studio: "Record a solo episode with AI teleprompter...",
+      Meetings: "Schedule a discovery call with a potential sponsor...",
+    },
+  },
+  {
+    text: "Create clips from my latest episode and post to social...",
+    chips: ["Clips", "Studio", "Social"],
+    modulePrompts: {
+      Clips: "Generate 5 vertical clips from my latest podcast...",
+      Studio: "Edit my raw footage with AI noise reduction...",
+      Social: "Schedule clips to post across all platforms...",
+    },
+  },
+  {
+    text: "Build a landing page for my upcoming live event...",
+    chips: ["Events", "My Page", "Email"],
+    modulePrompts: {
+      Events: "Create a virtual workshop with ticket sales...",
+      "My Page": "Update my link-in-bio with new offerings...",
+      Email: "Send event reminders to registered attendees...",
+    },
+  },
+  {
+    text: "Track my audience growth and send a newsletter update...",
+    chips: ["Analytics", "Newsletter", "Email"],
+    modulePrompts: {
+      Analytics: "Check my download analytics by episode...",
+      Newsletter: "Create a weekly digest for my audience...",
+      Email: "Draft a newsletter announcing my new course...",
+    },
+  },
+  {
+    text: "Set up a CRM to manage my brand partnerships...",
+    chips: ["CRM", "Email", "Monetize"],
+    modulePrompts: {
+      CRM: "Import my email list and segment by interest...",
+      Email: "Reply to sponsor inquiries in my inbox...",
+      Monetize: "Track my ad revenue this month...",
+    },
+  },
 ];
 
 export function InteractiveDemo() {
@@ -44,7 +60,9 @@ export function InteractiveDemo() {
   const [isTyping, setIsTyping] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
-  const currentPrompt = rotatingStatements[currentPromptIndex];
+  const currentData = promptData[currentPromptIndex];
+  const currentPrompt = currentData.text;
+  const currentChips = currentData.chips;
 
   // Typewriter effect
   useEffect(() => {
@@ -54,41 +72,35 @@ export function InteractiveDemo() {
       if (displayText.length < currentPrompt.length) {
         const timeout = setTimeout(() => {
           setDisplayText(currentPrompt.slice(0, displayText.length + 1));
-        }, 30); // Fast typing speed
+        }, 30);
         return () => clearTimeout(timeout);
       } else {
-        // Pause at end, then move to next
         const timeout = setTimeout(() => {
           setIsTyping(false);
         }, 2000);
         return () => clearTimeout(timeout);
       }
     } else {
-      // Move to next prompt
-      const nextIndex = (currentPromptIndex + 1) % rotatingStatements.length;
+      const nextIndex = (currentPromptIndex + 1) % promptData.length;
       setCurrentPromptIndex(nextIndex);
       setDisplayText("");
       setIsTyping(true);
     }
   }, [displayText, currentPrompt, isTyping, currentPromptIndex, isPaused]);
 
-  const handleModuleClick = (moduleKey: string) => {
-    const prompts = modulePrompts[moduleKey];
-    if (prompts && prompts.length > 0) {
-      const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+  const handleModuleClick = (chipLabel: string) => {
+    const prompt = currentData.modulePrompts[chipLabel];
+    if (prompt) {
       setIsPaused(true);
       setDisplayText("");
-      setIsTyping(true);
       
-      // Type out the new prompt
       let i = 0;
       const typeInterval = setInterval(() => {
-        if (i < randomPrompt.length) {
-          setDisplayText(randomPrompt.slice(0, i + 1));
+        if (i < prompt.length) {
+          setDisplayText(prompt.slice(0, i + 1));
           i++;
         } else {
           clearInterval(typeInterval);
-          // Resume auto-rotation after 4 seconds
           setTimeout(() => {
             setIsPaused(false);
             setDisplayText("");
@@ -101,7 +113,7 @@ export function InteractiveDemo() {
 
   const handleNewSuggestion = () => {
     setIsPaused(false);
-    const nextIndex = (currentPromptIndex + 1) % rotatingStatements.length;
+    const nextIndex = (currentPromptIndex + 1) % promptData.length;
     setCurrentPromptIndex(nextIndex);
     setDisplayText("");
     setIsTyping(true);
@@ -137,7 +149,7 @@ export function InteractiveDemo() {
             </p>
           </div>
 
-          {/* Module Chips Row */}
+          {/* Module Chips Row - Dynamic based on current prompt */}
           <div className="flex flex-wrap items-center gap-3 mb-8">
             <span 
               className="text-sm"
@@ -145,10 +157,10 @@ export function InteractiveDemo() {
             >
               Click a module for more ideas:
             </span>
-            {moduleChips.map((chip) => (
+            {currentChips.map((chipLabel) => (
               <button
-                key={chip.key}
-                onClick={() => handleModuleClick(chip.key)}
+                key={chipLabel}
+                onClick={() => handleModuleClick(chipLabel)}
                 className="px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:shadow-md"
                 style={{
                   background: "transparent",
@@ -156,7 +168,7 @@ export function InteractiveDemo() {
                   color: "hsl(var(--primary))",
                 }}
               >
-                {chip.label}
+                {chipLabel}
               </button>
             ))}
           </div>
