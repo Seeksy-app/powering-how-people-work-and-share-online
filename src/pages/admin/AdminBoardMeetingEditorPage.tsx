@@ -138,8 +138,7 @@ export default function AdminBoardMeetingEditorPage() {
       };
       const { error } = await supabase
         .from("board_meeting_content")
-        .upsert(payload as any, {
-        }, { onConflict: "meeting_id" });
+        .upsert(payload as any, { onConflict: "meeting_id" });
       if (error) throw error;
     },
     onSuccess: () => {
