@@ -93,13 +93,33 @@ export function MarketIntelligenceAdmin() {
     }
   };
 
+  // Quick research topics
+  const researchTopics = [
+    { label: 'TikTok Shop 2025', query: 'TikTok Shop sales growth 2025 shoptainment live shopping revenue' },
+    { label: 'Live Shopping Trends', query: 'live shopping ecommerce trends 2025 creator economy conversion rates' },
+    { label: 'Creator Monetization', query: 'creator monetization revenue streams 2025 trends sponsorships affiliate' },
+    { label: 'Podcast Advertising', query: 'podcast advertising market 2025 CPM rates growth host-read ads' },
+    { label: 'Social Commerce', query: 'social commerce Instagram shopping Meta shops creator storefronts 2025' },
+    { label: 'AI Content Tools', query: 'AI content creation tools market 2025 video editing automation' },
+  ];
+
+  const handleQuickSearch = async (query: string) => {
+    setSearchQuery(query);
+    try {
+      await search.mutateAsync({ query, category: undefined });
+      toast.success('Research completed - check Insights tab');
+    } catch (error) {
+      toast.error('Search failed');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Market Intelligence</h1>
-          <p className="text-muted-foreground">Manage sources, search the web, and review insights</p>
+          <p className="text-muted-foreground">Research topics, manage sources, and review AI-extracted insights</p>
         </div>
         <Button onClick={handleRefreshAll} disabled={refreshAll.isPending}>
           <RefreshCw className={cn("h-4 w-4 mr-2", refreshAll.isPending && "animate-spin")} />
@@ -107,23 +127,27 @@ export function MarketIntelligenceAdmin() {
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <Card>
+      {/* Research Section */}
+      <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Web Search</CardTitle>
-          <CardDescription>Search the web for market intelligence</CardDescription>
+          <div className="flex items-center gap-2">
+            <Search className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Market Research</CardTitle>
+          </div>
+          <CardDescription>Search the web with Firecrawl + AI analysis (Gemini)</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Custom Search */}
           <div className="flex gap-3">
             <Input 
-              placeholder="Search for competitor news, market trends, etc..."
+              placeholder="Enter your research topic... (e.g., TikTok shoptainment 2025 market data)"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1"
+              className="flex-1 bg-background"
             />
             <Select value={searchCategory} onValueChange={setSearchCategory}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px] bg-background">
                 <SelectValue placeholder="All categories" />
               </SelectTrigger>
               <SelectContent>
@@ -136,9 +160,35 @@ export function MarketIntelligenceAdmin() {
             </Select>
             <Button onClick={handleSearch} disabled={search.isPending}>
               <Search className="h-4 w-4 mr-2" />
-              {search.isPending ? 'Searching...' : 'Search'}
+              {search.isPending ? 'Researching...' : 'Research'}
             </Button>
           </div>
+
+          {/* Quick Topics */}
+          <div>
+            <p className="text-xs text-muted-foreground mb-2">Quick research topics:</p>
+            <div className="flex flex-wrap gap-2">
+              {researchTopics.map((topic) => (
+                <Button
+                  key={topic.label}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickSearch(topic.query)}
+                  disabled={search.isPending}
+                  className="text-xs"
+                >
+                  {topic.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {search.isPending && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <span>Searching web sources and extracting insights with AI...</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
