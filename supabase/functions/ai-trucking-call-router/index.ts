@@ -27,13 +27,15 @@ serve(async (req) => {
       return await handleLookupLoad(supabase, body);
     } else if (action === "create_lead") {
       return await handleCreateLead(supabase, body);
+    } else if (action === "negotiate_rate") {
+      return await handleNegotiateRate(supabase, body);
     } else {
       // Legacy format or unknown action
       console.log("[ai-trucking-call-router] Unknown action:", action);
       return new Response(
         JSON.stringify({ 
           error: "Unknown action", 
-          available_actions: ["lookup_load", "create_lead"] 
+          available_actions: ["lookup_load", "create_lead", "negotiate_rate"] 
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -134,6 +136,109 @@ async function handleLookupLoad(supabase: any, body: any) {
       rate_per_mile: ratePerMile ? parseFloat(ratePerMile.toFixed(2)) : null,
       notes: load.notes,
       message: buildLoadMessage(load, distanceMiles, targetRate, ratePerMile)
+    }),
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+  );
+}
+
+async function handleNegotiateRate(supabase: any, body: any) {
+  const { load_id, carrier_offer } = body;
+  
+  console.log("[negotiate_rate] Negotiating rate:", { load_id, carrier_offer });
+
+  if (!load_id) {
+    return new Response(
+      JSON.stringify({ success: false, message: "Load ID is required for negotiation." }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Get load details with target and ceiling rates
+  const { data: load, error: loadError } = await supabase
+    .from('trucking_loads')
+    .select('*')
+    .eq('id', load_id)
+    .single();
+
+  if (loadError || !load) {
+    console.error("[negotiate_rate] Load not found:", loadError);
+    return new Response(
+      JSON.stringify({ success: false, message: "Could not find the specified load." }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const targetRate = load.target_rate || 0;
+  const ceilingRate = load.floor_rate || targetRate; // floor_rate is the ceiling in DB
+  const INCREMENT = 25; // Always offer $25 more
+
+  // Parse carrier's offer
+  const offerAmount = parseFloat(carrier_offer) || 0;
+  
+  // Calculate our counter offer - start at target, increment by $25 toward ceiling
+  let counterOffer = targetRate;
+  let shouldAccept = false;
+  let message = "";
+  let negotiationGuidance = "";
+
+  if (offerAmount >= targetRate) {
+    // Carrier offered at or above target - accept!
+    shouldAccept = true;
+    counterOffer = offerAmount;
+    message = `That rate of $${offerAmount} works for us. Let's book this load!`;
+    negotiationGuidance = "ACCEPT - Carrier met or exceeded target rate.";
+  } else if (offerAmount >= ceilingRate) {
+    // Carrier offered at or above ceiling but below target - accept
+    shouldAccept = true;
+    counterOffer = offerAmount;
+    message = `We can make $${offerAmount} work. Let's get this load booked.`;
+    negotiationGuidance = "ACCEPT - Carrier met ceiling rate.";
+  } else if (offerAmount > 0) {
+    // Carrier made an offer below ceiling - counter with $25 more than their offer
+    // But don't go below ceiling or above target
+    counterOffer = Math.min(offerAmount + INCREMENT, targetRate);
+    counterOffer = Math.max(counterOffer, ceilingRate); // Don't go below ceiling
+    
+    if (counterOffer <= ceilingRate) {
+      // We've hit our ceiling, this is our best offer
+      shouldAccept = false;
+      message = `The best we can do is $${ceilingRate}. That's our ceiling rate for this lane.`;
+      negotiationGuidance = `COUNTER at $${ceilingRate} (ceiling). This is our absolute minimum.`;
+    } else {
+      shouldAccept = false;
+      const difference = targetRate - offerAmount;
+      message = `I can come down a little. How about $${counterOffer}? That's $${INCREMENT} better than your offer.`;
+      negotiationGuidance = `COUNTER at $${counterOffer}. We're $${difference} below target. Room to negotiate: $${counterOffer - ceilingRate} until ceiling.`;
+    }
+  } else {
+    // No offer yet - quote target rate
+    counterOffer = targetRate;
+    message = `The all-in rate for this load is $${targetRate}.`;
+    negotiationGuidance = "INITIAL QUOTE - Start at target rate.";
+  }
+
+  console.log("[negotiate_rate] Result:", { 
+    carrier_offer: offerAmount, 
+    counter_offer: counterOffer, 
+    should_accept: shouldAccept,
+    target: targetRate,
+    ceiling: ceilingRate
+  });
+
+  return new Response(
+    JSON.stringify({
+      success: true,
+      load_id: load.id,
+      load_number: load.load_number,
+      carrier_offer: offerAmount,
+      counter_offer: counterOffer,
+      target_rate: targetRate,
+      ceiling_rate: ceilingRate,
+      should_accept: shouldAccept,
+      room_to_negotiate: counterOffer - ceilingRate,
+      increment_amount: INCREMENT,
+      message: message,
+      negotiation_guidance: negotiationGuidance
     }),
     { headers: { ...corsHeaders, "Content-Type": "application/json" } }
   );
