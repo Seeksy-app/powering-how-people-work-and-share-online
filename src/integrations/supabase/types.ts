@@ -26476,6 +26476,7 @@ export type Database = {
           temp_required: boolean | null
           tons: number | null
           tonu_rate: number | null
+          truck_size: string | null
           updated_at: string | null
           weight_lbs: number | null
         }
@@ -26554,6 +26555,7 @@ export type Database = {
           temp_required?: boolean | null
           tons?: number | null
           tonu_rate?: number | null
+          truck_size?: string | null
           updated_at?: string | null
           weight_lbs?: number | null
         }
@@ -26632,6 +26634,7 @@ export type Database = {
           temp_required?: boolean | null
           tons?: number | null
           tonu_rate?: number | null
+          truck_size?: string | null
           updated_at?: string | null
           weight_lbs?: number | null
         }
