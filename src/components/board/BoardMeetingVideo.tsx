@@ -94,10 +94,17 @@ interface BoardMeetingVideoProps {
   onStartMeeting?: () => void;
   onJoinMeeting?: () => void;
   onStopAIAndGenerateNotes?: () => void;
+  onStopRecordingOnly?: () => void;
   onEndCall?: () => void;
+  onInvite?: () => void;
   videoUnavailable?: boolean;
   onNotesOnlyMode?: () => void;
   onMediaPlayStateChange?: (isPlaying: boolean) => void;
+  // Timer props for host controls in bottom bar
+  timerDisplay?: string;
+  timerRunning?: boolean;
+  onTimerToggle?: () => void;
+  onTimerReset?: () => void;
 }
 
 const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
@@ -122,10 +129,16 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
   onStartMeeting,
   onJoinMeeting,
   onStopAIAndGenerateNotes,
+  onStopRecordingOnly,
   onEndCall,
+  onInvite,
   videoUnavailable = false,
   onNotesOnlyMode,
   onMediaPlayStateChange,
+  timerDisplay,
+  timerRunning,
+  onTimerToggle,
+  onTimerReset,
 }) => {
   const [linkCopied, setLinkCopied] = useState(false);
   const [isStartingMeeting, setIsStartingMeeting] = useState(false);
@@ -936,13 +949,61 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
             </>
           )}
 
+          {/* Host Controls: Invite, Timer, Stop Recording */}
+          {isHost && (
+            <div className="flex items-center gap-2 ml-2 border-l border-slate-600 pl-2">
+              {/* Invite Button */}
+              {onInvite && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="secondary" size="sm" onClick={onInvite} className="gap-1.5">
+                      <Users className="h-4 w-4" />
+                      <span className="hidden sm:inline text-xs">Invite</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Invite participants</TooltipContent>
+                </Tooltip>
+              )}
+
+              {/* Timer Display */}
+              {timerDisplay && (
+                <div className="flex items-center gap-1 bg-slate-700/50 px-2 py-1 rounded">
+                  <span className="font-mono text-sm text-white">{timerDisplay}</span>
+                  {onTimerToggle && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-slate-300 hover:text-white"
+                      onClick={onTimerToggle}
+                    >
+                      {timerRunning ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+                    </Button>
+                  )}
+                </div>
+              )}
+
+              {/* Stop Recording Button */}
+              {isCapturingAudio && onStopRecordingOnly && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="secondary" size="sm" onClick={onStopRecordingOnly} className="gap-1.5">
+                      <Square className="h-4 w-4" />
+                      <span className="hidden sm:inline text-xs">Stop Recording</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Stop AI recording (meeting continues)</TooltipContent>
+                </Tooltip>
+              )}
+            </div>
+          )}
+
           {/* AI Notes Status Indicator - Always visible when AI is active */}
           {isCapturingAudio && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 ml-2">
                   <Sparkles className="h-4 w-4 text-emerald-500 animate-pulse" />
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">AI Notes Active</span>
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">AI Active</span>
                 </div>
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
@@ -950,8 +1011,6 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
               </TooltipContent>
             </Tooltip>
           )}
-
-          {/* Generate Notes removed - AI notes generate when Stop Recording is clicked */}
 
           {/* End Call Button */}
           <Tooltip>

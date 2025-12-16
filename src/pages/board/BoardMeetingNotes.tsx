@@ -1167,9 +1167,15 @@ export default function BoardMeetingNotes() {
         onDeferAllAndEnd={handleDeferAllAndEnd}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Panel: Member Questions & Notes */}
-        <div className="space-y-4">
+      <div className={`grid gap-6 transition-all duration-300 ${
+        navCollapsed 
+          ? 'grid-cols-1' 
+          : 'grid-cols-1 lg:grid-cols-4'
+      }`}>
+        {/* Left Panel: Member Questions & Notes - collapses during active meeting */}
+        <div className={`space-y-4 transition-all duration-300 ${
+          navCollapsed ? 'hidden' : ''
+        }`}>
           <Card>
             <Collapsible open={questionsOpen} onOpenChange={setQuestionsOpen}>
               <CollapsibleTrigger asChild>
@@ -1342,15 +1348,15 @@ export default function BoardMeetingNotes() {
           )}
         </div>
 
-        {/* Center/Right Panel: Meeting Detail */}
-        <div className="lg:col-span-3 space-y-6">
+        {/* Center/Right Panel: Meeting Detail - takes full width when nav collapsed */}
+        <div className={`space-y-6 ${navCollapsed ? 'col-span-1' : 'lg:col-span-3'}`}>
           {selectedNote ? (
             <>
-              {/* Header with Timer + Host Controls */}
+              {/* Header - Compact during active meeting */}
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
+                <CardHeader className={`flex flex-row items-center justify-between ${selectedNote.status === 'active' ? 'py-3' : ''}`}>
                   <div>
-                    <CardTitle className="text-xl">{selectedNote.title}</CardTitle>
+                    <CardTitle className={selectedNote.status === 'active' ? 'text-lg' : 'text-xl'}>{selectedNote.title}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">
                       <Calendar className="w-4 h-4 inline mr-1" />
                       {formatMeetingDate(selectedNote.meeting_date, "EEEE, MMMM d, yyyy")}
@@ -1366,71 +1372,32 @@ export default function BoardMeetingNotes() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap justify-end">
-                    {/* Host-only action buttons */}
-                    {isHost && (
+                    {/* Host controls - only show when NOT in active meeting (moved to video bar during active) */}
+                    {isHost && selectedNote.status !== 'active' && (
                       <>
-                        {/* Invite button - always visible for host */}
                         <Button variant="outline" size="sm" onClick={() => setIsInviteModalOpen(true)}>
                           <Users className="w-4 h-4 mr-2" />
                           Invite
                         </Button>
 
-                        {/* Start/Stop Meeting button */}
-                        {selectedNote.status !== 'completed' && (
-                          hostHasStarted ? (
-                            <Button size="sm" variant="outline" className="bg-green-600/20 border-green-600 text-green-600 hover:bg-green-600/30">
-                              <Play className="w-4 h-4 mr-2" />
-                              Active
-                            </Button>
-                          ) : (
+                        {selectedNote.status !== 'completed' && !hostHasStarted && (
+                          <>
                             <Button size="sm" onClick={startMeeting}>
                               <Play className="w-4 h-4 mr-2" />
                               Start Recording
                             </Button>
-                          )
-                        )}
-
-                        {/* Regenerate AI Pack - before host starts */}
-                        {!hostHasStarted && selectedNote.status !== 'completed' && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setIsGenerateAgendaModalOpen(true)}
-                            disabled={isGenerating}
-                          >
-                            <RefreshCw className="w-4 h-4 mr-2" />
-                            Regenerate AI Pack
-                          </Button>
-                        )}
-
-                        {/* End Meeting - after start, during active */}
-                        {hostHasStarted && selectedNote.status === 'active' && (
-                          <>
-                            {/* Nav toggle - host only during active meeting */}
-                            {showNavToggle && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={toggleNav}
-                                title={navCollapsed ? "Show Navigation" : "Hide Navigation"}
-                              >
-                                {navCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
-                              </Button>
-                            )}
-                            {isCapturingAudio && (
-                              <Button variant="secondary" size="sm" onClick={handleStopRecordingOnly}>
-                                <Square className="w-4 h-4 mr-2" />
-                                Stop Recording
-                              </Button>
-                            )}
-                            <Button variant="destructive" size="sm" onClick={handleEndMeetingWithGuardrail}>
-                              <LogOut className="w-4 h-4 mr-2" />
-                              End Call
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setIsGenerateAgendaModalOpen(true)}
+                              disabled={isGenerating}
+                            >
+                              <RefreshCw className="w-4 h-4 mr-2" />
+                              Regenerate AI Pack
                             </Button>
                           </>
                         )}
 
-                        {/* Carry Forward - after completed */}
                         {selectedNote.status === 'completed' && (
                           <Button 
                             variant="outline" 
@@ -1445,41 +1412,23 @@ export default function BoardMeetingNotes() {
                       </>
                     )}
 
-                    {/* Timer display - visible during active meeting */}
-                    {selectedNote.status !== 'completed' && hostHasStarted && (
-                      <div className="flex items-center gap-2 bg-muted px-3 py-2 rounded-lg">
-                        {isCapturingAudio && (
-                          <Badge variant="default" className="bg-green-600 animate-pulse text-xs">
-                            AI Listening
-                          </Badge>
-                        )}
-                        <span className={`font-mono text-lg ${timerRunning ? 'text-primary' : ''}`}>
-                          {getRemainingTime()}
-                        </span>
-                        {isHost && (
-                          <div className="flex gap-1">
-                            {!timerRunning ? (
-                              <Button size="sm" variant="ghost" onClick={() => setTimerRunning(true)} title="Resume Timer">
-                                <Play className="w-4 h-4" />
-                              </Button>
-                            ) : (
-                              <Button size="sm" variant="ghost" onClick={() => setTimerRunning(false)}>
-                                <Pause className="w-4 h-4" />
-                              </Button>
-                            )}
-                            <Button size="sm" variant="ghost" onClick={() => { setTimerSeconds(0); setTimerRunning(false); }}>
-                              <RotateCcw className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Hide Export PDF during active meetings to save space */}
+                    {/* Export PDF - hide during active meetings */}
                     {selectedNote.status !== 'active' && (
                       <Button variant="outline" size="sm" onClick={() => exportToPdf(selectedNote)}>
                         <Download className="w-4 h-4 mr-2" />
                         Export PDF
+                      </Button>
+                    )}
+
+                    {/* Nav toggle during active meeting */}
+                    {selectedNote.status === 'active' && showNavToggle && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={toggleNav}
+                        title={navCollapsed ? "Show Questions Panel" : "Hide Questions Panel"}
+                      >
+                        {navCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
                       </Button>
                     )}
                   </div>
@@ -1542,8 +1491,14 @@ export default function BoardMeetingNotes() {
                     onStartMeeting={isHost ? startVideoMeeting : undefined}
                     onJoinMeeting={hostHasStarted ? joinVideoMeeting : undefined}
                     onStopAIAndGenerateNotes={isHost ? stopAIAndGenerateNotes : undefined}
+                    onStopRecordingOnly={isHost ? handleStopRecordingOnly : undefined}
                     onEndCall={isHost ? handleEndMeetingWithGuardrail : undefined}
+                    onInvite={isHost ? () => setIsInviteModalOpen(true) : undefined}
                     onMediaPlayStateChange={handleMediaPlayStateChange}
+                    timerDisplay={hostHasStarted ? getRemainingTime() : undefined}
+                    timerRunning={timerRunning}
+                    onTimerToggle={isHost ? () => setTimerRunning(!timerRunning) : undefined}
+                    onTimerReset={isHost ? () => { setTimerSeconds(0); setTimerRunning(false); } : undefined}
                   />
                   {/* Host gate message for non-host before start */}
                   {!isHost && !hostHasStarted && (
