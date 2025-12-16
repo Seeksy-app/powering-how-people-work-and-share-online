@@ -313,7 +313,11 @@ export default function BoardMeetingNotes() {
         member_questions: [],
         status: "upcoming",
         created_by: userData.user.id,
+        host_user_id: userData.user.id, // Required for host permissions
       };
+
+      console.log("[CREATE MEETING] Payload:", newNote);
+      console.log("[CREATE MEETING] User ID:", userData.user.id);
 
       const { data, error } = await supabase
         .from("board_meeting_notes")
@@ -322,9 +326,13 @@ export default function BoardMeetingNotes() {
         .single();
       
       if (error) {
-        console.error("Insert error:", error);
+        console.error("[CREATE MEETING] Error:", error);
+        console.error("[CREATE MEETING] Error code:", error.code);
+        console.error("[CREATE MEETING] Error details:", error.details);
         throw new Error(error.message || "Failed to insert meeting");
       }
+      
+      console.log("[CREATE MEETING] Success:", data);
       return { meeting: data, agendaNotes: formData.agenda_notes };
     },
     onSuccess: async ({ meeting, agendaNotes }) => {
@@ -352,9 +360,9 @@ export default function BoardMeetingNotes() {
       });
       toast.success("Meeting created with AI-generated content");
     },
-    onError: (error) => {
-      toast.error("Failed to create meeting");
-      console.error(error);
+    onError: (error: Error) => {
+      console.error("[CREATE MEETING] Mutation error:", error);
+      toast.error(error.message || "Failed to create meeting");
     },
   });
 
