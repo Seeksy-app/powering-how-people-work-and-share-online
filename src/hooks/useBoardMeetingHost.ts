@@ -162,6 +162,7 @@ export function useBoardMeetingHost({
         });
       }
 
+      toast.success('Meeting ended successfully');
       return true;
     } catch (error) {
       console.error('Error ending meeting:', error);

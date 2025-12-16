@@ -19,8 +19,19 @@ export function useCarryForwardMeeting() {
       queryClient.invalidateQueries({ queryKey: ['board-meeting-notes'] });
       queryClient.invalidateQueries({ queryKey: ['board-decisions'] });
       toast.success(
-        `Created follow-up meeting with ${data.carried_agenda_items} agenda items and ${data.carried_decisions} decisions`
+        `Created follow-up meeting with ${data.carried_agenda_items} agenda items and ${data.carried_decisions} decisions carried forward`
       );
+      
+      // Push GTM event
+      if (typeof window !== 'undefined' && (window as any).dataLayer) {
+        (window as any).dataLayer.push({
+          event: 'board_meeting_carry_forward',
+          source_meeting_id: data.source_meeting_id,
+          new_meeting_id: data.new_meeting_id,
+          carried_agenda_items: data.carried_agenda_items,
+          carried_decisions: data.carried_decisions,
+        });
+      }
     },
     onError: (error: Error) => {
       console.error('Carry forward error:', error);

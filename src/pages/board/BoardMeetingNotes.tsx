@@ -151,6 +151,7 @@ export default function BoardMeetingNotes() {
     aiEnabled,
     isLoadingHost,
     startMeetingAsHost,
+    endMeetingAsHost,
     handleMediaPlayStateChange,
     toggleAI,
   } = useBoardMeetingHost({
@@ -750,14 +751,10 @@ export default function BoardMeetingNotes() {
     setTimerRunning(false);
     setTimerSeconds(0);
     
-    // 4. Mark meeting completed
-    await supabase
-      .from("board_meeting_notes")
-      .update({ status: "completed" })
-      .eq("id", selectedNote.id);
+    // 4. Mark meeting completed using host hook (sets ended_at + status)
+    await endMeetingAsHost();
     
     queryClient.invalidateQueries({ queryKey: ["board-meeting-notes"] });
-    toast.success("Meeting ended and marked as completed");
   };
 
   const handleReviewDecisions = () => {
