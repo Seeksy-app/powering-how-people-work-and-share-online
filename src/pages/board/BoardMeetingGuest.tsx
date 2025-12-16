@@ -91,6 +91,7 @@ export default function BoardMeetingGuest() {
   const [participantCount, setParticipantCount] = useState(1);
   const [isLoadingMeeting, setIsLoadingMeeting] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [remoteParticipants, setRemoteParticipants] = useState<Array<{id: string; name: string; videoTrack?: MediaStreamTrack | null}>>([]);
   
   // Collapsible sections
   const [memoOpen, setMemoOpen] = useState(true);
@@ -354,6 +355,19 @@ export default function BoardMeetingGuest() {
     if (callFrameRef.current) {
       const participants = callFrameRef.current.participants();
       setParticipantCount(Object.keys(participants).length);
+      
+      // Update remote participants list
+      const remotes: Array<{id: string; name: string; videoTrack?: MediaStreamTrack | null}> = [];
+      for (const [id, participant] of Object.entries(participants)) {
+        if (id === 'local') continue;
+        const p = participant as any;
+        remotes.push({
+          id,
+          name: p.user_name || 'Participant',
+          videoTrack: p.tracks?.video?.track || null,
+        });
+      }
+      setRemoteParticipants(remotes);
     }
   };
 
@@ -575,9 +589,9 @@ export default function BoardMeetingGuest() {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Main content - full width */}
       <div className="flex-1 overflow-auto">
-        <div className="max-w-4xl mx-auto p-6 space-y-6">
+        <div className="p-6 space-y-6">
           
           {/* Meeting Status Banner */}
           {!meetingStarted ? (
@@ -672,9 +686,10 @@ export default function BoardMeetingGuest() {
                   />
                 )}
 
-                {/* Video thumbnails */}
-                <div className="p-4 bg-muted/50 flex gap-3 overflow-x-auto">
-                  <div className="relative flex-shrink-0 w-40 h-28 bg-slate-800 rounded-lg overflow-hidden">
+                {/* Video thumbnails - all participants */}
+                <div className="p-4 bg-slate-900/50 flex gap-3 overflow-x-auto">
+                  {/* Local video thumbnail */}
+                  <div className="relative flex-shrink-0 w-48 h-36 bg-slate-700 rounded-lg overflow-hidden">
                     {!isVideoOff ? (
                       <video
                         ref={localVideoRef}
@@ -685,8 +700,8 @@ export default function BoardMeetingGuest() {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <div className="w-12 h-12 rounded-full bg-slate-600 flex items-center justify-center">
-                          <VideoOff className="h-6 w-6 text-slate-400" />
+                        <div className="w-14 h-14 rounded-full bg-slate-600 flex items-center justify-center">
+                          <VideoOff className="h-7 w-7 text-slate-400" />
                         </div>
                       </div>
                     )}
@@ -694,6 +709,32 @@ export default function BoardMeetingGuest() {
                       You ({guestName})
                     </div>
                   </div>
+
+                  {/* Remote participants */}
+                  {remoteParticipants.map((participant) => (
+                    <div
+                      key={participant.id}
+                      className="relative flex-shrink-0 w-48 h-36 bg-slate-700 rounded-lg overflow-hidden"
+                    >
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+                          <span className="text-xl font-medium text-primary">
+                            {participant.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="absolute bottom-1 left-1 bg-black/60 px-1.5 py-0.5 rounded text-xs text-white truncate max-w-[90%]">
+                        {participant.name}
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Empty slot indicator when waiting for others */}
+                  {remoteParticipants.length === 0 && (
+                    <div className="flex-shrink-0 w-48 h-36 bg-slate-700/50 rounded-lg border-2 border-dashed border-slate-600 flex items-center justify-center">
+                      <span className="text-sm text-slate-500">Waiting for others...</span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
