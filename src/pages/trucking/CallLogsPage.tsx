@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Phone, PhoneOff, Voicemail, Clock, DollarSign, Search, ExternalLink, AlertCircle } from "lucide-react";
+import { Phone, PhoneOff, Voicemail, Clock, DollarSign, Search, ExternalLink, AlertCircle, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TruckingPageWrapper, TruckingContentCard } from "@/components/trucking/TruckingPageWrapper";
@@ -105,9 +105,9 @@ export default function CallLogsPage() {
     const outcome = getOutcome(log);
     const matchesTab = 
       activeTab === "all" ||
+      (activeTab === "confirmed" && log.lead_id && ["interested", "booked", "countered"].includes(outcome)) ||
       (activeTab === "unconfirmed" && !log.lead_id && outcome !== "voicemail" && outcome !== "failed") ||
-      (activeTab === "voicemail" && log.routed_to_voicemail) ||
-      (activeTab === "successful" && ["interested", "booked", "countered"].includes(outcome));
+      (activeTab === "voicemail" && log.routed_to_voicemail);
     
     const matchesSearch = 
       !searchQuery ||
@@ -120,7 +120,7 @@ export default function CallLogsPage() {
 
   const stats = {
     total: logs.length,
-    successful: logs.filter(l => ["interested", "booked", "countered"].includes(getOutcome(l))).length,
+    confirmed: logs.filter(l => l.lead_id && ["interested", "booked", "countered"].includes(getOutcome(l))).length,
     voicemails: logs.filter(l => l.routed_to_voicemail).length,
     unconfirmed: logs.filter(l => !l.lead_id && !l.routed_to_voicemail && !l.failure_reason).length,
   };
@@ -142,7 +142,7 @@ export default function CallLogsPage() {
       <div className="text-xs text-slate-500 mb-4 flex items-center gap-6">
         <span>Total: {stats.total}</span>
         <span>•</span>
-        <span className="text-green-600">Successful: {stats.successful}</span>
+        <span className="text-green-600">Confirmed: {stats.confirmed}</span>
         <span>•</span>
         <span className="text-purple-600">Voicemails: {stats.voicemails}</span>
         <span>•</span>
@@ -156,12 +156,15 @@ export default function CallLogsPage() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="all">All Calls</TabsTrigger>
+                <TabsTrigger value="confirmed" className="flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Confirmed
+                </TabsTrigger>
                 <TabsTrigger value="unconfirmed" className="flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
                   Unconfirmed
                 </TabsTrigger>
                 <TabsTrigger value="voicemail">Voicemails</TabsTrigger>
-                <TabsTrigger value="successful">Successful</TabsTrigger>
               </TabsList>
             </Tabs>
             <div className="relative">
