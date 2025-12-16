@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, MessageSquare, Send, CalendarDays, ListPlus, FileText, ArrowLeft } from "lucide-react";
+import { Clock, MessageSquare, Send, CalendarDays, ListPlus, FileText, ArrowLeft, Video, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AgendaItem {
   text: string;
@@ -37,6 +38,7 @@ interface WaitingForHostScreenProps {
   onAddAgendaItem?: (item: string) => void;
   onSaveNotes?: (notes: string) => void;
   memberNotes?: string;
+  onHostStarted?: () => void;
 }
 
 export function WaitingForHostScreen({
@@ -46,12 +48,43 @@ export function WaitingForHostScreen({
   onAddAgendaItem,
   onSaveNotes,
   memberNotes = "",
+  onHostStarted,
 }: WaitingForHostScreenProps) {
   const navigate = useNavigate();
   const [newQuestion, setNewQuestion] = useState("");
   const [newAgendaItem, setNewAgendaItem] = useState("");
   const [notes, setNotes] = useState(memberNotes);
   const [showAgendaInput, setShowAgendaInput] = useState(false);
+  const [hostHasStarted, setHostHasStarted] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+
+  // Realtime subscription for instant participant auto-refresh
+  useEffect(() => {
+    const channel = supabase
+      .channel(`waiting-for-host-${meeting.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'board_meeting_notes',
+          filter: `id=eq.${meeting.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as { host_has_started?: boolean; status?: string };
+          if (updated.host_has_started) {
+            setHostHasStarted(true);
+            toast.success("Host has started the meeting! You can now join.");
+            onHostStarted?.();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [meeting.id, onHostStarted]);
 
   const handleSubmitQuestion = () => {
     if (!newQuestion.trim()) return;
@@ -68,14 +101,12 @@ export function WaitingForHostScreen({
 
   const handleNotesChange = (value: string) => {
     setNotes(value);
-    // Auto-save notes after typing stops
     if (onSaveNotes) {
       onSaveNotes(value);
     }
   };
 
   const handleSaveAndExit = () => {
-    // Save notes one final time if callback exists
     if (onSaveNotes && notes) {
       onSaveNotes(notes);
     }
@@ -105,20 +136,60 @@ export function WaitingForHostScreen({
         </Button>
       </div>
 
-      {/* Waiting banner */}
-      <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
-        <CardContent className="p-6 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full mb-4">
-            <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400 animate-pulse" />
-          </div>
-          <h2 className="text-xl font-semibold text-amber-800 dark:text-amber-200 mb-2">
-            Waiting for Host to Start
-          </h2>
-          <p className="text-amber-700 dark:text-amber-300">
-            The meeting will begin when the host starts it. You can review the agenda, add questions, suggest agenda items, and prepare notes below.
-          </p>
-        </CardContent>
-      </Card>
+      {/* Waiting/Ready banner */}
+      {hostHasStarted ? (
+        <Card className="border-green-200 bg-green-50 dark:bg-green-950/20 dark:border-green-800">
+          <CardContent className="p-6 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full mb-4">
+              <Video className="w-8 h-8 text-green-600 dark:text-green-400" />
+            </div>
+            <h2 className="text-xl font-semibold text-green-800 dark:text-green-200 mb-2">
+              Host Has Started — Join Now
+            </h2>
+            <p className="text-green-700 dark:text-green-300 mb-4">
+              The meeting is live! Click below to join the video call.
+            </p>
+            <Button 
+              onClick={() => {
+                setIsJoining(true);
+                onHostStarted?.();
+              }}
+              disabled={isJoining}
+              className="gap-2"
+            >
+              {isJoining ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Joining...
+                </>
+              ) : (
+                <>
+                  <Video className="h-4 w-4" />
+                  Join Meeting
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+          <CardContent className="p-6 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full mb-4">
+              <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400 animate-pulse" />
+            </div>
+            <h2 className="text-xl font-semibold text-amber-800 dark:text-amber-200 mb-2">
+              Waiting for Host to Start
+            </h2>
+            <p className="text-amber-700 dark:text-amber-300">
+              The meeting will begin when the host starts it. You can review the agenda, add questions, suggest agenda items, and prepare notes below.
+            </p>
+            <Badge variant="outline" className="mt-3 border-amber-300 text-amber-700">
+              <Clock className="w-3 h-3 mr-1" />
+              Upcoming
+            </Badge>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Meeting details */}
       <Card>
