@@ -11,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Package, Plus, MoreHorizontal, Settings, Edit, Trash2, Copy, CheckCircle2, 
-  ChevronDown, ChevronUp, Phone, Users, Search, Sun, Moon, Voicemail, Play, Pause, Archive
+  ChevronDown, ChevronUp, Phone, Users, Search, Sun, Moon, Voicemail, Play, Pause, Archive, RefreshCw
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -98,10 +98,26 @@ export default function TruckingDashboardPage() {
   const navigate = useNavigate();
   const { theme: appTheme, setTheme } = useTheme();
 
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
   useEffect(() => {
     fetchCurrentUser();
     fetchData();
+    
+    // Auto-refresh every 5 minutes
+    const interval = setInterval(() => {
+      fetchData();
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, []);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchData();
+    setIsRefreshing(false);
+    toast({ title: "Dashboard refreshed" });
+  };
 
   const fetchCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -331,6 +347,16 @@ export default function TruckingDashboardPage() {
             className="pl-10 bg-white border-slate-200"
           />
         </div>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleManualRefresh}
+          disabled={isRefreshing}
+          className="shrink-0"
+          title="Refresh dashboard"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+        </Button>
         <Button 
           variant="ghost" 
           size="icon"
