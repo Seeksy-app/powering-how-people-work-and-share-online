@@ -47,7 +47,7 @@ interface City {
 
 interface CityComboboxProps {
   value: { city: string; state: string };
-  onChange: (value: { city: string; state: string }) => void;
+  onChange: (value: { city: string; state: string; zip?: string }) => void;
   placeholder?: string;
 }
 
@@ -104,7 +104,7 @@ export default function CityCombobox({ value, onChange, placeholder = "Select ci
   });
 
   const handleSelect = (city: City) => {
-    onChange({ city: city.name, state: city.state_code });
+    onChange({ city: city.name, state: city.state_code, zip: city.zip || undefined });
     setOpen(false);
     setSearch("");
   };

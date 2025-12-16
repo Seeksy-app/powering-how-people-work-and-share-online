@@ -254,6 +254,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
                 onChange={(e) => setFormData({ ...formData, load_number: e.target.value })}
                 placeholder="e.g., 123456"
                 required
+                className="focus-visible:ring-offset-0"
               />
             </div>
 
@@ -263,7 +264,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
                 <Label className="text-sm font-medium">Origin *</Label>
                 <CityCombobox
                   value={{ city: formData.origin_city, state: formData.origin_state }}
-                  onChange={({ city, state }) => setFormData({ ...formData, origin_city: city, origin_state: state })}
+                  onChange={({ city, state, zip }) => setFormData({ ...formData, origin_city: city, origin_state: state, origin_zip: zip || formData.origin_zip })}
                   placeholder="Select origin city..."
                 />
                 <Input
@@ -280,7 +281,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
                 <Label className="text-sm font-medium">Destination *</Label>
                 <CityCombobox
                   value={{ city: formData.destination_city, state: formData.destination_state }}
-                  onChange={({ city, state }) => setFormData({ ...formData, destination_city: city, destination_state: state })}
+                  onChange={({ city, state, zip }) => setFormData({ ...formData, destination_city: city, destination_state: state, destination_zip: zip || formData.destination_zip })}
                   placeholder="Select destination city..."
                 />
                 <Input
