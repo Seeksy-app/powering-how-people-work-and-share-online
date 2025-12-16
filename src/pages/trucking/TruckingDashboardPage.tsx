@@ -481,7 +481,7 @@ export default function TruckingDashboardPage() {
         </Card>
         <Card 
           className="p-4 bg-white cursor-pointer transition-all hover:shadow-md"
-          onClick={() => navigate("/trucking/console")}
+          onClick={() => navigate("/trucking/call-logs")}
         >
           <div className="flex items-center justify-between">
             <div>
