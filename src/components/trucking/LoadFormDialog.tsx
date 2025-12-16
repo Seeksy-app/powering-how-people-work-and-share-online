@@ -14,6 +14,7 @@ import CityCombobox from "./CityCombobox";
 import { useDistanceCalculation } from "@/hooks/trucking/useDistanceCalculation";
 
 const equipmentTypes = ["Dry Van", "Reefer", "Flatbed", "Step Deck", "Power Only", "Hotshot", "Conestoga", "Double Drop", "RGN"];
+const truckSizes = ["Flatbed 48 foot", "53 foot trailer", "Van 53 foot"];
 
 interface LoadFormDialogProps {
   open: boolean;
@@ -38,6 +39,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
     pickup_window_start: "",
     pickup_window_end: "",
     equipment_type: "Dry Van",
+    truck_size: "",
     commodity: "",
     weight_lbs: "",
     miles: "",
@@ -111,6 +113,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
         pickup_window_start: data.pickup_window_start || "",
         pickup_window_end: data.pickup_window_end || "",
         equipment_type: data.equipment_type || "Dry Van",
+        truck_size: data.truck_size || "",
         commodity: data.commodity || "",
         weight_lbs: data.weight_lbs?.toString() || "",
         miles: data.miles?.toString() || "",
@@ -139,6 +142,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
       pickup_window_start: "",
       pickup_window_end: "",
       equipment_type: "Dry Van",
+      truck_size: "",
       commodity: "",
       weight_lbs: "",
       miles: "",
@@ -182,6 +186,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
         pickup_window_start: formData.pickup_window_start || null,
         pickup_window_end: formData.pickup_window_end || null,
         equipment_type: formData.equipment_type,
+        truck_size: formData.truck_size || null,
         commodity: formData.commodity,
         weight_lbs: formData.weight_lbs ? parseInt(formData.weight_lbs) : null,
         miles: formData.miles ? parseInt(formData.miles) : null,
@@ -353,7 +358,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
             </div>
 
             {/* Equipment & Details */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Equipment Type</Label>
                 <Select
@@ -370,6 +375,25 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label>Truck Size</Label>
+                <Select
+                  value={formData.truck_size}
+                  onValueChange={(v) => setFormData({ ...formData, truck_size: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select truck size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {truckSizes.map((size) => (
+                      <SelectItem key={size} value={size}>{size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label htmlFor="weight_lbs">Weight (lbs)</Label>
                 <Input
