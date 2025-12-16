@@ -982,16 +982,24 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
                 </div>
               )}
 
-              {/* Stop Recording Button */}
-              {isCapturingAudio && onStopRecordingOnly && (
+              {/* Stop Recording Button - Show when meeting is active (timer running) */}
+              {timerRunning && onStopRecordingOnly && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="secondary" size="sm" onClick={onStopRecordingOnly} className="gap-1.5">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={onStopRecordingOnly} 
+                      className="gap-1.5"
+                      disabled={!isCapturingAudio}
+                    >
                       <Square className="h-4 w-4" />
                       <span className="hidden sm:inline text-xs">Stop Recording</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Stop AI recording (meeting continues)</TooltipContent>
+                  <TooltipContent>
+                    {isCapturingAudio ? 'Stop AI recording (meeting continues)' : 'No active recording'}
+                  </TooltipContent>
                 </Tooltip>
               )}
             </div>
