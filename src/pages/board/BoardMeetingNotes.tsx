@@ -95,6 +95,9 @@ interface MeetingNote {
   ai_next_meeting_prep_draft: string | null;
   ai_notes_status: string | null;
   ai_notes_generated_at: string | null;
+  // Recording fields
+  recording_url: string | null;
+  audio_file_url: string | null;
 }
 
 interface CreateMeetingForm {
@@ -1611,6 +1614,40 @@ export default function BoardMeetingNotes() {
                     </CollapsibleContent>
                   </Card>
                 </Collapsible>
+              )}
+
+              {/* Meeting Recording (for completed meetings) */}
+              {selectedNote.status === 'completed' && (selectedNote.recording_url || selectedNote.audio_file_url) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Video className="w-5 h-5" />
+                      Meeting Recording
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {selectedNote.recording_url && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Video Recording</p>
+                        <video 
+                          src={selectedNote.recording_url} 
+                          controls 
+                          className="w-full rounded-lg max-h-[400px]"
+                        />
+                      </div>
+                    )}
+                    {selectedNote.audio_file_url && !selectedNote.recording_url && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Audio Recording</p>
+                        <audio 
+                          src={selectedNote.audio_file_url} 
+                          controls 
+                          className="w-full"
+                        />
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               )}
 
               {/* AI Meeting Notes (from video meeting) */}
