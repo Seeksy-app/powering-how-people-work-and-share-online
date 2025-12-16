@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2, MapPin, Check, Copy, CheckCircle2, Truck, Flag, Phone, MoreHorizontal, Calculator, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, MapPin, Check, Copy, CheckCircle2, Truck, Flag, Phone, MoreHorizontal, Calculator, Loader2, Archive, ArchiveRestore, Clock } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -433,10 +433,52 @@ export default function LoadsPage() {
     try {
       const { error } = await supabase
         .from("trucking_loads")
-        .update({ status: "booked", is_active: false })
+        .update({ status: "booked" })
         .eq("id", id);
       if (error) throw error;
-      toast({ title: "Load confirmed and moved to Confirmed" });
+      toast({ title: "Load confirmed" });
+      fetchLoads();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleArchiveLoad = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("trucking_loads")
+        .update({ status: "archived" })
+        .eq("id", id);
+      if (error) throw error;
+      toast({ title: "Load archived" });
+      fetchLoads();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleUnarchiveLoad = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("trucking_loads")
+        .update({ status: "open" })
+        .eq("id", id);
+      if (error) throw error;
+      toast({ title: "Load restored to Open" });
+      fetchLoads();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleSetPending = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("trucking_loads")
+        .update({ status: "pending" })
+        .eq("id", id);
+      if (error) throw error;
+      toast({ title: "Load marked as pending" });
       fetchLoads();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -650,15 +692,20 @@ export default function LoadsPage() {
   const getStatusBadge = (status: string) => {
     const colors: Record<string, string> = {
       open: "bg-green-500/10 text-green-500",
+      pending: "bg-yellow-500/10 text-yellow-500",
       booked: "bg-blue-500/10 text-blue-500",
+      confirmed: "bg-blue-500/10 text-blue-500",
       delivered: "bg-purple-500/10 text-purple-500",
       cancelled: "bg-red-500/10 text-red-500",
+      archived: "bg-slate-500/10 text-slate-500",
     };
     return colors[status] || "bg-gray-500/10 text-gray-500";
   };
 
-  const openLoads = loads.filter(l => l.status === "open" && l.is_active !== false);
-  const confirmedLoads = loads.filter(l => l.status === "booked" || l.is_active === false);
+  const openLoads = loads.filter(l => l.status === "open");
+  const pendingLoads = loads.filter(l => l.status === "pending");
+  const confirmedLoads = loads.filter(l => l.status === "booked" || l.status === "confirmed");
+  const archivedLoads = loads.filter(l => l.status === "archived");
 
   if (loading) {
     return (
@@ -700,7 +747,7 @@ export default function LoadsPage() {
   // Auto-calculate tons from weight
   const calculatedTons = formData.weight_lbs ? (parseFloat(formData.weight_lbs) / 2000).toFixed(2) : '';
 
-  const LoadsTable = ({ loadsData, showConfirmButton = false }: { loadsData: Load[], showConfirmButton?: boolean }) => (
+  const LoadsTable = ({ loadsData, tabType }: { loadsData: Load[], tabType: 'open' | 'pending' | 'confirmed' | 'archived' }) => (
     <Table>
       <TableHeader>
         <TableRow>
@@ -771,10 +818,48 @@ export default function LoadsPage() {
                     <Copy className="h-4 w-4 mr-2" />
                     Duplicate
                   </DropdownMenuItem>
-                  {showConfirmButton && (
-                    <DropdownMenuItem onClick={() => handleConfirmLoad(load.id)}>
-                      <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
-                      Confirm load
+                  <DropdownMenuSeparator />
+                  {/* Status change actions based on current tab */}
+                  {tabType === 'open' && (
+                    <>
+                      <DropdownMenuItem onClick={() => handleSetPending(load.id)}>
+                        <Clock className="h-4 w-4 mr-2 text-yellow-500" />
+                        Mark as Pending
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleConfirmLoad(load.id)}>
+                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                        Confirm load
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {tabType === 'pending' && (
+                    <>
+                      <DropdownMenuItem onClick={() => handleUnarchiveLoad(load.id)}>
+                        <ArchiveRestore className="h-4 w-4 mr-2" />
+                        Move to Open
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleConfirmLoad(load.id)}>
+                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                        Confirm load
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {tabType === 'confirmed' && (
+                    <DropdownMenuItem onClick={() => handleUnarchiveLoad(load.id)}>
+                      <ArchiveRestore className="h-4 w-4 mr-2" />
+                      Reopen load
+                    </DropdownMenuItem>
+                  )}
+                  {tabType === 'archived' && (
+                    <DropdownMenuItem onClick={() => handleUnarchiveLoad(load.id)}>
+                      <ArchiveRestore className="h-4 w-4 mr-2 text-blue-500" />
+                      Restore to Open
+                    </DropdownMenuItem>
+                  )}
+                  {tabType !== 'archived' && (
+                    <DropdownMenuItem onClick={() => handleArchiveLoad(load.id)}>
+                      <Archive className="h-4 w-4 mr-2 text-slate-500" />
+                      Archive
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
@@ -1452,12 +1537,20 @@ export default function LoadsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="open" className="gap-2">
-            Open Loads
+            Open
             <Badge variant="secondary">{openLoads.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="gap-2">
+            Pending
+            <Badge variant="secondary">{pendingLoads.length}</Badge>
           </TabsTrigger>
           <TabsTrigger value="confirmed" className="gap-2">
             Confirmed
             <Badge variant="secondary">{confirmedLoads.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="archived" className="gap-2">
+            Archived
+            <Badge variant="secondary">{archivedLoads.length}</Badge>
           </TabsTrigger>
         </TabsList>
 
@@ -1469,7 +1562,21 @@ export default function LoadsPage() {
                   No open loads. Add your first load to get started.
                 </div>
               ) : (
-                <LoadsTable loadsData={openLoads} showConfirmButton={true} />
+                <LoadsTable loadsData={openLoads} tabType="open" />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="pending">
+          <Card>
+            <CardContent className="p-0">
+              {pendingLoads.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  No pending loads. Loads with carrier interest will appear here.
+                </div>
+              ) : (
+                <LoadsTable loadsData={pendingLoads} tabType="pending" />
               )}
             </CardContent>
           </Card>
@@ -1483,7 +1590,21 @@ export default function LoadsPage() {
                   No confirmed loads yet.
                 </div>
               ) : (
-                <LoadsTable loadsData={confirmedLoads} showConfirmButton={false} />
+                <LoadsTable loadsData={confirmedLoads} tabType="confirmed" />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="archived">
+          <Card>
+            <CardContent className="p-0">
+              {archivedLoads.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  No archived loads.
+                </div>
+              ) : (
+                <LoadsTable loadsData={archivedLoads} tabType="archived" />
               )}
             </CardContent>
           </Card>
