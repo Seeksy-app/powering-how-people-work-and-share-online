@@ -480,13 +480,13 @@ export default function BoardMeetingGuest() {
   // Name entry screen
   if (!hasEnteredName) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="fixed inset-0 flex items-center justify-center p-4">
         {/* Full-page fun background image */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="fixed inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${deerInSnow})` }}
         />
-        <div className="absolute inset-0 bg-white/30 backdrop-blur-[2px]" />
+        <div className="fixed inset-0 bg-white/30 backdrop-blur-[2px]" />
         <Card className="w-full max-w-md relative z-10 shadow-2xl bg-card/95 backdrop-blur-sm">
           
           <CardHeader className="text-center pt-4">
