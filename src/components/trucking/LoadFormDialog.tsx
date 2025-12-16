@@ -239,7 +239,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{editingLoadId ? "Edit Load" : "Add New Load"}</DialogTitle>
         </DialogHeader>
