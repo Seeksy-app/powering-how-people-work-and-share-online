@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useBoardViewMode } from '@/hooks/useBoardViewMode';
+import { useMeetingFocusMode } from '@/contexts/MeetingFocusModeContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -150,6 +151,7 @@ export function BoardSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { canToggleBoardView, toggleBoardView, isViewingAsBoard } = useBoardViewMode();
+  const { isFocusMode, navCollapsed } = useMeetingFocusMode();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = async () => {
@@ -243,6 +245,11 @@ export function BoardSidebar() {
       </SidebarGroup>
     );
   };
+
+  // Hide sidebar completely in focus mode when collapsed
+  if (isFocusMode && navCollapsed) {
+    return null;
+  }
 
   return (
     <Sidebar collapsible="none" className="border-r border-slate-200 bg-white w-[260px] flex-shrink-0">

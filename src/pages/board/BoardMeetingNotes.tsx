@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
-import { Plus, Calendar, ChevronDown, ChevronUp, Sparkles, Download, Lock, Play, Pause, RotateCcw, Check, Clock, MessageSquare, Send, Trash2, LogOut, Video, Users, ArrowRight, RefreshCw } from "lucide-react";
+import { Plus, Calendar, ChevronDown, ChevronUp, Sparkles, Download, Lock, Play, Pause, RotateCcw, Clock, MessageSquare, Send, Trash2, LogOut, Video, Users, ArrowRight, RefreshCw, PanelLeftClose, PanelLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +22,7 @@ import { AIMeetingNotes } from "@/components/board/AIMeetingNotes";
 import { MeetingInviteManager } from "@/components/board/MeetingInviteManager";
 import { HostMeetingTabs } from "@/components/board/HostMeetingTabs";
 import { WaitingForHostScreen } from "@/components/board/WaitingForHostScreen";
+import { useMeetingFocusMode } from "@/contexts/MeetingFocusModeContext";
 import {
   Dialog,
   DialogContent,
@@ -115,6 +116,9 @@ export default function BoardMeetingNotes() {
   const [pendingExitAction, setPendingExitAction] = useState<'exit' | 'endCall' | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
+  // Meeting focus mode for auto-collapsing navigation
+  const { setFocusMode, showNavToggle, toggleNav, navCollapsed } = useMeetingFocusMode();
+  
   // Timer state
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
@@ -205,6 +209,15 @@ export default function BoardMeetingNotes() {
     }
     return () => clearInterval(interval);
   }, [timerRunning, selectedNote]);
+
+  // Auto-collapse navigation when meeting becomes active
+  useEffect(() => {
+    if (selectedNote?.status === 'active') {
+      setFocusMode(true);
+    } else {
+      setFocusMode(false);
+    }
+  }, [selectedNote?.status, setFocusMode]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -1227,10 +1240,23 @@ export default function BoardMeetingNotes() {
 
                         {/* End Meeting - after start, during active */}
                         {hostHasStarted && selectedNote.status === 'active' && (
-                          <Button variant="destructive" size="sm" onClick={handleEndMeetingWithGuardrail}>
-                            <LogOut className="w-4 h-4 mr-2" />
-                            End Meeting
-                          </Button>
+                          <>
+                            {/* Nav toggle - host only during active meeting */}
+                            {showNavToggle && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={toggleNav}
+                                title={navCollapsed ? "Show Navigation" : "Hide Navigation"}
+                              >
+                                {navCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+                              </Button>
+                            )}
+                            <Button variant="destructive" size="sm" onClick={handleEndMeetingWithGuardrail}>
+                              <LogOut className="w-4 h-4 mr-2" />
+                              End Meeting
+                            </Button>
+                          </>
                         )}
 
                         {/* Carry Forward - after completed */}
@@ -1417,12 +1443,11 @@ export default function BoardMeetingNotes() {
                             checked={item.checked}
                             onCheckedChange={() => toggleAgendaItem(selectedNote.id, i)}
                             className="mt-0.5"
-                            disabled={selectedNote.status === 'completed'}
+                            disabled={selectedNote.status === 'completed' || (selectedNote.status === 'active' && !isHost)}
                           />
                           <span className={`text-sm flex-1 ${item.checked ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                             {i + 1}. {item.text}
                           </span>
-                          {item.checked && <Check className="w-4 h-4 text-green-500" />}
                         </div>
                       ))}
                     </div>
