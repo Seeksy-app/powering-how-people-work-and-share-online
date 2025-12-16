@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback, memo } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import deerInSnow from "@/assets/deer-in-snow.jpg";
@@ -72,6 +72,46 @@ interface MeetingInfo {
   member_questions: MemberQuestion[];
   host_has_started: boolean;
 }
+
+// Component to render remote participant with video track
+const RemoteParticipantTile = memo(({ participant }: { participant: { id: string; name: string; videoTrack?: MediaStreamTrack | null } }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  useEffect(() => {
+    if (videoRef.current && participant.videoTrack) {
+      const stream = new MediaStream([participant.videoTrack]);
+      videoRef.current.srcObject = stream;
+      console.log('Attached video track for participant:', participant.name);
+    }
+  }, [participant.videoTrack, participant.name]);
+  
+  return (
+    <div className="relative flex-shrink-0 w-48 h-36 bg-slate-700 rounded-lg overflow-hidden">
+      {participant.videoTrack ? (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
+            <span className="text-xl font-medium text-primary">
+              {participant.name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        </div>
+      )}
+      <div className="absolute bottom-1 left-1 bg-black/60 px-1.5 py-0.5 rounded text-xs text-white truncate max-w-[90%]">
+        {participant.name}
+      </div>
+    </div>
+  );
+});
+
+RemoteParticipantTile.displayName = 'RemoteParticipantTile';
 
 export default function BoardMeetingGuest() {
   const { token } = useParams<{ token: string }>();
@@ -372,16 +412,26 @@ export default function BoardMeetingGuest() {
   };
 
   const toggleMute = () => {
+    console.log('toggleMute called, callFrameRef:', !!callFrameRef.current, 'isMuted:', isMuted);
     if (callFrameRef.current) {
-      callFrameRef.current.setLocalAudio(!isMuted);
-      setIsMuted(!isMuted);
+      const newMutedState = !isMuted;
+      callFrameRef.current.setLocalAudio(!newMutedState);
+      setIsMuted(newMutedState);
+      console.log('Audio toggled, new muted state:', newMutedState);
+    } else {
+      console.warn('Cannot toggle mute - no call frame');
     }
   };
 
   const toggleVideo = () => {
+    console.log('toggleVideo called, callFrameRef:', !!callFrameRef.current, 'isVideoOff:', isVideoOff);
     if (callFrameRef.current) {
-      callFrameRef.current.setLocalVideo(!isVideoOff);
-      setIsVideoOff(!isVideoOff);
+      const newVideoOffState = !isVideoOff;
+      callFrameRef.current.setLocalVideo(!newVideoOffState);
+      setIsVideoOff(newVideoOffState);
+      console.log('Video toggled, new video off state:', newVideoOffState);
+    } else {
+      console.warn('Cannot toggle video - no call frame');
     }
   };
 
@@ -618,21 +668,10 @@ export default function BoardMeetingGuest() {
 
             {/* Remote participants */}
             {remoteParticipants.map((participant) => (
-              <div
+              <RemoteParticipantTile
                 key={participant.id}
-                className="relative flex-shrink-0 w-48 h-36 bg-slate-700 rounded-lg overflow-hidden"
-              >
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center">
-                    <span className="text-xl font-medium text-primary">
-                      {participant.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                </div>
-                <div className="absolute bottom-1 left-1 bg-black/60 px-1.5 py-0.5 rounded text-xs text-white truncate max-w-[90%]">
-                  {participant.name}
-                </div>
-              </div>
+                participant={participant}
+              />
             ))}
 
             {/* Empty slot indicator when waiting for others */}

@@ -296,14 +296,20 @@ export const useBoardMeetingVideo = (meetingNoteId: string) => {
   // Toggle mute
   const toggleMute = useCallback(() => {
     if (!callObject) return;
-    callObject.setLocalAudio(isMuted);
+    // setLocalAudio(true) = unmuted, setLocalAudio(false) = muted
+    // When isMuted is true, we want to unmute, so pass true
+    // When isMuted is false, we want to mute, so pass false
+    callObject.setLocalAudio(!isMuted);
     setIsMuted(!isMuted);
   }, [callObject, isMuted]);
 
   // Toggle video
   const toggleVideo = useCallback(() => {
     if (!callObject) return;
-    callObject.setLocalVideo(isVideoOff);
+    // setLocalVideo(true) = video on, setLocalVideo(false) = video off
+    // When isVideoOff is true, we want video on, so pass true
+    // When isVideoOff is false, we want video off, so pass false
+    callObject.setLocalVideo(!isVideoOff);
     setIsVideoOff(!isVideoOff);
   }, [callObject, isVideoOff]);
 
