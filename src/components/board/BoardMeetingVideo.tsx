@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -12,6 +12,8 @@ import {
   Check,
   Sparkles,
   PhoneOff,
+  AlertTriangle,
+  FileText,
 } from 'lucide-react';
 import {
   Tooltip,
@@ -20,6 +22,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { toast } from 'sonner';
+import { MeetingStatusBadge } from './MeetingStatusBadge';
 
 interface Participant {
   id: string;
@@ -42,10 +45,12 @@ interface BoardMeetingVideoProps {
   guestToken?: string | null;
   onToggleMute: () => void;
   onToggleVideo: () => void;
-  onStartMeeting: () => void;
-  onJoinMeeting: () => void;
-  onStopAIAndGenerateNotes: () => void;
-  onEndCall: () => void;
+  onStartMeeting?: () => void;
+  onJoinMeeting?: () => void;
+  onStopAIAndGenerateNotes?: () => void;
+  onEndCall?: () => void;
+  videoUnavailable?: boolean;
+  onNotesOnlyMode?: () => void;
 }
 
 const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
@@ -65,8 +70,13 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
   onJoinMeeting,
   onStopAIAndGenerateNotes,
   onEndCall,
+  videoUnavailable = false,
+  onNotesOnlyMode,
 }) => {
-  const [linkCopied, setLinkCopied] = React.useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [isStartingMeeting, setIsStartingMeeting] = useState(false);
+  const [isJoiningMeeting, setIsJoiningMeeting] = useState(false);
+  const [isEndingCall, setIsEndingCall] = useState(false);
   const totalParticipants = participants.length + 1;
 
   const copyGuestLink = () => {
@@ -77,6 +87,64 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
     toast.success("Guest link copied to clipboard");
     setTimeout(() => setLinkCopied(false), 2000);
   };
+
+  const handleStartMeeting = async () => {
+    if (!onStartMeeting || isStartingMeeting) return;
+    setIsStartingMeeting(true);
+    try {
+      await onStartMeeting();
+    } finally {
+      setIsStartingMeeting(false);
+    }
+  };
+
+  const handleJoinMeeting = async () => {
+    if (!onJoinMeeting || isJoiningMeeting) return;
+    setIsJoiningMeeting(true);
+    try {
+      await onJoinMeeting();
+    } finally {
+      setIsJoiningMeeting(false);
+    }
+  };
+
+  const handleEndCall = async () => {
+    if (!onEndCall || isEndingCall) return;
+    setIsEndingCall(true);
+    try {
+      await onEndCall();
+    } finally {
+      setIsEndingCall(false);
+    }
+  };
+
+  // Video unavailable fallback
+  if (videoUnavailable) {
+    return (
+      <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-6">
+        <div className="flex items-start gap-4">
+          <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+            <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-2">
+              Video Temporarily Unavailable
+              <Badge variant="outline" className="text-xs">Network Issue</Badge>
+            </h3>
+            <p className="text-sm text-amber-700 dark:text-amber-300 mb-4">
+              The video service is currently unreachable. You can still run this meeting in notes-only mode.
+            </p>
+            {onNotesOnlyMode && (
+              <Button variant="outline" size="sm" onClick={onNotesOnlyMode} className="gap-2">
+                <FileText className="h-4 w-4" />
+                Continue with Notes Only
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Not connected - show start or join button
   if (!isConnected && !isConnecting) {
@@ -92,17 +160,35 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
         </p>
         {hasActiveRoom ? (
           <Button 
-            onClick={onJoinMeeting} 
+            onClick={handleJoinMeeting} 
             className="gap-2"
-            disabled={!onJoinMeeting}
+            disabled={!onJoinMeeting || isJoiningMeeting}
           >
-            <Users className="h-4 w-4" />
-            {onJoinMeeting ? 'Join Meeting' : 'Waiting for host...'}
+            {isJoiningMeeting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Joining...
+              </>
+            ) : (
+              <>
+                <Users className="h-4 w-4" />
+                {onJoinMeeting ? 'Join Meeting' : 'Waiting for host...'}
+              </>
+            )}
           </Button>
         ) : onStartMeeting ? (
-          <Button onClick={onStartMeeting} className="gap-2">
-            <Video className="h-4 w-4" />
-            Start Video Meeting
+          <Button onClick={handleStartMeeting} className="gap-2" disabled={isStartingMeeting}>
+            {isStartingMeeting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Starting...
+              </>
+            ) : (
+              <>
+                <Video className="h-4 w-4" />
+                Start Video Meeting
+              </>
+            )}
           </Button>
         ) : (
           <p className="text-sm text-muted-foreground">Waiting for host to start...</p>
@@ -144,6 +230,12 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
           <span className="text-sm text-muted-foreground">
             {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''}
           </span>
+          {/* Live status badges */}
+          <MeetingStatusBadge 
+            status="active" 
+            isCapturingAudio={isCapturingAudio} 
+            isGeneratingNotes={isGeneratingNotes} 
+          />
         </div>
         <div className="flex items-center gap-2">
           {guestToken && (
@@ -152,16 +244,8 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
               {linkCopied ? 'Copied!' : 'Copy Guest Link'}
             </Button>
           )}
-          {isGeneratingNotes && (
-            <Badge variant="default" className="bg-primary animate-pulse">
-              <Sparkles className="h-2 w-2 mr-1" />
-              Generating Notes...
-            </Badge>
-          )}
         </div>
       </div>
-
-      {/* Video thumbnails - horizontal layout */}
       <div className="p-3 flex gap-2 overflow-x-auto bg-slate-900/50">
         {/* Local video */}
         <div className="relative flex-shrink-0 w-32 h-24 bg-slate-700 rounded-lg overflow-hidden">
@@ -291,10 +375,15 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
                 variant="destructive"
                 size="sm"
                 className="ml-2 gap-2"
-                onClick={onEndCall}
+                onClick={handleEndCall}
+                disabled={isEndingCall}
               >
-                <PhoneOff className="h-4 w-4" />
-                End Call
+                {isEndingCall ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <PhoneOff className="h-4 w-4" />
+                )}
+                {isEndingCall ? 'Ending...' : 'End Call'}
               </Button>
             </TooltipTrigger>
             <TooltipContent>Leave video call</TooltipContent>
