@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Plus, 
   RefreshCw, 
@@ -24,7 +25,9 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  BookmarkPlus,
+  Sparkles
 } from 'lucide-react';
 import { 
   useMarketIntelligenceSources, 
@@ -40,6 +43,7 @@ import {
   useToggleInsightFeatured,
   type MarketIntelligenceSource
 } from '@/hooks/useMarketIntelligence';
+import { useSaveInsightToRD, useScheduleSourceRefresh } from '@/hooks/useSaveInsightToRD';
 import { formatDistanceToNow, format } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -56,6 +60,7 @@ export function MarketIntelligenceAdmin() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchCategory, setSearchCategory] = useState<string>('');
   const [addSourceOpen, setAddSourceOpen] = useState(false);
+  const [activeTopicCategory, setActiveTopicCategory] = useState<string>('all');
 
   const { data: sources, isLoading: sourcesLoading } = useMarketIntelligenceSources();
   const { data: insights, isLoading: insightsLoading } = useMarketIntelligenceInsights({ limit: 50 });
@@ -69,6 +74,8 @@ export function MarketIntelligenceAdmin() {
   const deleteSource = useDeleteSource();
   const archiveInsight = useArchiveInsight();
   const toggleFeatured = useToggleInsightFeatured();
+  const saveToRD = useSaveInsightToRD();
+  const scheduleRefresh = useScheduleSourceRefresh();
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -93,15 +100,55 @@ export function MarketIntelligenceAdmin() {
     }
   };
 
-  // Quick research topics
-  const researchTopics = [
-    { label: 'TikTok Shop 2025', query: 'TikTok Shop sales growth 2025 shoptainment live shopping revenue' },
-    { label: 'Live Shopping Trends', query: 'live shopping ecommerce trends 2025 creator economy conversion rates' },
-    { label: 'Creator Monetization', query: 'creator monetization revenue streams 2025 trends sponsorships affiliate' },
-    { label: 'Podcast Advertising', query: 'podcast advertising market 2025 CPM rates growth host-read ads' },
-    { label: 'Social Commerce', query: 'social commerce Instagram shopping Meta shops creator storefronts 2025' },
-    { label: 'AI Content Tools', query: 'AI content creation tools market 2025 video editing automation' },
+  // Research topic categories
+  const topicCategories = [
+    { id: 'all', label: 'All' },
+    { id: 'social', label: 'Social' },
+    { id: 'commerce', label: 'Commerce' },
+    { id: 'creator', label: 'Creators' },
+    { id: 'ai', label: 'AI & Tech' },
+    { id: 'ads', label: 'Advertising' },
   ];
+
+  // Expanded quick research topics by category
+  const researchTopics = [
+    // Social Platforms
+    { label: 'Instagram Live TV', query: 'Instagram Live TV 2025 creator features shopping engagement metrics revenue', category: 'social' },
+    { label: 'YouTube Shorts', query: 'YouTube Shorts monetization 2025 CPM creator fund revenue growth', category: 'social' },
+    { label: 'TikTok Shop 2025', query: 'TikTok Shop sales growth 2025 shoptainment live shopping revenue GMV', category: 'social' },
+    { label: 'Meta Reels', query: 'Meta Reels monetization Instagram Facebook 2025 creator earnings bonus', category: 'social' },
+    { label: 'Snapchat Spotlight', query: 'Snapchat Spotlight creator earnings 2025 monetization trends', category: 'social' },
+    { label: 'X/Twitter Spaces', query: 'Twitter X Spaces monetization 2025 creator revenue live audio', category: 'social' },
+    
+    // Commerce
+    { label: 'Live Shopping', query: 'live shopping ecommerce trends 2025 creator economy conversion rates revenue', category: 'commerce' },
+    { label: 'Social Commerce', query: 'social commerce Instagram shopping Meta shops creator storefronts 2025 GMV', category: 'commerce' },
+    { label: 'Affiliate Marketing', query: 'affiliate marketing creator economy 2025 commission rates Amazon LTK', category: 'commerce' },
+    { label: 'Shoppable Video', query: 'shoppable video commerce 2025 click-through rates conversion creator', category: 'commerce' },
+    
+    // Creator Economy
+    { label: 'Creator Monetization', query: 'creator monetization revenue streams 2025 trends sponsorships affiliate subscriptions', category: 'creator' },
+    { label: 'Creator Funds', query: 'creator fund payouts 2025 TikTok YouTube Instagram Snapchat comparison', category: 'creator' },
+    { label: 'Influencer Rates', query: 'influencer marketing rates 2025 sponsored post pricing nano micro macro', category: 'creator' },
+    { label: 'Patreon & Memberships', query: 'Patreon membership platforms 2025 creator subscriptions revenue Substack', category: 'creator' },
+    { label: 'UGC Creator Market', query: 'UGC user generated content creator market 2025 brand deals rates', category: 'creator' },
+    
+    // AI & Tech
+    { label: 'AI Content Tools', query: 'AI content creation tools market 2025 video editing automation growth', category: 'ai' },
+    { label: 'AI Video Generation', query: 'AI video generation tools 2025 Sora Runway creator adoption market size', category: 'ai' },
+    { label: 'AI Voice Cloning', query: 'AI voice cloning creator tools 2025 ElevenLabs podcasting dubbing', category: 'ai' },
+    { label: 'AI Editing Software', query: 'AI video editing software 2025 CapCut Descript auto-edit features', category: 'ai' },
+    
+    // Advertising
+    { label: 'Podcast Ads', query: 'podcast advertising market 2025 CPM rates growth host-read ads programmatic', category: 'ads' },
+    { label: 'Influencer Ad Spend', query: 'influencer marketing ad spend 2025 brand budgets ROI measurement', category: 'ads' },
+    { label: 'Audio Ads Market', query: 'audio advertising market 2025 Spotify podcast streaming ad revenue', category: 'ads' },
+    { label: 'Video Ad CPMs', query: 'video advertising CPM rates 2025 YouTube TikTok Instagram Reels comparison', category: 'ads' },
+  ];
+
+  const filteredTopics = activeTopicCategory === 'all' 
+    ? researchTopics 
+    : researchTopics.filter(t => t.category === activeTopicCategory);
 
   const handleQuickSearch = async (query: string) => {
     setSearchQuery(query);
@@ -111,6 +158,16 @@ export function MarketIntelligenceAdmin() {
     } catch (error) {
       toast.error('Search failed');
     }
+  };
+
+  const handleSaveToRD = (insight: any) => {
+    saveToRD.mutate({
+      title: insight.title,
+      url: insight.source_url,
+      content: `${insight.summary}\n\nKey Points:\n${insight.key_points?.map((p: string) => `• ${p}`).join('\n') || ''}`,
+      sourceName: insight.source_name,
+      tags: [insight.insight_type, ...insight.audience],
+    });
   };
 
   return (
@@ -164,11 +221,26 @@ export function MarketIntelligenceAdmin() {
             </Button>
           </div>
 
-          {/* Quick Topics */}
-          <div>
-            <p className="text-xs text-muted-foreground mb-2">Quick research topics:</p>
+          {/* Quick Topics with Category Filter */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground">Quick research topics:</p>
+              <div className="flex gap-1">
+                {topicCategories.map((cat) => (
+                  <Button
+                    key={cat.id}
+                    variant={activeTopicCategory === cat.id ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setActiveTopicCategory(cat.id)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    {cat.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {researchTopics.map((topic) => (
+              {filteredTopics.map((topic) => (
                 <Button
                   key={topic.label}
                   variant="outline"
@@ -177,6 +249,7 @@ export function MarketIntelligenceAdmin() {
                   disabled={search.isPending}
                   className="text-xs"
                 >
+                  <Sparkles className="h-3 w-3 mr-1 text-primary" />
                   {topic.label}
                 </Button>
               ))}
@@ -264,7 +337,36 @@ export function MarketIntelligenceAdmin() {
                               {source.category.replace('_', ' ')}
                             </Badge>
                           </TableCell>
-                          <TableCell className="capitalize">{source.refresh_frequency}</TableCell>
+                          <TableCell>
+                            <Select 
+                              value={source.refresh_frequency} 
+                              onValueChange={(val) => scheduleRefresh.mutate({ 
+                                sourceId: source.id, 
+                                frequency: val as 'hourly' | 'daily' | 'weekly' 
+                              })}
+                            >
+                              <SelectTrigger className="w-[100px] h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="hourly">
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" /> Hourly
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="daily">
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" /> Daily
+                                  </span>
+                                </SelectItem>
+                                <SelectItem value="weekly">
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3" /> Weekly
+                                  </span>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
                           <TableCell>
                             {source.last_fetched_at 
                               ? formatDistanceToNow(new Date(source.last_fetched_at), { addSuffix: true })
@@ -363,6 +465,24 @@ export function MarketIntelligenceAdmin() {
                             </div>
                           </div>
                           <div className="flex flex-col gap-1">
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleSaveToRD(insight)}
+                                    disabled={saveToRD.isPending}
+                                  >
+                                    <BookmarkPlus className="h-4 w-4 mr-1" />
+                                    Save to R&D
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Save this insight to R&D Intelligence Feeds</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                             <Button 
                               variant="ghost" 
                               size="sm"
