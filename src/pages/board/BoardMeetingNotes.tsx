@@ -1382,13 +1382,13 @@ export default function BoardMeetingNotes() {
                   memberNotes={(selectedNote as any).member_notes?.[currentUserId || ''] || ''}
                 />
               )}
-
-              {/* Host Meeting Tabs (for host during active meeting) */}
-              {isHost && hostHasStarted && selectedNote.status === 'active' && (
+              {/* Host Meeting Tabs (always visible for host, disabled before meeting starts) */}
+              {isHost && (
                 <HostMeetingTabs
                   meetingId={selectedNote.id}
                   isHost={isHost}
                   onMediaPlayStateChange={handleMediaPlayStateChange}
+                  disabled={selectedNote.status !== 'active'}
                 />
               )}
 
@@ -1648,10 +1648,10 @@ export default function BoardMeetingNotes() {
                 generatedAt={selectedNote.ai_notes_generated_at}
               />
 
-              {/* Generate Summary Button */}
-              {selectedNote.status !== 'completed' && selectedNote.decision_table.length > 0 && (
+              {/* Generate Summary Button - only block if there ARE decisions with missing values */}
+              {selectedNote.status !== 'completed' && (
                 <div className="flex flex-col items-end gap-2">
-                  {selectedNote.decision_table.some(row => !row.Decision?.trim()) && (
+                  {selectedNote.decision_table.length > 0 && selectedNote.decision_table.some(row => !row.Decision?.trim()) && (
                     <p className="text-sm text-destructive">All decisions must be filled before generating summary</p>
                   )}
                   <Button 
@@ -1659,7 +1659,7 @@ export default function BoardMeetingNotes() {
                     disabled={
                       generateSummaryMutation.isPending || 
                       selectedNote.decisions_summary_locked ||
-                      selectedNote.decision_table.some(row => !row.Decision?.trim())
+                      (selectedNote.decision_table.length > 0 && selectedNote.decision_table.some(row => !row.Decision?.trim()))
                     }
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
