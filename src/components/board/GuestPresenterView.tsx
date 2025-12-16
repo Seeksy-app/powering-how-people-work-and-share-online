@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,8 +16,42 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  LayoutDashboard,
+  Briefcase,
+  Target,
+  TrendingUp,
+  PlayCircle,
+  FolderOpen,
 } from "lucide-react";
-import { PresenterSection, PresenterState } from "@/hooks/usePresenterMode";
+import { PresenterSection, PresenterState, MeetingSection, isBoardPortalRoute, getBoardPortalPath } from "@/hooks/usePresenterMode";
+
+// Only meeting sections need icons/labels here - Board Portal routes navigate away
+const sectionIcons: Record<MeetingSection, React.ReactNode> = {
+  'video-only': <Eye className="h-5 w-5" />,
+  'agenda': <ListChecks className="h-5 w-5" />,
+  'decisions': <Table2 className="h-5 w-5" />,
+  'ai-notes': <Sparkles className="h-5 w-5" />,
+  'questions': <HelpCircle className="h-5 w-5" />,
+  'summary': <FileText className="h-5 w-5" />,
+};
+
+const sectionLabels: Record<MeetingSection, string> = {
+  'video-only': 'Video Only',
+  'agenda': 'Meeting Agenda',
+  'decisions': 'Decision Matrix',
+  'ai-notes': 'AI Meeting Notes',
+  'questions': 'Member Questions',
+  'summary': 'Meeting Summary',
+};
+
+const boardPortalLabels: Record<string, string> = {
+  'board-dashboard': 'Board Dashboard',
+  'board-business-model': 'Business Model',
+  'board-gtm': 'GTM Strategy',
+  'board-forecasts': '3-Year Forecasts',
+  'board-videos': 'Videos',
+  'board-docs': 'Documents',
+};
 
 interface GuestPresenterViewProps {
   meetingId: string;
@@ -45,32 +80,26 @@ interface MeetingData {
   decisions_summary: string | null;
 }
 
-const sectionIcons: Record<PresenterSection, React.ReactNode> = {
-  'video-only': <Eye className="h-5 w-5" />,
-  'agenda': <ListChecks className="h-5 w-5" />,
-  'decisions': <Table2 className="h-5 w-5" />,
-  'ai-notes': <Sparkles className="h-5 w-5" />,
-  'questions': <HelpCircle className="h-5 w-5" />,
-  'summary': <FileText className="h-5 w-5" />,
-};
-
-const sectionLabels: Record<PresenterSection, string> = {
-  'video-only': 'Video Only',
-  'agenda': 'Meeting Agenda',
-  'decisions': 'Decision Matrix',
-  'ai-notes': 'AI Meeting Notes',
-  'questions': 'Member Questions',
-  'summary': 'Meeting Summary',
-};
-
 export function GuestPresenterView({
   meetingId,
   presenterState,
   isFollowing,
   onToggleFollowing,
 }: GuestPresenterViewProps) {
+  const navigate = useNavigate();
   const [meetingData, setMeetingData] = useState<MeetingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Navigate to Board Portal routes when host presents them
+  useEffect(() => {
+    if (!isFollowing || !presenterState.isPresenting) return;
+    
+    if (isBoardPortalRoute(presenterState.currentSection)) {
+      const path = getBoardPortalPath(presenterState.currentSection);
+      console.log("[GuestPresenterView] Navigating to Board Portal:", path);
+      navigate(path);
+    }
+  }, [presenterState.currentSection, presenterState.isPresenting, isFollowing, navigate]);
 
   // Fetch meeting data
   useEffect(() => {
