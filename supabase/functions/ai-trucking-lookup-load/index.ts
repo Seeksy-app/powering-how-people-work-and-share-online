@@ -276,6 +276,7 @@ serve(async (req) => {
         weight: load.weight_lbs ? `${load.weight_lbs} lbs` : null,
         weight_lbs: load.weight_lbs,
         equipment_type: load.equipment_type || 'Dry Van',
+        truck_size: load.truck_size || null,
         commodity: load.commodity || 'General freight',
         status: load.status
       };
