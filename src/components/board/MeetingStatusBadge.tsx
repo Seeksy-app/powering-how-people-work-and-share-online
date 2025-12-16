@@ -45,9 +45,9 @@ export function MeetingStatusBadge({
       className: "bg-blue-500/10 text-blue-600 border-blue-500/30",
     },
     capturing: {
-      label: "Capturing Audio",
+      label: "AI Notes Active",
       icon: <Mic className="h-3 w-3 animate-pulse" />,
-      className: "bg-red-500/10 text-red-600 border-red-500/30 animate-pulse",
+      className: "bg-green-500/10 text-green-600 border-green-500/30 animate-pulse",
     },
     generating: {
       label: "Generating Notes",
