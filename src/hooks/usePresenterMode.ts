@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
-export type PresenterSection = 
+// Meeting sections (in-page navigation)
+export type MeetingSection = 
   | 'agenda' 
   | 'decisions' 
   | 'ai-notes' 
@@ -10,12 +11,43 @@ export type PresenterSection =
   | 'summary'
   | 'video-only';
 
+// Board Portal routes (full page navigation)
+export type BoardPortalRoute =
+  | 'board-dashboard'
+  | 'board-business-model'
+  | 'board-gtm'
+  | 'board-forecasts'
+  | 'board-videos'
+  | 'board-docs';
+
+// Combined type
+export type PresenterSection = MeetingSection | BoardPortalRoute;
+
+// Check if section is a Board Portal route
+export const isBoardPortalRoute = (section: PresenterSection): section is BoardPortalRoute => {
+  return section.startsWith('board-');
+};
+
+// Get route path for Board Portal sections
+export const getBoardPortalPath = (section: BoardPortalRoute): string => {
+  const routes: Record<BoardPortalRoute, string> = {
+    'board-dashboard': '/board',
+    'board-business-model': '/board/business-model',
+    'board-gtm': '/board/gtm',
+    'board-forecasts': '/board/forecasts',
+    'board-videos': '/board/videos',
+    'board-docs': '/board/docs',
+  };
+  return routes[section];
+};
+
 export interface PresenterState {
   isPresenting: boolean;
   currentSection: PresenterSection;
   hostName: string;
   scrollPosition?: number;
-  customContent?: string; // For showing specific content
+  customContent?: string;
+  meetingId?: string; // Include meeting ID for return navigation
 }
 
 interface UsePresenterModeOptions {
@@ -83,8 +115,8 @@ export function usePresenterMode({ meetingId, isHost, hostName = "Host" }: UsePr
 
   // Host: Start presenting
   const startPresenting = useCallback(() => {
-    broadcastState({ isPresenting: true, currentSection: 'agenda', hostName });
-  }, [broadcastState, hostName]);
+    broadcastState({ isPresenting: true, currentSection: 'agenda', hostName, meetingId });
+  }, [broadcastState, hostName, meetingId]);
 
   // Host: Stop presenting
   const stopPresenting = useCallback(() => {

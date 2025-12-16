@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,7 +38,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { PresenterControls } from './PresenterControls';
-import { usePresenterMode } from '@/hooks/usePresenterMode';
+import { usePresenterMode, isBoardPortalRoute, getBoardPortalPath, PresenterSection } from '@/hooks/usePresenterMode';
 import { toast } from 'sonner';
 import { MeetingStatusBadge } from './MeetingStatusBadge';
 import { useQuery } from '@tanstack/react-query';
@@ -148,18 +149,31 @@ const BoardMeetingVideo: React.FC<BoardMeetingVideoProps> = ({
   const screenVideoRef = useRef<HTMLVideoElement>(null);
   const mediaVideoRef = useRef<HTMLVideoElement>(null);
   const { activeTenantId } = useTenant();
+  const navigate = useNavigate();
 
   // Presenter mode hook
   const {
     presenterState,
     startPresenting,
     stopPresenting,
-    navigateToSection,
+    navigateToSection: baseNavigateToSection,
   } = usePresenterMode({
     meetingId: meetingId || '',
     isHost,
     hostName,
   });
+
+  // Wrap navigateToSection to also navigate host to Board Portal routes
+  const navigateToSection = useCallback((section: PresenterSection) => {
+    baseNavigateToSection(section);
+    
+    // If host selects a Board Portal route, navigate them too
+    if (isHost && isBoardPortalRoute(section)) {
+      const path = getBoardPortalPath(section);
+      console.log("[BoardMeetingVideo] Host navigating to Board Portal:", path);
+      navigate(path);
+    }
+  }, [baseNavigateToSection, isHost, navigate]);
 
   // Fetch media library
   const { data: mediaLibrary = [], isLoading: mediaLoading } = useQuery({
