@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import deerInSnow from "@/assets/deer-in-snow.jpg";
+import meetingDog from "@/assets/meeting-dog.jpg";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -479,8 +480,14 @@ export default function BoardMeetingGuest() {
   // Name entry screen
   if (!hasEnteredName) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center p-4">
-        <Card className="w-full max-w-lg overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        {/* Fun background image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${meetingDog})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-900/80 backdrop-blur-sm" />
+        <Card className="w-full max-w-lg overflow-hidden relative z-10 shadow-2xl">
           {/* Snow deer image */}
           <div className="relative w-full h-48 overflow-hidden">
             <img 

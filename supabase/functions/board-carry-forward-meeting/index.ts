@@ -33,8 +33,7 @@ serve(async (req) => {
     const { data: existingFollowUp } = await supabaseClient
       .from('board_meeting_notes')
       .select('id')
-      .ilike('title', `Follow-up:%`)
-      .or(`agenda_items.cs.${JSON.stringify([{ carried_from: completed_meeting_id }])}`)
+      .eq('carry_forward_source_id', completed_meeting_id)
       .maybeSingle();
 
     if (existingFollowUp) {
@@ -66,16 +65,20 @@ serve(async (req) => {
       );
     }
 
-    // Get deferred decisions
-    const { data: deferredDecisions, error: decisionsError } = await supabaseClient
+    // Get deferred decisions (status stored in options_json)
+    const { data: allDecisions, error: decisionsError } = await supabaseClient
       .from('board_decisions')
       .select('*')
-      .eq('meeting_id', completed_meeting_id)
-      .eq('status', 'deferred');
+      .eq('meeting_id', completed_meeting_id);
 
     if (decisionsError) {
-      console.error('Error fetching deferred decisions:', decisionsError);
+      console.error('Error fetching decisions:', decisionsError);
     }
+
+    // Filter for deferred decisions (status is in options_json)
+    const deferredDecisions = (allDecisions || []).filter((d: any) => 
+      d.options_json?.status === 'deferred'
+    );
 
     // Get unchecked agenda items
     const agendaItems = completedMeeting.agenda_items || [];
@@ -84,7 +87,7 @@ serve(async (req) => {
       : [];
 
     console.log('Unchecked agenda items:', uncheckedItems.length);
-    console.log('Deferred decisions:', deferredDecisions?.length || 0);
+    console.log('Deferred decisions:', deferredDecisions.length);
 
     // Calculate next meeting date (7 days from completed meeting)
     const originalDate = new Date(completedMeeting.meeting_date + 'T12:00:00');
@@ -92,23 +95,48 @@ serve(async (req) => {
     nextDate.setDate(nextDate.getDate() + 7);
     const nextDateStr = nextDate.toISOString().split('T')[0];
 
-    // Create new meeting draft
+    // Build carried agenda items with context
+    const carriedAgendaItems = uncheckedItems.map((item: any) => ({
+      text: typeof item === 'string' ? item : item.text,
+      checked: false,
+      carried_from: completed_meeting_id,
+    }));
+
+    // Add deferred decisions as agenda items
+    deferredDecisions.forEach((d: any) => {
+      carriedAgendaItems.push({
+        text: `[Deferred Decision] ${d.topic}`,
+        checked: false,
+        carried_from: completed_meeting_id,
+      });
+    });
+
+    // Build summary from previous meeting
+    const previousSummary = completedMeeting.memo?.purpose || '';
+    const carryForwardMemo = {
+      purpose: previousSummary ? `Follow-up from: ${completedMeeting.title}\n\nPrevious Summary: ${previousSummary}` : `Follow-up from: ${completedMeeting.title}`,
+      objective: 'Review carried items and deferred decisions from previous meeting',
+      current_state: [
+        `${uncheckedItems.length} unchecked agenda items carried forward`,
+        `${deferredDecisions.length} deferred decisions to review`,
+      ],
+      key_questions: deferredDecisions.map((d: any) => `Decision needed: ${d.topic}`),
+    };
+
+    // Create new meeting draft with summary carried forward
     const newMeeting = {
       title: `Follow-up: ${completedMeeting.title}`,
       meeting_date: nextDateStr,
       start_time: completedMeeting.start_time,
       duration_minutes: completedMeeting.duration_minutes,
-      agenda_items: uncheckedItems.map((item: any) => ({
-        text: typeof item === 'string' ? item : item.text,
-        checked: false,
-        carried_from: completed_meeting_id,
-      })),
-      memo: null,
+      agenda_items: carriedAgendaItems,
+      memo: carryForwardMemo,
       decision_table: [],
       member_questions: [],
       status: 'upcoming',
       created_by: completedMeeting.created_by,
       host_user_id: completedMeeting.host_user_id,
+      carry_forward_source_id: completed_meeting_id,
     };
 
     const { data: newMeetingData, error: insertError } = await supabaseClient
@@ -127,19 +155,22 @@ serve(async (req) => {
 
     console.log('Created new meeting:', newMeetingData.id);
 
-    // Copy deferred decisions to new meeting
-    if (deferredDecisions && deferredDecisions.length > 0) {
+    // Copy deferred decisions to new meeting with proper structure
+    if (deferredDecisions.length > 0) {
+      const PLATFORM_TENANT_ID = 'a0000000-0000-0000-0000-000000000001';
+      
       const newDecisions = deferredDecisions.map((d: any) => ({
         meeting_id: newMeetingData.id,
+        tenant_id: d.tenant_id || PLATFORM_TENANT_ID,
         topic: d.topic,
-        decision_text: d.decision_text,
-        option_summary: d.option_summary,
-        upside: d.upside,
-        risk: d.risk,
-        status: 'draft',
+        decision: d.decision,
+        due_date: d.due_date,
+        options_json: {
+          ...d.options_json,
+          status: 'open', // Reset to open for review
+          carried_from_meeting: completed_meeting_id,
+        },
         carried_from_meeting_id: completed_meeting_id,
-        source_type: 'carry_forward',
-        created_by: d.created_by,
       }));
 
       const { error: decisionsInsertError } = await supabaseClient
@@ -157,8 +188,8 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         new_meeting_id: newMeetingData.id,
-        carried_agenda_items: uncheckedItems.length,
-        carried_decisions: deferredDecisions?.length || 0,
+        carried_agenda_items: carriedAgendaItems.length,
+        carried_decisions: deferredDecisions.length,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
