@@ -1601,28 +1601,12 @@ export default function BoardMeetingNotes() {
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <CardContent>
-                        {selectedNote.status === 'active' && (
-                          <DecisionMatrixTable 
-                            meetingId={selectedNote.id}
-                            isHost={true}
-                            isCompleted={false}
-                            meetingStatus={selectedNote.status}
-                          />
-                        )}
-                        {selectedNote.status === 'completed' && (
-                          <DecisionMatrixTable 
-                            meetingId={selectedNote.id}
-                            isHost={true}
-                            isCompleted={true}
-                            meetingStatus={selectedNote.status}
-                          />
-                        )}
-                        {selectedNote.status === 'upcoming' && selectedNote.decision_table.length > 0 && (
-                          <DecisionTable 
-                            rows={selectedNote.decision_table}
-                            onDecisionChange={(rowIndex, value) => handleDecisionChange(selectedNote.id, rowIndex, value)}
-                          />
-                        )}
+                        <DecisionMatrixTable 
+                          meetingId={selectedNote.id}
+                          isHost={true}
+                          isCompleted={selectedNote.status === 'completed'}
+                          meetingStatus={selectedNote.status}
+                        />
                       </CardContent>
                     </CollapsibleContent>
                   </Card>
