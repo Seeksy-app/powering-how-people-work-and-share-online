@@ -1176,6 +1176,7 @@ const AppContent = () => {
             <Route path="/admin/legal/docs/new" element={<DocCreatePage />} />
             <Route path="/admin/conversational-demo" element={<AdminConversationalDemo />} />
             <Route path="/admin/architecture" element={<SeeksyArchitecture />} />
+            <Route path="/admin/tech-stack" element={<TechStack />} />
             <Route path="/admin/master-blog" element={<AdminMasterBlog />} />
             <Route path="/admin/system-status" element={<AdminSystemStatus />} />
             <Route path="/admin/ad-analytics-import" element={<AdAnalyticsImport />} />
