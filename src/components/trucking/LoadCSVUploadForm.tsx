@@ -44,20 +44,21 @@ const DB_FIELDS = [
   { key: "temp_min_f", label: "Temp Min (°F)" },
   { key: "temp_max_f", label: "Temp Max (°F)" },
   { key: "reference", label: "Reference #" },
+  { key: "carrier_name", label: "Carrier Name" },
 ];
 
 // Common Aljex/TMS column name mappings
 const AUTO_MAP_HINTS: Record<string, string[]> = {
   load_number: ["load", "load #", "load_number", "loadnumber", "pro", "pro #", "pronumber", "shipment", "shipment #"],
-  origin_city: ["origin", "origin city", "origincity", "pickup city", "pickup_city", "ship from city", "from city", "pick up at"],
+  origin_city: ["origin", "origin city", "origincity", "pickup city", "pickup_city", "ship from city", "from city", "pick up at", "pick up"],
   origin_state: ["origin state", "originstate", "pickup state", "pickup_state", "ship from state", "from state", "o_state"],
   origin_zip: ["origin zip", "originzip", "pickup zip", "pickup_zip", "ship from zip", "from zip", "o_zip"],
-  destination_city: ["destination", "dest", "dest city", "destination city", "destinationcity", "delivery city", "delivery_city", "ship to city", "to city"],
+  destination_city: ["destination", "dest", "dest city", "destination city", "destinationcity", "delivery city", "delivery_city", "ship to city", "to city", "consignee"],
   destination_state: ["dest state", "destination state", "destinationstate", "delivery state", "delivery_state", "ship to state", "to state", "d_state"],
   destination_zip: ["dest zip", "destination zip", "destinationzip", "delivery zip", "delivery_zip", "ship to zip", "to zip", "d_zip"],
-  pickup_date: ["pickup date", "pickup_date", "pickupdate", "ship date", "ship_date", "pu date", "pick up", "ready"],
+  pickup_date: ["pickup date", "pickup_date", "pickupdate", "ship date", "ship_date", "pu date", "ready"],
   delivery_date: ["delivery date", "delivery_date", "deliverydate", "del date", "deliver date", "due date"],
-  equipment_type: ["equipment", "equipment type", "equip", "trailer type", "truck type", "mode"],
+  equipment_type: ["equipment", "equipment type", "equip", "trailer type", "truck type", "type"],
   commodity: ["commodity", "product", "description", "freight", "cargo"],
   weight_lbs: ["weight", "weight_lbs", "lbs", "pounds", "gross weight"],
   miles: ["miles", "distance", "mileage"],
@@ -72,10 +73,14 @@ const AUTO_MAP_HINTS: Record<string, string[]> = {
   reference: ["reference", "ref", "ref #", "reference #", "po", "po #"],
   hazmat: ["hazmat", "hazardous", "haz"],
   temp_required: ["temp", "temperature", "temp required", "reefer"],
+  carrier_name: ["carrier", "carrier name", "trucking company"],
 };
 
 // Adelphia Metals specific format detection
 const ADELPHIA_HEADERS = ["PICK UP AT", "RATE", "DESTINATION", "READY", "WEIGHT", "LENGTH", "TARP"];
+
+// Aljex TMS standard format detection (Status, Pro, Customer, Pick Up, Consignee, etc.)
+const ALJEX_TMS_HEADERS = ["Status", "Pro", "Customer", "Pick Up", "Consignee", "Ship Date", "Type", "Weight"];
 
 export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
   const [uploading, setUploading] = useState(false);
@@ -120,10 +125,13 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
 
       // Detect Adelphia Metals format by looking for specific headers
       const isAdelphi = detectAdelphiaFormat(rawData);
-      setIsAdelphiaFormat(isAdelphi);
+      const isAljexTMS = detectAljexTMSFormat(rawData);
+      setIsAdelphiaFormat(isAdelphi || isAljexTMS);
 
       if (isAdelphi) {
         parseAdelphiaFormat(rawData);
+      } else if (isAljexTMS) {
+        parseAljexTMSFormat(rawData);
       } else {
         // Standard format - first row is headers
         const headers = rawData[0].map(h => String(h || '').trim());
@@ -147,6 +155,168 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
       console.error("XLSX parse error:", error);
       toast.error("Failed to parse Excel file");
     }
+  };
+
+  const detectAljexTMSFormat = (rawData: any[][]): boolean => {
+    // Look for Aljex TMS header row (Status, Pro, Customer, Pick Up, Consignee, etc.)
+    for (let i = 0; i < Math.min(5, rawData.length); i++) {
+      const row = rawData[i];
+      if (!row) continue;
+      const rowHeaders = row.map(c => String(c || '').toLowerCase().trim());
+      const matchCount = ALJEX_TMS_HEADERS.filter(h => 
+        rowHeaders.some(rh => rh === h.toLowerCase() || rh.includes(h.toLowerCase()))
+      ).length;
+      if (matchCount >= 5) return true;
+    }
+    return false;
+  };
+
+  const parseAljexTMSFormat = (rawData: any[][]) => {
+    // Find header row
+    let headerRowIndex = -1;
+    for (let i = 0; i < Math.min(5, rawData.length); i++) {
+      const row = rawData[i];
+      if (!row) continue;
+      const rowHeaders = row.map(c => String(c || '').toLowerCase().trim());
+      const matchCount = ALJEX_TMS_HEADERS.filter(h => 
+        rowHeaders.some(rh => rh === h.toLowerCase() || rh.includes(h.toLowerCase()))
+      ).length;
+      if (matchCount >= 5) {
+        headerRowIndex = i;
+        break;
+      }
+    }
+
+    if (headerRowIndex === -1) {
+      toast.error("Could not find Aljex header row");
+      return;
+    }
+
+    const headerRow = rawData[headerRowIndex].map(c => String(c || '').trim());
+    
+    // Find column indices
+    const findCol = (names: string[]) => headerRow.findIndex(h => 
+      names.some(n => h.toLowerCase() === n.toLowerCase())
+    );
+
+    const statusIdx = findCol(["Status"]);
+    const proIdx = findCol(["Pro"]);
+    const customerIdx = findCol(["Customer"]);
+    const pickUpIdx = findCol(["Pick Up"]);
+    const consigneeIdx = findCol(["Consignee"]);
+    const shipDateIdx = findCol(["Ship Date"]);
+    const loadDateIdx = findCol(["Load Date"]);
+    const delDateIdx = findCol(["Del Date"]);
+    const carrierIdx = findCol(["Carrier"]);
+    const typeIdx = findCol(["Type"]);
+    const weightIdx = findCol(["Weight"]);
+
+    const parsedData: Record<string, string>[] = [];
+
+    for (let i = headerRowIndex + 1; i < rawData.length; i++) {
+      const row = rawData[i];
+      if (!row || row.every(c => !c)) continue;
+
+      // Parse "Pick Up" column - format is "STATE CITY" like "AL CENTRE"
+      const pickUpRaw = pickUpIdx >= 0 ? String(row[pickUpIdx] || '').trim() : '';
+      const consigneeRaw = consigneeIdx >= 0 ? String(row[consigneeIdx] || '').trim() : '';
+      const statusRaw = statusIdx >= 0 ? String(row[statusIdx] || '').trim() : '';
+      const proRaw = proIdx >= 0 ? String(row[proIdx] || '').trim() : '';
+      const customerRaw = customerIdx >= 0 ? String(row[customerIdx] || '').trim() : '';
+      const shipDateRaw = shipDateIdx >= 0 ? String(row[shipDateIdx] || '').trim() : '';
+      const loadDateRaw = loadDateIdx >= 0 ? String(row[loadDateIdx] || '').trim() : '';
+      const delDateRaw = delDateIdx >= 0 ? String(row[delDateIdx] || '').trim() : '';
+      const carrierRaw = carrierIdx >= 0 ? String(row[carrierIdx] || '').trim() : '';
+      const typeRaw = typeIdx >= 0 ? String(row[typeIdx] || '').trim() : '';
+      const weightRaw = weightIdx >= 0 ? String(row[weightIdx] || '').trim() : '';
+
+      // Skip if no essential data
+      if (!pickUpRaw && !consigneeRaw) continue;
+
+      // Parse state-first location format: "AL CENTRE" → State: AL, City: CENTRE
+      const [originState, originCity] = parseStateFirstLocation(pickUpRaw);
+      const [destState, destCity] = parseStateFirstLocation(consigneeRaw);
+
+      // Parse ship date (format: "12/17/25" or "12/17/2025")
+      const pickupDate = parseAljexDate(shipDateRaw);
+      const deliveryDate = parseAljexDate(delDateRaw);
+
+      // Parse weight (remove commas)
+      const weight = weightRaw.replace(/[,]/g, '');
+
+      if (originCity || destCity) {
+        parsedData.push({
+          "Pro #": proRaw,
+          "Status": statusRaw,
+          "Customer": customerRaw,
+          "Origin City": originCity,
+          "Origin State": originState,
+          "Destination City": destCity,
+          "Destination State": destState,
+          "Pickup Date": pickupDate,
+          "Delivery Date": deliveryDate,
+          "Equipment Type": typeRaw,
+          "Weight": weight,
+          "Carrier": carrierRaw,
+        });
+      }
+    }
+
+    if (parsedData.length === 0) {
+      toast.error("No valid load data found");
+      return;
+    }
+
+    const headers = ["Pro #", "Status", "Customer", "Origin City", "Origin State", "Destination City", "Destination State", "Pickup Date", "Delivery Date", "Equipment Type", "Weight", "Carrier"];
+    setCsvHeaders(headers);
+    setCsvData(parsedData);
+    
+    // Auto-map to DB fields
+    setColumnMapping({
+      "Pro #": "load_number",
+      "Customer": "shipper_name",
+      "Origin City": "origin_city",
+      "Origin State": "origin_state",
+      "Destination City": "destination_city",
+      "Destination State": "destination_state",
+      "Pickup Date": "pickup_date",
+      "Delivery Date": "delivery_date",
+      "Equipment Type": "equipment_type",
+      "Weight": "weight_lbs",
+      "Carrier": "carrier_name",
+    });
+    
+    setStep("map");
+    toast.success(`Detected Aljex TMS format! Found ${parsedData.length} loads`);
+  };
+
+  // Parse "STATE CITY" format like "AL CENTRE" → ["AL", "CENTRE"]
+  const parseStateFirstLocation = (value: string): [string, string] => {
+    if (!value) return ['', ''];
+    const parts = value.split(' ');
+    if (parts.length >= 2) {
+      const state = parts[0].trim();
+      const city = parts.slice(1).join(' ').trim();
+      return [state, city];
+    }
+    return ['', value.trim()];
+  };
+
+  // Parse Aljex date format "12/17/25" or "12/17/2025"
+  const parseAljexDate = (value: string): string => {
+    if (!value) return '';
+    // Handle MM/DD/YY or MM/DD/YYYY format
+    const match = value.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (match) {
+      const month = match[1].padStart(2, '0');
+      const day = match[2].padStart(2, '0');
+      let year = match[3];
+      if (year.length === 2) {
+        year = parseInt(year) > 50 ? '19' + year : '20' + year;
+      }
+      return `${year}-${month}-${day}`;
+    }
+    return value;
   };
 
   const detectAdelphiaFormat = (rawData: any[][]): boolean => {
