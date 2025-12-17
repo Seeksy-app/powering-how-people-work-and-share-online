@@ -38,7 +38,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
     pickup_date: "",
     pickup_window_start: "",
     pickup_window_end: "",
-    equipment_type: "Dry Van",
+    equipment_type: "Flatbed",
     truck_size: "",
     commodity: "",
     weight_lbs: "",
@@ -141,7 +141,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
       pickup_date: "",
       pickup_window_start: "",
       pickup_window_end: "",
-      equipment_type: "Dry Van",
+      equipment_type: "Flatbed",
       truck_size: "",
       commodity: "",
       weight_lbs: "",
@@ -442,7 +442,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
             {formData.rate_type === "flat" ? (
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="ceiling_rate">Customer Rate (Invoice Amount) ($)</Label>
+                  <Label htmlFor="ceiling_rate">Customer Invoice ($) *</Label>
                   <Input
                     id="ceiling_rate"
                     type="number"
@@ -457,49 +457,39 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
                         target_rate: targetRate
                       });
                     }}
-                    placeholder="e.g., 2500"
+                    placeholder="e.g., 700"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    What the carrier pays (invoice amount)
-                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="target_rate">Target Rate (20% commission) ($)</Label>
-                    <Input
-                      id="target_rate"
-                      type="number"
-                      step="0.01"
-                      value={formData.target_rate}
-                      onChange={(e) => setFormData({ ...formData, target_rate: e.target.value })}
-                      placeholder="Auto-calculated"
-                      className="bg-muted/50"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Starting offer to driver (80% of customer rate)
-                    </p>
-                  </div>
-                  <div>
-                    <Label>Floor Rate (15% min commission) ($)</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={formData.ceiling_rate ? (parseFloat(formData.ceiling_rate) * 0.85).toFixed(2) : ''}
-                      disabled
-                      className="bg-muted/50"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Max pay before connecting to dispatch
-                    </p>
-                  </div>
-                </div>
-                {formData.ceiling_rate && (
-                  <div className="p-3 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
-                    <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                      Commission Range: ${((parseFloat(formData.ceiling_rate) || 0) * 0.15).toFixed(2)} - ${((parseFloat(formData.ceiling_rate) || 0) * 0.20).toFixed(2)}
-                    </p>
-                    <p className="text-xs text-green-600 dark:text-green-400">
-                      (15% - 20% of ${parseFloat(formData.ceiling_rate).toLocaleString()})
+                {formData.ceiling_rate && parseFloat(formData.ceiling_rate) > 0 && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Est. Payout:</span>
+                      <span className="text-lg font-bold text-foreground">
+                        ${(parseFloat(formData.ceiling_rate) * 0.80).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">Est. Comm:</span>
+                      <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                        ${(parseFloat(formData.ceiling_rate) * 0.20).toFixed(2)} (20%)
+                      </span>
+                    </div>
+                    <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Max Driver Pay (85%):</span>
+                        <span className="text-sm font-medium text-foreground">
+                          ${(parseFloat(formData.ceiling_rate) * 0.85).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground">Min Comm (15%):</span>
+                        <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
+                          ${(parseFloat(formData.ceiling_rate) * 0.15).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground pt-1">
+                      Negotiation range: ${ (parseFloat(formData.ceiling_rate) * 0.80).toFixed(0)} - ${(parseFloat(formData.ceiling_rate) * 0.85).toFixed(0)}
                     </p>
                   </div>
                 )}
