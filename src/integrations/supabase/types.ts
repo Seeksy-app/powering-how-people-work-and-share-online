@@ -26649,6 +26649,7 @@ export type Database = {
           auto_approve_band_flat: number | null
           auto_approve_band_per_mile: number | null
           broker_commission: number | null
+          carrier_name: string | null
           commodity: string | null
           contact_name: string | null
           contact_phone: string | null
@@ -26728,6 +26729,7 @@ export type Database = {
           auto_approve_band_flat?: number | null
           auto_approve_band_per_mile?: number | null
           broker_commission?: number | null
+          carrier_name?: string | null
           commodity?: string | null
           contact_name?: string | null
           contact_phone?: string | null
@@ -26807,6 +26809,7 @@ export type Database = {
           auto_approve_band_flat?: number | null
           auto_approve_band_per_mile?: number | null
           broker_commission?: number | null
+          carrier_name?: string | null
           commodity?: string | null
           contact_name?: string | null
           contact_phone?: string | null
