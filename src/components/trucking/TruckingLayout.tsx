@@ -474,6 +474,50 @@ export default function TruckingLayout({ children }: TruckingLayoutProps) {
         )}
         style={{ backgroundColor: '#F8FAFC' }}
       >
+        {/* Top Header Bar - Desktop */}
+        <div 
+          className="hidden lg:flex items-center justify-end px-6 py-3 border-b bg-white/80 backdrop-blur sticky top-0 z-30"
+          style={{ borderColor: '#E2E8F0' }}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-3 px-3 py-2 rounded-xl transition-colors hover:bg-slate-100">
+                <Avatar className="h-10 w-10 border-2 border-blue-500/20">
+                  <AvatarImage src={profileImageUrl || undefined} alt="Profile" />
+                  <AvatarFallback className="bg-blue-600 text-white text-sm font-medium">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {user?.email?.split('@')[0] || 'seeksytrucking'}
+                  </p>
+                  <p className="text-xs text-slate-500">D and L Transport</p>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem asChild>
+                <NavLink to="/trucking/profile" className="cursor-pointer">
+                  <User className="h-4 w-4 mr-2" />
+                  My Profile
+                </NavLink>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <NavLink to="/trucking/settings" className="cursor-pointer">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </NavLink>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                <LogOut className="h-4 w-4 mr-2" />
+                Log Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
           {children || <Outlet />}
         </div>
