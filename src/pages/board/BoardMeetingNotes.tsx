@@ -737,11 +737,27 @@ export default function BoardMeetingNotes() {
       const note = notes.find(n => n.id === noteId);
       if (!note) throw new Error("Meeting not found");
       
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from("board_meeting_notes")
         .delete()
-        .eq("id", noteId);
-      if (error) throw error;
+        .eq("id", noteId)
+        .select();
+        
+      if (error) {
+        console.error("Delete error:", error);
+        throw error;
+      }
+      
+      // Verify deletion actually occurred
+      const { data: checkData } = await supabase
+        .from("board_meeting_notes")
+        .select("id")
+        .eq("id", noteId)
+        .maybeSingle();
+        
+      if (checkData) {
+        throw new Error("Meeting could not be deleted - permission denied");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["board-meeting-notes", activeTenantId] });
@@ -749,6 +765,7 @@ export default function BoardMeetingNotes() {
       toast.success("Meeting deleted");
     },
     onError: (error: Error) => {
+      console.error("Delete mutation error:", error);
       toast.error(error.message || "Failed to delete meeting");
     },
   });
