@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
-import { Plus, Calendar, ChevronDown, ChevronUp, Sparkles, Download, Lock, Play, Pause, RotateCcw, Clock, MessageSquare, Send, Trash2, LogOut, Video, Users, ArrowRight, RefreshCw, PanelLeftClose, PanelLeft, Square } from "lucide-react";
+import { Plus, Calendar, ChevronDown, ChevronUp, Sparkles, Download, Lock, Play, Pause, RotateCcw, Clock, MessageSquare, Send, Trash2, LogOut, Video, Users, ArrowRight, RefreshCw, PanelLeftClose, PanelLeft, Square, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/contexts/TenantContext";
@@ -26,6 +26,7 @@ import { MeetingInviteManager } from "@/components/board/MeetingInviteManager";
 import { HostMeetingTabs } from "@/components/board/HostMeetingTabs";
 import { WaitingForHostScreen } from "@/components/board/WaitingForHostScreen";
 import { useMeetingFocusMode } from "@/contexts/MeetingFocusModeContext";
+import { UploadPastMeetingModal } from "@/components/board/UploadPastMeetingModal";
 import {
   Dialog,
   DialogContent,
@@ -139,6 +140,8 @@ export default function BoardMeetingNotes() {
   const [timerSeconds, setTimerSeconds] = useState(0);
   // Invite modal state
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  // Upload past meeting modal state
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   // Video meeting hook
   const {
@@ -1016,13 +1019,30 @@ export default function BoardMeetingNotes() {
           title="Meeting Notes" 
           subtitle="Board meeting agendas, memos, and decisions"
           actions={
-            <Button onClick={() => setIsCreateModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              New Meeting Notes
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Past Meeting
+              </Button>
+              <Button onClick={() => setIsCreateModalOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                New Meeting Notes
+              </Button>
+            </div>
           }
         />
       )}
+
+      {/* Upload Past Meeting Modal */}
+      <UploadPastMeetingModal
+        open={isUploadModalOpen}
+        onOpenChange={setIsUploadModalOpen}
+        onSuccess={(meetingId) => {
+          queryClient.invalidateQueries({ queryKey: ["board-meeting-notes", activeTenantId] });
+          const meeting = notes.find(n => n.id === meetingId);
+          if (meeting) setSelectedNote(meeting);
+        }}
+      />
 
       {/* Create Meeting Modal */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
