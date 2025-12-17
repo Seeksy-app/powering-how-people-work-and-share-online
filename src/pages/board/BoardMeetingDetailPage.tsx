@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, MapPin, Video, ExternalLink, FileText, Save } from "lucide-react";
+import { Calendar, MapPin, Video, ExternalLink, FileText, Save, Volume2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { DecisionTable } from "@/components/board/DecisionTable";
@@ -91,6 +91,21 @@ export default function BoardMeetingDetailPage() {
       return data;
     },
     enabled: !!meetingId && !!user?.id,
+  });
+
+  // Fetch meeting notes with audio URL
+  const { data: meetingNotes } = useQuery({
+    queryKey: ["board-meeting-notes", meetingId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("board_meeting_notes")
+        .select("audio_file_url, audio_transcript")
+        .eq("id", meetingId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!meetingId,
   });
 
   useEffect(() => {
@@ -178,6 +193,25 @@ export default function BoardMeetingDetailPage() {
                   {meeting.status.replace("_", " ")}
                 </Badge>
               </div>
+
+              {/* Audio Recording Player */}
+              {meetingNotes?.audio_file_url && (
+                <div className="mt-6 pt-4 border-t">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Volume2 className="h-4 w-4 text-primary" />
+                    </div>
+                    <h3 className="font-medium text-sm">Meeting Recording</h3>
+                  </div>
+                  <audio
+                    controls
+                    className="w-full h-10 rounded-lg"
+                    src={meetingNotes.audio_file_url}
+                  >
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              )}
             </CardContent>
           </Card>
 
