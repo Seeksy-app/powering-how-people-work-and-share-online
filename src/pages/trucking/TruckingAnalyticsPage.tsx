@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Sparkles, TrendingUp, Lightbulb, AlertTriangle, RefreshCw, Phone, Clock, CheckCircle2 } from "lucide-react";
-import { format } from "date-fns";
+import { Loader2, Sparkles, TrendingUp, Lightbulb, AlertTriangle, RefreshCw, Phone, Clock, CheckCircle2, CalendarIcon } from "lucide-react";
+import { format, subDays } from "date-fns";
 import TruckingAnalytics from "@/components/trucking/TruckingAnalytics";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { TruckingPageWrapper } from "@/components/trucking/TruckingPageWrapper";
 
 interface DailyBrief {
   id: string;
@@ -27,11 +31,15 @@ interface DailyBrief {
   created_at: string;
 }
 
+type DatePreset = "all" | "today" | "7d" | "30d" | "custom";
+
 export default function TruckingAnalyticsPage() {
   const [brief, setBrief] = useState<DailyBrief | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [datePreset, setDatePreset] = useState<DatePreset>("all");
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | undefined>(undefined);
 
   useEffect(() => {
     const init = async () => {
@@ -45,6 +53,25 @@ export default function TruckingAnalyticsPage() {
     };
     init();
   }, []);
+
+  const handlePresetChange = (preset: DatePreset) => {
+    setDatePreset(preset);
+    const today = new Date();
+    switch (preset) {
+      case "all":
+        setDateRange(undefined);
+        break;
+      case "today":
+        setDateRange({ from: today, to: today });
+        break;
+      case "7d":
+        setDateRange({ from: subDays(today, 7), to: today });
+        break;
+      case "30d":
+        setDateRange({ from: subDays(today, 30), to: today });
+        break;
+    }
+  };
 
   const generateBrief = async () => {
     if (!userId) return;
@@ -61,17 +88,37 @@ export default function TruckingAnalyticsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground">Performance metrics and AI insights</p>
+    <TruckingPageWrapper
+      title="Analytics & Insights"
+      description="Master analytics, call behavior, and AI-powered daily briefs"
+      action={
+        <div className="flex items-center gap-2">
+          {/* Date Range Presets */}
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
+            {[
+              { key: "all", label: "All Time" },
+              { key: "today", label: "Today" },
+              { key: "7d", label: "7 Days" },
+              { key: "30d", label: "30 Days" },
+            ].map(({ key, label }) => (
+              <Button
+                key={key}
+                size="sm"
+                variant={datePreset === key ? "secondary" : "ghost"}
+                className={cn("h-7 text-xs", datePreset === key && "bg-background shadow-sm")}
+                onClick={() => handlePresetChange(key as DatePreset)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+          <Button onClick={generateBrief} disabled={generating} variant="outline" size="sm" className="gap-2">
+            {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            Generate Brief
+          </Button>
         </div>
-        <Button onClick={generateBrief} disabled={generating} variant="outline" className="gap-2">
-          {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          Generate Daily Brief
-        </Button>
-      </div>
+      }
+    >
 
       {loading ? (
         <Card><CardContent className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></CardContent></Card>
@@ -165,7 +212,7 @@ export default function TruckingAnalyticsPage() {
         </Card>
       )}
 
-      <TruckingAnalytics />
-    </div>
+      <TruckingAnalytics dateRange={dateRange} />
+    </TruckingPageWrapper>
   );
 }

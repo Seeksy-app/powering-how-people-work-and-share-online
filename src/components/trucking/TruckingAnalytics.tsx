@@ -48,13 +48,17 @@ interface AnalyticsData {
   avgNegotiatedRate: number;
 }
 
-export default function TruckingAnalytics() {
+interface TruckingAnalyticsProps {
+  dateRange?: { from: Date; to: Date };
+}
+
+export default function TruckingAnalytics({ dateRange }: TruckingAnalyticsProps) {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAnalytics();
-  }, []);
+  }, [dateRange]);
 
   const fetchAnalytics = async () => {
     try {
@@ -62,6 +66,23 @@ export default function TruckingAnalytics() {
       const todayStart = startOfDay(today).toISOString();
       const todayEnd = endOfDay(today).toISOString();
       const weekAgo = subDays(today, 7).toISOString();
+      
+      // Use date range if provided, otherwise all time
+      const rangeStart = dateRange?.from ? startOfDay(dateRange.from).toISOString() : undefined;
+      const rangeEnd = dateRange?.to ? endOfDay(dateRange.to).toISOString() : undefined;
+
+      // Build queries with optional date range filtering
+      let loadsQuery = supabase.from("trucking_loads").select("id, status, target_rate");
+      let callsQuery = supabase.from("trucking_call_logs").select("id, call_outcome, routed_to_voicemail, created_at, duration_seconds, summary");
+      let leadsQuery = supabase.from("trucking_carrier_leads").select("id, status, rate_offered, rate_requested");
+      let transcriptsQuery = supabase.from("trucking_call_transcripts").select("duration_seconds, rate_discussed, negotiation_outcome, summary, key_topics");
+      
+      if (rangeStart && rangeEnd) {
+        loadsQuery = loadsQuery.gte("created_at", rangeStart).lte("created_at", rangeEnd);
+        callsQuery = callsQuery.gte("created_at", rangeStart).lte("created_at", rangeEnd);
+        leadsQuery = leadsQuery.gte("created_at", rangeStart).lte("created_at", rangeEnd);
+        transcriptsQuery = transcriptsQuery.gte("created_at", rangeStart).lte("created_at", rangeEnd);
+      }
 
       // Fetch all data in parallel
       const [
@@ -75,15 +96,15 @@ export default function TruckingAnalytics() {
         leadsTodayRes,
         transcriptsRes
       ] = await Promise.all([
-        supabase.from("trucking_loads").select("id, status, target_rate"),
+        loadsQuery,
         supabase.from("trucking_loads").select("id").gte("created_at", todayStart).lte("created_at", todayEnd),
         supabase.from("trucking_loads").select("id").gte("created_at", weekAgo),
-        supabase.from("trucking_call_logs").select("id, call_outcome, routed_to_voicemail, created_at, duration_seconds, summary"),
+        callsQuery,
         supabase.from("trucking_call_logs").select("id").gte("created_at", todayStart).lte("created_at", todayEnd),
         supabase.from("trucking_call_logs").select("id").gte("created_at", weekAgo),
-        supabase.from("trucking_carrier_leads").select("id, status, rate_offered, rate_requested"),
+        leadsQuery,
         supabase.from("trucking_carrier_leads").select("id").gte("created_at", todayStart).lte("created_at", todayEnd),
-        supabase.from("trucking_call_transcripts").select("duration_seconds, rate_discussed, negotiation_outcome, summary, key_topics")
+        transcriptsQuery
       ]);
 
       const loads = loadsRes.data || [];
