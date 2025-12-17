@@ -2,27 +2,42 @@
 
 export const CEI_BASE_SCORE = 100;
 
+// Duration-based penalties (applied server-side)
+export const CEI_DURATION_PENALTIES = {
+  quick_hangup_under_30s: -40,
+  short_call_30_to_90s: -20,
+  early_handoff_request_under_60s: -25,
+} as const;
+
 export const CEI_PENALTIES: Record<string, number> = {
-  dispatch_requested: -30,
-  human_requested: -30,
-  impatience_phrase_detected: -10,
+  dispatch_requested: -25,
+  human_requested: -25,
+  repeat_human_request: -20,
+  impatience_phrase_detected: -15,
   confusion_correction_detected: -10,
-  hard_frustration_detected: -40,
-  load_lookup_failed: -15,
-  repeat_back_verification_done: 0,
+  hard_frustration_detected: -15,
+  load_lookup_failed: -10,
+  lead_create_failed: -20,
+  quick_hangup_under_30s: -40,
+  short_call_30_to_90s: -20,
+  early_handoff_request_under_60s: -25,
 };
 
 export const CEI_BONUSES: Record<string, number> = {
   caller_thanked: 5,
   booking_interest_confirmed: 10,
-  call_resolved_without_handoff: 25,
+  call_resolved_without_handoff: 10,
   alternate_load_provided: 10,
+  ai_verified_phone: 5,
+  ai_repeated_info_correctly: 5,
+  lead_created: 10,
+  load_confirmed: 20,
 };
 
 export const CEI_BANDS = [
   { min: 90, max: 100, band: '90-100', label: 'Excellent', color: 'hsl(var(--success))' },
-  { min: 75, max: 89, band: '75-89', label: 'Good', color: 'hsl(142.1 76.2% 46.3%)' },
-  { min: 50, max: 74, band: '50-74', label: 'Fair', color: 'hsl(var(--warning))' },
+  { min: 75, max: 89, band: '75-89', label: 'Strong', color: 'hsl(142.1 76.2% 46.3%)' },
+  { min: 50, max: 74, band: '50-74', label: 'Mixed', color: 'hsl(var(--warning))' },
   { min: 25, max: 49, band: '25-49', label: 'Poor', color: 'hsl(var(--destructive))' },
   { min: 0, max: 24, band: '0-24', label: 'Critical', color: 'hsl(0 84.2% 40.2%)' },
 ] as const;
