@@ -6,22 +6,54 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// CEI Scoring Rules
+// CEI Scoring Rules - Base Score and Event-Based Adjustments
 const CEI_BASE_SCORE = 100;
+
+// Event-based penalties (from transcript analysis)
 const CEI_PENALTIES: Record<string, number> = {
-  dispatch_requested: -30,
-  human_requested: -30,
-  impatience_phrase_detected: -10,
+  dispatch_requested: -25,
+  human_requested: -25,
+  repeat_human_request: -20,
+  impatience_phrase_detected: -15,
   confusion_correction_detected: -10,
-  hard_frustration_detected: -40,
-  load_lookup_failed: -15,
+  hard_frustration_detected: -15,
+  load_lookup_failed: -10,
+  lead_create_failed: -20,
 };
+
+// Event-based bonuses
 const CEI_BONUSES: Record<string, number> = {
   caller_thanked: 5,
   booking_interest_confirmed: 10,
-  call_resolved_without_handoff: 25,
+  call_resolved_without_handoff: 10,
   alternate_load_provided: 10,
+  ai_verified_phone: 5,
+  ai_repeated_info_correctly: 5,
+  lead_created: 10,
+  load_confirmed: 20,
 };
+
+// Duration-based CEI adjustments (calculated server-side)
+function getDurationPenalty(durationSeconds: number | null): { penalty: number; reason: string | null } {
+  if (durationSeconds === null || durationSeconds === undefined) {
+    return { penalty: 0, reason: null };
+  }
+  if (durationSeconds < 30) {
+    return { penalty: -40, reason: 'quick_hangup_under_30s' };
+  }
+  if (durationSeconds < 90) {
+    return { penalty: -20, reason: 'short_call_30_to_90s' };
+  }
+  return { penalty: 0, reason: null }; // Calls > 90s get no penalty
+}
+
+// Early handoff penalty (handoff requested before 60 seconds)
+function getEarlyHandoffPenalty(timeToHandoffSeconds: number | null): { penalty: number; reason: string | null } {
+  if (timeToHandoffSeconds !== null && timeToHandoffSeconds < 60) {
+    return { penalty: -25, reason: 'early_handoff_request_under_60s' };
+  }
+  return { penalty: 0, reason: null };
+}
 
 // Phrase detection lists
 const PHRASE_LISTS = {
@@ -59,10 +91,16 @@ function getCEIBand(score: number): string {
   return '0-24';
 }
 
-function analyzeTranscript(transcript: string | null): {
+function analyzeTranscript(
+  transcript: string | null,
+  callDurationSeconds: number | null,
+  leadCreated: boolean,
+  loadConfirmed: boolean
+): {
   events: Array<{ event_type: string; severity: string; source: string; phrase?: string; cei_delta: number }>;
   handoff_requested: boolean;
   handoff_reason: string | null;
+  time_to_handoff_seconds: number | null;
   cei_score: number;
   cei_reasons: string[];
 } {
@@ -71,9 +109,25 @@ function analyzeTranscript(transcript: string | null): {
   let cei_score = CEI_BASE_SCORE;
   let handoff_requested = false;
   let handoff_reason: string | null = null;
+  let time_to_handoff_seconds: number | null = null;
+
+  // Apply duration-based penalties FIRST (server-side calculation)
+  const durationPenalty = getDurationPenalty(callDurationSeconds);
+  if (durationPenalty.penalty !== 0) {
+    cei_score += durationPenalty.penalty;
+    cei_reasons.push(durationPenalty.reason!);
+    events.push({
+      event_type: durationPenalty.reason!,
+      severity: durationPenalty.penalty <= -40 ? 'error' : 'warn',
+      source: 'system',
+      cei_delta: durationPenalty.penalty,
+    });
+  }
 
   if (!transcript) {
-    return { events, handoff_requested, handoff_reason, cei_score, cei_reasons };
+    // Clamp and return early if no transcript
+    cei_score = Math.max(0, Math.min(100, cei_score));
+    return { events, handoff_requested, handoff_reason, time_to_handoff_seconds, cei_score, cei_reasons };
   }
 
   const lowerTranscript = transcript.toLowerCase();
@@ -186,12 +240,49 @@ function analyzeTranscript(transcript: string | null): {
     });
     cei_score += CEI_BONUSES.call_resolved_without_handoff;
     cei_reasons.push('call_resolved_without_handoff');
+  } else if (time_to_handoff_seconds !== null) {
+    // Apply early handoff penalty if handoff was requested before 60 seconds
+    const earlyHandoff = getEarlyHandoffPenalty(time_to_handoff_seconds);
+    if (earlyHandoff.penalty !== 0) {
+      cei_score += earlyHandoff.penalty;
+      cei_reasons.push(earlyHandoff.reason!);
+      events.push({
+        event_type: earlyHandoff.reason!,
+        severity: 'error',
+        source: 'system',
+        cei_delta: earlyHandoff.penalty,
+      });
+    }
+  }
+
+  // Bonus for lead created
+  if (leadCreated) {
+    events.push({
+      event_type: 'lead_created',
+      severity: 'info',
+      source: 'system',
+      cei_delta: CEI_BONUSES.lead_created,
+    });
+    cei_score += CEI_BONUSES.lead_created;
+    cei_reasons.push('lead_created');
+  }
+
+  // Bonus for load confirmed
+  if (loadConfirmed) {
+    events.push({
+      event_type: 'load_confirmed',
+      severity: 'info',
+      source: 'system',
+      cei_delta: CEI_BONUSES.load_confirmed,
+    });
+    cei_score += CEI_BONUSES.load_confirmed;
+    cei_reasons.push('load_confirmed');
   }
 
   // Clamp score to 0-100
   cei_score = Math.max(0, Math.min(100, cei_score));
 
-  return { events, handoff_requested, handoff_reason, cei_score, cei_reasons };
+  return { events, handoff_requested, handoff_reason, time_to_handoff_seconds, cei_score, cei_reasons };
 }
 
 serve(async (req) => {
@@ -315,18 +406,10 @@ serve(async (req) => {
     
     console.log('Transcript available:', !!callTranscript, callTranscript ? `(${String(callTranscript).length} chars)` : '');
 
-    // Analyze transcript for CEI scoring
-    const transcriptAnalysis = analyzeTranscript(callTranscript);
-    console.log('CEI Analysis:', JSON.stringify({
-      cei_score: transcriptAnalysis.cei_score,
-      cei_band: getCEIBand(transcriptAnalysis.cei_score),
-      handoff_requested: transcriptAnalysis.handoff_requested,
-      events_count: transcriptAnalysis.events.length,
-    }, null, 2));
-
     // Map call outcome to CEI outcome
     let ceiOutcome: string = 'incomplete';
-    if (callOutcome === 'confirmed' || callOutcome === 'booked') {
+    const loadConfirmed = callOutcome === 'confirmed' || callOutcome === 'booked';
+    if (loadConfirmed) {
       ceiOutcome = 'confirmed';
     } else if (callOutcome === 'declined' || callOutcome === 'rejected') {
       ceiOutcome = 'declined';
@@ -338,7 +421,25 @@ serve(async (req) => {
       ceiOutcome = lead_id ? 'confirmed' : 'incomplete';
     }
 
-    // Create CEI call record
+    // Analyze transcript for CEI scoring with duration-based adjustments
+    const transcriptAnalysis = analyzeTranscript(
+      callTranscript, 
+      callDuration || null, 
+      !!lead_id, 
+      loadConfirmed
+    );
+    console.log('CEI Analysis:', JSON.stringify({
+      cei_score: transcriptAnalysis.cei_score,
+      cei_band: getCEIBand(transcriptAnalysis.cei_score),
+      handoff_requested: transcriptAnalysis.handoff_requested,
+      time_to_handoff_seconds: transcriptAnalysis.time_to_handoff_seconds,
+      events_count: transcriptAnalysis.events.length,
+    }, null, 2));
+
+    // Extract audio URL from ElevenLabs payload if available
+    const audioUrl = body.recording_url || callData.recording_url || analysis.recording_url || null;
+
+    // Create CEI call record with duration and audio
     const ceiCallData = {
       call_provider: 'elevenlabs',
       call_external_id: conversation_id || call_id || null,
@@ -358,6 +459,10 @@ serve(async (req) => {
       cei_band: getCEIBand(transcriptAnalysis.cei_score),
       cei_reasons: transcriptAnalysis.cei_reasons,
       owner_id,
+      // New fields for engagement metrics
+      call_duration_seconds: callDuration || 0,
+      audio_url: audioUrl,
+      time_to_handoff_seconds: transcriptAnalysis.time_to_handoff_seconds,
     };
 
     console.log('Creating CEI call:', JSON.stringify(ceiCallData, null, 2));

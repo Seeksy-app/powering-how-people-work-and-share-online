@@ -185,14 +185,25 @@ export function CEICallsTable({ calls, isLoading, onSelectCall }: CEICallsTableP
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {call.cei_reasons?.slice(0, 3).map((reason, i) => (
-                            <Badge key={i} variant="outline" className="text-[10px] px-1.5 py-0">
-                              {reason.replace(/_/g, ' ')}
+                          {/* Insight Badges */}
+                          {!call.handoff_requested && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 border-green-500/30 text-green-600">
+                              AI-Resolved
                             </Badge>
-                          ))}
-                          {(call.cei_reasons?.length || 0) > 3 && (
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                              +{call.cei_reasons!.length - 3}
+                          )}
+                          {call.handoff_requested && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-amber-500/10 border-amber-500/30 text-amber-600">
+                              Handoff
+                            </Badge>
+                          )}
+                          {call.cei_reasons?.includes('hard_frustration_detected') && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-red-500/10 border-red-500/30 text-red-600">
+                              Frustrated
+                            </Badge>
+                          )}
+                          {(call.call_duration_seconds || 0) > 120 && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 border-blue-500/30 text-blue-600">
+                              High Value
                             </Badge>
                           )}
                         </div>

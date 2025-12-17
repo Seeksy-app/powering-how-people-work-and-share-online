@@ -61,8 +61,8 @@ export function CEIKPICards({
       format: 'score',
       icon: Gauge,
       tooltip: '0–100 score. Higher = smoother call experience.',
-      color: ceiBandInfo.label === 'Excellent' || ceiBandInfo.label === 'Good' ? 'text-green-500' : 
-             ceiBandInfo.label === 'Fair' ? 'text-amber-500' : 'text-red-500',
+      color: ceiBandInfo.label === 'Excellent' || ceiBandInfo.label === 'Strong' ? 'text-green-500' : 
+             ceiBandInfo.label === 'Mixed' ? 'text-amber-500' : 'text-red-500',
     },
   ];
 
