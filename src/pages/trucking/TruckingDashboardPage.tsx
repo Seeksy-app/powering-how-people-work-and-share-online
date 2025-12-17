@@ -18,7 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { useTheme } from "next-themes";
-import LoadFormDialog from "@/components/trucking/LoadFormDialog";
+import AddLoadModal from "@/components/trucking/AddLoadModal";
 import { LoadCSVUploadForm } from "@/components/trucking/LoadCSVUploadForm";
 
 interface Load {
@@ -107,7 +107,7 @@ export default function TruckingDashboardPage() {
   const [activeTab, setActiveTab] = useState("open");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [editingLoadId, setEditingLoadId] = useState<string | null>(null);
+  const [editingLoad, setEditingLoad] = useState<Load | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [aiCallsEnabled, setAiCallsEnabled] = useState(true);
   const [expandedLoadId, setExpandedLoadId] = useState<string | null>(null);
@@ -272,7 +272,7 @@ export default function TruckingDashboardPage() {
   };
 
   const handleEdit = (load: Load) => {
-    setEditingLoadId(load.id);
+    setEditingLoad(load);
     setDialogOpen(true);
   };
 
@@ -1087,18 +1087,63 @@ export default function TruckingDashboardPage() {
       )}
 
       {/* Add/Edit Load Dialog */}
-      <LoadFormDialog 
+      <AddLoadModal 
         open={dialogOpen} 
         onOpenChange={(open) => {
           setDialogOpen(open);
-          if (!open) setEditingLoadId(null);
+          if (!open) setEditingLoad(null);
         }} 
-        onSuccess={() => {
+        onSubmit={async (formData) => {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+          
+          const loadData = {
+            owner_id: user.id,
+            load_number: formData.load_number,
+            origin_city: formData.origin_city,
+            origin_state: formData.origin_state,
+            origin_zip: formData.origin_zip || null,
+            destination_city: formData.destination_city,
+            destination_state: formData.destination_state,
+            destination_zip: formData.destination_zip || null,
+            pickup_date: formData.pickup_date || null,
+            pickup_window_start: formData.pickup_window_start || null,
+            pickup_window_end: formData.pickup_window_end || null,
+            equipment_type: formData.equipment_type,
+            length_ft: formData.length_ft || null,
+            commodity: formData.commodity || null,
+            weight_lbs: formData.weight_lbs || null,
+            miles: formData.miles || null,
+            rate_type: formData.rate_type || 'flat',
+            target_rate: formData.target_rate || null,
+            floor_rate: formData.floor_rate || null,
+            desired_rate_per_ton: formData.desired_rate_per_ton || null,
+            floor_rate_per_ton: formData.floor_rate_per_ton || null,
+            tons: formData.tons || null,
+            special_instructions: formData.special_instructions || null,
+            hazmat: formData.hazmat || false,
+            temp_required: formData.temp_required || false,
+            temp_min_f: formData.temp_min_f || null,
+            temp_max_f: formData.temp_max_f || null,
+            status: editingLoad?.status || "open",
+            is_active: true,
+          };
+          
+          if (editingLoad) {
+            const { error } = await supabase.from("trucking_loads").update(loadData).eq("id", editingLoad.id);
+            if (error) throw error;
+            toast({ title: "Load updated successfully" });
+          } else {
+            const { error } = await supabase.from("trucking_loads").insert(loadData);
+            if (error) throw error;
+            toast({ title: "Load created successfully" });
+          }
+          
           fetchData();
           setDialogOpen(false);
-          setEditingLoadId(null);
+          setEditingLoad(null);
         }}
-        editingLoadId={editingLoadId || undefined}
+        editingLoad={editingLoad}
       />
 
       {/* Import CSV Dialog */}
