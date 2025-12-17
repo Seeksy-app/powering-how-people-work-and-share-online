@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, Loader2, FileSpreadsheet, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 
 interface LoadCSVUploadFormProps {
   onUploadSuccess?: () => void;
@@ -16,7 +17,7 @@ interface LoadCSVUploadFormProps {
 
 // Our database fields that can be mapped
 const DB_FIELDS = [
-  { key: "load_number", label: "Load Number", required: true },
+  { key: "load_number", label: "Load Number", required: false },
   { key: "origin_city", label: "Origin City", required: true },
   { key: "origin_state", label: "Origin State", required: true },
   { key: "origin_zip", label: "Origin Zip" },
@@ -33,6 +34,7 @@ const DB_FIELDS = [
   { key: "floor_rate", label: "Floor Rate ($)" },
   { key: "pieces", label: "Pieces" },
   { key: "length_ft", label: "Length (ft)" },
+  { key: "equipment_notes", label: "Equipment Notes (Tarp)" },
   { key: "special_instructions", label: "Special Instructions" },
   { key: "internal_notes", label: "Internal Notes" },
   { key: "shipper_name", label: "Shipper Name" },
@@ -47,13 +49,13 @@ const DB_FIELDS = [
 // Common Aljex/TMS column name mappings
 const AUTO_MAP_HINTS: Record<string, string[]> = {
   load_number: ["load", "load #", "load_number", "loadnumber", "pro", "pro #", "pronumber", "shipment", "shipment #"],
-  origin_city: ["origin", "origin city", "origincity", "pickup city", "pickup_city", "ship from city", "from city"],
+  origin_city: ["origin", "origin city", "origincity", "pickup city", "pickup_city", "ship from city", "from city", "pick up at"],
   origin_state: ["origin state", "originstate", "pickup state", "pickup_state", "ship from state", "from state", "o_state"],
   origin_zip: ["origin zip", "originzip", "pickup zip", "pickup_zip", "ship from zip", "from zip", "o_zip"],
   destination_city: ["destination", "dest", "dest city", "destination city", "destinationcity", "delivery city", "delivery_city", "ship to city", "to city"],
   destination_state: ["dest state", "destination state", "destinationstate", "delivery state", "delivery_state", "ship to state", "to state", "d_state"],
   destination_zip: ["dest zip", "destination zip", "destinationzip", "delivery zip", "delivery_zip", "ship to zip", "to zip", "d_zip"],
-  pickup_date: ["pickup date", "pickup_date", "pickupdate", "ship date", "ship_date", "pu date", "pick up"],
+  pickup_date: ["pickup date", "pickup_date", "pickupdate", "ship date", "ship_date", "pu date", "pick up", "ready"],
   delivery_date: ["delivery date", "delivery_date", "deliverydate", "del date", "deliver date", "due date"],
   equipment_type: ["equipment", "equipment type", "equip", "trailer type", "truck type", "mode"],
   commodity: ["commodity", "product", "description", "freight", "cargo"],
@@ -63,13 +65,17 @@ const AUTO_MAP_HINTS: Record<string, string[]> = {
   floor_rate: ["floor rate", "floor_rate", "min rate", "minimum"],
   pieces: ["pieces", "qty", "quantity", "count", "pcs"],
   length_ft: ["length", "length_ft", "feet", "ft"],
-  special_instructions: ["instructions", "special instructions", "notes", "comments"],
+  equipment_notes: ["tarp", "tarp required", "notes"],
+  special_instructions: ["instructions", "special instructions"],
   shipper_name: ["shipper", "shipper name", "customer", "customer name", "consignor"],
   shipper_phone: ["shipper phone", "customer phone", "phone"],
   reference: ["reference", "ref", "ref #", "reference #", "po", "po #"],
   hazmat: ["hazmat", "hazardous", "haz"],
   temp_required: ["temp", "temperature", "temp required", "reefer"],
 };
+
+// Adelphia Metals specific format detection
+const ADELPHIA_HEADERS = ["PICK UP AT", "RATE", "DESTINATION", "READY", "WEIGHT", "LENGTH", "TARP"];
 
 export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
   const [uploading, setUploading] = useState(false);
@@ -79,6 +85,7 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({});
   const [step, setStep] = useState<"upload" | "map" | "preview" | "done">("upload");
   const [importResults, setImportResults] = useState<{ success: number; failed: number }>({ success: 0, failed: 0 });
+  const [isAdelphiaFormat, setIsAdelphiaFormat] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -87,13 +94,229 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
       if (fileType === 'csv') {
         setFile(selectedFile);
         parseCSV(selectedFile);
-      } else if (fileType === 'xlsx') {
-        toast.error("XLSX support coming soon. Please export as CSV from Aljex.");
+      } else if (fileType === 'xlsx' || fileType === 'xls') {
+        setFile(selectedFile);
+        parseXLSX(selectedFile);
       } else {
-        toast.error("Please upload a CSV file");
+        toast.error("Please upload a CSV or Excel file");
         e.target.value = '';
       }
     }
+  };
+
+  const parseXLSX = async (file: File) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      
+      // Convert to JSON with header detection
+      const rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
+      
+      if (rawData.length === 0) {
+        toast.error("No data found in spreadsheet");
+        return;
+      }
+
+      // Detect Adelphia Metals format by looking for specific headers
+      const isAdelphi = detectAdelphiaFormat(rawData);
+      setIsAdelphiaFormat(isAdelphi);
+
+      if (isAdelphi) {
+        parseAdelphiaFormat(rawData);
+      } else {
+        // Standard format - first row is headers
+        const headers = rawData[0].map(h => String(h || '').trim());
+        const data = rawData.slice(1)
+          .filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''))
+          .map(row => {
+            const obj: Record<string, string> = {};
+            headers.forEach((h, i) => {
+              obj[h] = row[i] !== undefined ? String(row[i]) : '';
+            });
+            return obj;
+          });
+
+        setCsvHeaders(headers);
+        setCsvData(data);
+        autoMapColumns(headers);
+        setStep("map");
+        toast.success(`Found ${data.length} rows and ${headers.length} columns`);
+      }
+    } catch (error) {
+      console.error("XLSX parse error:", error);
+      toast.error("Failed to parse Excel file");
+    }
+  };
+
+  const detectAdelphiaFormat = (rawData: any[][]): boolean => {
+    // Look for the Adelphia header row (contains "PICK UP AT", "RATE", "DESTINATION", etc.)
+    for (let i = 0; i < Math.min(15, rawData.length); i++) {
+      const row = rawData[i];
+      if (!row) continue;
+      const rowStr = row.map(c => String(c || '').toUpperCase()).join('|');
+      const matchCount = ADELPHIA_HEADERS.filter(h => rowStr.includes(h)).length;
+      if (matchCount >= 4) return true;
+    }
+    return false;
+  };
+
+  const parseAdelphiaFormat = (rawData: any[][]) => {
+    // Find the header row
+    let headerRowIndex = -1;
+    for (let i = 0; i < Math.min(15, rawData.length); i++) {
+      const row = rawData[i];
+      if (!row) continue;
+      const rowStr = row.map(c => String(c || '').toUpperCase()).join('|');
+      if (ADELPHIA_HEADERS.filter(h => rowStr.includes(h)).length >= 4) {
+        headerRowIndex = i;
+        break;
+      }
+    }
+
+    if (headerRowIndex === -1) {
+      toast.error("Could not find header row");
+      return;
+    }
+
+    // Find column indices for each field we care about
+    const headerRow = rawData[headerRowIndex].map(c => String(c || '').toUpperCase().trim());
+    
+    const pickupAtIdx = headerRow.findIndex(h => h.includes('PICK UP AT') || h === 'PICK UP AT');
+    const rateIdx = headerRow.findIndex(h => h === 'RATE');
+    const destIdx = headerRow.findIndex(h => h === 'DESTINATION');
+    const readyIdx = headerRow.findIndex(h => h === 'READY');
+    const weightIdx = headerRow.findIndex(h => h === 'WEIGHT');
+    const lengthIdx = headerRow.findIndex(h => h === 'LENGTH');
+    const tarpIdx = headerRow.findIndex(h => h === 'TARP');
+
+    // Parse data rows
+    const parsedData: Record<string, string>[] = [];
+    
+    for (let i = headerRowIndex + 1; i < rawData.length; i++) {
+      const row = rawData[i];
+      if (!row || row.every(c => !c)) continue; // Skip empty rows
+      
+      // Get pickup location (format: "CITY,STATE" or "CITY, STATE")
+      const pickupRaw = pickupAtIdx >= 0 ? String(row[pickupAtIdx] || '').trim() : '';
+      const rateRaw = rateIdx >= 0 ? String(row[rateIdx] || '').trim() : '';
+      const destRaw = destIdx >= 0 ? String(row[destIdx] || '').trim() : '';
+      const readyRaw = readyIdx >= 0 ? String(row[readyIdx] || '').trim() : '';
+      const weightRaw = weightIdx >= 0 ? String(row[weightIdx] || '').trim() : '';
+      const lengthRaw = lengthIdx >= 0 ? String(row[lengthIdx] || '').trim() : '';
+      const tarpRaw = tarpIdx >= 0 ? String(row[tarpIdx] || '').trim() : '';
+
+      // Skip rows without essential data
+      if (!pickupRaw && !destRaw && !rateRaw) continue;
+      // Skip instruction rows
+      if (pickupRaw.toUpperCase().includes('ALL TRUCKS') || pickupRaw.toUpperCase().includes('DRIVERS MUST') || pickupRaw.toUpperCase().includes('CALL TO SET')) continue;
+
+      // Parse city,state format
+      const [originCity, originState] = parseCityState(pickupRaw);
+      const [destCity, destState] = parseCityState(destRaw);
+      
+      // Parse rate (remove $ and commas)
+      const rate = parseRateValue(rateRaw);
+      
+      // Parse date (format: "12-Dec" or similar)
+      const pickupDate = parseShortDate(readyRaw);
+      
+      // Parse weight
+      const weight = weightRaw.replace(/[,]/g, '');
+      
+      // Parse length (remove ' suffix)
+      const length = lengthRaw.replace(/['"]/g, '');
+      
+      // Parse tarp
+      const tarp = tarpRaw.toUpperCase() === 'YES' ? 'Tarp Required' : (tarpRaw.toUpperCase() === 'NO' ? 'No Tarp' : tarpRaw);
+
+      if (originCity || destCity) {
+        parsedData.push({
+          "Origin City": originCity,
+          "Origin State": originState,
+          "Destination City": destCity,
+          "Destination State": destState,
+          "Rate": rate,
+          "Pickup Date": pickupDate,
+          "Weight": weight,
+          "Length": length,
+          "Tarp": tarp,
+        });
+      }
+    }
+
+    if (parsedData.length === 0) {
+      toast.error("No valid load data found");
+      return;
+    }
+
+    // Set up with pre-parsed headers
+    const headers = ["Origin City", "Origin State", "Destination City", "Destination State", "Rate", "Pickup Date", "Weight", "Length", "Tarp"];
+    setCsvHeaders(headers);
+    setCsvData(parsedData);
+    
+    // Auto-map to our DB fields
+    setColumnMapping({
+      "Origin City": "origin_city",
+      "Origin State": "origin_state",
+      "Destination City": "destination_city",
+      "Destination State": "destination_state",
+      "Rate": "target_rate",
+      "Pickup Date": "pickup_date",
+      "Weight": "weight_lbs",
+      "Length": "length_ft",
+      "Tarp": "equipment_notes",
+    });
+    
+    setStep("map");
+    toast.success(`Detected Adelphia Metals format! Found ${parsedData.length} loads`);
+  };
+
+  const parseCityState = (value: string): [string, string] => {
+    if (!value) return ['', ''];
+    // Handle formats like "SIOUX CITY,IA" or "SIOUX CITY, IA" or "FORT WAYNE,IN/WOODBURN,IN"
+    // Take the first location if there are multiple
+    const firstLocation = value.split('/')[0].trim();
+    const parts = firstLocation.split(',');
+    if (parts.length >= 2) {
+      const city = parts.slice(0, -1).join(',').trim();
+      const state = parts[parts.length - 1].trim();
+      return [city, state];
+    }
+    return [value.trim(), ''];
+  };
+
+  const parseRateValue = (value: string): string => {
+    if (!value) return '';
+    // Remove $, commas, and other non-numeric chars except decimal
+    return value.replace(/[$,]/g, '').trim();
+  };
+
+  const parseShortDate = (value: string): string => {
+    if (!value) return '';
+    // Handle formats like "12-Dec", "15-Dec", etc.
+    const months: Record<string, string> = {
+      'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
+      'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
+    };
+    
+    const match = value.match(/(\d{1,2})-([a-zA-Z]{3})/i);
+    if (match) {
+      const day = match[1].padStart(2, '0');
+      const monthStr = match[2].toLowerCase();
+      const month = months[monthStr];
+      if (month) {
+        // Use current year, or next year if date appears to be in the past
+        const now = new Date();
+        let year = now.getFullYear();
+        const dateToCheck = new Date(`${year}-${month}-${day}`);
+        if (dateToCheck < now) {
+          year += 1;
+        }
+        return `${year}-${month}-${day}`;
+      }
+    }
+    return value;
   };
 
   const parseCSV = (file: File) => {
@@ -109,19 +332,7 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
         const headers = results.meta.fields || [];
         setCsvHeaders(headers);
         setCsvData(results.data as Record<string, string>[]);
-        
-        // Auto-map columns based on hints
-        const autoMapping: Record<string, string> = {};
-        headers.forEach(header => {
-          const lowerHeader = header.toLowerCase().trim();
-          for (const [dbField, hints] of Object.entries(AUTO_MAP_HINTS)) {
-            if (hints.some(hint => lowerHeader.includes(hint) || hint.includes(lowerHeader))) {
-              autoMapping[header] = dbField;
-              break;
-            }
-          }
-        });
-        setColumnMapping(autoMapping);
+        autoMapColumns(headers);
         setStep("map");
         
         toast.success(`Found ${results.data.length} rows and ${headers.length} columns`);
@@ -130,6 +341,20 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
         toast.error(`Parse error: ${error.message}`);
       }
     });
+  };
+
+  const autoMapColumns = (headers: string[]) => {
+    const autoMapping: Record<string, string> = {};
+    headers.forEach(header => {
+      const lowerHeader = header.toLowerCase().trim();
+      for (const [dbField, hints] of Object.entries(AUTO_MAP_HINTS)) {
+        if (hints.some(hint => lowerHeader.includes(hint) || hint.includes(lowerHeader))) {
+          autoMapping[header] = dbField;
+          break;
+        }
+      }
+    });
+    setColumnMapping(autoMapping);
   };
 
   const handleMappingChange = (csvColumn: string, dbField: string) => {
@@ -184,6 +409,10 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
 
   const parseDate = (value: string | undefined): string | null => {
     if (!value) return null;
+    // If already in YYYY-MM-DD format, return as-is
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
     try {
       const date = new Date(value);
       if (isNaN(date.getTime())) return null;
@@ -231,7 +460,7 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
           }
 
           // Skip if missing critical data
-          if (!loadData.load_number && !loadData.origin_city) {
+          if (!loadData.origin_city && !loadData.destination_city) {
             failedCount++;
             continue;
           }
@@ -282,6 +511,7 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
     setColumnMapping({});
     setStep("upload");
     setImportResults({ success: 0, failed: 0 });
+    setIsAdelphiaFormat(false);
     const fileInput = document.getElementById('csv-file-input') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -291,10 +521,10 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileSpreadsheet className="w-5 h-5" />
-          Import Loads from CSV
+          Import Loads from Spreadsheet
         </CardTitle>
         <CardDescription>
-          Upload a CSV export from Aljex or any TMS to bulk import loads
+          Upload a CSV or Excel file (including Adelphia Metals format) to bulk import loads
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -306,11 +536,11 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
                 <span className="text-primary font-medium">Click to upload</span>
                 <span className="text-muted-foreground"> or drag and drop</span>
               </Label>
-              <p className="text-sm text-muted-foreground mt-2">CSV files only (XLSX coming soon)</p>
+              <p className="text-sm text-muted-foreground mt-2">CSV or Excel files (.csv, .xlsx, .xls)</p>
               <Input
                 id="csv-file-input"
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx,.xls"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -326,9 +556,16 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
         {step === "map" && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">
-                Map your CSV columns to load fields ({csvData.length} rows found)
-              </p>
+              <div>
+                <p className="text-sm font-medium">
+                  Map your columns to load fields ({csvData.length} rows found)
+                </p>
+                {isAdelphiaFormat && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ Adelphia Metals format detected - columns auto-parsed
+                  </p>
+                )}
+              </div>
               <Button variant="outline" size="sm" onClick={resetForm}>
                 Start Over
               </Button>
@@ -338,7 +575,7 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>CSV Column</TableHead>
+                    <TableHead>Column</TableHead>
                     <TableHead>Sample Data</TableHead>
                     <TableHead>Map To</TableHead>
                   </TableRow>
@@ -440,10 +677,10 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
           <div className="text-center py-8 space-y-4">
             <CheckCircle2 className="w-16 h-16 mx-auto text-green-500" />
             <div>
-              <p className="text-lg font-medium">Import Complete!</p>
+              <h3 className="text-lg font-semibold">Import Complete</h3>
               <p className="text-muted-foreground">
-                {importResults.success} loads imported successfully
-                {importResults.failed > 0 && `, ${importResults.failed} failed`}
+                Successfully imported {importResults.success} loads
+                {importResults.failed > 0 && ` (${importResults.failed} failed)`}
               </p>
             </div>
             <Button onClick={resetForm}>Import More</Button>
