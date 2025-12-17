@@ -11,11 +11,15 @@ import {
   ChevronUp,
   Copy,
   Check,
-  Download,
+  Square,
+  CheckSquare,
+  User,
+  Calendar,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -25,6 +29,7 @@ interface ActionItem {
   task: string;
   owner?: string;
   timeline?: string;
+  completed?: boolean;
 }
 
 interface AgendaRecap {
@@ -42,6 +47,7 @@ interface AIMeetingNotesProps {
   transcript: string | null;
   aiNotesStatus: string | null;
   generatedAt: string | null;
+  onActionItemToggle?: (index: number, completed: boolean) => void;
 }
 
 export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
@@ -54,9 +60,11 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
   transcript,
   aiNotesStatus,
   generatedAt,
+  onActionItemToggle,
 }) => {
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [localActionItems, setLocalActionItems] = useState<ActionItem[]>(aiActionItems || []);
 
   const hasAnyNotes = aiSummary || (aiDecisions && aiDecisions.length > 0) || 
     (aiActionItems && aiActionItems.length > 0) || transcript;
@@ -64,6 +72,16 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
   if (!hasAnyNotes || aiNotesStatus === 'none') {
     return null;
   }
+
+  const handleActionItemToggle = (index: number) => {
+    const updated = [...localActionItems];
+    updated[index] = { ...updated[index], completed: !updated[index].completed };
+    setLocalActionItems(updated);
+    onActionItemToggle?.(index, updated[index].completed || false);
+  };
+
+  const completedCount = localActionItems.filter(i => i.completed).length;
+  const totalActionItems = localActionItems.length;
 
   const copyAllNotes = () => {
     let content = "# AI Meeting Notes\n\n";
@@ -84,10 +102,11 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
       content += "\n";
     }
     
-    if (aiActionItems && aiActionItems.length > 0) {
+    if (localActionItems.length > 0) {
       content += "## Action Items\n";
-      aiActionItems.forEach((item, i) => {
-        content += `${i + 1}. ${item.task}`;
+      localActionItems.forEach((item, i) => {
+        const checkbox = item.completed ? "[x]" : "[ ]";
+        content += `${checkbox} ${item.task}`;
         if (item.owner) content += ` (Owner: ${item.owner})`;
         if (item.timeline) content += ` - Due: ${item.timeline}`;
         content += "\n";
@@ -114,13 +133,15 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
   };
 
   return (
-    <Card className="border-green-500/30 bg-green-500/5">
-      <CardHeader>
+    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+      <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-green-600" />
+            <div className="p-1.5 rounded-lg bg-primary/10">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
             AI Meeting Notes
-            <Badge variant="outline" className="ml-2 bg-green-100 text-green-700 border-green-300">
+            <Badge variant="outline" className={`ml-2 ${aiNotesStatus === 'draft' ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-green-100 text-green-700 border-green-300'}`}>
               {aiNotesStatus === 'draft' ? 'Draft' : 'Generated'}
             </Badge>
           </CardTitle>
@@ -140,14 +161,16 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
       <CardContent className="space-y-6">
         {/* Executive Summary */}
         {aiSummary && (
-          <div>
-            <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
-              <FileText className="w-4 h-4 text-primary" />
+          <div className="space-y-3">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <div className="p-1 rounded bg-blue-500/10">
+                <FileText className="w-4 h-4 text-blue-600" />
+              </div>
               Executive Summary
             </h4>
-            <div className="bg-background/50 rounded-lg p-3 text-sm text-muted-foreground">
+            <div className="bg-card border rounded-xl p-4 text-sm leading-relaxed">
               {aiSummary.split('\n').map((line, i) => (
-                <p key={i} className={line.startsWith('•') || line.startsWith('-') ? 'ml-2' : ''}>
+                <p key={i} className={`${line.startsWith('•') || line.startsWith('-') ? 'ml-4 text-muted-foreground' : 'text-foreground'} ${i > 0 ? 'mt-2' : ''}`}>
                   {line}
                 </p>
               ))}
@@ -157,102 +180,167 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
 
         {/* Decisions */}
         {aiDecisions && aiDecisions.length > 0 && (
-          <div>
-            <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
-              <CheckCircle2 className="w-4 h-4 text-green-600" />
+          <div className="space-y-3">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <div className="p-1 rounded bg-green-500/10">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+              </div>
               Decisions Made
+              <Badge variant="secondary" className="ml-auto">{aiDecisions.length}</Badge>
             </h4>
-            <ul className="space-y-2">
+            <div className="grid gap-3">
               {aiDecisions.map((decision: any, i) => {
                 const text = typeof decision === 'string' ? decision : (decision.statement || decision.decision || '');
                 return (
-                  <li key={i} className="bg-background/50 rounded-lg p-3 text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="text-green-600 font-medium">{i + 1}.</span>
-                      <div className="flex-1">
-                        <p className="text-foreground">{text}</p>
+                  <div key={i} className="bg-card border rounded-xl p-4 hover:border-green-500/30 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="flex items-center justify-center w-6 h-6 rounded-full bg-green-500/10 text-green-600 text-xs font-bold flex-shrink-0 mt-0.5">
+                        {i + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{text}</p>
                         {(decision.owner || decision.status || decision.notes) && (
-                          <div className="flex gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                            {decision.owner && <span>Owner: <strong>{decision.owner}</strong></span>}
-                            {decision.status && <span>Status: <strong>{decision.status}</strong></span>}
-                            {decision.notes && <span className="text-muted-foreground/70 italic">{decision.notes}</span>}
+                          <div className="flex items-center gap-4 mt-2 text-xs flex-wrap">
+                            {decision.owner && (
+                              <span className="flex items-center gap-1 text-muted-foreground">
+                                <User className="w-3 h-3" />
+                                {decision.owner}
+                              </span>
+                            )}
+                            {decision.status && (
+                              <Badge variant="outline" className="text-xs">
+                                {decision.status}
+                              </Badge>
+                            )}
+                            {decision.notes && (
+                              <span className="text-muted-foreground/70 italic">{decision.notes}</span>
+                            )}
                           </div>
                         )}
                       </div>
                     </div>
-                  </li>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           </div>
         )}
 
-        {/* Action Items */}
-        {aiActionItems && aiActionItems.length > 0 && (
-          <div>
-            <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
-              <ListTodo className="w-4 h-4 text-blue-600" />
-              Action Items
-            </h4>
-            <ul className="space-y-2">
-              {aiActionItems.map((item, i) => (
-                <li key={i} className="bg-background/50 rounded-lg p-3 text-sm">
-                  <div className="flex items-start gap-2">
-                    <span className="text-blue-600 font-medium">{i + 1}.</span>
-                    <div className="flex-1">
-                      <p className="text-foreground">{item.task}</p>
-                      <div className="flex gap-3 mt-1 text-xs text-muted-foreground">
-                        {item.owner && <span>Owner: <strong>{item.owner}</strong></span>}
-                        {item.timeline && <span>Due: <strong>{item.timeline}</strong></span>}
+        {/* Action Items with Checkboxes */}
+        {localActionItems.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-sm flex items-center gap-2">
+                <div className="p-1 rounded bg-blue-500/10">
+                  <ListTodo className="w-4 h-4 text-blue-600" />
+                </div>
+                Action Items
+              </h4>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {completedCount} of {totalActionItems} completed
+                </span>
+                <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                    style={{ width: `${totalActionItems > 0 ? (completedCount / totalActionItems) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {localActionItems.map((item, i) => (
+                <div 
+                  key={i} 
+                  className={`bg-card border rounded-xl p-4 transition-all duration-200 ${item.completed ? 'opacity-60 bg-muted/30' : 'hover:border-blue-500/30'}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={item.completed || false}
+                      onCheckedChange={() => handleActionItemToggle(i)}
+                      className="mt-0.5 h-5 w-5 rounded border-2"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground font-medium'}`}>
+                        {item.task}
+                      </p>
+                      <div className="flex items-center gap-4 mt-2 text-xs flex-wrap">
+                        {item.owner && (
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <User className="w-3 h-3" />
+                            {item.owner}
+                          </span>
+                        )}
+                        {item.timeline && (
+                          <span className="flex items-center gap-1 text-muted-foreground">
+                            <Calendar className="w-3 h-3" />
+                            {item.timeline}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         {/* Agenda Recap */}
         {aiAgendaRecap && aiAgendaRecap.length > 0 && (
-          <div>
-            <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
-              <ClipboardList className="w-4 h-4 text-purple-600" />
+          <div className="space-y-3">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <div className="p-1 rounded bg-purple-500/10">
+                <ClipboardList className="w-4 h-4 text-purple-600" />
+              </div>
               Agenda Item Recap
+              <Badge variant="secondary" className="ml-auto">{aiAgendaRecap.length}</Badge>
             </h4>
-            <ul className="space-y-2">
+            <div className="grid gap-3">
               {aiAgendaRecap.map((recap, i) => (
-                <li key={i} className="bg-background/50 rounded-lg p-3 text-sm">
-                  <p className="font-medium text-foreground">{recap.item}</p>
-                  <p className="text-muted-foreground mt-1">{recap.summary}</p>
-                </li>
+                <div key={i} className="bg-card border rounded-xl p-4">
+                  <p className="font-medium text-sm text-foreground">{recap.item}</p>
+                  <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{recap.summary}</p>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         {/* Risks & Blockers */}
         {aiRisks && (
-          <div>
-            <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
+          <div className="space-y-3">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <div className="p-1 rounded bg-amber-500/10">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+              </div>
               Risks & Blockers
             </h4>
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-sm text-muted-foreground">
-              {aiRisks}
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 text-sm leading-relaxed text-foreground">
+              {aiRisks.split('\n').map((line, i) => (
+                <p key={i} className={`${line.startsWith('•') || line.startsWith('-') ? 'ml-4 text-amber-700 dark:text-amber-400' : ''} ${i > 0 ? 'mt-2' : ''}`}>
+                  {line}
+                </p>
+              ))}
             </div>
           </div>
         )}
 
         {/* Next Meeting Prep */}
         {aiNextMeetingPrep && (
-          <div>
-            <h4 className="font-semibold text-sm flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-primary" />
+          <div className="space-y-3">
+            <h4 className="font-semibold text-sm flex items-center gap-2">
+              <div className="p-1 rounded bg-primary/10">
+                <Sparkles className="w-4 h-4 text-primary" />
+              </div>
               Next Meeting Prep
             </h4>
-            <div className="bg-background/50 rounded-lg p-3 text-sm text-muted-foreground">
-              {aiNextMeetingPrep}
+            <div className="bg-card border rounded-xl p-4 text-sm leading-relaxed text-muted-foreground">
+              {aiNextMeetingPrep.split('\n').map((line, i) => (
+                <p key={i} className={i > 0 ? 'mt-2' : ''}>
+                  {line}
+                </p>
+              ))}
             </div>
           </div>
         )}
@@ -263,7 +351,7 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
         {transcript && (
           <Collapsible open={transcriptOpen} onOpenChange={setTranscriptOpen}>
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between">
+              <Button variant="ghost" className="w-full justify-between hover:bg-muted/50">
                 <span className="flex items-center gap-2">
                   <FileText className="w-4 h-4" />
                   Full Transcript
@@ -273,7 +361,7 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <ScrollArea className="h-[300px] mt-2">
-                <div className="bg-background/50 rounded-lg p-4 text-sm text-muted-foreground whitespace-pre-wrap font-mono">
+                <div className="bg-muted/30 border rounded-xl p-4 text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed">
                   {transcript}
                 </div>
               </ScrollArea>
