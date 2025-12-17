@@ -6,10 +6,12 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Phone, CheckCircle, XCircle, TrendingUp, Network } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { TruckingPageWrapper, TruckingContentCard, TruckingEmptyState, TruckingStatCardLight } from "@/components/trucking/TruckingPageWrapper";
+import { getOutcomeLabel, getOutcomeTooltip } from "@/constants/truckingOutcomes";
 
 interface CallLog {
   id: string;
@@ -229,9 +231,18 @@ export default function AITruckingConsolePage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getOutcomeBadge(call.outcome)}>
-                        {call.outcome?.replace("_", " ") || 'Pending'}
-                      </Badge>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge className={`cursor-help ${getOutcomeBadge(call.outcome)}`}>
+                              {getOutcomeLabel(call.outcome)}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p>{getOutcomeTooltip(call.outcome)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                     <TableCell className="text-slate-600">
                       {formatDuration(call.duration_seconds, call.call_started_at, call.call_ended_at)}
@@ -269,9 +280,18 @@ export default function AITruckingConsolePage() {
               <div>
                 <label className="text-sm text-slate-500">Outcome</label>
                 <div className="mt-1">
-                  <Badge className={getOutcomeBadge(selectedCall.outcome)}>
-                    {selectedCall.outcome?.replace("_", " ") || 'Pending'}
-                  </Badge>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge className={`cursor-help ${getOutcomeBadge(selectedCall.outcome)}`}>
+                          {getOutcomeLabel(selectedCall.outcome)}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>{getOutcomeTooltip(selectedCall.outcome)}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
               
