@@ -626,7 +626,7 @@ export const NAVIGATION_CONFIG: {
           "id": "admin_tech_stack",
           "label": "Tech Stack",
           "icon": "layers",
-          "path": "/tech-stack",
+          "path": "/admin/tech-stack",
           "roles": ["admin", "super_admin"]
         },
         {
