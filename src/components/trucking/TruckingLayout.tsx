@@ -23,6 +23,7 @@ import {
   ChevronRight,
   ClipboardList,
   BarChart3,
+  TrendingUp,
   Sun,
   Moon,
   Shield,
@@ -63,6 +64,7 @@ const allNavItems = [
   { label: "Loads", href: "/trucking/loads", icon: PackageSearch, ownerOnly: false },
   { label: "Call Logs", href: "/trucking/call-logs", icon: ClipboardList, ownerOnly: false },
   { label: "AI Call Analytics", href: "/trucking/ai-analytics", icon: BarChart3, ownerOnly: true },
+  { label: "Analytics", href: "/trucking/analytics", icon: TrendingUp, ownerOnly: true },
   { label: "Contacts", href: "/trucking/contacts", icon: BookUser, ownerOnly: false },
 ];
 
