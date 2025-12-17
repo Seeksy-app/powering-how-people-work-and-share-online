@@ -623,6 +623,13 @@ export const NAVIGATION_CONFIG: {
           "roles": ["admin", "super_admin"]
         },
         {
+          "id": "admin_tech_stack",
+          "label": "Tech Stack",
+          "icon": "layers",
+          "path": "/tech-stack",
+          "roles": ["admin", "super_admin"]
+        },
+        {
           "id": "admin_system_status",
           "label": "System Status",
           "icon": "activity",
