@@ -635,6 +635,25 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Get the max sequential load number to continue the sequence
+      const { data: maxLoadData } = await supabase
+        .from("trucking_loads")
+        .select("load_number")
+        .like("load_number", "[0-9]%")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      
+      // Find the highest numeric load number
+      let nextLoadNumber = 1001;
+      if (maxLoadData) {
+        const numericLoads = maxLoadData
+          .map(l => parseInt(l.load_number, 10))
+          .filter(n => !isNaN(n));
+        if (numericLoads.length > 0) {
+          nextLoadNumber = Math.max(...numericLoads) + 1;
+        }
+      }
+
       for (const row of csvData) {
         try {
           // Map CSV row to database fields
@@ -669,9 +688,10 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
             continue;
           }
 
-          // Generate load number if missing
+          // Generate sequential load number if missing
           if (!loadData.load_number) {
-            loadData.load_number = `IMPORT-${Date.now()}-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+            loadData.load_number = String(nextLoadNumber);
+            nextLoadNumber++;
           }
 
           const { error } = await supabase
