@@ -30,9 +30,13 @@ serve(async (req) => {
     // Extract ALL possible fields - everything is OPTIONAL except we try to get call_outcome
     const params = body.parameters || body;
     
-    // ElevenLabs sends analysis data nested - extract it
+    // ElevenLabs sends data in nested structures
     const analysis = body.analysis || params.analysis || {};
+    const callData = body.call || params.call || {};
+    const callMetadata = body.metadata || params.metadata || {};
+    
     console.log('Analysis object:', JSON.stringify(analysis, null, 2));
+    console.log('Call object:', JSON.stringify(callData, null, 2));
     
     const {
       // OWNER ID - can be passed directly from ElevenLabs agent config
@@ -76,22 +80,31 @@ serve(async (req) => {
       final_rate
     } = params;
     
-    // Extract duration from ElevenLabs analysis object (where they actually send it)
-    const elevenLabsDuration = analysis.call_duration || analysis.duration || 
-                               body.call_duration || body.duration;
+    // Extract duration from ElevenLabs nested structures
+    // ElevenLabs sends: call.call_duration_secs, call.duration, analysis.call_duration, etc.
+    const elevenLabsDuration = 
+      callData.call_duration_secs || callData.call_duration || callData.duration ||
+      analysis.call_duration || analysis.duration || 
+      body.call_duration_secs || body.call_duration || body.duration;
 
     // Normalize call outcome - use call_outcome first, then outcome, then status
     const callOutcome = call_outcome || outcome || status || 'completed';
 
-    // Extract phone from various possible fields
+    // Extract phone from various possible fields (including nested call object)
     const callerPhone = callback_phone || contact_number || phone || 
-                        caller_number || phone_number || from_number || caller_id || null;
+                        caller_number || phone_number || from_number || caller_id ||
+                        callData.from_number || callData.caller_id || callData.phone_number || null;
     
     // Calculate duration from various possible sources (including ElevenLabs analysis)
     let callDuration = elevenLabsDuration || duration_seconds || duration || call_duration;
-    if (!callDuration && started_at && ended_at) {
-      const start = new Date(started_at);
-      const end = new Date(ended_at);
+    
+    // Check nested structures for start/end times
+    const callStarted = started_at || callData.started_at || callData.start_time;
+    const callEnded = ended_at || callData.ended_at || callData.end_time;
+    
+    if (!callDuration && callStarted && callEnded) {
+      const start = new Date(callStarted);
+      const end = new Date(callEnded);
       callDuration = Math.round((end.getTime() - start.getTime()) / 1000);
     }
     // ElevenLabs may send duration in seconds as a float, round it
@@ -165,8 +178,21 @@ serve(async (req) => {
     }
 
     // Extract transcript from various possible locations
-    const callTranscript = transcript || analysis.transcript || body.transcript || null;
-    console.log('Transcript available:', !!callTranscript, callTranscript ? `(${callTranscript.length} chars)` : '');
+    // ElevenLabs may send transcript as array of messages or as a string
+    let callTranscript = transcript || analysis.transcript || body.transcript || null;
+    
+    // If transcript is an array, convert to string
+    if (Array.isArray(callTranscript)) {
+      callTranscript = callTranscript
+        .map((msg: { role?: string; message?: string; text?: string; content?: string }) => {
+          const role = msg.role || 'unknown';
+          const text = msg.message || msg.text || msg.content || '';
+          return `${role}: ${text}`;
+        })
+        .join('\n');
+    }
+    
+    console.log('Transcript available:', !!callTranscript, callTranscript ? `(${String(callTranscript).length} chars)` : '');
 
     // Build call log entry - THIS ALWAYS GETS CREATED
     // Using actual schema columns: id, owner_id, carrier_phone, load_id, call_direction, 
@@ -177,8 +203,8 @@ serve(async (req) => {
       owner_id,
       load_id: actualLoadId,
       carrier_phone: callerPhone,
-      call_started_at: started_at || new Date().toISOString(),
-      call_ended_at: ended_at || new Date().toISOString(),
+      call_started_at: callStarted || new Date().toISOString(),
+      call_ended_at: callEnded || new Date().toISOString(),
       duration_seconds: callDuration || 0,
       outcome: callOutcome,
       call_outcome: callOutcome,
