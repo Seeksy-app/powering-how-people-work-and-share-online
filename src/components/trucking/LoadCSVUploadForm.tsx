@@ -378,8 +378,17 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
 
       // Skip rows without essential data
       if (!pickupRaw && !destRaw && !rateRaw) continue;
-      // Skip instruction rows
-      if (pickupRaw.toUpperCase().includes('ALL TRUCKS') || pickupRaw.toUpperCase().includes('DRIVERS MUST') || pickupRaw.toUpperCase().includes('CALL TO SET')) continue;
+      // Skip instruction/note rows
+      const pickupUpper = pickupRaw.toUpperCase();
+      if (pickupUpper.includes('ALL TRUCKS') || 
+          pickupUpper.includes('DRIVERS MUST') || 
+          pickupUpper.includes('CALL TO SET') ||
+          pickupUpper.includes('NOTE') ||
+          pickupUpper.includes('SECOND NOTE') ||
+          pickupUpper.includes('ESCORT') ||
+          pickupUpper.includes('WILL NOT LOAD') ||
+          pickupUpper.includes('LOADING ON') ||
+          pickupUpper.includes('APPOINTMENT')) continue;
 
       // Parse city,state format
       const [originCity, originState] = parseCityState(pickupRaw);
