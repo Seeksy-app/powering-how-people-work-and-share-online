@@ -5,11 +5,13 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Phone, PhoneOff, Voicemail, Clock, Search, AlertCircle, CheckCircle2, FileText, Headphones } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TruckingPageWrapper, TruckingContentCard } from "@/components/trucking/TruckingPageWrapper";
 import { formatDistanceToNow, format } from "date-fns";
+import { getOutcomeLabel, getOutcomeTooltip } from "@/constants/truckingOutcomes";
 
 interface CallLog {
   id: string;
@@ -45,11 +47,22 @@ interface CallLog {
 const outcomeColors: Record<string, string> = {
   interested: "bg-green-500/10 text-green-600",
   booked: "bg-blue-500/10 text-blue-600",
+  confirmed: "bg-blue-500/10 text-blue-600",
   countered: "bg-yellow-500/10 text-yellow-600",
   declined: "bg-red-500/10 text-red-600",
   no_answer: "bg-gray-500/10 text-gray-600",
   voicemail: "bg-purple-500/10 text-purple-600",
   failed: "bg-red-500/10 text-red-600",
+  error: "bg-red-500/10 text-red-600",
+  completed: "bg-green-500/10 text-green-600",
+  callback_requested: "bg-orange-500/10 text-orange-600",
+  unconfirmed: "bg-yellow-500/10 text-yellow-600",
+  lead_created: "bg-green-500/10 text-green-600",
+  caller_hung_up: "bg-yellow-500/10 text-yellow-600",
+  no_load_found: "bg-orange-500/10 text-orange-600",
+  call_completed: "bg-blue-500/10 text-blue-600",
+  unknown: "bg-gray-500/10 text-gray-600",
+  pending: "bg-gray-500/10 text-gray-600",
 };
 
 export default function CallLogsPage() {
@@ -238,9 +251,18 @@ export default function CallLogsPage() {
                       </TableCell>
                       <TableCell>{formatDuration(log.duration_seconds)}</TableCell>
                       <TableCell>
-                        <Badge className={outcomeColors[outcome] || "bg-gray-500/10 text-gray-600"}>
-                          {outcome}
-                        </Badge>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Badge className={`cursor-help ${outcomeColors[outcome] || "bg-gray-500/10 text-gray-600"}`}>
+                                {getOutcomeLabel(outcome)}
+                              </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p>{getOutcomeTooltip(outcome)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                         {log.is_demo && (
                           <Badge variant="outline" className="ml-1 text-xs">DEMO</Badge>
                         )}
