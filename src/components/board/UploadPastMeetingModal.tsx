@@ -60,8 +60,9 @@ export function UploadPastMeetingModal({
       toast.error("Please enter a meeting title");
       return;
     }
-    if (!transcript.trim()) {
-      toast.error("Please provide a transcript");
+    // Require either transcript OR audio file
+    if (!transcript.trim() && !audioFile) {
+      toast.error("Please provide a transcript or audio file");
       return;
     }
 
@@ -147,7 +148,7 @@ export function UploadPastMeetingModal({
             Upload Past Meeting
           </DialogTitle>
           <DialogDescription>
-            Upload a transcript and audio from a past meeting to generate AI notes.
+            Upload a transcript or audio file from a past meeting to generate AI notes.
           </DialogDescription>
         </DialogHeader>
 
@@ -256,7 +257,7 @@ export function UploadPastMeetingModal({
           <Button
             variant="secondary"
             onClick={() => handleSubmit(false)}
-            disabled={isSubmitting || !title.trim() || !transcript.trim()}
+            disabled={isSubmitting || !title.trim() || (!transcript.trim() && !audioFile)}
           >
             {isSubmitting && !isGeneratingNotes ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -265,7 +266,7 @@ export function UploadPastMeetingModal({
           </Button>
           <Button
             onClick={() => handleSubmit(true)}
-            disabled={isSubmitting || !title.trim() || !transcript.trim()}
+            disabled={isSubmitting || !title.trim() || (!transcript.trim() && !audioFile)}
           >
             {isGeneratingNotes ? (
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
