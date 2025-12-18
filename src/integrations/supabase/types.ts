@@ -26498,6 +26498,8 @@ export type Database = {
           carrier_phone: string | null
           created_at: string | null
           duration_seconds: number | null
+          elevenlabs_agent_id: string | null
+          elevenlabs_conversation_id: string | null
           estimated_cost_usd: number | null
           failure_reason: string | null
           id: string
@@ -26509,6 +26511,7 @@ export type Database = {
           owner_id: string | null
           recording_url: string | null
           routed_to_voicemail: boolean | null
+          source: string | null
           summary: string | null
           total_characters: number | null
           transcript: string | null
@@ -26523,6 +26526,8 @@ export type Database = {
           carrier_phone?: string | null
           created_at?: string | null
           duration_seconds?: number | null
+          elevenlabs_agent_id?: string | null
+          elevenlabs_conversation_id?: string | null
           estimated_cost_usd?: number | null
           failure_reason?: string | null
           id?: string
@@ -26534,6 +26539,7 @@ export type Database = {
           owner_id?: string | null
           recording_url?: string | null
           routed_to_voicemail?: boolean | null
+          source?: string | null
           summary?: string | null
           total_characters?: number | null
           transcript?: string | null
@@ -26548,6 +26554,8 @@ export type Database = {
           carrier_phone?: string | null
           created_at?: string | null
           duration_seconds?: number | null
+          elevenlabs_agent_id?: string | null
+          elevenlabs_conversation_id?: string | null
           estimated_cost_usd?: number | null
           failure_reason?: string | null
           id?: string
@@ -26559,6 +26567,7 @@ export type Database = {
           owner_id?: string | null
           recording_url?: string | null
           routed_to_voicemail?: boolean | null
+          source?: string | null
           summary?: string | null
           total_characters?: number | null
           transcript?: string | null
