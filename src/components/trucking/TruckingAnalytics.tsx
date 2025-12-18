@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { 
@@ -57,11 +57,7 @@ export default function TruckingAnalytics({ dateRange }: TruckingAnalyticsProps)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, [dateRange]);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       // Use Mountain Time (America/Denver) for accurate "today" calculation
       const TIMEZONE = 'America/Denver';
@@ -220,7 +216,34 @@ export default function TruckingAnalytics({ dateRange }: TruckingAnalyticsProps)
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange]);
+
+  // Initial fetch and realtime subscription
+  useEffect(() => {
+    fetchAnalytics();
+    
+    // Subscribe to realtime updates on trucking_call_logs
+    const channel = supabase
+      .channel('analytics-call-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'trucking_call_logs'
+        },
+        () => {
+          console.log('Call log changed, refreshing analytics...');
+          fetchAnalytics();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchAnalytics]);
+
 
   if (loading) {
     return (
