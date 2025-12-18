@@ -16,25 +16,32 @@ serve(async (req) => {
 
   try {
     const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
+    const JESS_AGENT_ID = Deno.env.get('ELEVENLABS_JESS_AGENT_ID');
+    
     if (!ELEVENLABS_API_KEY) {
       throw new Error('ELEVENLABS_API_KEY not configured');
     }
 
     console.log('=== ELEVENLABS USAGE FETCH ===');
+    if (JESS_AGENT_ID) {
+      console.log(`Filtering by Jess Agent ID: ${JESS_AGENT_ID}`);
+    }
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    // Fetch conversations from ElevenLabs API directly
-    const conversationsResponse = await fetch(
-      'https://api.elevenlabs.io/v1/convai/conversations?page_size=100',
-      {
-        headers: {
-          'xi-api-key': ELEVENLABS_API_KEY,
-        },
-      }
-    );
+    // Fetch conversations from ElevenLabs API - filter by agent if available
+    let url = 'https://api.elevenlabs.io/v1/convai/conversations?page_size=100';
+    if (JESS_AGENT_ID) {
+      url += `&agent_id=${encodeURIComponent(JESS_AGENT_ID)}`;
+    }
+    
+    const conversationsResponse = await fetch(url, {
+      headers: {
+        'xi-api-key': ELEVENLABS_API_KEY,
+      },
+    });
 
     if (!conversationsResponse.ok) {
       const errorText = await conversationsResponse.text();

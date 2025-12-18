@@ -26500,6 +26500,8 @@ export type Database = {
           call_status: string | null
           carrier_phone: string | null
           created_at: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           duration_seconds: number | null
           elevenlabs_agent_id: string | null
           elevenlabs_conversation_id: string | null
@@ -26534,6 +26536,8 @@ export type Database = {
           call_status?: string | null
           carrier_phone?: string | null
           created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           duration_seconds?: number | null
           elevenlabs_agent_id?: string | null
           elevenlabs_conversation_id?: string | null
@@ -26568,6 +26572,8 @@ export type Database = {
           call_status?: string | null
           carrier_phone?: string | null
           created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           duration_seconds?: number | null
           elevenlabs_agent_id?: string | null
           elevenlabs_conversation_id?: string | null
