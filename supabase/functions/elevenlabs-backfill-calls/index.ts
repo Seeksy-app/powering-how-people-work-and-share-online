@@ -71,9 +71,9 @@ serve(async (req) => {
       throw new Error('ELEVENLABS_JESS_AGENT_ID not configured - cannot backfill without agent filter');
     }
 
-    // Validate agent ID format
-    if (!JESS_AGENT_ID.startsWith('agtbrch_') && !JESS_AGENT_ID.startsWith('agent_')) {
-      console.warn(`Agent ID format may be incorrect: ${JESS_AGENT_ID.substring(0, 20)}...`);
+    // Validate agent ID format - must be agent_*, NOT agtbrch_*
+    if (!JESS_AGENT_ID.startsWith('agent_')) {
+      throw new Error(`Invalid agent ID format: ${JESS_AGENT_ID.substring(0, 15)}... - must start with 'agent_', not 'agtbrch_'`);
     }
 
     console.log(`Using Jess Agent ID: ${JESS_AGENT_ID}`);
