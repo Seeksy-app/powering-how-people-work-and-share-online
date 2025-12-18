@@ -472,7 +472,7 @@ export default function AddLoadModal({ open, onOpenChange, onSubmit, editingLoad
             {/* Rate Fields based on type */}
             {formData.rate_type === "flat" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormField label="Target Rate ($)" required helper="What we want to pay">
+                <FormField label="Target Pay ($)" required helper="What we want to pay">
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-500 font-semibold">$</span>
                     <Input
@@ -480,12 +480,12 @@ export default function AddLoadModal({ open, onOpenChange, onSubmit, editingLoad
                       step="1"
                       value={formData.target_rate}
                       onChange={(e) => setFormData({ ...formData, target_rate: e.target.value })}
-                      placeholder="2500"
+                      placeholder="560"
                       className="pl-8 border-2 border-border hover:border-rose-500/50 focus:border-rose-500 transition-colors bg-background font-medium"
                     />
                   </div>
                 </FormField>
-                <FormField label="Ceiling Rate ($)" required helper="Max we can pay">
+                <FormField label="Customer Invoice ($)" required helper="What customer pays">
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-500 font-semibold">$</span>
                     <Input
@@ -493,7 +493,7 @@ export default function AddLoadModal({ open, onOpenChange, onSubmit, editingLoad
                       step="1"
                       value={formData.floor_rate}
                       onChange={(e) => setFormData({ ...formData, floor_rate: e.target.value })}
-                      placeholder="2700"
+                      placeholder="700"
                       className="pl-8 border-2 border-border hover:border-rose-500/50 focus:border-rose-500 transition-colors bg-background font-medium"
                     />
                   </div>
@@ -502,7 +502,7 @@ export default function AddLoadModal({ open, onOpenChange, onSubmit, editingLoad
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField label="Desired Rate ($/ton)" required helper="What we want to pay">
+                  <FormField label="Target Pay ($/ton)" required helper="What we want to pay">
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-500 font-semibold">$</span>
                       <Input
@@ -515,7 +515,7 @@ export default function AddLoadModal({ open, onOpenChange, onSubmit, editingLoad
                       />
                     </div>
                   </FormField>
-                  <FormField label="Ceiling Rate ($/ton)" required helper="Max we can pay">
+                  <FormField label="Customer Invoice ($/ton)" required helper="What customer pays">
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-rose-500 font-semibold">$</span>
                       <Input

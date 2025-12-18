@@ -443,34 +443,34 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="target_rate">Target Rate ($) *</Label>
+                    <Label htmlFor="target_rate">Target Pay ($) *</Label>
                     <Input
                       id="target_rate"
                       type="number"
                       step="0.01"
                       value={formData.target_rate}
                       onChange={(e) => setFormData({ ...formData, target_rate: e.target.value })}
-                      placeholder="e.g., 2500"
+                      placeholder="e.g., 560"
                     />
                     <p className="text-xs text-muted-foreground mt-1">What we want to pay</p>
                   </div>
                   <div>
-                    <Label htmlFor="ceiling_rate">Ceiling Rate ($) *</Label>
+                    <Label htmlFor="ceiling_rate">Customer Invoice ($) *</Label>
                     <Input
                       id="ceiling_rate"
                       type="number"
                       step="0.01"
                       value={formData.ceiling_rate}
                       onChange={(e) => setFormData({ ...formData, ceiling_rate: e.target.value })}
-                      placeholder="e.g., 2700"
+                      placeholder="e.g., 700"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">Max we can pay</p>
+                    <p className="text-xs text-muted-foreground mt-1">What customer pays</p>
                   </div>
                 </div>
                 {formData.target_rate && formData.ceiling_rate && (
                   <div className="p-3 bg-muted/50 rounded-lg text-sm">
                     <p className="text-xs text-muted-foreground">
-                      💡 Target/Desired = what we want to pay. Ceiling = max we can pay.
+                      💡 Target Pay = what we want to pay. Customer Invoice = what customer pays.
                     </p>
                   </div>
                 )}
@@ -479,7 +479,7 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="desired_rate_per_ton">Desired Rate (Pay rate) ($/ton)</Label>
+                    <Label htmlFor="desired_rate_per_ton">Target Pay ($/ton)</Label>
                     <Input
                       id="desired_rate_per_ton"
                       type="number"
@@ -490,14 +490,14 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
                     />
                   </div>
                   <div>
-                    <Label htmlFor="ceiling_rate_per_ton">Ceiling Rate ($/ton)</Label>
+                    <Label htmlFor="ceiling_rate_per_ton">Customer Invoice ($/ton)</Label>
                     <Input
                       id="ceiling_rate_per_ton"
                       type="number"
                       step="0.01"
                       value={formData.ceiling_rate_per_ton}
                       onChange={(e) => setFormData({ ...formData, ceiling_rate_per_ton: e.target.value })}
-                      placeholder="e.g., 65"
+                      placeholder="e.g., 85"
                     />
                   </div>
                 </div>
