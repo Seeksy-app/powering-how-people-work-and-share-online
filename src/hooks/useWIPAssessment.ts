@@ -172,22 +172,31 @@ export function useWIPAssessment(audiencePath: 'civilian' | 'military' | 'reentr
         rankedNeedIds,
       };
 
-      // Save to database
-      await saveRoundResponseMutation.mutateAsync(response);
+      console.log('[WIP] Submitting round:', currentRoundIndex, 'of', rounds.length);
 
-      // Update local state
-      setResponses((prev) => {
-        const existing = prev.findIndex((r) => r.roundIndex === currentRoundIndex);
-        if (existing >= 0) {
-          const updated = [...prev];
-          updated[existing] = response;
-          return updated;
-        }
-        return [...prev, response];
-      });
+      try {
+        // Save to database
+        await saveRoundResponseMutation.mutateAsync(response);
 
-      // Move to next round (or past last round to trigger isComplete)
-      setCurrentRoundIndex((prev) => prev + 1);
+        // Update local state
+        setResponses((prev) => {
+          const existing = prev.findIndex((r) => r.roundIndex === currentRoundIndex);
+          if (existing >= 0) {
+            const updated = [...prev];
+            updated[existing] = response;
+            return updated;
+          }
+          return [...prev, response];
+        });
+
+        // Move to next round (or past last round to trigger isComplete)
+        const nextRound = currentRoundIndex + 1;
+        console.log('[WIP] Moving to round:', nextRound, 'isComplete will be:', nextRound > rounds.length);
+        setCurrentRoundIndex(nextRound);
+      } catch (error) {
+        console.error('[WIP] Error submitting round:', error);
+        toast.error('Failed to save response. Please try again.');
+      }
     },
     [currentRoundIndex, rounds.length, saveRoundResponseMutation]
   );
