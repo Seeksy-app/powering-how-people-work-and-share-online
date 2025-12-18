@@ -680,6 +680,7 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
       // Soft-delete existing loads from this template (mark as inactive on Load Board)
       // They will still appear on Loads page but not on Load Board
       if (importSource !== "standard") {
+        // Deactivate loads with matching import_source
         const { error: deactivateError } = await supabase
           .from("trucking_loads")
           .update({ is_active: false })
@@ -689,6 +690,18 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
         
         if (deactivateError) {
           console.warn("Warning: Could not deactivate old loads:", deactivateError);
+        }
+
+        // Also deactivate legacy loads with NULL import_source (pre-tracking loads)
+        const { error: deactivateLegacyError } = await supabase
+          .from("trucking_loads")
+          .update({ is_active: false })
+          .eq("owner_id", user.id)
+          .is("import_source", null)
+          .eq("is_active", true);
+        
+        if (deactivateLegacyError) {
+          console.warn("Warning: Could not deactivate legacy loads:", deactivateLegacyError);
         }
       }
 
