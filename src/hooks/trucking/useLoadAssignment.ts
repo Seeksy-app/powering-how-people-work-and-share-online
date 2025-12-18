@@ -21,10 +21,11 @@ export function useLoadAssignment() {
 
       if (fetchError) throw fetchError;
       
-      if (load.status !== "pending") {
+      // Allow taking pending or open loads
+      if (load.status !== "pending" && load.status !== "open") {
         toast({ 
           title: "Cannot take this load", 
-          description: "Only pending loads can be taken.", 
+          description: "Only pending or open loads can be taken.", 
           variant: "destructive" 
         });
         return false;

@@ -12,7 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Package, Plus, MoreHorizontal, Settings, Edit, Trash2, Copy, CheckCircle2, 
-  ChevronDown, ChevronUp, Phone, Users, Search, Sun, Moon, Voicemail, Play, Pause, Archive, RefreshCw, Upload
+  ChevronDown, ChevronUp, Phone, Users, Search, Sun, Moon, Voicemail, Play, Pause, Archive, RefreshCw, Upload, UserPlus
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { useTheme } from "next-themes";
 import AddLoadModal from "@/components/trucking/AddLoadModal";
 import { LoadCSVUploadForm } from "@/components/trucking/LoadCSVUploadForm";
+import { useLoadAssignment } from "@/hooks/trucking/useLoadAssignment";
 
 interface Load {
   id: string;
@@ -117,6 +118,7 @@ export default function TruckingDashboardPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { theme: appTheme, setTheme } = useTheme();
+  const { takeLoad, releaseLoad, loading: assignmentLoading } = useLoadAssignment();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -952,10 +954,19 @@ export default function TruckingDashboardPage() {
                               Duplicate
                             </DropdownMenuItem>
                             {load.status === "open" && (
-                              <DropdownMenuItem onClick={() => handleConfirm(load.id)}>
-                                <CheckCircle2 className="h-4 w-4 mr-2" />
-                                Confirm
-                              </DropdownMenuItem>
+                              <>
+                                <DropdownMenuItem 
+                                  onClick={() => takeLoad(load.id, fetchData)}
+                                  disabled={assignmentLoading === load.id}
+                                >
+                                  <UserPlus className="h-4 w-4 mr-2" />
+                                  {assignmentLoading === load.id ? "Assigning..." : "Assign to Me"}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleConfirm(load.id)}>
+                                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                                  Confirm
+                                </DropdownMenuItem>
+                              </>
                             )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 

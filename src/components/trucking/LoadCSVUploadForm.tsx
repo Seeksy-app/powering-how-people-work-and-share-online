@@ -290,25 +290,21 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
 
     console.log("Parsed", parsedData.length, "loads. Sample:", parsedData[0]);
 
-    const headers = ["Load #", "Status", "Origin City", "Origin State", "Origin Zip", "Destination City", "Destination State", "Destination Zip", "Pickup Date", "Equipment", "Commodity", "Weight", "Footage", "Miles", "Customer Invoice", "Target Pay", "Max Pay", "Hazmat", "Tarps", "Tarp Size"];
-    setCsvHeaders(headers);
+    // Only use essential columns for cleaner preview
+    const essentialHeaders = ["Load #", "Origin City", "Origin State", "Destination City", "Destination State", "Pickup Date", "Equipment", "Customer Invoice", "Target Pay", "Max Pay"];
+    setCsvHeaders(essentialHeaders);
     setCsvData(parsedData);
     
-    // Auto-map to DB fields
+    // Auto-map to DB fields - only the essential fields
     setColumnMapping({
       "Load #": "load_number",
       "Origin City": "origin_city",
       "Origin State": "origin_state",
-      "Origin Zip": "origin_zip",
       "Destination City": "destination_city",
       "Destination State": "destination_state",
-      "Destination Zip": "destination_zip",
       "Pickup Date": "pickup_date",
       "Equipment": "equipment_type",
-      "Commodity": "commodity",
-      "Weight": "weight_lbs",
-      "Footage": "length_ft",
-      "Miles": "miles",
+      "Customer Invoice": "floor_rate",
       "Target Pay": "target_rate",
       "Max Pay": "floor_rate",
     });
