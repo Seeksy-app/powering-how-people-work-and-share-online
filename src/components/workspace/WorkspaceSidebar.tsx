@@ -670,6 +670,30 @@ export function WorkspaceSidebar() {
 
           <Separator className="my-2 bg-sidebar-border" />
 
+          {/* Workspaces Section */}
+          <div className="px-3 py-2">
+            {!isCollapsed && (
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-sidebar-foreground/70">
+                  Workspaces
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={() => setShowCreateWorkspace(true)}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            )}
+            <WorkspaceSelector />
+          </div>
+
+          <Separator className="my-2 bg-sidebar-border" />
+
           <ScrollArea className="flex-1">
             {/* Modules Section Header */}
             <div className="px-3 py-2">
