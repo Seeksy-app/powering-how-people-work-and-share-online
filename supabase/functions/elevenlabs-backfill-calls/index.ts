@@ -241,26 +241,52 @@ serve(async (req) => {
         const callData = detail.call || {};
         const metadata = detail.metadata || {};
         
+        // Also check phone_call object in metadata (where ElevenLabs stores Twilio data)
+        const phoneCall = (metadata.phone_call || {}) as Record<string, unknown>;
+        
         const audioUrl = callData.recording_url || null;
         const callCostCredits = callData.call_cost_credits || null;
         const endedReason = callData.ended_reason || null;
         const connectionDuration = callData.connection_duration_secs || null;
         
-        // Phone numbers - check both call object and metadata
-        const callerPhone = callData.from_number || metadata.caller_phone_number as string || null;
-        const receiverPhone = callData.to_number || metadata.called_phone_number as string || null;
+        // Phone numbers - check ALL possible locations (ElevenLabs is inconsistent)
+        // phone_call.external_number = caller for inbound, called for outbound
+        // phone_call.agent_number = our number
+        const phoneCallExternal = phoneCall.external_number as string || null;
+        const phoneCallAgent = phoneCall.agent_number as string || null;
+        const phoneCallDirection = phoneCall.direction as string || 'inbound';
         
-        // Call direction - check call object and metadata
-        const callDirection = callData.call_direction || metadata.call_direction as string || 'inbound';
+        // For inbound: external_number is caller, agent_number is receiver
+        // For outbound: agent_number is caller, external_number is receiver
+        let callerPhone: string | null = null;
+        let receiverPhone: string | null = null;
         
-        // Twilio SIDs - check metadata for these
-        const twilioCallSid = metadata.call_sid as string || metadata.twilio_call_sid as string || null;
-        const twilioStreamSid = metadata.stream_sid as string || metadata.twilio_stream_sid as string || null;
+        if (phoneCallDirection === 'inbound') {
+          callerPhone = phoneCallExternal || callData.from_number || metadata.caller_phone_number as string || null;
+          receiverPhone = phoneCallAgent || callData.to_number || metadata.called_phone_number as string || null;
+        } else {
+          callerPhone = phoneCallAgent || callData.from_number || metadata.caller_phone_number as string || null;
+          receiverPhone = phoneCallExternal || callData.to_number || metadata.called_phone_number as string || null;
+        }
+        
+        // Fallback if still null - try any available number
+        if (!callerPhone && phoneCallExternal) callerPhone = phoneCallExternal;
+        
+        console.log(`Call ${conv.conversation_id}: direction=${phoneCallDirection}, caller=${callerPhone}, receiver=${receiverPhone}`);
+        
+        // Call direction - check phone_call object first (most reliable)
+        const callDirection = phoneCallDirection || callData.call_direction || metadata.call_direction as string || 'inbound';
+        
+        // Twilio SIDs - check phone_call object AND metadata
+        const twilioCallSid = phoneCall.call_sid as string || metadata.call_sid as string || metadata.twilio_call_sid as string || null;
+        const twilioStreamSid = phoneCall.stream_sid as string || metadata.stream_sid as string || metadata.twilio_stream_sid as string || null;
         
         // CRITICAL: Use actual ElevenLabs timestamps, NOT now()
-        const startTime = detail.start_time_unix_secs 
-          ? new Date(detail.start_time_unix_secs * 1000).toISOString()
-          : null; // Don't default to now() - leave null if no timestamp
+        // Check metadata.start_time_unix_secs as backup
+        const startTimeUnix = detail.start_time_unix_secs || metadata.start_time_unix_secs as number || null;
+        const startTime = startTimeUnix 
+          ? new Date(startTimeUnix * 1000).toISOString()
+          : null;
         const endTime = detail.end_time_unix_secs
           ? new Date(detail.end_time_unix_secs * 1000).toISOString()
           : null;
@@ -279,6 +305,11 @@ serve(async (req) => {
           else if (dataResults.declined) outcome = 'declined';
           else if (dataResults.confirmed) outcome = 'confirmed';
         }
+        
+        // call_successful should be boolean, not string
+        // Ensure call_successful is strictly boolean
+        const rawCallSuccessful = detail.analysis?.call_successful;
+        const callSuccessful = rawCallSuccessful === true;
 
         // Summary from analysis
         const summary = detail.analysis?.summary || null;
@@ -326,7 +357,7 @@ serve(async (req) => {
           branch_id: detail.branch_id || null,
           // Analysis data
           analysis_summary: detail.analysis?.summary || null,
-          call_successful: detail.analysis?.call_successful || null,
+          call_successful: callSuccessful,
           data_collection_results: detail.analysis?.data_collection_results || null,
           // Client initiation data
           initiation_client_data: detail.conversation_initiation_client_data || null,
