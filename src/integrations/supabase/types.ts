@@ -14,6 +14,266 @@ export type Database = {
   }
   public: {
     Tables: {
+      aar_media: {
+        Row: {
+          aar_id: string
+          alt_text: string | null
+          caption: string | null
+          created_at: string
+          display_order: number | null
+          file_name: string | null
+          file_size: number | null
+          id: string
+          is_cover_image: boolean | null
+          is_featured: boolean | null
+          media_type: string
+          mime_type: string | null
+          platform_intent: string[] | null
+          section: string | null
+          seo_keywords: string[] | null
+          storage_path: string
+          timestamp_highlights: Json | null
+          tooltip: string | null
+          transcript: string | null
+        }
+        Insert: {
+          aar_id: string
+          alt_text?: string | null
+          caption?: string | null
+          created_at?: string
+          display_order?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          is_cover_image?: boolean | null
+          is_featured?: boolean | null
+          media_type?: string
+          mime_type?: string | null
+          platform_intent?: string[] | null
+          section?: string | null
+          seo_keywords?: string[] | null
+          storage_path: string
+          timestamp_highlights?: Json | null
+          tooltip?: string | null
+          transcript?: string | null
+        }
+        Update: {
+          aar_id?: string
+          alt_text?: string | null
+          caption?: string | null
+          created_at?: string
+          display_order?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          is_cover_image?: boolean | null
+          is_featured?: boolean | null
+          media_type?: string
+          mime_type?: string | null
+          platform_intent?: string[] | null
+          section?: string | null
+          seo_keywords?: string[] | null
+          storage_path?: string
+          timestamp_highlights?: Json | null
+          tooltip?: string | null
+          transcript?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aar_media_aar_id_fkey"
+            columns: ["aar_id"]
+            isOneToOne: false
+            referencedRelation: "aars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aars: {
+        Row: {
+          attendance_count: number | null
+          attendance_estimate: number | null
+          brand_esg_gtm_alignment: string | null
+          cltv_benchmark: number | null
+          community_description: string | null
+          cpl: number | null
+          created_at: string
+          cvr: number | null
+          engagement_interactions: number | null
+          engagement_scans: number | null
+          event_date_end: string | null
+          event_date_start: string | null
+          event_name: string
+          event_purpose: string | null
+          event_type: string
+          executive_summary: string | null
+          final_assessment: string | null
+          financial_spend: Json | null
+          funnel_submissions: number | null
+          funnel_views: number | null
+          future_partnership_ideas: string[] | null
+          generated_at: string | null
+          generated_blog: string | null
+          generated_facebook_post: string | null
+          generated_instagram_caption: string | null
+          generated_linkedin_article: string | null
+          generated_linkedin_post: string | null
+          hosted_by: string | null
+          id: string
+          is_client_facing: boolean | null
+          key_stakeholders: Json | null
+          leads_generated: number | null
+          location_city_state: string | null
+          location_venue: string | null
+          not_designed_for_lead_gen: boolean | null
+          owner_id: string | null
+          partner_organizations: string[] | null
+          prepared_by: string | null
+          program_initiative: string | null
+          pull_quotes: Json | null
+          recommendations_expand: string[] | null
+          recommendations_improve: string[] | null
+          recommendations_repeat: string[] | null
+          reporting_window: string | null
+          roi_summary: string | null
+          share_password_hash: string | null
+          share_slug: string | null
+          status: string | null
+          strategic_objectives: string[] | null
+          time_window: string | null
+          total_spend: number | null
+          updated_at: string
+          visibility: string | null
+          weather_environmental_notes: string | null
+          wins_business_support: string | null
+          wins_civic_visibility: string | null
+          wins_community_impact: string | null
+          wins_esg_execution: string | null
+          wins_relationship_building: string | null
+        }
+        Insert: {
+          attendance_count?: number | null
+          attendance_estimate?: number | null
+          brand_esg_gtm_alignment?: string | null
+          cltv_benchmark?: number | null
+          community_description?: string | null
+          cpl?: number | null
+          created_at?: string
+          cvr?: number | null
+          engagement_interactions?: number | null
+          engagement_scans?: number | null
+          event_date_end?: string | null
+          event_date_start?: string | null
+          event_name: string
+          event_purpose?: string | null
+          event_type?: string
+          executive_summary?: string | null
+          final_assessment?: string | null
+          financial_spend?: Json | null
+          funnel_submissions?: number | null
+          funnel_views?: number | null
+          future_partnership_ideas?: string[] | null
+          generated_at?: string | null
+          generated_blog?: string | null
+          generated_facebook_post?: string | null
+          generated_instagram_caption?: string | null
+          generated_linkedin_article?: string | null
+          generated_linkedin_post?: string | null
+          hosted_by?: string | null
+          id?: string
+          is_client_facing?: boolean | null
+          key_stakeholders?: Json | null
+          leads_generated?: number | null
+          location_city_state?: string | null
+          location_venue?: string | null
+          not_designed_for_lead_gen?: boolean | null
+          owner_id?: string | null
+          partner_organizations?: string[] | null
+          prepared_by?: string | null
+          program_initiative?: string | null
+          pull_quotes?: Json | null
+          recommendations_expand?: string[] | null
+          recommendations_improve?: string[] | null
+          recommendations_repeat?: string[] | null
+          reporting_window?: string | null
+          roi_summary?: string | null
+          share_password_hash?: string | null
+          share_slug?: string | null
+          status?: string | null
+          strategic_objectives?: string[] | null
+          time_window?: string | null
+          total_spend?: number | null
+          updated_at?: string
+          visibility?: string | null
+          weather_environmental_notes?: string | null
+          wins_business_support?: string | null
+          wins_civic_visibility?: string | null
+          wins_community_impact?: string | null
+          wins_esg_execution?: string | null
+          wins_relationship_building?: string | null
+        }
+        Update: {
+          attendance_count?: number | null
+          attendance_estimate?: number | null
+          brand_esg_gtm_alignment?: string | null
+          cltv_benchmark?: number | null
+          community_description?: string | null
+          cpl?: number | null
+          created_at?: string
+          cvr?: number | null
+          engagement_interactions?: number | null
+          engagement_scans?: number | null
+          event_date_end?: string | null
+          event_date_start?: string | null
+          event_name?: string
+          event_purpose?: string | null
+          event_type?: string
+          executive_summary?: string | null
+          final_assessment?: string | null
+          financial_spend?: Json | null
+          funnel_submissions?: number | null
+          funnel_views?: number | null
+          future_partnership_ideas?: string[] | null
+          generated_at?: string | null
+          generated_blog?: string | null
+          generated_facebook_post?: string | null
+          generated_instagram_caption?: string | null
+          generated_linkedin_article?: string | null
+          generated_linkedin_post?: string | null
+          hosted_by?: string | null
+          id?: string
+          is_client_facing?: boolean | null
+          key_stakeholders?: Json | null
+          leads_generated?: number | null
+          location_city_state?: string | null
+          location_venue?: string | null
+          not_designed_for_lead_gen?: boolean | null
+          owner_id?: string | null
+          partner_organizations?: string[] | null
+          prepared_by?: string | null
+          program_initiative?: string | null
+          pull_quotes?: Json | null
+          recommendations_expand?: string[] | null
+          recommendations_improve?: string[] | null
+          recommendations_repeat?: string[] | null
+          reporting_window?: string | null
+          roi_summary?: string | null
+          share_password_hash?: string | null
+          share_slug?: string | null
+          status?: string | null
+          strategic_objectives?: string[] | null
+          time_window?: string | null
+          total_spend?: number | null
+          updated_at?: string
+          visibility?: string | null
+          weather_environmental_notes?: string | null
+          wins_business_support?: string | null
+          wins_civic_visibility?: string | null
+          wins_community_impact?: string | null
+          wins_esg_execution?: string | null
+          wins_relationship_building?: string | null
+        }
+        Relationships: []
+      }
       access_denied_log: {
         Row: {
           attempted_permission: string
