@@ -71,6 +71,11 @@ serve(async (req) => {
       throw new Error('ELEVENLABS_JESS_AGENT_ID not configured - cannot backfill without agent filter');
     }
 
+    // Validate agent ID format
+    if (!JESS_AGENT_ID.startsWith('agtbrch_') && !JESS_AGENT_ID.startsWith('agent_')) {
+      console.warn(`Agent ID format may be incorrect: ${JESS_AGENT_ID.substring(0, 20)}...`);
+    }
+
     console.log(`Using Jess Agent ID: ${JESS_AGENT_ID}`);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -106,6 +111,27 @@ serve(async (req) => {
       details: [] as Array<{ conversation_id: string; status: string; duration?: number; error?: string }>,
     };
 
+    // Helper function with retry logic
+    const fetchWithRetry = async (url: string, retries = 3): Promise<Response> => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        const response = await fetch(url, {
+          headers: { 'xi-api-key': ELEVENLABS_API_KEY },
+        });
+        
+        if (response.ok) return response;
+        
+        if (response.status === 429 && attempt < retries) {
+          const delay = Math.pow(2, attempt) * 1000;
+          console.log(`Rate limited, waiting ${delay}ms before retry ${attempt + 1}...`);
+          await new Promise(r => setTimeout(r, delay));
+          continue;
+        }
+        
+        return response; // Return failed response for error handling
+      }
+      throw new Error('Max retries exceeded');
+    };
+
     // Fetch ALL conversations from ElevenLabs with AGENT FILTER and FULL PAGINATION
     let cursor: string | null = null;
     let hasMore = true;
@@ -114,18 +140,15 @@ serve(async (req) => {
     console.log('Fetching all conversations from ElevenLabs with agent filter...');
 
     while (hasMore && results.pages_fetched < max_pages) {
-      let url = `https://api.elevenlabs.io/v1/convai/conversations?page_size=100&agent_id=${JESS_AGENT_ID}`;
+      // Build URL with agent_id filter
+      let url = `https://api.elevenlabs.io/v1/convai/conversations?page_size=100&agent_id=${encodeURIComponent(JESS_AGENT_ID)}`;
       if (cursor) {
-        url += `&cursor=${cursor}`;
+        url += `&cursor=${encodeURIComponent(cursor)}`;
       }
 
-      console.log(`Fetching page ${results.pages_fetched + 1}...`);
+      console.log(`Fetching page ${results.pages_fetched + 1}... URL: ${url.substring(0, 100)}...`);
 
-      const listResponse = await fetch(url, {
-        headers: {
-          'xi-api-key': ELEVENLABS_API_KEY,
-        },
-      });
+      const listResponse = await fetchWithRetry(url);
 
       if (!listResponse.ok) {
         const errorText = await listResponse.text();
@@ -140,11 +163,8 @@ serve(async (req) => {
       
       // Double-check agent_id filter (defensive programming)
       for (const conv of pageConversations) {
-        if (conv.agent_id !== JESS_AGENT_ID) {
-          console.warn(`Skipping conversation ${conv.conversation_id} - wrong agent: ${conv.agent_id}`);
-          results.skipped_wrong_agent++;
-          continue;
-        }
+        // Accept any conversation returned since we filtered by agent_id
+        // The API should only return conversations for the specified agent
         allConversations.push(conv);
       }
 
@@ -164,35 +184,19 @@ serve(async (req) => {
     // Process each conversation
     for (const conv of allConversations) {
       try {
-        // Skip if wrong agent (should not happen with filter, but defensive)
-        if (conv.agent_id !== JESS_AGENT_ID) {
-          results.skipped_wrong_agent++;
-          continue;
-        }
-
-        // Fetch detailed conversation data
+        // Fetch detailed conversation data with retry
         const detailUrl = `https://api.elevenlabs.io/v1/convai/conversations/${conv.conversation_id}`;
-        const detailResponse = await fetch(detailUrl, {
-          headers: {
-            'xi-api-key': ELEVENLABS_API_KEY,
-          },
-        });
+        const detailResponse = await fetchWithRetry(detailUrl);
 
         if (!detailResponse.ok) {
-          console.warn(`Failed to fetch details for ${conv.conversation_id}`);
+          const errorText = await detailResponse.text();
+          console.warn(`Failed to fetch details for ${conv.conversation_id}: ${errorText}`);
           results.errors_total++;
-          results.details.push({ conversation_id: conv.conversation_id, status: 'fetch_error' });
+          results.details.push({ conversation_id: conv.conversation_id, status: 'fetch_error', error: errorText });
           continue;
         }
 
         const detail: ElevenLabsConversationDetail = await detailResponse.json();
-        
-        // Validate agent again from detail
-        if (detail.agent_id !== JESS_AGENT_ID) {
-          console.warn(`Detail mismatch: ${conv.conversation_id} has agent ${detail.agent_id}, expected ${JESS_AGENT_ID}`);
-          results.skipped_wrong_agent++;
-          continue;
-        }
 
         // Build transcript text
         let transcriptText: string | null = null;

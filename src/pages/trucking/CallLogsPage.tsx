@@ -5,7 +5,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Phone, PhoneOff, Voicemail, Clock, Search, AlertCircle, CheckCircle2, FileText, Headphones, RefreshCw, Loader2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Phone, PhoneOff, Voicemail, Clock, Search, AlertCircle, CheckCircle2, FileText, Headphones, RefreshCw, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TruckingPageWrapper, TruckingContentCard } from "@/components/trucking/TruckingPageWrapper";
@@ -35,6 +36,14 @@ interface CallLog {
   lead_id: string | null;
   language: string | null;
   total_characters: number | null;
+  elevenlabs_conversation_id?: string | null;
+  elevenlabs_agent_id?: string | null;
+  call_cost_credits?: number | null;
+  call_cost_usd?: number | null;
+  llm_cost_usd_total?: number | null;
+  ended_reason?: string | null;
+  call_status?: string | null;
+  deleted_at?: string | null;
   trucking_loads?: { load_number: string } | null;
   trucking_call_transcripts?: {
     transcript_text: string | null;
@@ -89,6 +98,7 @@ export default function CallLogsPage() {
           trucking_loads(load_number),
           trucking_call_transcripts(transcript_text, sentiment, key_topics, negotiation_outcome, rate_discussed)
         `)
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -97,6 +107,22 @@ export default function CallLogsPage() {
       toast({ title: "Error loading call logs", description: error.message, variant: "destructive" });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (logId: string) => {
+    try {
+      const { error } = await supabase
+        .from("trucking_call_logs")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", logId);
+      
+      if (error) throw error;
+      
+      setLogs(prev => prev.filter(l => l.id !== logId));
+      toast({ title: "Call log deleted", description: "The call log has been removed from the list." });
+    } catch (error: any) {
+      toast({ title: "Error deleting call log", description: error.message, variant: "destructive" });
     }
   };
 
@@ -338,6 +364,35 @@ export default function CallLogsPage() {
                           >
                             <Headphones className={`h-4 w-4 ${hasRecording ? 'text-green-500' : 'text-muted-foreground/40'}`} />
                           </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                title="Delete call log"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete this call log?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This hides it from analytics but can be restored later.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(log.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </TableCell>
                     </TableRow>

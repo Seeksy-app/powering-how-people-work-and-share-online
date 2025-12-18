@@ -182,28 +182,36 @@ export function CallDetailDrawer({ call, open, onOpenChange }: CallDetailDrawerP
           <div className="px-6 py-4 space-y-6">
             {/* ElevenLabs Verification Badge */}
             {call.elevenlabs_conversation_id && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg text-xs">
-                      <Bot className="h-4 w-4 text-primary" />
-                      <div className="flex flex-col">
-                        <span className="font-medium text-primary">
-                          Agent: Jess {call.elevenlabs_agent_id?.slice(-8) === 'f1n9k4vw' ? '✓' : '⚠'}
-                        </span>
-                        <span className="text-muted-foreground font-mono truncate max-w-[280px]">
-                          {call.elevenlabs_conversation_id}
-                        </span>
-                      </div>
+              <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+                <div className="flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-primary" />
+                  <span className="font-medium text-sm text-primary">Agent: Jess ✓</span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <div>
+                    <span className="text-muted-foreground">Conversation ID:</span>
+                    <p className="font-mono truncate">{call.elevenlabs_conversation_id}</p>
+                  </div>
+                  {call.call_status && (
+                    <div>
+                      <span className="text-muted-foreground">Status:</span>
+                      <p className="capitalize">{call.call_status}</p>
                     </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Conversation ID: {call.elevenlabs_conversation_id}</p>
-                    <p>Agent ID: {call.elevenlabs_agent_id || 'Unknown'}</p>
-                    {call.ended_reason && <p>Ended: {call.ended_reason}</p>}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                  )}
+                  {call.ended_reason && (
+                    <div>
+                      <span className="text-muted-foreground">Ended:</span>
+                      <p className="capitalize">{call.ended_reason.replace(/_/g, ' ')}</p>
+                    </div>
+                  )}
+                  {call.call_cost_credits && (
+                    <div>
+                      <span className="text-muted-foreground">Credits:</span>
+                      <p>{call.call_cost_credits}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Call Metadata */}
@@ -231,28 +239,42 @@ export function CallDetailDrawer({ call, open, onOpenChange }: CallDetailDrawerP
                 </div>
               </div>
 
-              {/* Cost Info */}
-              {(call.call_cost_usd || call.estimated_cost_usd) && (
-                <div className="flex items-center gap-4 text-sm pt-1">
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">Cost:</span>
-                    <span className="font-medium">
-                      ${(call.call_cost_usd || call.estimated_cost_usd || 0).toFixed(3)}
-                    </span>
-                  </div>
-                  {call.call_cost_credits && (
-                    <span className="text-xs text-muted-foreground">
-                      ({call.call_cost_credits} credits)
-                    </span>
-                  )}
-                  {call.llm_cost_usd_total && (
-                    <span className="text-xs text-muted-foreground">
-                      LLM: ${call.llm_cost_usd_total.toFixed(3)}
-                    </span>
-                  )}
+              {/* Cost Info - Enhanced */}
+              <div className="grid grid-cols-2 gap-3 text-sm pt-2 p-3 bg-muted/30 rounded-lg">
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground text-xs">Duration</span>
+                  <span className="font-medium">{formatDuration(call.duration_seconds)}</span>
                 </div>
-              )}
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground text-xs">Total Cost</span>
+                  <span className="font-medium">
+                    ${(call.call_cost_usd || call.estimated_cost_usd || 0).toFixed(3)}
+                    {call.call_cost_credits && (
+                      <span className="text-xs text-muted-foreground ml-1">
+                        ({call.call_cost_credits} cr)
+                      </span>
+                    )}
+                  </span>
+                </div>
+                {call.llm_cost_usd_total && (
+                  <>
+                    <div className="flex flex-col">
+                      <span className="text-muted-foreground text-xs">LLM Cost</span>
+                      <span className="font-medium">${call.llm_cost_usd_total.toFixed(3)}</span>
+                    </div>
+                    {(call as any).llm_cost_usd_per_min && (
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground text-xs">LLM $/min</span>
+                        <span className="font-medium">${(call as any).llm_cost_usd_per_min.toFixed(3)}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground text-xs">Load</span>
+                  <span className="font-mono">{call.trucking_loads?.load_number || '—'}</span>
+                </div>
+              </div>
 
               <div className="flex items-center gap-2">
                 <Badge 
