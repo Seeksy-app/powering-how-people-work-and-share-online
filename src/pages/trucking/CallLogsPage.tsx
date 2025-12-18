@@ -127,10 +127,14 @@ export default function CallLogsPage() {
   };
 
   const handleBackfill = async () => {
-    console.log('BACKFILL CLICKED — invoking function');
+    console.log('=== BACKFILL HANDLER START ===');
+    alert('Backfill clicked - check console'); // Temporary debug alert
+    console.log('Setting backfilling to true...');
     setBackfilling(true);
     try {
-      console.log('Calling supabase.functions.invoke("elevenlabs-backfill-calls")...');
+      console.log('About to call supabase.functions.invoke...');
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-backfill-calls`;
+      console.log('Edge function URL:', url);
       const { data, error } = await supabase.functions.invoke('elevenlabs-backfill-calls', {
         body: { limit: 100 }
       });
