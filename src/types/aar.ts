@@ -21,13 +21,27 @@ export interface TimestampHighlight {
   note: string;
 }
 
+// Strict union type for event types
+export type AAREventType = 
+  | 'meeting' 
+  | 'community_event' 
+  | 'activation' 
+  | 'conference' 
+  | 'sponsorship'
+  | 'webinar'
+  | 'campaign'
+  | 'other';
+
+export type AARStatus = 'draft' | 'review' | 'published';
+export type AARVisibility = 'internal' | 'client_shareable' | 'public_case_study';
+
 export interface AAR {
   id: string;
   owner_id: string;
   
   // Event Metadata
   event_name: string;
-  event_type: 'meeting' | 'community_event' | 'activation' | 'conference' | 'sponsorship';
+  event_type: AAREventType;
   event_date_start?: string;
   event_date_end?: string;
   time_window?: string;
@@ -87,8 +101,8 @@ export interface AAR {
   final_assessment?: string;
   
   // Status & Sharing
-  status: 'draft' | 'review' | 'published';
-  visibility: 'internal' | 'client_shareable' | 'public_case_study';
+  status: AARStatus;
+  visibility: AARVisibility;
   share_slug?: string;
   
   // Generated Content
@@ -140,22 +154,25 @@ export const AAR_SECTIONS = [
 
 export type AARSectionId = typeof AAR_SECTIONS[number]['id'];
 
-export const EVENT_TYPES = [
+export const EVENT_TYPES: { value: AAREventType; label: string }[] = [
   { value: 'meeting', label: 'Meeting' },
   { value: 'community_event', label: 'Community Event' },
   { value: 'activation', label: 'Activation' },
   { value: 'conference', label: 'Conference' },
   { value: 'sponsorship', label: 'Sponsorship' },
-] as const;
+  { value: 'webinar', label: 'Webinar' },
+  { value: 'campaign', label: 'Campaign' },
+  { value: 'other', label: 'Other' },
+];
 
-export const AAR_STATUS = [
+export const AAR_STATUS: { value: AARStatus; label: string; color: string }[] = [
   { value: 'draft', label: 'Draft', color: 'bg-muted' },
   { value: 'review', label: 'In Review', color: 'bg-yellow-500' },
   { value: 'published', label: 'Published', color: 'bg-green-500' },
-] as const;
+];
 
-export const AAR_VISIBILITY = [
+export const AAR_VISIBILITY: { value: AARVisibility; label: string }[] = [
   { value: 'internal', label: 'Internal Only' },
   { value: 'client_shareable', label: 'Client Shareable' },
   { value: 'public_case_study', label: 'Public Case Study' },
-] as const;
+];

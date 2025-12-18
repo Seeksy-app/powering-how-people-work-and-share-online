@@ -13,8 +13,35 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import type { AAR, AARMedia } from '@/types/aar';
+import type { AAR, AARMedia, AAREventType, AARStatus, AARVisibility, Stakeholder, PullQuote, SpendItem } from '@/types/aar';
 import { EVENT_TYPES } from '@/types/aar';
+
+// Helper to safely parse AAR data from database
+function parseAARFromDB(data: Record<string, unknown>): Partial<AAR> {
+  const validEventTypes: AAREventType[] = ['meeting', 'community_event', 'activation', 'conference', 'sponsorship', 'webinar', 'campaign', 'other'];
+  const validStatuses: AARStatus[] = ['draft', 'review', 'published'];
+  const validVisibilities: AARVisibility[] = ['internal', 'client_shareable', 'public_case_study'];
+  
+  const eventType = validEventTypes.includes(data.event_type as AAREventType) 
+    ? (data.event_type as AAREventType) 
+    : 'other';
+  const status = validStatuses.includes(data.status as AARStatus) 
+    ? (data.status as AARStatus) 
+    : 'draft';
+  const visibility = validVisibilities.includes(data.visibility as AARVisibility) 
+    ? (data.visibility as AARVisibility) 
+    : 'internal';
+
+  return {
+    ...data,
+    event_type: eventType,
+    status,
+    visibility,
+    key_stakeholders: Array.isArray(data.key_stakeholders) ? data.key_stakeholders as Stakeholder[] : [],
+    pull_quotes: Array.isArray(data.pull_quotes) ? data.pull_quotes as PullQuote[] : [],
+    financial_spend: Array.isArray(data.financial_spend) ? data.financial_spend as SpendItem[] : [],
+  } as Partial<AAR>;
+}
 
 export default function AARSharePage() {
   const { id } = useParams<{ id: string }>();
@@ -61,16 +88,8 @@ export default function AARSharePage() {
         return;
       }
 
-      // Parse and set AAR data with proper type casting
-      setAAR({
-        ...data,
-        event_type: data.event_type as AAR['event_type'],
-        status: (data.status || 'draft') as AAR['status'],
-        visibility: (data.visibility || 'internal') as AAR['visibility'],
-        key_stakeholders: (data.key_stakeholders as unknown as AAR['key_stakeholders']) || [],
-        pull_quotes: (data.pull_quotes as unknown as AAR['pull_quotes']) || [],
-        financial_spend: (data.financial_spend as unknown as AAR['financial_spend']) || [],
-      });
+      // Parse and set AAR data with proper type validation
+      setAAR(parseAARFromDB(data));
       setIsAuthenticated(true);
 
       // Fetch media
