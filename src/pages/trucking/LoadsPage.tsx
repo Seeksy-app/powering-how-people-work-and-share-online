@@ -105,6 +105,11 @@ interface Load {
   // Assignment fields
   assigned_agent_id: string | null;
   assigned_at: string | null;
+  assigned_agent?: {
+    id: string;
+    full_name: string | null;
+    username: string | null;
+  } | null;
 }
 
 const equipmentTypes = ["Dry Van", "Reefer", "Flatbed", "Step Deck", "Power Only", "Hotshot", "Conestoga", "Double Drop", "RGN"];
@@ -124,6 +129,7 @@ export default function LoadsPage() {
   const [estimatingMiles, setEstimatingMiles] = useState(false);
   const [deletedLoads, setDeletedLoads] = useState<Load[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [agentMap, setAgentMap] = useState<Map<string, { id: string; full_name: string | null; username: string | null }>>(new Map());
   const { toast } = useToast();
   const { getRecentValues, addRecentValue } = useTruckingRecentValues();
   const { labels } = useTruckingFieldLabels();
@@ -200,27 +206,50 @@ export default function LoadsPage() {
       if (!user) return;
       setCurrentUserId(user.id);
 
-      // Fetch active loads (not soft deleted)
-      const { data, error } = await supabase
-        .from("trucking_loads")
-        .select("*")
-        .eq("owner_id", user.id)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+      // Fetch loads and agents in parallel
+      const [loadsResult, deletedResult, agentsResult] = await Promise.all([
+        supabase
+          .from("trucking_loads")
+          .select("*")
+          .eq("owner_id", user.id)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("trucking_loads")
+          .select("*")
+          .eq("owner_id", user.id)
+          .not("deleted_at", "is", null)
+          .order("deleted_at", { ascending: false }),
+        supabase
+          .from("profiles")
+          .select("id, full_name, username")
+      ]);
 
-      if (error) throw error;
-      setLoads((data as Load[]) || []);
+      if (loadsResult.error) throw loadsResult.error;
+      if (deletedResult.error) throw deletedResult.error;
 
-      // Fetch deleted loads
-      const { data: deletedData, error: deletedError } = await supabase
-        .from("trucking_loads")
-        .select("*")
-        .eq("owner_id", user.id)
-        .not("deleted_at", "is", null)
-        .order("deleted_at", { ascending: false });
+      // Build agent map
+      const newAgentMap = new Map<string, { id: string; full_name: string | null; username: string | null }>();
+      if (agentsResult.data) {
+        agentsResult.data.forEach((agent: { id: string; full_name: string | null; username: string | null }) => {
+          newAgentMap.set(agent.id, agent);
+        });
+      }
+      setAgentMap(newAgentMap);
 
-      if (deletedError) throw deletedError;
-      setDeletedLoads((deletedData as Load[]) || []);
+      // Attach agent info to loads
+      const loadsWithAgents = (loadsResult.data || []).map((load: any) => ({
+        ...load,
+        assigned_agent: load.assigned_agent_id ? newAgentMap.get(load.assigned_agent_id) || null : null
+      }));
+
+      const deletedWithAgents = (deletedResult.data || []).map((load: any) => ({
+        ...load,
+        assigned_agent: load.assigned_agent_id ? newAgentMap.get(load.assigned_agent_id) || null : null
+      }));
+
+      setLoads(loadsWithAgents as Load[]);
+      setDeletedLoads(deletedWithAgents as Load[]);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
@@ -969,15 +998,17 @@ export default function LoadsPage() {
             <TableCell>
               <div className="flex flex-col gap-1">
                 <Badge className={getStatusBadge(load.status)}>{load.status}</Badge>
-                {load.status === "pending" && load.assigned_agent_id && (
+                {load.assigned_agent_id && (
                   <Badge 
                     variant="outline" 
                     className={load.assigned_agent_id === currentUserId 
                       ? "text-green-600 border-green-600 text-xs" 
-                      : "text-orange-500 border-orange-500 text-xs"
+                      : "text-primary border-primary/50 text-xs"
                     }
                   >
-                    {load.assigned_agent_id === currentUserId ? "Mine" : "Taken"}
+                    {load.assigned_agent_id === currentUserId 
+                      ? "Mine" 
+                      : (load.assigned_agent?.full_name || load.assigned_agent?.username || "Assigned")}
                   </Badge>
                 )}
               </div>
