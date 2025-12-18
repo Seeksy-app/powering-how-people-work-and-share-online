@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { 
   Sparkles, 
@@ -11,15 +11,21 @@ import {
   Copy,
   Check,
   User,
+  Pencil,
+  Save,
+  X,
+  Mail,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ActionItem {
   task: string;
@@ -34,6 +40,7 @@ interface AgendaRecap {
 }
 
 interface AIMeetingNotesProps {
+  meetingId: string;
   aiSummary: string | null;
   aiDecisions: any[] | null;
   aiActionItems: ActionItem[] | null;
@@ -44,10 +51,16 @@ interface AIMeetingNotesProps {
   aiNotesStatus: string | null;
   generatedAt: string | null;
   audioUrl?: string | null;
+  isHost?: boolean;
+  meetingTitle?: string;
+  meetingDate?: string;
+  hostName?: string;
   onActionItemToggle?: (index: number, completed: boolean) => void;
+  onSummaryUpdated?: () => void;
 }
 
 export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
+  meetingId,
   aiSummary,
   aiDecisions,
   aiActionItems,
@@ -58,32 +71,37 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
   aiNotesStatus,
   generatedAt,
   audioUrl,
+  isHost = false,
+  meetingTitle = "",
+  meetingDate = "",
+  hostName = "",
   onActionItemToggle,
+  onSummaryUpdated,
 }) => {
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [localActionItems, setLocalActionItems] = useState<ActionItem[]>(aiActionItems || []);
+  const [isEditingSummary, setIsEditingSummary] = useState(false);
+  const [editedSummary, setEditedSummary] = useState(aiSummary || "");
+  const [isSavingSummary, setIsSavingSummary] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
-  // Format transcript with better structure - split into paragraphs by sentence clusters
+  // Sync editedSummary when aiSummary changes
+  useEffect(() => {
+    setEditedSummary(aiSummary || "");
+  }, [aiSummary]);
+
+  // Format transcript with better structure
   const formatTranscript = (text: string) => {
     if (!text) return [];
-    
-    // Split by periods followed by spaces to get sentences, then group into paragraphs
     const sentences = text.split(/(?<=[.!?])\s+/);
     const paragraphs: { type: 'paragraph', content: string, key: number }[] = [];
-    
-    // Group sentences into paragraphs of 3-4 sentences each
     for (let i = 0; i < sentences.length; i += 4) {
       const chunk = sentences.slice(i, i + 4).join(' ').trim();
       if (chunk) {
-        paragraphs.push({
-          type: 'paragraph',
-          content: chunk,
-          key: i,
-        });
+        paragraphs.push({ type: 'paragraph', content: chunk, key: i });
       }
     }
-    
     return paragraphs;
   };
 
@@ -101,8 +119,53 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
     onActionItemToggle?.(index, updated[index].completed || false);
   };
 
-  const completedCount = localActionItems.filter(i => i.completed).length;
-  const totalActionItems = localActionItems.length;
+  const handleSaveSummary = async () => {
+    if (!meetingId) return;
+    setIsSavingSummary(true);
+    try {
+      const { error } = await supabase
+        .from("board_meeting_notes")
+        .update({ ai_summary_draft: editedSummary })
+        .eq("id", meetingId);
+      
+      if (error) throw error;
+      
+      setIsEditingSummary(false);
+      onSummaryUpdated?.();
+      toast.success("Executive summary saved");
+    } catch (error) {
+      console.error("Error saving summary:", error);
+      toast.error("Failed to save summary");
+    } finally {
+      setIsSavingSummary(false);
+    }
+  };
+
+  const handleNotifyBoard = async () => {
+    if (!meetingId) return;
+    setIsSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-board-meeting-notes-email", {
+        body: {
+          meetingId,
+          meetingTitle,
+          meetingDate,
+          executiveSummary: editedSummary || aiSummary,
+          hostName,
+        },
+      });
+      
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      toast.success(data?.message || "Board members notified");
+    } catch (error: any) {
+      console.error("Error sending notification:", error);
+      toast.error(error.message || "Failed to notify board");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   const copyAllNotes = () => {
     let content = "# AI Meeting Notes\n\n";
@@ -122,8 +185,6 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
       });
       content += "\n";
     }
-    
-    // Action Items removed per user request
     
     if (aiRisks) {
       content += "## Risks & Blockers\n" + aiRisks + "\n\n";
@@ -159,6 +220,22 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
                 Generated {format(new Date(generatedAt), "MMM d 'at' h:mm a")}
               </span>
             )}
+            {/* Host: Notify Board Button */}
+            {isHost && aiSummary && (
+              <Button 
+                variant="default" 
+                size="sm" 
+                onClick={handleNotifyBoard}
+                disabled={isSendingEmail}
+              >
+                {isSendingEmail ? (
+                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                ) : (
+                  <Mail className="w-4 h-4 mr-1" />
+                )}
+                {isSendingEmail ? "Sending..." : "Notify Board"}
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={copyAllNotes}>
               {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
               {copied ? "Copied!" : "Copy All"}
@@ -168,22 +245,73 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
       </CardHeader>
       <CardContent className="space-y-6">
 
-        {/* Executive Summary */}
+        {/* Executive Summary - Editable by Host */}
         {aiSummary && (
           <div className="space-y-3">
-            <h4 className="font-semibold text-sm flex items-center gap-2">
-              <div className="p-1 rounded bg-blue-500/10">
-                <FileText className="w-4 h-4 text-blue-600" />
-              </div>
-              Executive Summary
-            </h4>
-            <div className="bg-card border rounded-xl p-4 text-sm leading-relaxed">
-              {aiSummary.split('\n').map((line, i) => (
-                <p key={i} className={`${line.startsWith('•') || line.startsWith('-') ? 'ml-4 text-muted-foreground' : 'text-foreground'} ${i > 0 ? 'mt-2' : ''}`}>
-                  {line}
-                </p>
-              ))}
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-sm flex items-center gap-2">
+                <div className="p-1 rounded bg-blue-500/10">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                </div>
+                Executive Summary
+              </h4>
+              {isHost && !isEditingSummary && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsEditingSummary(true)}
+                  className="h-7 px-2"
+                >
+                  <Pencil className="w-3 h-3 mr-1" />
+                  Edit
+                </Button>
+              )}
             </div>
+            
+            {isEditingSummary ? (
+              <div className="space-y-3">
+                <Textarea
+                  value={editedSummary}
+                  onChange={(e) => setEditedSummary(e.target.value)}
+                  className="min-h-[150px] text-sm"
+                  placeholder="Enter executive summary..."
+                />
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditingSummary(false);
+                      setEditedSummary(aiSummary || "");
+                    }}
+                    disabled={isSavingSummary}
+                  >
+                    <X className="w-3 h-3 mr-1" />
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveSummary}
+                    disabled={isSavingSummary}
+                  >
+                    {isSavingSummary ? (
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                    ) : (
+                      <Save className="w-3 h-3 mr-1" />
+                    )}
+                    {isSavingSummary ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-card border rounded-xl p-4 text-sm leading-relaxed">
+                {aiSummary.split('\n').map((line, i) => (
+                  <p key={i} className={`${line.startsWith('•') || line.startsWith('-') ? 'ml-4 text-muted-foreground' : 'text-foreground'} ${i > 0 ? 'mt-2' : ''}`}>
+                    {line}
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -234,8 +362,6 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
             </div>
           </div>
         )}
-
-        {/* Action Items removed per user request */}
 
         {/* Agenda Recap */}
         {aiAgendaRecap && aiAgendaRecap.length > 0 && (
@@ -298,7 +424,7 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
 
         <Separator />
 
-        {/* Audio Player + Transcript (Collapsible) */}
+        {/* Transcript (Collapsible) */}
         {transcript && (
           <Collapsible open={transcriptOpen} onOpenChange={setTranscriptOpen}>
             <CollapsibleTrigger asChild>
@@ -311,7 +437,6 @@ export const AIMeetingNotes: React.FC<AIMeetingNotesProps> = ({
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4 mt-2">
-              {/* Formatted Transcript - split into readable paragraphs */}
               <ScrollArea className="h-[400px]">
                 <div className="bg-muted/30 border rounded-xl p-6 space-y-4">
                   {formatTranscript(transcript).map((paragraph) => (

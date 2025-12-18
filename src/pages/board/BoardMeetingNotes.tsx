@@ -1640,6 +1640,7 @@ export default function BoardMeetingNotes() {
 
               {/* AI Meeting Notes (from video meeting) */}
               <AIMeetingNotes
+                meetingId={selectedNote.id}
                 aiSummary={selectedNote.ai_summary_draft}
                 aiDecisions={selectedNote.ai_decisions_draft}
                 aiActionItems={selectedNote.ai_action_items_draft}
@@ -1652,6 +1653,11 @@ export default function BoardMeetingNotes() {
                 audioUrl={selectedNote.audio_file_url ? 
                   `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/meeting-recordings/${selectedNote.audio_file_url}` 
                   : null}
+                isHost={isHost}
+                meetingTitle={selectedNote.title}
+                meetingDate={selectedNote.meeting_date}
+                hostName={user?.email?.split('@')[0] || "Host"}
+                onSummaryUpdated={() => refetch()}
               />
 
               {/* Bottom Complete Meeting button removed - duplicate with top End Meeting action */}
