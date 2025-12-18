@@ -47,6 +47,7 @@ interface Load {
   broker_commission?: number;
   commodity?: string;
   weight_lbs?: number;
+  length_ft?: number;
   notes?: string;
   owner_id?: string;
   assigned_agent_id?: string | null;
@@ -1223,7 +1224,7 @@ export default function TruckingDashboardPage() {
                         <TableCell colSpan={9} className="p-4">
                           <div className="space-y-4">
                             {/* Load Details */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
                               <div>
                                 <p className="text-slate-500 text-xs">Commodity</p>
                                 <p className="font-medium">{load.commodity || "General Freight"}</p>
@@ -1231,6 +1232,14 @@ export default function TruckingDashboardPage() {
                               <div>
                                 <p className="text-slate-500 text-xs">Weight</p>
                                 <p className="font-medium">{load.weight_lbs ? `${load.weight_lbs.toLocaleString()} lbs` : "—"}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Distance</p>
+                                <p className="font-medium">{load.miles ? `${load.miles.toLocaleString()} mi` : "—"}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Footage</p>
+                                <p className="font-medium">{load.length_ft ? `${load.length_ft} ft` : "—"}</p>
                               </div>
                               <div>
                                 <p className="text-slate-500 text-xs">Floor Rate</p>
