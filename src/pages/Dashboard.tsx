@@ -570,22 +570,28 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       <WelcomeModal />
-      <main className="px-10 pt-8 pb-16 flex flex-col items-start w-full">
-        <div className="w-full mb-8 flex items-start justify-between" data-onboarding="dashboard-header">
-          <div className="flex items-center gap-4">
+      <main className="px-6 lg:px-10 pt-6 pb-16 flex flex-col items-start w-full">
+        {/* Hero Banner */}
+        <div className="w-full mb-6 flex items-start justify-between" data-onboarding="dashboard-header">
+          <div className="flex items-center gap-5">
             {profileData.avatar_url && (
-              <Avatar className="h-16 w-16 ring-2 ring-primary/20">
-                <AvatarImage src={profileData.avatar_url} alt={profileData.full_name} />
-                <AvatarFallback className="text-2xl">
-                  {profileData.full_name?.charAt(0) || firstName?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary to-purple-500 rounded-full blur-md opacity-30 scale-110" />
+                <Avatar className="h-16 w-16 ring-4 ring-white shadow-lg relative">
+                  <AvatarImage src={profileData.avatar_url} alt={profileData.full_name} />
+                  <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-purple-500 text-white">
+                    {profileData.full_name?.charAt(0) || firstName?.charAt(0) || "U"}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
             )}
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-brand-blue to-brand-navy bg-clip-text text-transparent">
-                Welcome back{firstName ? ` ${firstName}` : ""}!
+              <h1 className="text-3xl lg:text-4xl font-bold">
+                <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {firstName || 'there'}!
+                </span>
               </h1>
-              <p className="text-muted-foreground">Here's what's happening with your account.</p>
+              <p className="text-muted-foreground">Here's what's happening across your shows, campaigns, and events today.</p>
             </div>
           </div>
           <div className="flex items-center gap-4" data-onboarding="add-widgets">
