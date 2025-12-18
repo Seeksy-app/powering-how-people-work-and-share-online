@@ -53,9 +53,9 @@ export default function TruckingAdminRatePreferencesPage() {
           
         setPreferences({
           agency_id: agency?.id || null,
-          target_margin_percent: 15,
-          absolute_rate_floor: 500,
-          rate_increment: 25,
+          target_margin_percent: 20,  // 20% target commission = driver gets 80%
+          absolute_rate_floor: 15,    // 15% floor commission = max driver gets 85%
+          rate_increment: 0,          // Not used with percentage-based
           max_negotiation_rounds: 3,
           equipment_types: ['Van', 'Reefer', 'Flatbed'],
         });
@@ -147,33 +147,35 @@ export default function TruckingAdminRatePreferencesPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="target_margin">Target Margin (%)</Label>
+              <Label htmlFor="target_margin">Target Commission (%)</Label>
               <Input
                 id="target_margin"
                 type="number"
-                value={preferences?.target_margin_percent || 15}
+                value={preferences?.target_margin_percent || 20}
                 onChange={(e) => setPreferences(p => p ? { ...p, target_margin_percent: parseFloat(e.target.value) || 0 } : null)}
               />
               <p className="text-xs text-muted-foreground">
-                Jess starts at target rate, then offers +$25 increments up to ceiling when drivers want more.
+                Jess starts at this commission (e.g., 20% = driver gets 80% of invoice). Can negotiate down to floor.
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="rate_floor">Absolute Rate Floor (per load)</Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="rate_floor"
-                  type="number"
-                  className="pl-9"
-                  value={preferences?.absolute_rate_floor || 500}
-                  onChange={(e) => setPreferences(p => p ? { ...p, absolute_rate_floor: parseFloat(e.target.value) || 0 } : null)}
-                />
-              </div>
+              <Label htmlFor="floor_commission">Floor Commission (%)</Label>
+              <Input
+                id="floor_commission"
+                type="number"
+                value={preferences?.absolute_rate_floor || 15}
+                onChange={(e) => setPreferences(p => p ? { ...p, absolute_rate_floor: parseFloat(e.target.value) || 0 } : null)}
+              />
               <p className="text-xs text-muted-foreground">
-                AI will not book below this unless you manually approve.
+                Minimum commission (e.g., 15% = driver gets max 85%). Below this requires dispatch approval.
               </p>
+            </div>
+
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg text-xs space-y-1">
+              <p className="font-medium">Example: $800 Customer Invoice</p>
+              <p>• Target Pay (20%): <span className="text-green-600 font-medium">$640</span> (you keep $160)</p>
+              <p>• Max Pay (15%): <span className="text-amber-600 font-medium">$680</span> (you keep $120)</p>
             </div>
           </CardContent>
         </Card>

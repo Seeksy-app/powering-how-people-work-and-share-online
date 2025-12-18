@@ -227,6 +227,8 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
     const carrierIdx = findCol(["Carrier"]);
     const typeIdx = findCol(["Type"]);
     const weightIdx = findCol(["Weight"]);
+    // Rate columns - Aljex uses "LH Revenue" for linehaul revenue (customer invoice amount)
+    const rateIdx = findCol(["LH Revenue", "Invoice Amount", "Revenue", "Rate", "Total Revenue"]);
 
     const parsedData: Record<string, string>[] = [];
 
@@ -246,6 +248,7 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
       const carrierRaw = carrierIdx >= 0 ? String(row[carrierIdx] || '').trim() : '';
       const typeRaw = typeIdx >= 0 ? String(row[typeIdx] || '').trim() : '';
       const weightRaw = weightIdx >= 0 ? String(row[weightIdx] || '').trim() : '';
+      const rateRaw = rateIdx >= 0 ? String(row[rateIdx] || '').trim() : '';
 
       // Skip if no essential data
       if (!pickUpRaw && !consigneeRaw) continue;
@@ -261,6 +264,12 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
       // Parse weight (remove commas)
       const weight = weightRaw.replace(/[,]/g, '');
 
+      // Parse rate and calculate commission-based pricing
+      // Customer Invoice (rate) → Target Pay (80% = 20% commission) → Max Pay (85% = 15% commission)
+      const customerInvoice = parseFloat(rateRaw.replace(/[,$]/g, '')) || 0;
+      const targetRate = customerInvoice > 0 ? Math.round(customerInvoice * 0.80) : 0; // 80% = 20% commission
+      const floorRate = customerInvoice > 0 ? Math.round(customerInvoice * 0.85) : 0;  // 85% = 15% commission (max driver pay)
+
       if (originCity || destCity) {
         parsedData.push({
           "Pro #": proRaw,
@@ -275,6 +284,9 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
           "Equipment Type": typeRaw,
           "Weight": weight,
           "Carrier": carrierRaw,
+          "Customer Invoice": customerInvoice > 0 ? String(customerInvoice) : '',
+          "Target Pay": targetRate > 0 ? String(targetRate) : '',
+          "Max Pay": floorRate > 0 ? String(floorRate) : '',
         });
       }
     }
@@ -284,7 +296,7 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
       return;
     }
 
-    const headers = ["Pro #", "Status", "Customer", "Origin City", "Origin State", "Destination City", "Destination State", "Pickup Date", "Delivery Date", "Equipment Type", "Weight", "Carrier"];
+    const headers = ["Pro #", "Status", "Customer", "Origin City", "Origin State", "Destination City", "Destination State", "Pickup Date", "Delivery Date", "Equipment Type", "Weight", "Carrier", "Customer Invoice", "Target Pay", "Max Pay"];
     setCsvHeaders(headers);
     setCsvData(parsedData);
     
@@ -301,6 +313,8 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
       "Equipment Type": "equipment_type",
       "Weight": "weight_lbs",
       "Carrier": "carrier_name",
+      "Target Pay": "target_rate",
+      "Max Pay": "floor_rate",
     });
     
     setStep("map");
