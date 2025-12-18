@@ -79,6 +79,7 @@ interface CallLog {
   voicemail_transcript?: string;
   routed_to_voicemail?: boolean;
   created_at: string;
+  call_started_at?: string; // Actual call time from ElevenLabs
   load_id?: string;
   duration_seconds?: number;
   summary?: string;
@@ -148,12 +149,15 @@ export default function TruckingDashboardPage() {
 
   const fetchData = async () => {
     try {
+      // Use call_started_at for accurate call timestamps (from ElevenLabs, not DB insert time)
+      const todayStart = new Date().toISOString().split("T")[0];
       const [loadsRes, leadsRes, callsRes, voicemailRes, allCallsRes, transcriptsRes] = await Promise.all([
         supabase.from("trucking_loads").select("*").eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("trucking_carrier_leads").select("*, trucking_loads(id, load_number, origin_city, origin_state, destination_city, destination_state, target_rate, equipment_type, miles, pickup_date)").order("created_at", { ascending: false }),
-        supabase.from("trucking_call_logs").select("id").gte("created_at", new Date().toISOString().split("T")[0]),
-        supabase.from("trucking_call_logs").select("id, carrier_phone, call_outcome, recording_url, voicemail_transcript, routed_to_voicemail, created_at").eq("routed_to_voicemail", true).order("created_at", { ascending: false }).limit(10),
-        supabase.from("trucking_call_logs").select("id, carrier_phone, call_outcome, load_id, duration_seconds, summary, created_at").order("created_at", { ascending: false }).limit(100),
+        // Use call_started_at for "Calls Today" - this is the actual ElevenLabs call time
+        supabase.from("trucking_call_logs").select("id").gte("call_started_at", todayStart),
+        supabase.from("trucking_call_logs").select("id, carrier_phone, call_outcome, recording_url, voicemail_transcript, routed_to_voicemail, call_started_at").eq("routed_to_voicemail", true).order("call_started_at", { ascending: false }).limit(10),
+        supabase.from("trucking_call_logs").select("id, carrier_phone, call_outcome, load_id, duration_seconds, summary, call_started_at").order("call_started_at", { ascending: false }).limit(100),
         supabase.from("trucking_call_transcripts").select("*").order("created_at", { ascending: false }).limit(100)
       ]);
 
@@ -655,7 +659,7 @@ export default function TruckingDashboardPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-slate-900">{vm.carrier_phone || "Unknown"}</p>
-                      <p className="text-sm text-slate-500">{format(new Date(vm.created_at), "MMM d, h:mm a")}</p>
+                      <p className="text-sm text-slate-500">{format(new Date(vm.call_started_at || vm.created_at), "MMM d, h:mm a")}</p>
                       {vm.voicemail_transcript && (
                         <p className="text-sm text-slate-600 mt-1 italic">"{vm.voicemail_transcript}"</p>
                       )}
@@ -1045,7 +1049,7 @@ export default function TruckingDashboardPage() {
                                           </Badge>
                                         </div>
                                         <span className="text-xs text-slate-500">
-                                          {format(new Date(call.created_at), "MMM d, h:mm a")}
+                                          {format(new Date(call.call_started_at || call.created_at), "MMM d, h:mm a")}
                                           {call.duration_seconds ? ` • ${Math.floor(call.duration_seconds / 60)}m ${call.duration_seconds % 60}s` : ""}
                                         </span>
                                       </div>

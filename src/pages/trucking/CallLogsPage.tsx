@@ -91,6 +91,7 @@ export default function CallLogsPage() {
 
   const fetchLogs = async () => {
     try {
+      // Order by call_started_at (actual ElevenLabs call time) not created_at (DB insert time)
       const { data, error } = await supabase
         .from("trucking_call_logs")
         .select(`
@@ -99,7 +100,7 @@ export default function CallLogsPage() {
           trucking_call_transcripts(transcript_text, sentiment, key_topics, negotiation_outcome, rate_discussed)
         `)
         .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+        .order("call_started_at", { ascending: false, nullsFirst: false });
 
       if (error) throw error;
       setLogs((data as CallLog[]) || []);

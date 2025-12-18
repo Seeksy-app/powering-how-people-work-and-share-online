@@ -72,19 +72,23 @@ export default function TruckingAnalytics({ dateRange }: TruckingAnalyticsProps)
       const rangeEnd = dateRange?.to ? endOfDay(dateRange.to).toISOString() : undefined;
 
       // Build queries with optional date range filtering
+      // IMPORTANT: Use call_started_at for call logs (actual call time from ElevenLabs)
+      // to prevent backfilled calls from being counted as "today"
       let loadsQuery = supabase.from("trucking_loads").select("id, status, target_rate");
-      let callsQuery = supabase.from("trucking_call_logs").select("id, call_outcome, routed_to_voicemail, created_at, duration_seconds, summary");
+      let callsQuery = supabase.from("trucking_call_logs").select("id, call_outcome, routed_to_voicemail, call_started_at, duration_seconds, summary, estimated_cost_usd");
       let leadsQuery = supabase.from("trucking_carrier_leads").select("id, status, rate_offered, rate_requested");
       let transcriptsQuery = supabase.from("trucking_call_transcripts").select("duration_seconds, rate_discussed, negotiation_outcome, summary, key_topics");
       
       if (rangeStart && rangeEnd) {
         loadsQuery = loadsQuery.gte("created_at", rangeStart).lte("created_at", rangeEnd);
-        callsQuery = callsQuery.gte("created_at", rangeStart).lte("created_at", rangeEnd);
+        // Use call_started_at for calls - this is the actual ElevenLabs timestamp
+        callsQuery = callsQuery.gte("call_started_at", rangeStart).lte("call_started_at", rangeEnd);
         leadsQuery = leadsQuery.gte("created_at", rangeStart).lte("created_at", rangeEnd);
         transcriptsQuery = transcriptsQuery.gte("created_at", rangeStart).lte("created_at", rangeEnd);
       }
 
       // Fetch all data in parallel
+      // Note: Call queries use call_started_at (actual call time) not created_at (DB insert time)
       const [
         loadsRes,
         loadsTodayRes,
@@ -100,8 +104,9 @@ export default function TruckingAnalytics({ dateRange }: TruckingAnalyticsProps)
         supabase.from("trucking_loads").select("id").gte("created_at", todayStart).lte("created_at", todayEnd),
         supabase.from("trucking_loads").select("id").gte("created_at", weekAgo),
         callsQuery,
-        supabase.from("trucking_call_logs").select("id").gte("created_at", todayStart).lte("created_at", todayEnd),
-        supabase.from("trucking_call_logs").select("id").gte("created_at", weekAgo),
+        // Use call_started_at for accurate "calls today" count
+        supabase.from("trucking_call_logs").select("id").gte("call_started_at", todayStart).lte("call_started_at", todayEnd),
+        supabase.from("trucking_call_logs").select("id").gte("call_started_at", weekAgo),
         leadsQuery,
         supabase.from("trucking_carrier_leads").select("id").gte("created_at", todayStart).lte("created_at", todayEnd),
         transcriptsQuery
