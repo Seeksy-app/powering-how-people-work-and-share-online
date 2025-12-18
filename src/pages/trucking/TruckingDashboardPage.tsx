@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Package, Plus, MoreHorizontal, Settings, Edit, Trash2, Copy, CheckCircle2, 
   ChevronDown, ChevronUp, Phone, Users, Search, Sun, Moon, Voicemail, Play, Pause, Archive, RefreshCw, Upload, UserPlus, Sparkles
@@ -126,6 +127,7 @@ export default function TruckingDashboardPage() {
   const [playingVoicemailId, setPlayingVoicemailId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [dailyBriefOpen, setDailyBriefOpen] = useState(false);
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const navigate = useNavigate();
   const { theme: appTheme, setTheme } = useTheme();
@@ -390,6 +392,59 @@ export default function TruckingDashboardPage() {
       fetchData();
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  // Bulk operations for pending leads
+  const handleBulkArchiveLeads = async () => {
+    if (selectedLeadIds.size === 0) return;
+    try {
+      const { error } = await supabase
+        .from("trucking_carrier_leads")
+        .update({ is_archived: true })
+        .in("id", Array.from(selectedLeadIds));
+      if (error) throw error;
+      toast({ title: `${selectedLeadIds.size} leads archived` });
+      setSelectedLeadIds(new Set());
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleBulkDeleteLeads = async () => {
+    if (selectedLeadIds.size === 0) return;
+    try {
+      const { error } = await supabase
+        .from("trucking_carrier_leads")
+        .delete()
+        .in("id", Array.from(selectedLeadIds));
+      if (error) throw error;
+      toast({ title: `${selectedLeadIds.size} leads deleted` });
+      setSelectedLeadIds(new Set());
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const toggleLeadSelection = (leadId: string) => {
+    setSelectedLeadIds(prev => {
+      const next = new Set(prev);
+      if (next.has(leadId)) {
+        next.delete(leadId);
+      } else {
+        next.add(leadId);
+      }
+      return next;
+    });
+  };
+
+  const toggleAllLeads = (leads: Lead[]) => {
+    if (selectedLeadIds.size === leads.length) {
+      setSelectedLeadIds(new Set());
+    } else {
+      setSelectedLeadIds(new Set(leads.map(l => l.id)));
     }
   };
 
@@ -723,9 +778,43 @@ export default function TruckingDashboardPage() {
         </Card>
       ) : activeTab === "pending" ? (
         <Card className="bg-white border border-slate-200 overflow-hidden">
+          {/* Bulk Actions Header */}
+          {selectedLeadIds.size > 0 && (
+            <div className="p-3 bg-blue-50 border-b border-blue-200 flex items-center justify-between">
+              <span className="text-sm font-medium text-blue-700">
+                {selectedLeadIds.size} lead{selectedLeadIds.size > 1 ? 's' : ''} selected
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkArchiveLeads}
+                  className="h-8 gap-1"
+                >
+                  <Archive className="h-4 w-4" />
+                  Archive
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkDeleteLeads}
+                  className="h-8 gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50 border-b border-slate-200">
+                <TableHead className="w-10" onClick={(e) => e.stopPropagation()}>
+                  <Checkbox 
+                    checked={pendingLeads.length > 0 && selectedLeadIds.size === pendingLeads.length}
+                    onCheckedChange={() => toggleAllLeads(pendingLeads)}
+                  />
+                </TableHead>
                 <TableHead className="w-8"></TableHead>
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">Load #</TableHead>
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">Company</TableHead>
@@ -739,7 +828,7 @@ export default function TruckingDashboardPage() {
             <TableBody>
               {pendingLeads.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12">
+                  <TableCell colSpan={9} className="text-center py-12">
                     <div className="flex flex-col items-center gap-2 text-slate-500">
                       <Phone className="h-10 w-10 text-slate-300" />
                       <p>No pending leads yet</p>
@@ -752,9 +841,15 @@ export default function TruckingDashboardPage() {
                   <>
                     <TableRow 
                       key={lead.id} 
-                      className="hover:bg-slate-50 cursor-pointer"
+                      className={`hover:bg-slate-50 cursor-pointer ${selectedLeadIds.has(lead.id) ? 'bg-blue-50' : ''}`}
                       onClick={() => setExpandedLeadId(expandedLeadId === lead.id ? null : lead.id)}
                     >
+                      <TableCell className="w-10" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox 
+                          checked={selectedLeadIds.has(lead.id)}
+                          onCheckedChange={() => toggleLeadSelection(lead.id)}
+                        />
+                      </TableCell>
                       <TableCell className="w-8">
                         {expandedLeadId === lead.id ? (
                           <ChevronUp className="h-4 w-4 text-slate-400" />
@@ -773,37 +868,51 @@ export default function TruckingDashboardPage() {
                         {format(new Date(lead.created_at), "MMM d, h:mm a")}
                       </TableCell>
                       <TableCell onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
+                        <div className="flex items-center gap-2">
+                          {lead.load_id && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => takeLoad(lead.load_id!, fetchData)}
+                              disabled={assignmentLoading === lead.load_id}
+                              className="h-8"
+                            >
+                              <UserPlus className="h-4 w-4 mr-1" />
+                              {assignmentLoading === lead.load_id ? "..." : "Assign"}
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => confirmLead(lead)} className="text-green-600">
-                              <CheckCircle2 className="h-4 w-4 mr-2" />
-                              Confirm
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleEditLead(lead)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleArchiveLead(lead)}>
-                              <Archive className="h-4 w-4 mr-2" />
-                              Archive
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDeleteLead(lead.id)} className="text-red-600">
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => confirmLead(lead)} className="text-green-600">
+                                <CheckCircle2 className="h-4 w-4 mr-2" />
+                                Confirm
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditLead(lead)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleArchiveLead(lead)}>
+                                <Archive className="h-4 w-4 mr-2" />
+                                Archive
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleDeleteLead(lead.id)} className="text-red-600">
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                     {expandedLeadId === lead.id && lead.trucking_loads && (
                       <TableRow key={`${lead.id}-details`} className="bg-slate-50">
-                        <TableCell colSpan={8} className="p-4">
+                        <TableCell colSpan={9} className="p-4">
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                               <p className="text-slate-500 text-xs">Lane</p>
