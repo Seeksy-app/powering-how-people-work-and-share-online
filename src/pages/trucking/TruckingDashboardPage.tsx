@@ -972,32 +972,54 @@ export default function TruckingDashboardPage() {
                     {expandedLeadId === lead.id && lead.trucking_loads && (
                       <TableRow key={`${lead.id}-details`} className="bg-slate-50">
                         <TableCell colSpan={9} className="p-4">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                            <div>
-                              <p className="text-slate-500 text-xs">Lane</p>
-                              <p className="font-medium">
-                                {lead.trucking_loads.origin_city}, {lead.trucking_loads.origin_state} → {lead.trucking_loads.destination_city}, {lead.trucking_loads.destination_state}
-                              </p>
+                          <div className="space-y-4">
+                            {/* Lane Info */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div>
+                                <p className="text-slate-500 text-xs">Lane</p>
+                                <p className="font-medium">
+                                  {lead.trucking_loads.origin_city}, {lead.trucking_loads.origin_state} → {lead.trucking_loads.destination_city}, {lead.trucking_loads.destination_state}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Equipment</p>
+                                <p className="font-medium">{lead.trucking_loads.equipment_type || "—"}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Pickup</p>
+                                <p className="font-medium">{lead.trucking_loads.pickup_date ? format(new Date(lead.trucking_loads.pickup_date), "MMM d, yyyy") : "—"}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Target Rate</p>
+                                <p className="font-medium">${lead.trucking_loads.target_rate?.toLocaleString() || "—"}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-slate-500 text-xs">Equipment</p>
-                              <p className="font-medium">{lead.trucking_loads.equipment_type || "—"}</p>
-                            </div>
-                            <div>
-                              <p className="text-slate-500 text-xs">Distance</p>
-                              <p className="font-medium">{lead.trucking_loads.miles ? `${lead.trucking_loads.miles} mi` : "—"}</p>
-                            </div>
-                            <div>
-                              <p className="text-slate-500 text-xs">Pickup</p>
-                              <p className="font-medium">{lead.trucking_loads.pickup_date ? format(new Date(lead.trucking_loads.pickup_date), "MMM d, yyyy") : "—"}</p>
-                            </div>
-                            <div>
-                              <p className="text-slate-500 text-xs">Target Rate</p>
-                              <p className="font-medium">${lead.trucking_loads.target_rate?.toLocaleString() || "—"}</p>
-                            </div>
-                            <div>
-                              <p className="text-slate-500 text-xs">Confirmed Rate</p>
-                              <p className="font-bold text-green-700 text-lg">${lead.negotiated_rate?.toLocaleString() || lead.trucking_loads.target_rate?.toLocaleString() || "—"}</p>
+                            {/* Load Details */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
+                              <div>
+                                <p className="text-slate-500 text-xs">Commodity</p>
+                                <p className="font-medium">{(lead.trucking_loads as any).commodity || "General Freight"}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Weight</p>
+                                <p className="font-medium">{(lead.trucking_loads as any).weight_lbs ? `${(lead.trucking_loads as any).weight_lbs.toLocaleString()} lbs` : "—"}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Distance</p>
+                                <p className="font-medium">{lead.trucking_loads.miles ? `${lead.trucking_loads.miles.toLocaleString()} mi` : "—"}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Footage</p>
+                                <p className="font-medium">{(lead.trucking_loads as any).length_ft ? `${(lead.trucking_loads as any).length_ft} ft` : "—"}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Floor Rate</p>
+                                <p className="font-medium">${lead.trucking_loads.target_rate?.toLocaleString() || "—"}</p>
+                              </div>
+                              <div>
+                                <p className="text-slate-500 text-xs">Confirmed Rate</p>
+                                <p className="font-bold text-green-700 text-lg">${lead.negotiated_rate?.toLocaleString() || lead.trucking_loads.target_rate?.toLocaleString() || "—"}</p>
+                              </div>
                             </div>
                           </div>
                         </TableCell>
