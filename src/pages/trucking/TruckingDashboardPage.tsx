@@ -1202,7 +1202,7 @@ export default function TruckingDashboardPage() {
                                   try {
                                     const { error } = await supabase
                                       .from("trucking_loads")
-                                      .update({ status: "archived" })
+                                      .update({ status: "archived", is_active: false })
                                       .eq("id", load.id);
                                     if (error) throw error;
                                     toast({ title: "Load archived" });
