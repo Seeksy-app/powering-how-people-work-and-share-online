@@ -201,6 +201,25 @@ export function useWIPAssessment(audiencePath: 'civilian' | 'military' | 'reentr
     }
   }, [currentRoundIndex]);
 
+  // Go forward to next round (for navigating to already-completed rounds)
+  const goForward = useCallback(() => {
+    // Can only go forward if we have a response for the current round
+    const hasResponse = responses.some(r => r.roundIndex === currentRoundIndex);
+    if (hasResponse && currentRoundIndex < rounds.length) {
+      setCurrentRoundIndex((prev) => prev + 1);
+    }
+  }, [currentRoundIndex, responses, rounds.length]);
+
+  // Get response for a specific round
+  const getResponseForRound = useCallback((roundIndex: number) => {
+    return responses.find(r => r.roundIndex === roundIndex) || null;
+  }, [responses]);
+
+  // Check if current round has been completed
+  const hasCompletedCurrentRound = useCallback(() => {
+    return responses.some(r => r.roundIndex === currentRoundIndex);
+  }, [responses, currentRoundIndex]);
+
   // Complete the assessment
   const completeAssessment = useCallback(async () => {
     return await completeAssessmentMutation.mutateAsync();
@@ -249,9 +268,12 @@ export function useWIPAssessment(audiencePath: 'civilian' | 'military' | 'reentr
     startAssessment,
     submitRound,
     goBack,
+    goForward,
     completeAssessment,
     getCurrentRound,
     getLiveScores,
+    getResponseForRound,
+    hasCompletedCurrentRound,
     getTopValues,
     getTopNeeds,
 
