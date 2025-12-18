@@ -169,6 +169,7 @@ const ICON_MAP: Record<string, any> = {
   'marketing': Megaphone,
   'settings': Settings,
   'awards': Award,
+  'aars': FileText,
   // Legacy icon names
   home: LayoutDashboard,
   'layout-dashboard': LayoutDashboard,

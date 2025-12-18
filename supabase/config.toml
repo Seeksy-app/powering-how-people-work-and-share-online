@@ -569,3 +569,6 @@ verify_jwt = false
 
 [[functions.elevenlabs-reconcile-calls.schedules]]
 cron = "0 3 * * *"
+
+[functions.aar-generate-content]
+verify_jwt = true

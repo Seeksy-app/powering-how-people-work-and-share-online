@@ -275,6 +275,10 @@ import AwardsWinners from "./pages/AwardsWinners";
 import AwardsJudgesPortal from "./pages/AwardsJudgesPortal";
 import AwardsAdminTally from "./pages/AwardsAdminTally";
 import PurchaseSponsorship from "./pages/PurchaseSponsorship";
+// AAR (After-Action Reports)
+import AARListPage from "./pages/aar/AARListPage";
+import AAREditorPage from "./pages/aar/AAREditorPage";
+import AARSharePage from "./pages/aar/AARSharePage";
 import TeamChat from "./pages/TeamChat";
 import DropboxCallback from "./pages/DropboxCallback";
 import Team from "./pages/Team";
@@ -1534,6 +1538,12 @@ const AppContent = () => {
         <Route path="/awards/judges" element={<AwardsJudgesPortal />} />
         <Route path="/awards/admin/tally" element={<AwardsAdminTally />} />
         <Route path="/nominate/:programId" element={<PublicNomination />} />
+        
+        {/* AAR (After-Action Reports) Routes */}
+        <Route path="/aar" element={<AARListPage />} />
+        <Route path="/aar/:id" element={<AAREditorPage />} />
+        <Route path="/aar/:id/share" element={<AARSharePage />} />
+        
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/crm" element={<CRM />} />
             <Route path="/sms" element={<SMS />} />
