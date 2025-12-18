@@ -79,31 +79,31 @@ const AUTO_MAP_HINTS: Record<string, string[]> = {
 // Adelphia Metals specific format detection
 const ADELPHIA_HEADERS = ["PICK UP AT", "RATE", "DESTINATION", "READY", "WEIGHT", "LENGTH", "TARP"];
 
-// Aljex TMS - exact column headers from user's export
-// Format: CSV Header → Internal Field
-const ALJEX_COLUMN_MAP: Record<string, string> = {
-  "Pro #": "load_number",
-  "Type": "equipment_type",
-  "Status": "status",
-  "Ship date": "pickup_date",
-  "Pickup City": "origin_city",
-  "Pickup State": "origin_state",
-  "Pickup Zip": "origin_zip",
-  "Consignee City": "destination_city",
-  "Consignee State": "destination_state",
-  "Consignee Zip": "destination_zip",
-  "Description": "commodity",
-  "Weight": "weight_lbs",
-  "Footage": "length_ft",
-  "Miles": "miles",
-  "LH Revenue": "floor_rate",
-  "Hazmat": "hazmat",
-  "Tarps": "equipment_notes",
-  "Tarp Size": "tarp_size",
+// Aljex TMS - Column position-based mapping (Excel column letters to 0-based indices)
+// Formula: Single letter = letter - 'A', Double letter XY = (X - 'A' + 1) * 26 + (Y - 'A')
+const ALJEX_COLUMN_POSITIONS: Record<string, { index: number; field: string }> = {
+  "B": { index: 1, field: "load_number" },      // Pro # → Load #
+  "J": { index: 9, field: "equipment_type" },   // Type → Equipment
+  "N": { index: 13, field: "status" },          // Status
+  "P": { index: 15, field: "pickup_date" },     // Ship date
+  "AF": { index: 31, field: "origin_city" },    // Pickup City
+  "AG": { index: 32, field: "origin_state" },   // Pickup State
+  "AH": { index: 33, field: "origin_zip" },     // Pickup Zip
+  "AJ": { index: 35, field: "destination_city" },   // Consignee City → Destination City
+  "AK": { index: 36, field: "destination_state" },  // Consignee State → Destination State
+  "AL": { index: 37, field: "destination_zip" },    // Consignee Zip → Destination Zip
+  "AQ": { index: 42, field: "commodity" },      // Description → Commodity
+  "AR": { index: 43, field: "weight_lbs" },     // Weight
+  "AS": { index: 44, field: "length_ft" },      // Footage → Truck Size
+  "AW": { index: 48, field: "miles" },          // Miles
+  "BA": { index: 52, field: "floor_rate" },     // LH Revenue → Customer Invoice
+  "FU": { index: 176, field: "hazmat" },        // Hazmat (y/n)
+  "GJ": { index: 191, field: "equipment_notes" }, // Tarps (y/n)
+  "GK": { index: 192, field: "tarp_size" },     // Tarp Size
 };
 
-// Key headers to identify Aljex format
-const ALJEX_TMS_HEADERS = ["Pro #", "Ship date", "Pickup City", "Consignee City", "LH Revenue"];
+// Key columns to detect Aljex format (just need data in these positions)
+const ALJEX_KEY_COLUMNS = [1, 31, 35]; // B (Pro #), AF (Pickup City), AJ (Consignee City)
 
 type ImportTemplate = "auto" | "adelphia" | "aljex" | "standard";
 
@@ -198,123 +198,97 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
   };
 
   const detectAljexTMSFormat = (rawData: any[][]): boolean => {
-    // Look for Aljex TMS header row with our exact column names
-    for (let i = 0; i < Math.min(10, rawData.length); i++) {
-      const row = rawData[i];
-      if (!row) continue;
-      const rowHeaders = row.map(c => String(c || '').trim());
-      // Check if this row has at least 3 of our expected exact headers
-      const matchCount = ALJEX_TMS_HEADERS.filter(h => rowHeaders.includes(h)).length;
-      if (matchCount >= 3) return true;
+    // Check if data exists in key column positions (skip first row as header)
+    if (rawData.length < 2) return false;
+    
+    // Check row 1 (first data row) for data in key positions
+    const dataRow = rawData[1];
+    if (!dataRow) return false;
+    
+    // Check if we have data in at least 2 of the key columns (B, AF, AJ)
+    let hasData = 0;
+    for (const colIdx of ALJEX_KEY_COLUMNS) {
+      if (dataRow[colIdx] && String(dataRow[colIdx]).trim()) {
+        hasData++;
+      }
     }
-    return false;
+    return hasData >= 2;
   };
 
   const parseAljexTMSFormat = (rawData: any[][]) => {
-    // Find header row - look for row containing our exact column names
-    let headerRowIndex = -1;
-    for (let i = 0; i < Math.min(10, rawData.length); i++) {
-      const row = rawData[i];
-      if (!row) continue;
-      const rowHeaders = row.map(c => String(c || '').trim());
-      // Check if this row has at least 3 of our expected exact headers
-      const matchCount = ALJEX_TMS_HEADERS.filter(h => rowHeaders.includes(h)).length;
-      if (matchCount >= 3) {
-        headerRowIndex = i;
-        break;
-      }
-    }
-
-    if (headerRowIndex === -1) {
-      toast.error("Could not find Aljex header row. Looking for: Pro #, Ship date, Pickup City, Consignee City, LH Revenue");
-      return;
-    }
-
-    const headerRow = rawData[headerRowIndex].map(c => String(c || '').trim());
-    console.log("Aljex header row found at index", headerRowIndex, ":", headerRow);
-
-    // Build column index map - only for exact matches
-    const colIndices: Record<string, number> = {};
-    for (const csvHeader of Object.keys(ALJEX_COLUMN_MAP)) {
-      const idx = headerRow.indexOf(csvHeader);
-      if (idx !== -1) {
-        colIndices[csvHeader] = idx;
-        console.log(`Found "${csvHeader}" at column ${idx}`);
-      }
-    }
-
-    // Validate we found essential columns
-    if (!colIndices["Pickup City"] && !colIndices["Consignee City"]) {
-      toast.error("Could not find 'Pickup City' or 'Consignee City' columns");
-      return;
-    }
-
+    // Skip row 0 (header), process all data rows using column positions
     const parsedData: Record<string, string>[] = [];
 
-    for (let i = headerRowIndex + 1; i < rawData.length; i++) {
+    // Helper to get value from specific column index
+    const getVal = (row: any[], colLetter: string): string => {
+      const config = ALJEX_COLUMN_POSITIONS[colLetter];
+      if (!config) return '';
+      const val = row[config.index];
+      return val !== undefined && val !== null ? String(val).trim() : '';
+    };
+
+    console.log("Parsing Aljex by column position. Total rows:", rawData.length);
+
+    for (let i = 1; i < rawData.length; i++) {
       const row = rawData[i];
       if (!row || row.every(c => !c)) continue;
 
-      // Helper to get cell value
-      const getVal = (csvHeader: string): string => {
-        const idx = colIndices[csvHeader];
-        if (idx === undefined || idx < 0) return '';
-        return String(row[idx] || '').trim();
-      };
+      const proNumber = getVal(row, "B");  // Pro # for Load #
+      const originCity = getVal(row, "AF");
+      const destCity = getVal(row, "AJ");
 
-      const originCity = getVal("Pickup City");
-      const destCity = getVal("Consignee City");
-
-      // Skip rows without location data
-      if (!originCity && !destCity) continue;
+      // Skip rows without Pro # or location data
+      if (!proNumber && !originCity && !destCity) continue;
 
       // Parse ship date
-      const shipDateRaw = getVal("Ship date");
+      const shipDateRaw = getVal(row, "P");
       const pickupDate = parseAljexDate(shipDateRaw);
 
       // Parse weight and miles (remove commas)
-      const weight = getVal("Weight").replace(/[,]/g, '');
-      const miles = getVal("Miles").replace(/[,]/g, '');
+      const weight = getVal(row, "AR").replace(/[,]/g, '');
+      const miles = getVal(row, "AW").replace(/[,]/g, '');
 
       // Parse LH Revenue and calculate commission-based pricing
-      const customerInvoice = parseFloat(getVal("LH Revenue").replace(/[,$]/g, '')) || 0;
-      const targetRate = customerInvoice > 0 ? Math.round(customerInvoice * 0.80) : 0; // 80% = 20% commission
-      const floorRate = customerInvoice > 0 ? Math.round(customerInvoice * 0.85) : 0;  // 85% = 15% commission
+      const customerInvoice = parseFloat(getVal(row, "BA").replace(/[,$]/g, '')) || 0;
+      const targetRate = customerInvoice > 0 ? Math.round(customerInvoice * 0.80) : 0;
+      const floorRate = customerInvoice > 0 ? Math.round(customerInvoice * 0.85) : 0;
 
       // Parse boolean fields
-      const hazmatRaw = getVal("Hazmat").toLowerCase();
-      const tarpsRaw = getVal("Tarps").toLowerCase();
+      const hazmatRaw = getVal(row, "FU").toLowerCase();
+      const tarpsRaw = getVal(row, "GJ").toLowerCase();
       const hazmat = hazmatRaw === 'y' || hazmatRaw === 'yes' ? 'Yes' : 'No';
       const tarps = tarpsRaw === 'y' || tarpsRaw === 'yes' ? 'Yes' : 'No';
 
       parsedData.push({
-        "Load #": getVal("Pro #"),
-        "Status": getVal("Status"),
+        "Load #": proNumber,  // Use Pro # directly as Load #
+        "Status": getVal(row, "N"),
         "Origin City": originCity,
-        "Origin State": getVal("Pickup State"),
-        "Origin Zip": getVal("Pickup Zip"),
+        "Origin State": getVal(row, "AG"),
+        "Origin Zip": getVal(row, "AH"),
         "Destination City": destCity,
-        "Destination State": getVal("Consignee State"),
-        "Destination Zip": getVal("Consignee Zip"),
+        "Destination State": getVal(row, "AK"),
+        "Destination Zip": getVal(row, "AL"),
         "Pickup Date": pickupDate,
-        "Equipment": getVal("Type"),
-        "Commodity": getVal("Description"),
+        "Equipment": getVal(row, "J"),
+        "Commodity": getVal(row, "AQ"),
         "Weight": weight,
-        "Footage": getVal("Footage"),
+        "Footage": getVal(row, "AS"),
         "Miles": miles,
         "Customer Invoice": customerInvoice > 0 ? String(customerInvoice) : '',
         "Target Pay": targetRate > 0 ? String(targetRate) : '',
         "Max Pay": floorRate > 0 ? String(floorRate) : '',
         "Hazmat": hazmat,
         "Tarps": tarps,
-        "Tarp Size": getVal("Tarp Size"),
+        "Tarp Size": getVal(row, "GK"),
       });
     }
 
     if (parsedData.length === 0) {
-      toast.error("No valid load data found");
+      toast.error("No valid load data found. Check that your Excel has data starting in row 2.");
       return;
     }
+
+    console.log("Parsed", parsedData.length, "loads. Sample:", parsedData[0]);
 
     const headers = ["Load #", "Status", "Origin City", "Origin State", "Origin Zip", "Destination City", "Destination State", "Destination Zip", "Pickup Date", "Equipment", "Commodity", "Weight", "Footage", "Miles", "Customer Invoice", "Target Pay", "Max Pay", "Hazmat", "Tarps", "Tarp Size"];
     setCsvHeaders(headers);
@@ -340,7 +314,7 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
     });
     
     setStep("map");
-    toast.success(`Detected Aljex TMS format! Found ${parsedData.length} loads`);
+    toast.success(`Found ${parsedData.length} loads using column positions`);
   };
 
   // Parse "STATE CITY" format like "AL CENTRE" → ["AL", "CENTRE"]
