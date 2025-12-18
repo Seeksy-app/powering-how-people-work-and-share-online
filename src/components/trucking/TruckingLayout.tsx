@@ -60,7 +60,7 @@ const theme = {
 
 // Base nav items - filtered based on role (removed Settings - now in user dropdown)
 const allNavItems = [
-  { label: "Dashboard", href: "/trucking/dashboard", icon: LayoutDashboard, ownerOnly: false },
+  { label: "Load Board", href: "/trucking/dashboard", icon: LayoutDashboard, ownerOnly: false },
   { label: "Loads", href: "/trucking/loads", icon: PackageSearch, ownerOnly: false },
   { label: "Call Logs", href: "/trucking/call-logs", icon: ClipboardList, ownerOnly: false },
   { label: "AI Call Analytics", href: "/trucking/ai-analytics", icon: BarChart3, ownerOnly: true },

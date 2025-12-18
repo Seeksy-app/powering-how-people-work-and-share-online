@@ -441,55 +441,36 @@ export default function LoadFormDialog({ open, onOpenChange, onSuccess, editingL
             {/* Rate Fields */}
             {formData.rate_type === "flat" ? (
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="ceiling_rate">Customer Invoice ($) *</Label>
-                  <Input
-                    id="ceiling_rate"
-                    type="number"
-                    step="0.01"
-                    value={formData.ceiling_rate}
-                    onChange={(e) => {
-                      const customerRate = parseFloat(e.target.value) || 0;
-                      const targetRate = (customerRate * 0.80).toFixed(2);
-                      setFormData({ 
-                        ...formData, 
-                        ceiling_rate: e.target.value,
-                        target_rate: targetRate
-                      });
-                    }}
-                    placeholder="e.g., 700"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="target_rate">Target Rate ($) *</Label>
+                    <Input
+                      id="target_rate"
+                      type="number"
+                      step="0.01"
+                      value={formData.target_rate}
+                      onChange={(e) => setFormData({ ...formData, target_rate: e.target.value })}
+                      placeholder="e.g., 2500"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">What we want to pay</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="ceiling_rate">Ceiling Rate ($) *</Label>
+                    <Input
+                      id="ceiling_rate"
+                      type="number"
+                      step="0.01"
+                      value={formData.ceiling_rate}
+                      onChange={(e) => setFormData({ ...formData, ceiling_rate: e.target.value })}
+                      placeholder="e.g., 2700"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Max we can pay</p>
+                  </div>
                 </div>
-                {formData.ceiling_rate && parseFloat(formData.ceiling_rate) > 0 && (
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Est. Payout:</span>
-                      <span className="text-lg font-bold text-foreground">
-                        ${(parseFloat(formData.ceiling_rate) * 0.80).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Est. Comm:</span>
-                      <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                        ${(parseFloat(formData.ceiling_rate) * 0.20).toFixed(2)} (20%)
-                      </span>
-                    </div>
-                    <div className="border-t border-blue-200 dark:border-blue-700 pt-2 mt-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Max Driver Pay (85%):</span>
-                        <span className="text-sm font-medium text-foreground">
-                          ${(parseFloat(formData.ceiling_rate) * 0.85).toFixed(2)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Min Comm (15%):</span>
-                        <span className="text-sm font-medium text-amber-600 dark:text-amber-400">
-                          ${(parseFloat(formData.ceiling_rate) * 0.15).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground pt-1">
-                      Negotiation range: ${ (parseFloat(formData.ceiling_rate) * 0.80).toFixed(0)} - ${(parseFloat(formData.ceiling_rate) * 0.85).toFixed(0)}
+                {formData.target_rate && formData.ceiling_rate && (
+                  <div className="p-3 bg-muted/50 rounded-lg text-sm">
+                    <p className="text-xs text-muted-foreground">
+                      💡 Target/Desired = what we want to pay. Ceiling = max we can pay.
                     </p>
                   </div>
                 )}
