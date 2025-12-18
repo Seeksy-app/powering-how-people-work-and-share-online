@@ -894,32 +894,18 @@ export default function LoadsPage() {
     }
     
     // Flat rate pricing model:
-    // - floor_rate = Customer Invoice Rate (what carrier pays us, e.g., $700)
-    // - target_rate = Est. Payout at 20% commission (floor_rate × 0.80, e.g., $560)
-    // - maxDriverPay = Max Driver Pay at 15% min commission (floor_rate × 0.85, e.g., $595)
-    const customerInvoice = load.floor_rate; // e.g., $700
-    const estPayout = load.target_rate; // e.g., $560 (20% commission)
-    const maxDriverPay = customerInvoice ? Math.round(customerInvoice * 0.85) : null; // e.g., $595 (15% commission)
-    
-    let commissionInfo = null;
-    let maxPayInfo = null;
-    
-    if (customerInvoice && estPayout) {
-      const estComm = customerInvoice - estPayout; // e.g., $140
-      commissionInfo = `Est. Comm: $${estComm.toLocaleString()} (20%)`;
-    }
-    if (maxDriverPay && customerInvoice) {
-      const minComm = customerInvoice - maxDriverPay; // e.g., $105
-      maxPayInfo = `Max Pay: $${maxDriverPay.toLocaleString()} (15% = $${minComm})`;
-    }
+    // - target_rate = Target Rate (what we want to pay, Jess quotes this first)
+    // - floor_rate = Ceiling Rate (max we can pay, Jess can negotiate up to this)
+    const targetRate = load.target_rate; // What we want to pay
+    const ceilingRate = load.floor_rate; // Max we can pay
     
     return {
-      primary: estPayout ? `$${estPayout.toLocaleString()}` : '—',
+      primary: targetRate ? `$${targetRate.toLocaleString()}` : '—',
       secondary: formatRatePerMile(load) ? `~$${formatRatePerMile(load)}/mi` : '',
-      total: customerInvoice ? `Customer Invoice: $${customerInvoice.toLocaleString()}` : '',
+      total: ceilingRate ? `Ceiling: $${ceilingRate.toLocaleString()}` : '',
       negotiated: load.negotiated_rate ? `Neg: $${load.negotiated_rate.toLocaleString()}` : null,
-      commission: commissionInfo,
-      floorRate: maxPayInfo,
+      commission: null,
+      floorRate: null,
     };
   };
 
@@ -1585,9 +1571,20 @@ export default function LoadsPage() {
 
                 {formData.rate_type === 'flat' ? (
                   <>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label>Customer Invoice ($) *</Label>
+                        <Label>Target Rate ($) *</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.target_rate}
+                          onChange={(e) => setFormData({ ...formData, target_rate: e.target.value })}
+                          placeholder="2500"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">What we want to pay</p>
+                      </div>
+                      <div>
+                        <Label>Ceiling Rate ($) *</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -1595,40 +1592,13 @@ export default function LoadsPage() {
                           onChange={(e) => setFormData({ ...formData, floor_rate: e.target.value })}
                           placeholder="2700"
                         />
-                        {formData.floor_rate && (
-                          <div className="mt-1 space-y-0.5">
-                            <p className="text-xs text-muted-foreground">
-                              Est. Payout: ${Math.round(parseFloat(formData.floor_rate) * 0.80).toLocaleString()}
-                            </p>
-                            <p className="text-xs text-green-600">
-                              Est. Comm: ${Math.round(parseFloat(formData.floor_rate) * 0.20).toLocaleString()} (20%)
-                            </p>
-                          </div>
-                        )}
+                        <p className="text-xs text-muted-foreground mt-1">Max we can pay</p>
                       </div>
-                      <div>
-                        <Label>Max Driver Pay (85%)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={formData.target_rate}
-                          onChange={(e) => setFormData({ ...formData, target_rate: e.target.value })}
-                          placeholder={formData.floor_rate ? Math.round(parseFloat(formData.floor_rate) * 0.85).toString() : "2295"}
-                          disabled
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">Auto-calculated (15% min commission)</p>
-                      </div>
-                      <div>
-                        <Label>Negotiated Rate ($)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={formData.negotiated_rate}
-                          onChange={(e) => setFormData({ ...formData, negotiated_rate: e.target.value })}
-                          placeholder="2350"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">Set when carrier agrees</p>
-                      </div>
+                    </div>
+                    <div className="p-3 bg-muted/50 rounded-lg text-sm">
+                      <p className="text-xs text-muted-foreground">
+                        💡 Target/Desired = what we want to pay. Ceiling = max we can pay.
+                      </p>
                     </div>
                   </>
                 ) : (
