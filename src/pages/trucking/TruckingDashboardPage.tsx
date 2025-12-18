@@ -46,6 +46,13 @@ interface Load {
   weight_lbs?: number;
   notes?: string;
   owner_id?: string;
+  assigned_agent_id?: string | null;
+  assigned_at?: string | null;
+  assigned_agent?: {
+    id: string;
+    full_name: string | null;
+    username: string | null;
+  } | null;
 }
 
 interface Lead {
@@ -161,20 +168,36 @@ export default function TruckingDashboardPage() {
       const todayStartUTC = fromZonedTime(todayStartDenver, TIMEZONE).toISOString();
       const todayEndUTC = fromZonedTime(todayEndDenver, TIMEZONE).toISOString();
       
-      const [loadsRes, leadsRes, callsRes, voicemailRes, allCallsRes, transcriptsRes] = await Promise.all([
+      const [loadsRes, leadsRes, callsRes, voicemailRes, allCallsRes, transcriptsRes, agentsRes] = await Promise.all([
         supabase.from("trucking_loads").select("*").eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("trucking_carrier_leads").select("*, trucking_loads(id, load_number, origin_city, origin_state, destination_city, destination_state, target_rate, equipment_type, miles, pickup_date)").order("created_at", { ascending: false }),
         // Use call_started_at for "Calls Today" with proper timezone handling
         supabase.from("trucking_call_logs").select("id").gte("call_started_at", todayStartUTC).lte("call_started_at", todayEndUTC),
         supabase.from("trucking_call_logs").select("id, carrier_phone, call_outcome, recording_url, voicemail_transcript, routed_to_voicemail, call_started_at").eq("routed_to_voicemail", true).order("call_started_at", { ascending: false }).limit(10),
         supabase.from("trucking_call_logs").select("id, carrier_phone, call_outcome, load_id, duration_seconds, summary, call_started_at").order("call_started_at", { ascending: false }).limit(100),
-        supabase.from("trucking_call_transcripts").select("*").order("created_at", { ascending: false }).limit(100)
+        supabase.from("trucking_call_transcripts").select("*").order("created_at", { ascending: false }).limit(100),
+        // Fetch all profiles for agent lookup
+        supabase.from("profiles").select("id, full_name, username")
       ]);
 
       if (loadsRes.error) throw loadsRes.error;
       if (leadsRes.error) throw leadsRes.error;
 
-      setLoads((loadsRes.data as Load[]) || []);
+      // Create agent lookup map
+      const agentMap = new Map<string, { id: string; full_name: string | null; username: string | null }>();
+      if (agentsRes.data) {
+        agentsRes.data.forEach((agent: { id: string; full_name: string | null; username: string | null }) => {
+          agentMap.set(agent.id, agent);
+        });
+      }
+
+      // Attach agent info to loads
+      const loadsWithAgents = (loadsRes.data || []).map((load: any) => ({
+        ...load,
+        assigned_agent: load.assigned_agent_id ? agentMap.get(load.assigned_agent_id) || null : null
+      }));
+
+      setLoads(loadsWithAgents as Load[]);
       setLeads((leadsRes.data as unknown as Lead[]) || []);
       setCallsToday(callsRes.data?.length || 0);
       setVoicemails((voicemailRes.data as unknown as CallLog[]) || []);
@@ -891,6 +914,7 @@ export default function TruckingDashboardPage() {
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">Pickup</TableHead>
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">Equipment</TableHead>
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">Rate</TableHead>
+                <TableHead className="font-medium text-slate-600 whitespace-nowrap">Assigned</TableHead>
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">Status</TableHead>
                 <TableHead className="font-medium text-slate-600 whitespace-nowrap">Actions</TableHead>
               </TableRow>
@@ -950,6 +974,15 @@ export default function TruckingDashboardPage() {
                       </TableCell>
                       <TableCell className="text-slate-600 whitespace-nowrap">{load.equipment_type || "—"}</TableCell>
                       <TableCell className="whitespace-nowrap">{formatRate(load)}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {load.assigned_agent ? (
+                          <span className="text-sm text-primary font-medium">
+                            {load.assigned_agent.full_name || load.assigned_agent.username || "Agent"}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">{getStatusBadge(load.status)}</TableCell>
                       <TableCell className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
