@@ -557,22 +557,41 @@ export function LoadCSVUploadForm({ onUploadSuccess }: LoadCSVUploadFormProps) {
   };
 
   const parseCSV = (file: File) => {
+    // First parse without headers to get raw data for format detection
     Papa.parse(file, {
-      header: true,
+      header: false,
       skipEmptyLines: true,
       complete: (results) => {
-        if (results.data.length === 0) {
+        const rawData = results.data as any[][];
+        
+        if (rawData.length === 0) {
           toast.error("No data found in CSV");
           return;
         }
-        
-        const headers = results.meta.fields || [];
-        setCsvHeaders(headers);
-        setCsvData(results.data as Record<string, string>[]);
-        autoMapColumns(headers);
-        setStep("map");
-        
-        toast.success(`Found ${results.data.length} rows and ${headers.length} columns`);
+
+        // Use selected template or auto-detect
+        if (selectedTemplate === "adelphia") {
+          setIsAdelphiaFormat(true);
+          parseAdelphiaFormat(rawData);
+        } else if (selectedTemplate === "aljex") {
+          setIsAdelphiaFormat(true);
+          parseAljexTMSFormat(rawData);
+        } else if (selectedTemplate === "standard") {
+          parseStandardFormat(rawData);
+        } else {
+          // Auto-detect format
+          const isAdelphi = detectAdelphiaFormat(rawData);
+          const isAljexTMS = detectAljexTMSFormat(rawData);
+          setIsAdelphiaFormat(isAdelphi || isAljexTMS);
+
+          if (isAdelphi) {
+            parseAdelphiaFormat(rawData);
+          } else if (isAljexTMS) {
+            parseAljexTMSFormat(rawData);
+          } else {
+            parseStandardFormat(rawData);
+          }
+        }
       },
       error: (error) => {
         toast.error(`Parse error: ${error.message}`);
