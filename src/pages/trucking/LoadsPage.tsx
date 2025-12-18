@@ -1573,31 +1573,31 @@ export default function LoadsPage() {
                   <>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label>Target Rate ($) *</Label>
+                        <Label>Target Pay ($) *</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.target_rate}
                           onChange={(e) => setFormData({ ...formData, target_rate: e.target.value })}
-                          placeholder="2500"
+                          placeholder="560"
                         />
                         <p className="text-xs text-muted-foreground mt-1">What we want to pay</p>
                       </div>
                       <div>
-                        <Label>Ceiling Rate ($) *</Label>
+                        <Label>Customer Invoice ($) *</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.floor_rate}
                           onChange={(e) => setFormData({ ...formData, floor_rate: e.target.value })}
-                          placeholder="2700"
+                          placeholder="700"
                         />
-                        <p className="text-xs text-muted-foreground mt-1">Max we can pay</p>
+                        <p className="text-xs text-muted-foreground mt-1">What customer pays</p>
                       </div>
                     </div>
                     <div className="p-3 bg-muted/50 rounded-lg text-sm">
                       <p className="text-xs text-muted-foreground">
-                        💡 Target/Desired = what we want to pay. Ceiling = max we can pay.
+                        💡 Target Pay = what we want to pay. Customer Invoice = what customer pays.
                       </p>
                     </div>
                   </>
@@ -1605,7 +1605,7 @@ export default function LoadsPage() {
                   <>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <Label>Desired Rate (Pay rate) ($/ton)</Label>
+                        <Label>Target Pay ($/ton)</Label>
                         <Input
                           type="number"
                           step="0.01"
@@ -1615,13 +1615,13 @@ export default function LoadsPage() {
                         />
                       </div>
                       <div>
-                        <Label>Ceiling Rate ($/ton)</Label>
+                        <Label>Customer Invoice ($/ton)</Label>
                         <Input
                           type="number"
                           step="0.01"
                           value={formData.floor_rate_per_ton}
                           onChange={(e) => setFormData({ ...formData, floor_rate_per_ton: e.target.value })}
-                          placeholder="65"
+                          placeholder="85"
                         />
                       </div>
                       <div>
