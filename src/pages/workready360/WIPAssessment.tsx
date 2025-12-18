@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Loader2, Info } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WIPRankingCard } from '@/components/wip/WIPRankingCard';
@@ -14,6 +14,8 @@ export default function WIPAssessment() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationMilestone, setCelebrationMilestone] = useState(0);
   const hasStartedRef = useRef(false);
+  const shownMilestonesRef = useRef<Set<number>>(new Set());
+  const previousRoundRef = useRef<number>(1);
 
   const {
     values,
@@ -28,9 +30,12 @@ export default function WIPAssessment() {
     startAssessment,
     submitRound,
     goBack,
+    goForward,
     completeAssessment,
     getCurrentRound,
     getLiveScores,
+    getResponseForRound,
+    hasCompletedCurrentRound,
     isStarting,
     isSaving,
     isCompleting,
@@ -44,12 +49,18 @@ export default function WIPAssessment() {
     }
   }, [assessmentId, isLoading, needs.length, rounds.length]);
 
-  // Check for milestones
+  // Check for milestones - only trigger when moving FORWARD and milestone not already shown
   useEffect(() => {
-    if (currentRoundIndex > 1 && (currentRoundIndex - 1) % 7 === 0) {
-      setCelebrationMilestone(currentRoundIndex - 1);
+    const completedRound = currentRoundIndex - 1;
+    const isMovingForward = currentRoundIndex > previousRoundRef.current;
+    
+    if (isMovingForward && completedRound > 0 && completedRound % 7 === 0 && !shownMilestonesRef.current.has(completedRound)) {
+      shownMilestonesRef.current.add(completedRound);
+      setCelebrationMilestone(completedRound);
       setShowCelebration(true);
     }
+    
+    previousRoundRef.current = currentRoundIndex;
   }, [currentRoundIndex]);
 
   const handleRoundComplete = async (rankedNeedIds: string[]) => {
@@ -182,7 +193,7 @@ export default function WIPAssessment() {
         </AnimatePresence>
 
         {/* Navigation */}
-        <div className="flex justify-between mt-4">
+        <div className="flex justify-between items-center mt-4">
           <Button
             variant="ghost"
             onClick={goBack}
@@ -194,6 +205,16 @@ export default function WIPAssessment() {
           <div className="text-sm text-muted-foreground">
             {totalRounds - currentRoundIndex + 1} rounds remaining
           </div>
+          {/* Show Next button if current round is already completed (user went back) */}
+          {hasCompletedCurrentRound() && currentRoundIndex < totalRounds && (
+            <Button
+              variant="ghost"
+              onClick={goForward}
+            >
+              Next
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
         </div>
       </main>
     </div>
