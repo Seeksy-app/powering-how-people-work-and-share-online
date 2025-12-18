@@ -551,3 +551,6 @@ verify_jwt = true
 
 [functions.elevenlabs-backfill-calls]
 verify_jwt = true
+
+[functions.send-board-meeting-notes-email]
+verify_jwt = true
