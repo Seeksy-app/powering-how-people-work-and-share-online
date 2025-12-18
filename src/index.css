@@ -26,7 +26,7 @@ body {
 @layer base {
   :root {
     /* Seeksy Brand Colors (HSL) */
-    --background: 210 40% 99%;          /* #F8FAFC - subtle */
+    --background: 220 20% 97%;          /* Warmer off-white */
     --foreground: 222 47% 11%;          /* #0F172A - ink */
 
     /* Navigation theme tokens */
@@ -47,16 +47,16 @@ body {
     --popover-foreground: 222 47% 11%;
 
     /* Seeksy Blue - Primary */
-    --primary: 220 84% 55%;             /* #2C6BED */
+    --primary: 217 91% 60%;             /* Vibrant blue #3B82F6 */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 220 84% 65%;
+    --primary-glow: 217 91% 70%;
 
     /* Warm CTA Gradient */
     --secondary: 43 91% 64%;            /* #F6C453 */
     --secondary-foreground: 222 47% 11%;
 
     /* Slate for body text */
-    --muted: 210 40% 98%;               /* #F8FAFC */
+    --muted: 220 14% 96%;               /* Softer muted */
     --muted-foreground: 215 16% 47%;    /* #64748B - slate */
 
     --accent: 43 91% 64%;               /* #F6C453 */
@@ -65,39 +65,49 @@ body {
     --destructive: 0 72% 51%;           /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 32% 85%;              /* #CBD5E1 - stronger border */
+    --border: 220 13% 91%;              /* Softer border */
     --input: 0 0% 100%;                 /* Pure white background */
     --input-border: 214 32% 78%;        /* #A1B2C9 - visible field border */
     --input-placeholder: 215 16% 55%;   /* Darker placeholder */
-    --ring: 220 84% 55%;                /* Seeksy Blue */
+    --ring: 217 91% 60%;                /* Seeksy Blue */
 
     /* Brand palette */
     --brand-gold: 43 91% 64%;
     --brand-green: 142 76% 36%;         /* #16A34A - success */
-    --brand-orange: 37 91% 52%;         /* #F59E0B - warning */
-    --brand-blue: 220 84% 55%;          /* #2C6BED */
+    --brand-orange: 25 95% 53%;         /* Vibrant orange */
+    --brand-blue: 217 91% 60%;          /* Vibrant blue */
     --brand-navy: 222 47% 11%;
     --brand-dark-red: 0 72% 51%;
     --brand-red: 0 72% 51%;
+    --brand-purple: 262 83% 58%;        /* Vibrant purple */
+    --brand-cyan: 186 94% 41%;          /* Teal accent */
+    --brand-pink: 330 81% 60%;          /* Pink accent */
 
     /* Soft accent backgrounds */
-    --accent-create: 220 100% 95%;      /* #E8F0FF - soft blue */
-    --accent-connect: 152 40% 94%;      /* #EAF6F1 - soft mint */
-    --accent-monetize: 38 100% 94%;     /* #FFF3E1 - soft sand */
+    --accent-create: 217 100% 96%;      /* Soft blue */
+    --accent-connect: 142 50% 94%;      /* Soft green */
+    --accent-monetize: 38 100% 94%;     /* Soft sand */
+    --accent-purple: 262 80% 96%;       /* Soft purple */
+
+    /* Enhanced Card styles */
+    --card-hover: 220 14% 98%;
+    --card-shadow: 0 4px 6px -1px hsl(220 13% 91% / 0.5), 0 2px 4px -2px hsl(220 13% 91% / 0.5);
+    --card-shadow-hover: 0 20px 25px -5px hsl(220 13% 91% / 0.3), 0 8px 10px -6px hsl(220 13% 91% / 0.3);
 
     /* Light Sidebar Theme (Monday-style) */
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 220 84% 55%;
+    --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 214 32% 91%;
+    --sidebar-accent: 217 91% 96%;
     --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 220 84% 55%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
 
     /* Header/TopNav theme */
-    --header-background: 220 84% 55%;
-    --header-foreground: 0 0% 100%;
+    --header-background: 0 0% 100%;
+    --header-foreground: 222 47% 11%;
+    --header-border: 220 13% 91%;
 
     /* Seeksy Radii */
     --radius: 1rem;                     /* 16px - md */
@@ -105,13 +115,20 @@ body {
     --radius-lg: 1.5rem;                /* 24px */
     --radius-xl: 2rem;                  /* 32px */
     
-    /* Seeksy Shadows */
-    --shadow-soft: 0 18px 40px rgba(15, 23, 42, 0.10);
-    --shadow-glow: 0 30px 70px rgba(15, 23, 42, 0.18);
+    /* Enhanced Shadows */
+    --shadow-soft: 0 4px 6px -1px hsl(220 13% 91% / 0.4), 0 2px 4px -2px hsl(220 13% 91% / 0.4);
+    --shadow-md: 0 10px 15px -3px hsl(220 13% 91% / 0.4), 0 4px 6px -4px hsl(220 13% 91% / 0.4);
+    --shadow-lg: 0 20px 25px -5px hsl(220 13% 91% / 0.3), 0 8px 10px -6px hsl(220 13% 91% / 0.3);
+    --shadow-glow: 0 0 40px hsl(217 91% 60% / 0.2);
+    --shadow-glow-primary: 0 4px 14px hsl(217 91% 60% / 0.25);
     
-    /* Seeksy Gradients */
-    --gradient-warm-cta: linear-gradient(135deg, #F6C453, #F59E0B);
+    /* Enhanced Gradients */
+    --gradient-warm-cta: linear-gradient(135deg, hsl(43 91% 64%), hsl(25 95% 53%));
     --gradient-vibrant: linear-gradient(135deg, hsl(var(--brand-gold)), hsl(var(--brand-orange)));
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(262 83% 58%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 96%) 0%, hsl(262 80% 96%) 50%, hsl(330 81% 97%) 100%);
+    --gradient-card-shine: linear-gradient(135deg, transparent 0%, hsl(0 0% 100% / 0.6) 50%, transparent 100%);
+    --gradient-sidebar: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 20% 98%) 100%);
   }
   
   /* Prevent horizontal scrolling globally */
