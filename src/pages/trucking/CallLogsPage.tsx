@@ -182,11 +182,21 @@ export default function CallLogsPage() {
       (activeTab === "unconfirmed" && !log.lead_id && outcome !== "voicemail" && outcome !== "failed") ||
       (activeTab === "voicemail" && log.routed_to_voicemail);
     
+    // Comprehensive search across all relevant fields
+    const searchLower = searchQuery.toLowerCase().trim();
     const matchesSearch = 
       !searchQuery ||
-      log.carrier_phone?.includes(searchQuery) ||
-      log.summary?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.trucking_loads?.load_number?.toLowerCase().includes(searchQuery.toLowerCase());
+      // Phone number search
+      log.carrier_phone?.toLowerCase().includes(searchLower) ||
+      // Load number search
+      log.trucking_loads?.load_number?.toLowerCase().includes(searchLower) ||
+      // Summary search (includes name if mentioned)
+      log.summary?.toLowerCase().includes(searchLower) ||
+      // ElevenLabs conversation ID search
+      log.elevenlabs_conversation_id?.toLowerCase().includes(searchLower) ||
+      // Transcript search (may contain names, cities)
+      log.transcript?.toLowerCase().includes(searchLower) ||
+      log.voicemail_transcript?.toLowerCase().includes(searchLower);
 
     return matchesTab && matchesSearch;
   });
@@ -259,10 +269,10 @@ export default function CallLogsPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
-                placeholder="Search phone, load..."
+                placeholder="Search phone, name, load, city, conv ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-64"
+                className="pl-9 w-80"
               />
             </div>
           </div>
