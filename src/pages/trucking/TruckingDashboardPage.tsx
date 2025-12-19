@@ -247,13 +247,6 @@ export default function TruckingDashboardPage() {
   const pendingLeads = leads.filter((l) => (l.status === "pending" || l.status === "interested" || l.status === "new") && !(l as any).is_archived);
   const archivedLeads = leads.filter((l) => (l as any).is_archived);
   const confirmedLoads = filteredLoads.filter((l) => l.status === "booked");
-
-  // Earnings calculations
-  const estRevenue = openLoads.reduce((sum, l) => sum + (l.target_rate || 0), 0) + confirmedLoads.reduce((sum, l) => sum + (l.target_rate || 0), 0);
-  const bookedRevenue = confirmedLoads.reduce((sum, l) => sum + (l.target_rate || 0), 0);
-  const estEarnings = openLoads.reduce((sum, l) => sum + (l.broker_commission || 0), 0) + confirmedLoads.reduce((sum, l) => sum + (l.broker_commission || 0), 0);
-  const bookedEarnings = confirmedLoads.reduce((sum, l) => sum + (l.broker_commission || 0), 0);
-
   const getDisplayedLoads = () => {
     if (activeTab === "open") return openLoads;
     if (activeTab === "pending") return []; // pending leads shown separately

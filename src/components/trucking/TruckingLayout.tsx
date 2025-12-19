@@ -304,16 +304,24 @@ export default function TruckingLayout({ children }: TruckingLayoutProps) {
                   Jess
                 </span>
               </div>
-              {/* Cost Estimate - Owner only */}
+              {/* Cost Estimate & Earnings - Owner only */}
               {isOwner && (
                 <div 
-                  className="flex items-center justify-between pt-2 mt-1"
+                  className="pt-2 mt-1 space-y-1"
                   style={{ borderTop: `1px solid ${theme.sidebar.border}` }}
                 >
-                  <span className="text-[11px]" style={{ color: theme.text.muted }}>Est. Cost/Mo</span>
-                  <span className="text-xs font-medium" style={{ color: theme.accent.yellow }}>
-                    {costStats.loading ? "..." : formatCost(costStats.totalCostThisMonth)}
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px]" style={{ color: theme.text.muted }}>My Earnings</span>
+                    <span className="text-xs font-medium" style={{ color: theme.accent.green }}>
+                      $0
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px]" style={{ color: theme.text.muted }}>Est. Cost/Mo</span>
+                    <span className="text-xs font-medium" style={{ color: theme.accent.yellow }}>
+                      {costStats.loading ? "..." : formatCost(costStats.totalCostThisMonth)}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
