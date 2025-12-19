@@ -16,7 +16,7 @@ export interface TruckingCall {
   primary_load_id: string | null;
   load_ids_discussed: string[] | null;
   transcript_text: string | null;
-  call_outcome: 'confirmed' | 'declined' | 'callback_requested' | 'incomplete' | 'error';
+  call_outcome: 'confirmed' | 'declined' | 'callback_requested' | 'incomplete' | 'error' | 'booked' | 'lead_created' | 'resolved' | 'hangup';
   handoff_requested: boolean;
   handoff_reason: string | null;
   lead_created: boolean;
@@ -36,6 +36,11 @@ export interface TruckingCall {
   summary: string | null;
   transcript: string | null;
   recording_url: string | null;
+  // Sentiment fields
+  sentiment_score: number | null;
+  sentiment_label: string | null;
+  was_high_intent: boolean | null;
+  was_premium: boolean | null;
 }
 
 export interface TruckingCallEvent {
@@ -68,8 +73,12 @@ export interface TruckingDailyReport {
   sent_to_dispatch_at: string | null;
 }
 
+// CEI Band type
+type CeiBand = '90-100' | '75-89' | '50-74' | '25-49' | '0-24';
+
 // Helper to compute CEI band from score
-function getCeiBand(score: number): '90-100' | '75-89' | '50-74' | '25-49' | '0-24' {
+function getCeiBand(score: number | null): CeiBand {
+  if (score === null || score === undefined) return '50-74';
   if (score >= 90) return '90-100';
   if (score >= 75) return '75-89';
   if (score >= 50) return '50-74';
@@ -78,26 +87,37 @@ function getCeiBand(score: number): '90-100' | '75-89' | '50-74' | '25-49' | '0-
 }
 
 // Map outcome string to the expected enum
-function mapOutcome(outcome: string | null): 'confirmed' | 'declined' | 'callback_requested' | 'incomplete' | 'error' {
+function mapOutcome(outcome: string | null): TruckingCall['call_outcome'] {
   if (!outcome) return 'incomplete';
   const lower = outcome.toLowerCase();
   if (lower === 'confirmed' || lower === 'completed') return 'confirmed';
   if (lower === 'declined') return 'declined';
   if (lower === 'callback' || lower === 'callback_requested') return 'callback_requested';
   if (lower === 'error' || lower === 'failed') return 'error';
+  if (lower === 'booked') return 'booked';
+  if (lower === 'lead_created') return 'lead_created';
+  if (lower === 'resolved') return 'resolved';
+  if (lower === 'hangup') return 'hangup';
   return 'incomplete';
 }
 
-// Transform trucking_call_logs row to TruckingCall
+// Transform view row to TruckingCall
 function transformCallLog(log: Record<string, unknown>): TruckingCall {
   const durationSeconds = (log.duration_seconds as number | null) ?? 0;
-  // Estimate CEI score based on call success and duration
-  let ceiScore = 50; // Base score
-  if (log.call_successful === true) ceiScore += 30;
-  if (log.lead_id) ceiScore += 20;
-  if (durationSeconds > 60) ceiScore += 10;
-  if (durationSeconds < 15) ceiScore -= 20;
-  ceiScore = Math.max(0, Math.min(100, ceiScore));
+  
+  // Use CEI score from database (computed by the view/function) or calculate fallback
+  let ceiScore = log.cei_score as number | null;
+  if (ceiScore === null || ceiScore === undefined) {
+    // Fallback: Estimate CEI score based on call success and duration
+    ceiScore = 50; // Base score
+    if (log.call_successful === true) ceiScore += 30;
+    if (log.lead_id) ceiScore += 20;
+    if (durationSeconds > 60) ceiScore += 10;
+    if (durationSeconds < 15) ceiScore -= 20;
+    ceiScore = Math.max(0, Math.min(100, ceiScore));
+  }
+  
+  const ceiBand = (log.cei_band as CeiBand) || getCeiBand(ceiScore);
   
   return {
     id: log.id as string,
@@ -117,7 +137,7 @@ function transformCallLog(log: Record<string, unknown>): TruckingCall {
     lead_created: !!log.lead_id,
     lead_create_error: null,
     cei_score: ceiScore,
-    cei_band: getCeiBand(ceiScore),
+    cei_band: ceiBand,
     cei_reasons: null,
     owner_id: log.owner_id as string | null,
     reviewed_at: null,
@@ -130,6 +150,10 @@ function transformCallLog(log: Record<string, unknown>): TruckingCall {
     summary: log.summary as string | null,
     transcript: log.transcript as string | null,
     recording_url: log.recording_url as string | null,
+    sentiment_score: log.sentiment_score as number | null,
+    sentiment_label: log.sentiment_label as string | null,
+    was_high_intent: log.was_high_intent as boolean | null,
+    was_premium: log.was_premium as boolean | null,
   };
 }
 
@@ -137,29 +161,110 @@ export function useTruckingCalls(date: Date) {
   return useQuery({
     queryKey: ['trucking-calls', format(date, 'yyyy-MM-dd')],
     queryFn: async () => {
-      // Convert date to CST timezone for proper day boundary
+      // Format date for CST comparison
       const cstTz = 'America/Chicago';
       const dateInCst = toZonedTime(date, cstTz);
-      const startOfDayCst = startOfDay(dateInCst);
-      const endOfDayCst = endOfDay(dateInCst);
+      const dateStr = format(dateInCst, 'yyyy-MM-dd');
       
-      // Convert back to UTC for query
-      const startUtc = fromZonedTime(startOfDayCst, cstTz).toISOString();
-      const endUtc = fromZonedTime(endOfDayCst, cstTz).toISOString();
-      
-      // Query trucking_call_logs (the actual data source)
+      // Query the v_trucking_calls_daily_cst view with call_date_cst filter
       const { data, error } = await supabase
-        .from('trucking_call_logs')
-        .select('*')
-        .is('deleted_at', null)
-        .gte('call_started_at', startUtc)
-        .lte('call_started_at', endUtc)
+        .from('v_trucking_calls_daily_cst')
+        .select(`
+          id,
+          carrier_phone,
+          receiver_number,
+          call_started_at,
+          created_at,
+          duration_seconds,
+          outcome,
+          call_outcome,
+          was_high_intent,
+          was_premium,
+          sentiment_label,
+          sentiment_score,
+          cei_score,
+          cei_band,
+          elevenlabs_conversation_id,
+          twilio_call_sid,
+          load_id,
+          lead_id,
+          transcript,
+          summary,
+          recording_url,
+          source,
+          owner_id,
+          call_date_cst
+        `)
+        .eq('call_date_cst', dateStr)
         .order('call_started_at', { ascending: false });
       
       if (error) throw error;
       
       // Transform to TruckingCall interface
       return (data || []).map(log => transformCallLog(log as Record<string, unknown>));
+    },
+  });
+}
+
+// Hook to fetch KPIs from the view
+export function useTruckingKPIs(date: Date) {
+  return useQuery({
+    queryKey: ['trucking-kpis', format(date, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      const cstTz = 'America/Chicago';
+      const dateInCst = toZonedTime(date, cstTz);
+      const dateStr = format(dateInCst, 'yyyy-MM-dd');
+      
+      const { data, error } = await supabase
+        .from('v_trucking_call_kpis_by_day_cst')
+        .select('*')
+        .eq('call_date_cst', dateStr)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+// Hook to fetch CEI band breakdown from the view
+export function useTruckingCEIBands(date: Date) {
+  return useQuery({
+    queryKey: ['trucking-cei-bands', format(date, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      const cstTz = 'America/Chicago';
+      const dateInCst = toZonedTime(date, cstTz);
+      const dateStr = format(dateInCst, 'yyyy-MM-dd');
+      
+      const { data, error } = await supabase
+        .from('v_trucking_cei_band_by_day_cst')
+        .select('*')
+        .eq('call_date_cst', dateStr)
+        .order('cei_band');
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// Hook to fetch emotions breakdown from the view
+export function useTruckingEmotions(date: Date) {
+  return useQuery({
+    queryKey: ['trucking-emotions', format(date, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      const cstTz = 'America/Chicago';
+      const dateInCst = toZonedTime(date, cstTz);
+      const dateStr = format(dateInCst, 'yyyy-MM-dd');
+      
+      const { data, error } = await supabase
+        .from('v_trucking_emotions_by_day_cst')
+        .select('*')
+        .eq('call_date_cst', dateStr)
+        .order('calls', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     },
   });
 }
@@ -204,8 +309,6 @@ export function useMarkCallReviewed() {
   
   return useMutation({
     mutationFn: async ({ callId, userId }: { callId: string; userId: string }) => {
-      // Note: trucking_call_logs doesn't have reviewed fields, 
-      // this would need a separate table or columns added
       console.warn('Mark reviewed not yet supported for trucking_call_logs');
     },
     onSuccess: () => {
@@ -241,7 +344,11 @@ export function useUpdateCallNotes() {
 }
 
 export function useTruckingCallsStats(date: Date) {
-  const { data: calls, isLoading } = useTruckingCalls(date);
+  const { data: calls, isLoading: callsLoading } = useTruckingCalls(date);
+  const { data: kpis, isLoading: kpisLoading } = useTruckingKPIs(date);
+  const { data: ceiBands, isLoading: bandsLoading } = useTruckingCEIBands(date);
+  
+  const isLoading = callsLoading || kpisLoading || bandsLoading;
   
   const emptyStats = {
     isLoading,
@@ -256,48 +363,78 @@ export function useTruckingCallsStats(date: Date) {
     engagedCallsCount: 0,
     quickHangupsCount: 0,
     avgTimeToHandoffSeconds: null as number | null,
+    // KPI view data
+    connectedCalls: 0,
+    leadsCreated: 0,
+    successfulOutcomes: 0,
+    booked: 0,
+    callbackRequested: 0,
+    highIntentCalls: 0,
+    negativeCalls: 0,
+    neutralCalls: 0,
+    positiveCalls: 0,
   };
 
   if (isLoading || !calls) {
     return emptyStats;
   }
   
-  const totalCalls = calls.length;
+  const totalCalls = kpis?.total_calls || calls.length;
   if (totalCalls === 0) {
     return { ...emptyStats, isLoading: false };
   }
   
-  const resolvedWithoutHandoff = calls.filter(c => !c.handoff_requested).length;
-  const handoffRequested = calls.filter(c => c.handoff_requested).length;
-  const leadCreated = calls.filter(c => c.lead_created).length;
-  const avgCeiScore = calls.reduce((sum, c) => sum + c.cei_score, 0) / totalCalls;
+  // Use KPIs from view if available
+  const connectedCalls = kpis?.connected_calls || 0;
+  const quickHangups = kpis?.quick_hangups || 0;
+  const leadsCreated = kpis?.leads_created || 0;
+  const successfulOutcomes = kpis?.successful_outcomes || 0;
+  const booked = kpis?.booked || 0;
+  const callbackRequested = kpis?.callback_requested || 0;
+  const highIntentCalls = kpis?.high_intent_calls || 0;
+  const avgCei = kpis?.avg_cei || 0;
+  const negativeCalls = kpis?.negative_calls || 0;
+  const neutralCalls = kpis?.neutral_calls || 0;
+  const positiveCalls = kpis?.positive_calls || 0;
   
-  const ceiBandBreakdown = calls.reduce((acc, c) => {
-    acc[c.cei_band] = (acc[c.cei_band] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  // Build CEI band breakdown from view data
+  const ceiBandBreakdown: Record<string, number> = {
+    '90-100': 0,
+    '75-89': 0,
+    '50-74': 0,
+    '25-49': 0,
+    '0-24': 0,
+  };
   
-  // Engagement metrics
+  if (ceiBands) {
+    ceiBands.forEach((band: { cei_band: string; calls: number }) => {
+      if (band.cei_band && ceiBandBreakdown.hasOwnProperty(band.cei_band)) {
+        ceiBandBreakdown[band.cei_band] = band.calls;
+      }
+    });
+  }
+  
+  // Calculate engagement metrics from calls data
   const callsWithDuration = calls.filter(c => c.call_duration_seconds != null && c.call_duration_seconds > 0);
   const avgDurationSeconds = callsWithDuration.length > 0 
     ? callsWithDuration.reduce((sum, c) => sum + (c.call_duration_seconds || 0), 0) / callsWithDuration.length
     : 0;
   
   const engagedCallsCount = calls.filter(c => (c.call_duration_seconds || 0) > 90).length;
-  const quickHangupsCount = calls.filter(c => (c.call_duration_seconds || 0) < 30 && (c.call_duration_seconds || 0) > 0).length;
+  const quickHangupsCount = quickHangups || calls.filter(c => (c.call_duration_seconds || 0) < 30 && (c.call_duration_seconds || 0) > 0).length;
   
-  const callsWithHandoff = calls.filter(c => c.handoff_requested && c.time_to_handoff_seconds != null);
-  const avgTimeToHandoffSeconds = callsWithHandoff.length > 0
-    ? callsWithHandoff.reduce((sum, c) => sum + (c.time_to_handoff_seconds || 0), 0) / callsWithHandoff.length
-    : null;
+  // Calculate percentages
+  const resolvedWithoutHandoff = calls.filter(c => !c.handoff_requested).length;
+  const handoffRequested = calls.filter(c => c.handoff_requested).length;
+  const leadCreatedCount = leadsCreated || calls.filter(c => c.lead_created).length;
   
   return {
     isLoading: false,
     totalCalls,
-    resolvedWithoutHandoffPct: (resolvedWithoutHandoff / totalCalls) * 100,
-    handoffRequestedPct: (handoffRequested / totalCalls) * 100,
-    leadCreatedPct: (leadCreated / totalCalls) * 100,
-    avgCeiScore: Math.round(avgCeiScore),
+    resolvedWithoutHandoffPct: totalCalls > 0 ? (resolvedWithoutHandoff / totalCalls) * 100 : 0,
+    handoffRequestedPct: totalCalls > 0 ? (handoffRequested / totalCalls) * 100 : 0,
+    leadCreatedPct: totalCalls > 0 ? (leadCreatedCount / totalCalls) * 100 : 0,
+    avgCeiScore: Math.round(avgCei),
     ceiBandBreakdown: {
       '90-100': ceiBandBreakdown['90-100'] || 0,
       '75-89': ceiBandBreakdown['75-89'] || 0,
@@ -309,7 +446,17 @@ export function useTruckingCallsStats(date: Date) {
     avgDurationSeconds,
     engagedCallsCount,
     quickHangupsCount,
-    avgTimeToHandoffSeconds,
+    avgTimeToHandoffSeconds: null,
+    // From KPI view
+    connectedCalls,
+    leadsCreated: leadCreatedCount,
+    successfulOutcomes,
+    booked,
+    callbackRequested,
+    highIntentCalls,
+    negativeCalls,
+    neutralCalls,
+    positiveCalls,
   };
 }
 
@@ -321,15 +468,14 @@ export function useTruckingCallsRange(startDate: Date, endDate: Date) {
       const cstTz = 'America/Chicago';
       const startInCst = toZonedTime(startDate, cstTz);
       const endInCst = toZonedTime(endDate, cstTz);
-      const startUtc = fromZonedTime(startOfDay(startInCst), cstTz).toISOString();
-      const endUtc = fromZonedTime(endOfDay(endInCst), cstTz).toISOString();
+      const startStr = format(startInCst, 'yyyy-MM-dd');
+      const endStr = format(endInCst, 'yyyy-MM-dd');
       
       const { data, error } = await supabase
-        .from('trucking_call_logs')
+        .from('v_trucking_calls_daily_cst')
         .select('*')
-        .is('deleted_at', null)
-        .gte('call_started_at', startUtc)
-        .lte('call_started_at', endUtc)
+        .gte('call_date_cst', startStr)
+        .lte('call_date_cst', endStr)
         .order('call_started_at', { ascending: false });
       
       if (error) throw error;
