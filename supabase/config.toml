@@ -559,10 +559,10 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.elevenlabs-process-pending-webhooks]
-verify_jwt = true
+verify_jwt = false
 
 [[functions.elevenlabs-process-pending-webhooks.schedules]]
-cron = "*/5 * * * *"
+cron = "*/1 * * * *"
 
 [functions.backfill-elevenlabs-summaries]
 verify_jwt = false
@@ -571,7 +571,7 @@ verify_jwt = false
 verify_jwt = false
 
 [[functions.elevenlabs-reconcile-calls.schedules]]
-cron = "0 3 * * *"
+cron = "*/1 * * * *"
 
 [functions.aar-generate-content]
 verify_jwt = true
