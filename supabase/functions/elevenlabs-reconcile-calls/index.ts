@@ -21,7 +21,7 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const elevenLabsApiKey = Deno.env.get('ELEVENLABS_API_KEY');
-  const agentId = Deno.env.get('ELEVENLABS_AGENT_ID');
+  const agentId = Deno.env.get('ELEVENLABS_JESS_AGENT_ID');
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
