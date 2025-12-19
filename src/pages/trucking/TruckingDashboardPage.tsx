@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Package, Plus, MoreHorizontal, Settings, Edit, Trash2, Copy, CheckCircle2, 
-  ChevronDown, ChevronUp, Phone, Users, Voicemail, Play, Pause, Archive, Upload, UserPlus, Sparkles, RefreshCw
+  ChevronDown, ChevronUp, ChevronRight, Phone, Users, Voicemail, Play, Pause, Archive, Upload, UserPlus, Sparkles, RefreshCw
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -136,6 +136,7 @@ export default function TruckingDashboardPage() {
   const [expandedLoadId, setExpandedLoadId] = useState<string | null>(null);
   const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null);
   const [playingVoicemailId, setPlayingVoicemailId] = useState<string | null>(null);
+  const [expandedCallIds, setExpandedCallIds] = useState<string[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [dailyBriefOpen, setDailyBriefOpen] = useState(false);
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
@@ -764,31 +765,59 @@ export default function TruckingDashboardPage() {
               </TableHeader>
               <TableBody>
                 {callLogs.slice(0, 20).map((call) => (
-                  <TableRow key={call.id} className="hover:bg-slate-50">
-                    <TableCell className="font-medium">{call.carrier_phone || "Unknown"}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={
-                        call.call_outcome === 'completed' || call.call_outcome === 'confirmed' 
-                          ? 'bg-green-50 text-green-700 border-green-200'
-                          : call.call_outcome === 'callback_requested'
-                          ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                          : 'bg-slate-50 text-slate-700'
-                      }>
-                        {call.call_outcome || "—"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-slate-500">
-                      {call.duration_seconds 
-                        ? `${Math.floor(call.duration_seconds / 60)}m ${call.duration_seconds % 60}s` 
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-slate-500 text-sm">
-                      {format(new Date(call.call_started_at || call.created_at), "MMM d, h:mm a")}
-                    </TableCell>
-                    <TableCell className="text-slate-600 text-sm max-w-xs truncate">
-                      {call.summary || "—"}
-                    </TableCell>
-                  </TableRow>
+                  <React.Fragment key={call.id}>
+                    <TableRow 
+                      className="hover:bg-slate-50 cursor-pointer"
+                      onClick={() => setExpandedCallIds(prev => 
+                        prev.includes(call.id) 
+                          ? prev.filter(id => id !== call.id)
+                          : [...prev, call.id]
+                      )}
+                    >
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {expandedCallIds.includes(call.id) ? (
+                            <ChevronDown className="h-4 w-4 text-slate-400" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-slate-400" />
+                          )}
+                          {call.carrier_phone || "Unknown"}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={
+                          call.call_outcome === 'completed' || call.call_outcome === 'confirmed' 
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : call.call_outcome === 'callback_requested'
+                            ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                            : 'bg-slate-50 text-slate-700'
+                        }>
+                          {call.call_outcome || "—"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-slate-500">
+                        {call.duration_seconds 
+                          ? `${Math.floor(call.duration_seconds / 60)}m ${call.duration_seconds % 60}s` 
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="text-slate-500 text-sm">
+                        {format(new Date(call.call_started_at || call.created_at), "MMM d, h:mm a")}
+                      </TableCell>
+                      <TableCell className="text-slate-600 text-sm max-w-xs truncate">
+                        {call.summary || "—"}
+                      </TableCell>
+                    </TableRow>
+                    {expandedCallIds.includes(call.id) && (
+                      <TableRow className="bg-slate-50">
+                        <TableCell colSpan={5} className="p-4">
+                          <div className="text-sm text-slate-700 space-y-2">
+                            <p className="font-medium text-slate-900">Call Overview</p>
+                            <p className="whitespace-pre-wrap">{call.summary || "No summary available"}</p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 ))}
               </TableBody>
             </Table>
