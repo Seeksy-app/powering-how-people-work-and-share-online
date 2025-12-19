@@ -784,6 +784,330 @@ const PlatformOnePager = () => {
             </div>
           </section>
 
+          {/* Exhibit A - Technology and IP Description */}
+          <section className="mt-16 print:break-before-page">
+            <div className="border-t-2 border-amber-500/30 pt-8">
+              <h2 className="text-3xl font-bold text-center mb-2 print:text-2xl">Exhibit A</h2>
+              <p className="text-xl text-muted-foreground text-center mb-2 print:text-lg">
+                Technology and Intellectual Property Description
+              </p>
+              <p className="text-xs text-center text-muted-foreground mb-8 italic max-w-2xl mx-auto">
+                This Exhibit A is incorporated by reference into the Agreement and is intended to describe, 
+                at a high level, the technology assets and intellectual property associated with the platform known as "Seeksy."
+              </p>
+
+              {/* 1. Defined Platform */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">1</span>
+                  Defined Platform
+                </h3>
+                <Card className="border-amber-500/20">
+                  <CardContent className="pt-5">
+                    <p className="text-sm text-foreground/90">
+                      <strong>"Seeksy Platform"</strong> means a modular, app-based software platform comprising a unified 
+                      identity layer, application orchestration framework, analytics systems, and usage-based monetization 
+                      mechanisms, together with related documentation, schemas, workflows, and interfaces.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* 2. Core Software Components */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">2</span>
+                  Core Software Components
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3">The Seeksy Platform includes the following core components:</p>
+                <div className="space-y-3">
+                  <Card>
+                    <CardContent className="pt-4 pb-3">
+                      <h4 className="font-semibold text-sm mb-1">2.1 Identity and Profile Layer</h4>
+                      <p className="text-xs text-muted-foreground">
+                        A persistent identity system enabling users to maintain a unified profile across multiple applications, 
+                        including public-facing and private configurations, independent of any single application module.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-3">
+                      <h4 className="font-semibold text-sm mb-1">2.2 Modular Application Framework</h4>
+                      <p className="text-xs text-muted-foreground">
+                        A framework allowing discrete software applications ("Apps") to be activated, deactivated, or modified 
+                        independently while sharing common platform services, including identity, billing, and analytics.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-3">
+                      <h4 className="font-semibold text-sm mb-1">2.3 Monetization and Usage Engine</h4>
+                      <p className="text-xs text-muted-foreground">
+                        A credit-based usage system enabling metered consumption of platform functionality, designed to support 
+                        graceful degradation of services without forced account termination or data loss.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-3">
+                      <h4 className="font-semibold text-sm mb-1">2.4 Analytics and Event Logging Systems</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Event-based data capture, storage, and reporting systems supporting performance measurement, 
+                        engagement analysis, conversion tracking, and operational auditing.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-4 pb-3">
+                      <h4 className="font-semibold text-sm mb-1">2.5 Communication and Interaction Systems</h4>
+                      <p className="text-xs text-muted-foreground">
+                        Integrated voice, messaging, scheduling, and AI-assisted interaction capabilities, including 
+                        call routing, lead qualification, and automated response workflows.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* 3. Intellectual Property Assets */}
+              <div className="mb-6 print:break-before-page">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">3</span>
+                  Intellectual Property Assets
+                </h3>
+                <p className="text-sm text-muted-foreground mb-3 italic">
+                  Unless expressly excluded, the intellectual property associated with the Seeksy Platform includes:
+                </p>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <Card className="bg-amber-500/5 border-amber-500/20">
+                    <CardContent className="pt-4">
+                      <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                        <Code className="h-4 w-4 text-amber-600" />
+                        3.1 Software and Source Code
+                      </h4>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Platform architecture and system design</li>
+                        <li>• Application orchestration logic</li>
+                        <li>• Identity abstraction mechanisms</li>
+                        <li>• Monetization and credit-based usage logic</li>
+                        <li>• Analytics, scoring, and reporting logic</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-amber-500/5 border-amber-500/20">
+                    <CardContent className="pt-4">
+                      <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                        <Database className="h-4 w-4 text-amber-600" />
+                        3.2 Data Models and Schemas
+                      </h4>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Unified identity schemas</li>
+                        <li>• Application-agnostic event schemas</li>
+                        <li>• Performance, engagement, and sentiment scoring</li>
+                        <li>• Aggregated reporting views and data constructs</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-amber-500/5 border-amber-500/20">
+                    <CardContent className="pt-4">
+                      <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                        <GitBranch className="h-4 w-4 text-amber-600" />
+                        3.3 Business Logic and Workflows
+                      </h4>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Application lifecycle management workflows</li>
+                        <li>• Communication and engagement pipelines</li>
+                        <li>• Lead creation, routing, and qualification logic</li>
+                        <li>• Billing and usage tracking workflows</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-amber-500/5 border-amber-500/20">
+                    <CardContent className="pt-4">
+                      <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                        <Palette className="h-4 w-4 text-amber-600" />
+                        3.4 User Interface and Experience Systems
+                      </h4>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Modular page and collection composition logic</li>
+                        <li>• Configurable public and private presentation layers</li>
+                        <li>• Shareable and embeddable interface components</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* 4. Excluded Assets */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">4</span>
+                  Excluded Assets
+                </h3>
+                <Card className="border-destructive/30 bg-destructive/5">
+                  <CardContent className="pt-4">
+                    <p className="text-xs text-muted-foreground mb-2 italic">
+                      Unless otherwise specified in the Agreement, the following are excluded from the intellectual property conveyed:
+                    </p>
+                    <ul className="text-xs text-muted-foreground space-y-1.5">
+                      <li className="flex items-start gap-2">
+                        <span className="text-destructive">×</span>
+                        Third-party software, APIs, or services used in the operation of the Seeksy Platform
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-destructive">×</span>
+                        Open-source components subject to separate license terms
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-destructive">×</span>
+                        User-generated content and data not owned by Seeksy
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-destructive">×</span>
+                        Trademarks, logos, or brand assets unless expressly included
+                      </li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* 5-6 Grid */}
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                {/* 5. Third-Party Services */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">5</span>
+                    Third-Party Services
+                  </h3>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-muted-foreground">
+                        The Seeksy Platform integrates with third-party infrastructure, communications, hosting, and AI 
+                        service providers. Such integrations are <strong>non-exclusive and replaceable</strong>, and no material 
+                        platform functionality is dependent upon a single third-party provider.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* 6. Data Ownership */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">6</span>
+                    Data Ownership
+                  </h3>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <ul className="text-xs text-muted-foreground space-y-1.5">
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-3 w-3 mt-0.5 text-amber-600 shrink-0" />
+                          Platform-generated analytics, derived metrics, schemas, and scoring methodologies constitute Seeksy IP.
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-3 w-3 mt-0.5 text-amber-600 shrink-0" />
+                          User-generated content remains owned by the applicable user, subject to contractual rights.
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <CheckCircle2 className="h-3 w-3 mt-0.5 text-amber-600 shrink-0" />
+                          Data access, export, and retention rights governed by Agreement terms.
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* 7-8 Grid */}
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                {/* 7. Deployment and Transferability */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">7</span>
+                    Deployment and Transferability
+                  </h3>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-muted-foreground mb-2">The Seeksy Platform is designed to support:</p>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li className="flex items-center gap-2">
+                          <ArrowRight className="h-3 w-3 text-amber-600" />
+                          Licensing arrangements
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <ArrowRight className="h-3 w-3 text-amber-600" />
+                          White-label and private-label deployments
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <ArrowRight className="h-3 w-3 text-amber-600" />
+                          Partial or complete transfer of IP
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <ArrowRight className="h-3 w-3 text-amber-600" />
+                          Separation of individual app modules
+                        </li>
+                      </ul>
+                      <p className="text-xs text-muted-foreground mt-2 italic">
+                        Architecture supports transfer without material re-engineering.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* 8. Security and Access Controls */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">8</span>
+                    Security and Access Controls
+                  </h3>
+                  <Card>
+                    <CardContent className="pt-4">
+                      <p className="text-xs text-muted-foreground">
+                        The Seeksy Platform includes role-based access controls, application-level permissioning, and 
+                        event logging sufficient to support audit and compliance requirements.
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2 italic">
+                        Detailed security documentation may be provided upon request.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+
+              {/* 9. No Vertical Restriction */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">9</span>
+                  No Vertical Restriction
+                </h3>
+                <Card className="bg-gradient-to-r from-amber-500/10 to-orange-500/5 border-amber-500/20">
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-foreground/90">
+                      The Seeksy Platform is <strong>not limited to a specific industry or market</strong> and is designed 
+                      for multi-vertical deployment without structural modification.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* 10. No Warranty of Fitness */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center text-xs font-bold text-amber-600">10</span>
+                  No Warranty of Fitness
+                </h3>
+                <Card className="border-muted bg-muted/30">
+                  <CardContent className="pt-4">
+                    <p className="text-xs text-muted-foreground italic">
+                      This Exhibit is provided for descriptive purposes only and does not constitute a warranty of 
+                      performance, fitness for a particular purpose, or non-infringement, except as expressly set 
+                      forth in the Agreement.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </section>
+
           {/* Footer */}
           <footer className="text-center text-xs text-muted-foreground pt-4 border-t print:mt-4">
             <p>© {new Date().getFullYear()} Seeksy. Confidential — For Investor & Licensing Discussions.</p>
