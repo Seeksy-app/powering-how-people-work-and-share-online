@@ -46,25 +46,34 @@ export function SentimentAnalyticsTab({ dateRange }: SentimentAnalyticsTabProps)
       const now = new Date();
       const zonedNow = toZonedTime(now, TIMEZONE);
       
-      const rangeStart = dateRange?.from 
-        ? fromZonedTime(startOfDay(dateRange.from), TIMEZONE).toISOString() 
-        : fromZonedTime(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), TIMEZONE).toISOString(); // Default last 30 days
-      const rangeEnd = dateRange?.to 
-        ? fromZonedTime(endOfDay(dateRange.to), TIMEZONE).toISOString()
-        : fromZonedTime(endOfDay(zonedNow), TIMEZONE).toISOString();
+      // Format dates for CST comparison
+      const startDateCst = dateRange?.from 
+        ? format(toZonedTime(dateRange.from, TIMEZONE), 'yyyy-MM-dd')
+        : format(toZonedTime(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), TIMEZONE), 'yyyy-MM-dd');
+      const endDateCst = dateRange?.to 
+        ? format(toZonedTime(dateRange.to, TIMEZONE), 'yyyy-MM-dd')
+        : format(zonedNow, 'yyyy-MM-dd');
 
-      // Fetch calls with analysis data
+      // Fetch calls from the CST view with sentiment data
       const { data: calls } = await supabase
-        .from('trucking_call_logs')
-        .select('id, carrier_phone, call_outcome, call_started_at, summary, analysis_summary, transcript, data_collection_results')
-        .is('deleted_at', null)
-        .gte('call_started_at', rangeStart)
-        .lte('call_started_at', rangeEnd);
+        .from('v_trucking_calls_daily_cst')
+        .select('id, carrier_phone, call_outcome, call_started_at, summary, analysis_summary, transcript, data_collection_results, sentiment_label, sentiment_score, call_date_cst')
+        .gte('call_date_cst', startDateCst)
+        .lte('call_date_cst', endDateCst);
 
       const callsData = calls || [];
 
-      // Analyze sentiment from transcripts/summaries
-      const analyzeSentiment = (call: typeof callsData[0]): 'positive' | 'neutral' | 'negative' => {
+      // Use database sentiment if available, otherwise analyze from text
+      const getSentiment = (call: typeof callsData[0]): 'positive' | 'neutral' | 'negative' => {
+        // First check if we have sentiment_label from the database
+        if (call.sentiment_label) {
+          const label = call.sentiment_label.toLowerCase();
+          if (label === 'positive') return 'positive';
+          if (label === 'negative') return 'negative';
+          return 'neutral';
+        }
+        
+        // Fallback: analyze from text
         const text = `${call.summary || ''} ${call.analysis_summary || ''} ${call.transcript || ''}`.toLowerCase();
         
         const positiveWords = ['thank', 'great', 'perfect', 'excellent', 'appreciate', 'confirmed', 'book', 'deal', 'interested', 'sounds good'];
@@ -78,7 +87,7 @@ export function SentimentAnalyticsTab({ dateRange }: SentimentAnalyticsTabProps)
         return 'neutral';
       };
 
-      const sentiments = callsData.map(c => ({ ...c, analyzedSentiment: analyzeSentiment(c) }));
+      const sentiments = callsData.map(c => ({ ...c, analyzedSentiment: getSentiment(c) }));
       
       const positiveCalls = sentiments.filter(c => c.analyzedSentiment === 'positive').length;
       const negativeCalls = sentiments.filter(c => c.analyzedSentiment === 'negative').length;
