@@ -6,6 +6,7 @@ interface CostStats {
   totalCostThisMonth: number;
   callsLast20: number;
   callsThisMonth: number;
+  confirmedCount: number;
   loading: boolean;
   error: string | null;
 }
@@ -16,6 +17,7 @@ export function useTruckingCostStats() {
     totalCostThisMonth: 0,
     callsLast20: 0,
     callsThisMonth: 0,
+    confirmedCount: 0,
     loading: true,
     error: null,
   });
@@ -31,6 +33,13 @@ export function useTruckingCostStats() {
         setStats(prev => ({ ...prev, loading: false }));
         return;
       }
+
+      // Fetch user's confirmed loads count
+      const { count: confirmedCount } = await supabase
+        .from('trucking_loads')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'booked')
+        .eq('owner_id', user.id);
 
       // First try to get from database
       const { data, error } = await supabase.rpc("get_trucking_cost_stats", {
@@ -56,6 +65,7 @@ export function useTruckingCostStats() {
           totalCostThisMonth: dbCost,
           callsLast20: result.calls_count_last_20 || 0,
           callsThisMonth: dbCallCount,
+          confirmedCount: confirmedCount || 0,
           loading: false,
           error: null,
         });
@@ -75,6 +85,7 @@ export function useTruckingCostStats() {
             totalCostThisMonth: usage.monthly.estimated_cost || 0,
             callsLast20: Math.min(usage.monthly.calls, 20),
             callsThisMonth: usage.monthly.calls || 0,
+            confirmedCount: confirmedCount || 0,
             loading: false,
             error: null,
           });
@@ -90,6 +101,7 @@ export function useTruckingCostStats() {
         totalCostThisMonth: dbCost,
         callsLast20: result.calls_count_last_20 || 0,
         callsThisMonth: dbCallCount,
+        confirmedCount: confirmedCount || 0,
         loading: false,
         error: null,
       });
