@@ -504,6 +504,21 @@ export default function TruckingLayout({ children }: TruckingLayoutProps) {
             </Button>
           </div>
 
+          {/* AI Toggle + Earnings */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+              </span>
+              <span className="text-sm font-medium text-slate-700">AI On</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200">
+              <span className="text-sm font-medium text-green-700">$5</span>
+              <span className="text-xs text-green-600">earned</span>
+            </div>
+          </div>
+
           {/* Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
