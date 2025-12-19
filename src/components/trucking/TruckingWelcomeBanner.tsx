@@ -144,7 +144,7 @@ export function TruckingWelcomeBanner() {
           <span className="text-2xl">👋</span>
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-              {userName ? `${greeting.replace('!', `, ${userName}!`)}` : greeting}
+              {userName ? `Hey ${userName}! ${greeting}` : greeting}
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Let's move some freight today!
