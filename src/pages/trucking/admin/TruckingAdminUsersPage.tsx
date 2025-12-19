@@ -138,6 +138,13 @@ export default function TruckingAdminUsersPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Get user profile for inviter name
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
+
       // Create invite record
       const { data: invite, error } = await supabase
         .from("trucking_user_invites")
@@ -147,7 +154,10 @@ export default function TruckingAdminUsersPage() {
           role: inviteForm.role,
           invited_by: user.id,
         })
-        .select()
+        .select(`
+          *,
+          trucking_agencies(name)
+        `)
         .single();
 
       if (error) throw error;
@@ -157,10 +167,29 @@ export default function TruckingAdminUsersPage() {
       const link = `${baseUrl}/trucking/signup?invite=${invite.invite_token}`;
       setInviteLink(link);
 
-      toast({ 
-        title: "Invite created!", 
-        description: "Share the link with the user to complete their signup." 
+      // Send invite email
+      const { error: emailError } = await supabase.functions.invoke("send-trucking-invite", {
+        body: {
+          email: inviteForm.email,
+          inviteLink: link,
+          role: inviteForm.role,
+          agencyName: invite.trucking_agencies?.name,
+          inviterName: profile?.full_name,
+        },
       });
+
+      if (emailError) {
+        console.error("Error sending invite email:", emailError);
+        toast({ 
+          title: "Invite created!", 
+          description: "Link created but email failed to send. Please share the link manually." 
+        });
+      } else {
+        toast({ 
+          title: "Invite sent!", 
+          description: "Email sent and link is also available below." 
+        });
+      }
 
       // Reset form but keep dialog open to show link
       setInviteForm({ email: "", agency_id: "", role: "admin" });
