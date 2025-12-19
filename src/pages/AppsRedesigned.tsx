@@ -141,13 +141,25 @@ export default function AppsRedesigned() {
     const required = getRequiredModules(moduleId);
     const missingRequired = required.filter(r => !installedModuleIds.includes(r.moduleId));
     
-    // Install required first
-    for (const req of missingRequired) {
-      await addModule(req.moduleId);
+    try {
+      // Install required first
+      for (const req of missingRequired) {
+        await addModule(req.moduleId);
+      }
+      
+      // Then install the module
+      await addModule(moduleId);
+      
+      // Show success confirmation
+      const module = SEEKSY_MODULES.find(m => m.id === moduleId);
+      toast.success("App added!", {
+        description: `${module?.name || 'App'} is now in your sidebar and My Day.`,
+      });
+    } catch (error) {
+      toast.error("Failed to add app", {
+        description: "Please try again.",
+      });
     }
-    
-    // Then install the module
-    await addModule(moduleId);
   };
 
   const handleInstallCollection = async (collection: SeeksyCollection) => {
@@ -157,10 +169,24 @@ export default function AppsRedesigned() {
       return;
     }
     
-    for (const moduleId of collection.includedApps) {
-      if (!installedModuleIds.includes(moduleId)) {
-        await addModule(moduleId);
+    try {
+      const newlyInstalled: string[] = [];
+      for (const moduleId of collection.includedApps) {
+        if (!installedModuleIds.includes(moduleId)) {
+          await addModule(moduleId);
+          newlyInstalled.push(moduleId);
+        }
       }
+      
+      if (newlyInstalled.length > 0) {
+        toast.success(`${collection.name} added!`, {
+          description: `${newlyInstalled.length} apps are now in your sidebar and My Day.`,
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to add collection", {
+        description: "Please try again.",
+      });
     }
   };
 
