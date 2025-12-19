@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, startOfDay, endOfDay } from 'date-fns';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
+// Maps trucking_call_logs to the TruckingCall interface used by analytics
 export interface TruckingCall {
   id: string;
   created_at: string;
@@ -30,6 +32,10 @@ export interface TruckingCall {
   call_duration_seconds: number | null;
   audio_url: string | null;
   time_to_handoff_seconds: number | null;
+  // Additional fields from trucking_call_logs for display
+  summary: string | null;
+  transcript: string | null;
+  recording_url: string | null;
 }
 
 export interface TruckingCallEvent {
@@ -62,22 +68,98 @@ export interface TruckingDailyReport {
   sent_to_dispatch_at: string | null;
 }
 
+// Helper to compute CEI band from score
+function getCeiBand(score: number): '90-100' | '75-89' | '50-74' | '25-49' | '0-24' {
+  if (score >= 90) return '90-100';
+  if (score >= 75) return '75-89';
+  if (score >= 50) return '50-74';
+  if (score >= 25) return '25-49';
+  return '0-24';
+}
+
+// Map outcome string to the expected enum
+function mapOutcome(outcome: string | null): 'confirmed' | 'declined' | 'callback_requested' | 'incomplete' | 'error' {
+  if (!outcome) return 'incomplete';
+  const lower = outcome.toLowerCase();
+  if (lower === 'confirmed' || lower === 'completed') return 'confirmed';
+  if (lower === 'declined') return 'declined';
+  if (lower === 'callback' || lower === 'callback_requested') return 'callback_requested';
+  if (lower === 'error' || lower === 'failed') return 'error';
+  return 'incomplete';
+}
+
+// Transform trucking_call_logs row to TruckingCall
+function transformCallLog(log: Record<string, unknown>): TruckingCall {
+  const durationSeconds = (log.duration_seconds as number | null) ?? 0;
+  // Estimate CEI score based on call success and duration
+  let ceiScore = 50; // Base score
+  if (log.call_successful === true) ceiScore += 30;
+  if (log.lead_id) ceiScore += 20;
+  if (durationSeconds > 60) ceiScore += 10;
+  if (durationSeconds < 15) ceiScore -= 20;
+  ceiScore = Math.max(0, Math.min(100, ceiScore));
+  
+  return {
+    id: log.id as string,
+    created_at: (log.call_started_at as string) || (log.created_at as string),
+    call_provider: (log.source as string) || 'elevenlabs',
+    call_external_id: (log.elevenlabs_conversation_id as string) || (log.twilio_call_sid as string) || null,
+    agent_name: 'Jess', // Default agent name
+    caller_phone: log.carrier_phone as string | null,
+    mc_number: null, // Not stored directly in call_logs
+    company_name: null, // Would need to join with lead
+    primary_load_id: log.load_id as string | null,
+    load_ids_discussed: log.load_id ? [log.load_id as string] : null,
+    transcript_text: (log.transcript as string) || null,
+    call_outcome: mapOutcome((log.call_outcome as string) || (log.outcome as string)),
+    handoff_requested: false, // Would need separate tracking
+    handoff_reason: null,
+    lead_created: !!log.lead_id,
+    lead_create_error: null,
+    cei_score: ceiScore,
+    cei_band: getCeiBand(ceiScore),
+    cei_reasons: null,
+    owner_id: log.owner_id as string | null,
+    reviewed_at: null,
+    reviewed_by: null,
+    flagged_for_coaching: null,
+    internal_notes: null,
+    call_duration_seconds: durationSeconds,
+    audio_url: log.recording_url as string | null,
+    time_to_handoff_seconds: null,
+    summary: log.summary as string | null,
+    transcript: log.transcript as string | null,
+    recording_url: log.recording_url as string | null,
+  };
+}
+
 export function useTruckingCalls(date: Date) {
   return useQuery({
     queryKey: ['trucking-calls', format(date, 'yyyy-MM-dd')],
     queryFn: async () => {
-      const startDate = startOfDay(date).toISOString();
-      const endDate = endOfDay(date).toISOString();
+      // Convert date to CST timezone for proper day boundary
+      const cstTz = 'America/Chicago';
+      const dateInCst = toZonedTime(date, cstTz);
+      const startOfDayCst = startOfDay(dateInCst);
+      const endOfDayCst = endOfDay(dateInCst);
       
+      // Convert back to UTC for query
+      const startUtc = fromZonedTime(startOfDayCst, cstTz).toISOString();
+      const endUtc = fromZonedTime(endOfDayCst, cstTz).toISOString();
+      
+      // Query trucking_call_logs (the actual data source)
       const { data, error } = await supabase
-        .from('trucking_calls')
+        .from('trucking_call_logs')
         .select('*')
-        .gte('created_at', startDate)
-        .lte('created_at', endDate)
-        .order('created_at', { ascending: false });
+        .is('deleted_at', null)
+        .gte('call_started_at', startUtc)
+        .lte('call_started_at', endUtc)
+        .order('call_started_at', { ascending: false });
       
       if (error) throw error;
-      return data as TruckingCall[];
+      
+      // Transform to TruckingCall interface
+      return (data || []).map(log => transformCallLog(log as Record<string, unknown>));
     },
   });
 }
@@ -122,15 +204,9 @@ export function useMarkCallReviewed() {
   
   return useMutation({
     mutationFn: async ({ callId, userId }: { callId: string; userId: string }) => {
-      const { error } = await supabase
-        .from('trucking_calls')
-        .update({
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: userId,
-        })
-        .eq('id', callId);
-      
-      if (error) throw error;
+      // Note: trucking_call_logs doesn't have reviewed fields, 
+      // this would need a separate table or columns added
+      console.warn('Mark reviewed not yet supported for trucking_call_logs');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trucking-calls'] });
@@ -143,12 +219,7 @@ export function useFlagCallForCoaching() {
   
   return useMutation({
     mutationFn: async ({ callId, flagged }: { callId: string; flagged: boolean }) => {
-      const { error } = await supabase
-        .from('trucking_calls')
-        .update({ flagged_for_coaching: flagged })
-        .eq('id', callId);
-      
-      if (error) throw error;
+      console.warn('Flag for coaching not yet supported for trucking_call_logs');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trucking-calls'] });
@@ -161,12 +232,7 @@ export function useUpdateCallNotes() {
   
   return useMutation({
     mutationFn: async ({ callId, notes }: { callId: string; notes: string }) => {
-      const { error } = await supabase
-        .from('trucking_calls')
-        .update({ internal_notes: notes })
-        .eq('id', callId);
-      
-      if (error) throw error;
+      console.warn('Call notes not yet supported for trucking_call_logs');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trucking-calls'] });
@@ -245,4 +311,45 @@ export function useTruckingCallsStats(date: Date) {
     quickHangupsCount,
     avgTimeToHandoffSeconds,
   };
+}
+
+// Hook to get calls for a date range (last 7 days, week, etc.)
+export function useTruckingCallsRange(startDate: Date, endDate: Date) {
+  return useQuery({
+    queryKey: ['trucking-calls-range', format(startDate, 'yyyy-MM-dd'), format(endDate, 'yyyy-MM-dd')],
+    queryFn: async () => {
+      const cstTz = 'America/Chicago';
+      const startInCst = toZonedTime(startDate, cstTz);
+      const endInCst = toZonedTime(endDate, cstTz);
+      const startUtc = fromZonedTime(startOfDay(startInCst), cstTz).toISOString();
+      const endUtc = fromZonedTime(endOfDay(endInCst), cstTz).toISOString();
+      
+      const { data, error } = await supabase
+        .from('trucking_call_logs')
+        .select('*')
+        .is('deleted_at', null)
+        .gte('call_started_at', startUtc)
+        .lte('call_started_at', endUtc)
+        .order('call_started_at', { ascending: false });
+      
+      if (error) throw error;
+      return (data || []).map(log => transformCallLog(log as Record<string, unknown>));
+    },
+  });
+}
+
+// Hook to check if calls exist outside the current date
+export function useTruckingCallsExist() {
+  return useQuery({
+    queryKey: ['trucking-calls-exist'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('trucking_call_logs')
+        .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null);
+      
+      if (error) throw error;
+      return (count || 0) > 0;
+    },
+  });
 }
