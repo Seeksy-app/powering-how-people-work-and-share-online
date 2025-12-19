@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Sparkles, Star, Trophy } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 
 interface WIPMicroCelebrationProps {
   show: boolean;
@@ -11,8 +11,8 @@ interface WIPMicroCelebrationProps {
 
 export function WIPMicroCelebration({ show, milestone, onComplete }: WIPMicroCelebrationProps) {
   useEffect(() => {
-    if (show) {
-      // Trigger confetti
+    if (show && milestone === 21) {
+      // Trigger confetti only on final completion
       confetti({
         particleCount: 50,
         spread: 60,
@@ -27,27 +27,10 @@ export function WIPMicroCelebration({ show, milestone, onComplete }: WIPMicroCel
 
       return () => clearTimeout(timer);
     }
-  }, [show, onComplete]);
+  }, [show, milestone, onComplete]);
 
-  const getMessage = () => {
-    switch (milestone) {
-      case 7:
-        return { icon: Star, text: "1/3 Complete! Great start!" };
-      case 14:
-        return { icon: Sparkles, text: "Halfway there! Keep going!" };
-      case 21:
-        return { icon: Trophy, text: "All done! Calculating your results..." };
-      default:
-        return null;
-    }
-  };
-
-  const message = getMessage();
-  
-  // Don't show celebration for non-milestone rounds
-  if (!message) return null;
-  
-  const { icon: Icon, text } = message;
+  // Only celebrate on final completion (round 21)
+  if (milestone !== 21) return null;
 
   return (
     <AnimatePresence>
@@ -68,9 +51,9 @@ export function WIPMicroCelebration({ show, milestone, onComplete }: WIPMicroCel
               animate={{ rotate: [0, -10, 10, -10, 0] }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Icon className="h-12 w-12 mx-auto text-primary mb-3" />
+              <Trophy className="h-12 w-12 mx-auto text-primary mb-3" />
             </motion.div>
-            <p className="text-lg font-semibold text-foreground">{text}</p>
+            <p className="text-lg font-semibold text-foreground">All done! Calculating your results...</p>
           </motion.div>
         </motion.div>
       )}
