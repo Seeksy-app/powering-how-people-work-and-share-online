@@ -75,10 +75,43 @@ serve(async (req) => {
     let reconciled = 0;
     let leadsCreated = 0;
     let callLogsCreated = 0;
+    let summariesUpdated = 0;
 
     for (const conv of conversations) {
       const convId = conv.conversation_id;
       
+      // Check if call log exists and needs summary update
+      const { data: existingCallLog } = await supabase
+        .from('trucking_call_logs')
+        .select('id, summary')
+        .eq('elevenlabs_conversation_id', convId)
+        .maybeSingle();
+
+      // If call log exists but has no summary, fetch and update it
+      if (existingCallLog && !existingCallLog.summary) {
+        const detailResponse = await fetch(
+          `https://api.elevenlabs.io/v1/convai/conversations/${convId}`,
+          { headers: { 'xi-api-key': elevenLabsApiKey } }
+        );
+
+        if (detailResponse.ok) {
+          const detail = await detailResponse.json();
+          const summary = detail.analysis?.summary || 
+                         detail.analysis?.call_summary ||
+                         detail.metadata?.summary;
+          
+          if (summary) {
+            await supabase
+              .from('trucking_call_logs')
+              .update({ summary })
+              .eq('id', existingCallLog.id);
+            summariesUpdated++;
+            console.log(`Updated summary for call log: ${existingCallLog.id}`);
+          }
+        }
+        continue; // Skip to next conversation
+      }
+
       // Check if we already have this in webhook_events
       const { data: existingEvent } = await supabase
         .from('trucking_webhook_events')
@@ -130,11 +163,26 @@ serve(async (req) => {
         // Check if call log exists
         const { data: existingCallLog } = await supabase
           .from('trucking_call_logs')
-          .select('id, lead_id')
+          .select('id, lead_id, summary')
           .eq('elevenlabs_conversation_id', convId)
           .maybeSingle();
 
-        if (!existingCallLog && callerPhone) {
+        // Get summary from ElevenLabs analysis
+        const summary = detail.analysis?.summary || 
+                       detail.analysis?.call_summary ||
+                       detail.metadata?.summary ||
+                       null;
+
+        if (existingCallLog) {
+          // Update existing call log if summary is missing
+          if (!existingCallLog.summary && summary) {
+            await supabase
+              .from('trucking_call_logs')
+              .update({ summary })
+              .eq('id', existingCallLog.id);
+            console.log(`Updated summary for existing call log: ${existingCallLog.id}`);
+          }
+        } else if (callerPhone) {
           // Create call log
           const { data: ownerData } = await supabase
             .from('trucking_loads')
@@ -159,7 +207,7 @@ serve(async (req) => {
             receiver_number: detail.phone_call?.to_number || null,
             call_cost_credits: detail.metadata?.cost_credits || null,
             llm_cost_usd_total: detail.metadata?.llm_cost_usd || null,
-            summary: detail.analysis?.summary || 'Reconciled from ElevenLabs',
+            summary: summary || 'Reconciled from ElevenLabs',
             source: 'reconciliation',
             post_call_webhook_status: 'missed',
             post_call_webhook_error: 'Webhook not received - recovered via reconciliation',
@@ -211,7 +259,7 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Reconciliation complete: ${reconciled} reconciled, ${callLogsCreated} call logs, ${leadsCreated} leads created`);
+    console.log(`Reconciliation complete: ${reconciled} reconciled, ${callLogsCreated} call logs, ${leadsCreated} leads, ${summariesUpdated} summaries updated`);
 
     return new Response(JSON.stringify({
       ok: true,
@@ -219,6 +267,7 @@ serve(async (req) => {
       reconciled,
       call_logs_created: callLogsCreated,
       leads_created: leadsCreated,
+      summaries_updated: summariesUpdated,
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
