@@ -594,6 +594,7 @@ export default function TruckingDashboardPage() {
               {aiCallsEnabled ? 'AI On' : 'AI Off'}
             </span>
           </div>
+          <span>My Earnings: <strong className="text-green-600">${(confirmedToday * 5).toLocaleString()}</strong> <span className="text-xs text-slate-400">({confirmedToday} × $5)</span></span>
           <span>Est Revenue: <strong className="text-slate-700">${estRevenue.toLocaleString()}</strong></span>
           <span>Booked: <strong className="text-slate-700">{bookedRevenue > 0 ? `$${bookedRevenue.toLocaleString()}` : "—"}</strong></span>
         </div>

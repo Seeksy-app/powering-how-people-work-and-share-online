@@ -6,6 +6,7 @@ import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { MessageSquare, ThumbsUp, ThumbsDown, Meh, TrendingUp, Phone, Repeat, Users, Loader2, AlertCircle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import { Badge } from '@/components/ui/badge';
+import { formatPhoneForDisplay } from '@/utils/phoneFormat';
 
 interface SentimentAnalyticsTabProps {
   dateRange?: { from: Date; to: Date };
@@ -372,7 +373,7 @@ export function SentimentAnalyticsTab({ dateRange }: SentimentAnalyticsTabProps)
                 data.repeatCallers.slice(0, 6).map((caller, index) => (
                   <div key={caller.phone} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
                     <div>
-                      <p className="text-sm font-medium">{caller.phone}</p>
+                      <p className="text-sm font-medium">{formatPhoneForDisplay(caller.phone)}</p>
                       <p className="text-xs text-muted-foreground">Last call: {caller.lastCallDate}</p>
                     </div>
                     <Badge variant={caller.callCount > 3 ? 'default' : 'secondary'}>
