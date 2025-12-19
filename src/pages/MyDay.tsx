@@ -49,6 +49,8 @@ import { QuickCreateCard } from "@/components/dashboard/QuickCreateCard";
 import { QuickActionsRow } from "@/components/dashboard/QuickActionsRow";
 import { RecommendedSeeksiesBanner } from "@/components/dashboard/RecommendedSeeeksiesBanner";
 import { HolidayCreatorBanner } from "@/components/dashboard/HolidayCreatorBanner";
+import { SparkGuidanceCard } from "@/components/dashboard/SparkGuidanceCard";
+import { FirstActionCTA } from "@/components/dashboard/FirstActionCTA";
 import { useHolidaySettings } from "@/hooks/useHolidaySettings";
 import { useRole } from "@/contexts/RoleContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
@@ -564,6 +566,12 @@ export default function MyDay() {
           </div>
         </div>
 
+        {/* Spark Micro-Guidance Card - for new users */}
+        <SparkGuidanceCard firstName={firstName} modulesCount={activeModuleIds.size} />
+
+        {/* First Action CTA - prominent entry point */}
+        <FirstActionCTA hasModules={activeModuleIds.size > 0} />
+
         {/* Social Accounts Banner */}
         <SocialAccountsBanner />
 
@@ -572,7 +580,7 @@ export default function MyDay() {
           <HolidayCreatorBanner firstName={firstName} />
         )}
 
-        {/* Recommended Seeksies Banner */}
+        {/* Recommended Seeksies - reworded copy */}
         <RecommendedSeeksiesBanner />
 
         {/* Quick Actions Row - only renders if modules installed */}
@@ -715,10 +723,7 @@ export default function MyDay() {
               </div>
             )}
 
-            {/* Quick Actions */}
-            {visibleWidgets.find(w => w.id === 'quick-actions') && (
-              <QuickActionsWidget />
-            )}
+            {/* Note: Quick Actions removed from widgets section - now appears once at top via QuickActionsRow */}
           </div>
         )}
       </main>

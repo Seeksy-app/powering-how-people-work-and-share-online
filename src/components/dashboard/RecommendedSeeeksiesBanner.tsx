@@ -98,9 +98,9 @@ export const RecommendedSeeksiesBanner = () => {
                 <Sparkles className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-sm mb-1">Recommended Seeksies</h3>
+                <h3 className="font-semibold text-sm mb-1">Expand Your Toolkit</h3>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Add these modules to unlock more features for your workspace
+                  These Seeksies pair well with what you've already installed
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {recommendedModules.map((mod) => (
