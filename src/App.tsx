@@ -65,6 +65,7 @@ import VideoCollectionPage from "./pages/public/VideoCollectionPage";
 import WorkReady360Home from "./pages/workready360/WorkReady360Home";
 import WIPAssessment from "./pages/workready360/WIPAssessment";
 import WIPResults from "./pages/workready360/WIPResults";
+import IPAssessment from "./pages/workready360/IPAssessment";
 // AITrucking
 import TruckingLandingPage from "./pages/trucking/TruckingLandingPage";
 import TruckingDashboardPage from "./pages/trucking/TruckingDashboardPage";
@@ -856,8 +857,7 @@ const AppContent = () => {
         <Route path="/workready360" element={<WorkReady360Home />} />
         <Route path="/workready360/wip" element={<WIPAssessment />} />
         <Route path="/workready360/wip/results/:assessmentId" element={<WIPResults />} />
-        {/* Placeholder for Interest Profiler */}
-        <Route path="/workready360/ip" element={<WorkReady360Home />} />
+        <Route path="/workready360/interest-profiler" element={<IPAssessment />} />
       </Routes>
     );
   }

@@ -38,7 +38,7 @@ export default function WorkReady360Home() {
       icon: Compass,
       duration: '15-20 min',
       questions: '60 questions',
-      status: 'coming-soon',
+      status: 'available',
       path: '/workready360/interest-profiler',
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
