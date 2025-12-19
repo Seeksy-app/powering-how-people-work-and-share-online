@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Plus, X, Loader2, Clock } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Sparkles, Plus, X, Loader2, Clock, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format, differenceInHours, differenceInMinutes } from "date-fns";
@@ -185,101 +186,115 @@ export function HighIntentKeywordsCard({ loads = [], onRefresh }: HighIntentKeyw
     );
   };
 
+  const [isOpen, setIsOpen] = useState(true);
+
   return (
     <Card className="p-4 border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-amber-600" />
-          <h3 className="font-semibold text-slate-900">High Intent Keywords</h3>
-        </div>
-        <div className="flex items-center gap-1 text-xs text-slate-500">
-          <Clock className="h-3 w-3" />
-          <span>Resets in {getTimeUntilReset()}</span>
-        </div>
-      </div>
-      
-      <p className="text-xs text-slate-600 mb-3">
-        When callers mention these keywords, AI responds: "Congratulations! This is a premium load. 
-        Please provide your company name and phone, and one of our dispatchers will call you right back."
-      </p>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <div className="flex items-center justify-between cursor-pointer">
+            <div className="flex items-center gap-2">
+              {isOpen ? <ChevronDown className="h-4 w-4 text-slate-500" /> : <ChevronRight className="h-4 w-4 text-slate-500" />}
+              <Sparkles className="h-5 w-5 text-amber-600" />
+              <h3 className="font-semibold text-slate-900">High Intent Keywords</h3>
+              {keywords.length > 0 && (
+                <Badge variant="secondary" className="bg-amber-100 text-amber-700">
+                  {keywords.length}
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-1 text-xs text-slate-500">
+              <Clock className="h-3 w-3" />
+              <span>Resets in {getTimeUntilReset()}</span>
+            </div>
+          </div>
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent className="mt-3">
+          <p className="text-xs text-slate-600 mb-3">
+            When callers mention these keywords, AI responds: "Congratulations! This is a premium load. 
+            Please provide your company name and phone, and one of our dispatchers will call you right back."
+          </p>
 
-      {/* Add new keyword */}
-      <div className="flex gap-2 mb-3">
-        <Select value={keywordType} onValueChange={setKeywordType}>
-          <SelectTrigger className="w-[100px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="origin_city">Origin</SelectItem>
-            <SelectItem value="destination_city">Dest</SelectItem>
-            <SelectItem value="load_number">Load #</SelectItem>
-            <SelectItem value="custom">Custom</SelectItem>
-          </SelectContent>
-        </Select>
-        <Input
-          placeholder="Enter keyword..."
-          value={newKeyword}
-          onChange={(e) => setNewKeyword(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addKeyword()}
-          className="flex-1"
-        />
-        <Button size="sm" onClick={addKeyword} disabled={adding}>
-          {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-        </Button>
-      </div>
+          {/* Add new keyword */}
+          <div className="flex gap-2 mb-3">
+            <Select value={keywordType} onValueChange={setKeywordType}>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="origin_city">Origin</SelectItem>
+                <SelectItem value="destination_city">Dest</SelectItem>
+                <SelectItem value="load_number">Load #</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Enter keyword..."
+              value={newKeyword}
+              onChange={(e) => setNewKeyword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && addKeyword()}
+              className="flex-1"
+            />
+            <Button size="sm" onClick={addKeyword} disabled={adding}>
+              {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            </Button>
+          </div>
 
-      {/* Quick add from loads */}
-      {loads.length > 0 && (
-        <div className="mb-3">
-          <Select value={selectedLoadId} onValueChange={(value) => {
-            const load = loads.find(l => l.id === value);
-            if (load) addFromLoad(load);
-          }}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Quick add from load..." />
-            </SelectTrigger>
-            <SelectContent>
-              {loads.slice(0, 10).map((load) => (
-                <SelectItem key={load.id} value={load.id}>
-                  {load.load_number}: {load.origin_city} → {load.destination_city}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+          {/* Quick add from loads */}
+          {loads.length > 0 && (
+            <div className="mb-3">
+              <Select value={selectedLoadId} onValueChange={(value) => {
+                const load = loads.find(l => l.id === value);
+                if (load) addFromLoad(load);
+              }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Quick add from load..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {loads.slice(0, 10).map((load) => (
+                    <SelectItem key={load.id} value={load.id}>
+                      {load.load_number}: {load.origin_city} → {load.destination_city}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-      {/* Current keywords */}
-      <div className="flex flex-wrap gap-2">
-        {loading ? (
-          <div className="text-sm text-slate-500">Loading...</div>
-        ) : keywords.length === 0 ? (
-          <div className="text-sm text-slate-500">No active keywords. Add some to enable premium responses.</div>
-        ) : (
-          keywords.map((kw) => (
-            <Badge 
-              key={kw.id} 
-              variant="secondary" 
-              className="flex items-center gap-1 pr-1 bg-white border"
-            >
-              {getKeywordTypeBadge(kw.keyword_type)}
-              <span className="font-medium">{kw.keyword}</span>
-              <button
-                onClick={() => removeKeyword(kw.id)}
-                className="ml-1 hover:bg-slate-200 rounded p-0.5"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))
-        )}
-      </div>
+          {/* Current keywords */}
+          <div className="flex flex-wrap gap-2">
+            {loading ? (
+              <div className="text-sm text-slate-500">Loading...</div>
+            ) : keywords.length === 0 ? (
+              <div className="text-sm text-slate-500">No active keywords. Add some to enable premium responses.</div>
+            ) : (
+              keywords.map((kw) => (
+                <Badge 
+                  key={kw.id} 
+                  variant="secondary" 
+                  className="flex items-center gap-1 pr-1 bg-white border"
+                >
+                  {getKeywordTypeBadge(kw.keyword_type)}
+                  <span className="font-medium">{kw.keyword}</span>
+                  <button
+                    onClick={() => removeKeyword(kw.id)}
+                    className="ml-1 hover:bg-slate-200 rounded p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))
+            )}
+          </div>
 
-      {keywords.length > 0 && (
-        <div className="mt-2 text-xs text-slate-500">
-          {keywords.length} active keyword{keywords.length !== 1 ? 's' : ''} • All reset at 12:00 AM CST
-        </div>
-      )}
+          {keywords.length > 0 && (
+            <div className="mt-2 text-xs text-slate-500">
+              {keywords.length} active keyword{keywords.length !== 1 ? 's' : ''} • All reset at 12:00 AM CST
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }

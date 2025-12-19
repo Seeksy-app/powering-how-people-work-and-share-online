@@ -382,6 +382,7 @@ serve(async (req) => {
     
     // Fetch summary from ElevenLabs API if not in webhook payload
     let summary = webhookSummary || analysis.summary || analysis.call_successful_summary || null;
+    console.log('Initial summary from webhook:', summary ? `${summary.substring(0, 100)}...` : 'null');
     
     if (!summary && elevenLabsConversationId) {
       const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
@@ -399,18 +400,40 @@ serve(async (req) => {
           
           if (convResponse.ok) {
             const convData = await convResponse.json();
-            console.log('ElevenLabs conversation analysis:', JSON.stringify(convData.analysis, null, 2));
+            console.log('ElevenLabs conversation response keys:', Object.keys(convData));
+            if (convData.analysis) {
+              console.log('ElevenLabs analysis keys:', Object.keys(convData.analysis));
+              console.log('ElevenLabs analysis:', JSON.stringify(convData.analysis, null, 2));
+            }
             
-            // Extract summary from the analysis object
+            // Extract summary from the analysis object - try multiple field names
             if (convData.analysis) {
               summary = convData.analysis.call_successful_summary || 
                        convData.analysis.summary || 
                        convData.analysis.transcript_summary ||
+                       convData.analysis.call_summary ||
                        null;
+              
+              // Also check evaluation criteria results for summary
+              if (!summary && convData.analysis.evaluation_criteria_results) {
+                const evalResults = convData.analysis.evaluation_criteria_results;
+                if (typeof evalResults === 'object') {
+                  // Look for a summary in evaluation results
+                  summary = evalResults.summary || evalResults.call_summary || null;
+                }
+              }
+              
               console.log('Extracted summary from ElevenLabs:', summary ? `${summary.substring(0, 100)}...` : 'null');
             }
+            
+            // If still no summary, check if there's a data field
+            if (!summary && convData.data) {
+              console.log('Checking convData.data for summary...');
+              summary = convData.data.summary || convData.data.call_summary || null;
+            }
           } else {
-            console.warn('Failed to fetch ElevenLabs conversation:', convResponse.status);
+            const errorText = await convResponse.text();
+            console.warn('Failed to fetch ElevenLabs conversation:', convResponse.status, errorText);
           }
         } catch (fetchError) {
           console.error('Error fetching ElevenLabs conversation details:', fetchError);
@@ -419,6 +442,8 @@ serve(async (req) => {
         console.warn('ELEVENLABS_API_KEY not configured, cannot fetch summary');
       }
     }
+    
+    console.log('Final summary value:', summary ? `${summary.substring(0, 100)}...` : 'null');
     
     // Extract duration
     const elevenLabsDuration = 
