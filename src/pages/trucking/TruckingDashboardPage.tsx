@@ -25,6 +25,7 @@ import { LoadCSVUploadForm } from "@/components/trucking/LoadCSVUploadForm";
 import { useLoadAssignment } from "@/hooks/trucking/useLoadAssignment";
 import { TruckingDailyBriefModal } from "@/components/trucking/TruckingDailyBriefModal";
 import { TruckingGlobalSearch } from "@/components/trucking/TruckingGlobalSearch";
+import { TruckingWelcomeBanner } from "@/components/trucking/TruckingWelcomeBanner";
 
 interface Load {
   id: string;
@@ -124,6 +125,7 @@ export default function TruckingDashboardPage() {
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [transcripts, setTranscripts] = useState<CallTranscript[]>([]);
   const [callsToday, setCallsToday] = useState(0);
+  const [confirmedToday, setConfirmedToday] = useState(0);
   const [loading, setLoading] = useState(true);
   const [ownerFilter, setOwnerFilter] = useState<"all" | "mine">("all");
   const [activeTab, setActiveTab] = useState("open");
@@ -170,18 +172,18 @@ export default function TruckingDashboardPage() {
 
   const fetchData = async () => {
     try {
-      // Use Mountain Time (America/Denver) for accurate "today" calculation
-      // This ensures calls at 11pm Denver time aren't counted as "tomorrow" due to UTC
-      const TIMEZONE = 'America/Denver';
+      // Use Central Time (America/Chicago) for accurate "today" calculation
+      // New day starts at midnight CST
+      const TIMEZONE = 'America/Chicago';
       const now = new Date();
-      const nowInDenver = toZonedTime(now, TIMEZONE);
-      const todayStartDenver = startOfDay(nowInDenver);
-      const todayEndDenver = endOfDay(nowInDenver);
+      const nowInCentral = toZonedTime(now, TIMEZONE);
+      const todayStartCentral = startOfDay(nowInCentral);
+      const todayEndCentral = endOfDay(nowInCentral);
       // Convert back to UTC for database query
-      const todayStartUTC = fromZonedTime(todayStartDenver, TIMEZONE).toISOString();
-      const todayEndUTC = fromZonedTime(todayEndDenver, TIMEZONE).toISOString();
+      const todayStartUTC = fromZonedTime(todayStartCentral, TIMEZONE).toISOString();
+      const todayEndUTC = fromZonedTime(todayEndCentral, TIMEZONE).toISOString();
       
-      const [loadsRes, leadsRes, callsRes, voicemailRes, allCallsRes, transcriptsRes, agentsRes] = await Promise.all([
+      const [loadsRes, leadsRes, callsRes, voicemailRes, allCallsRes, transcriptsRes, agentsRes, confirmedTodayRes] = await Promise.all([
         supabase.from("trucking_loads").select("*").eq("is_active", true).order("created_at", { ascending: false }),
         supabase.from("trucking_carrier_leads").select("*, trucking_loads(id, load_number, origin_city, origin_state, destination_city, destination_state, target_rate, equipment_type, miles, pickup_date), trucking_call_logs!trucking_carrier_leads_call_log_id_fkey(id, summary, call_outcome, call_status, duration_seconds)").order("created_at", { ascending: false }),
         // Use call_started_at for "Calls Today" with proper timezone handling
@@ -190,7 +192,9 @@ export default function TruckingDashboardPage() {
         supabase.from("trucking_call_logs").select("id, carrier_phone, call_outcome, load_id, duration_seconds, summary, call_started_at").order("call_started_at", { ascending: false }).limit(100),
         supabase.from("trucking_call_transcripts").select("*").order("created_at", { ascending: false }).limit(100),
         // Fetch all profiles for agent lookup
-        supabase.from("profiles").select("id, full_name, username")
+        supabase.from("profiles").select("id, full_name, username"),
+        // Count confirmed loads for today (status changed to booked today in CST)
+        supabase.from("trucking_loads").select("id").eq("status", "booked").gte("updated_at", todayStartUTC).lte("updated_at", todayEndUTC)
       ]);
 
       if (loadsRes.error) throw loadsRes.error;
@@ -213,6 +217,7 @@ export default function TruckingDashboardPage() {
       setLoads(loadsWithAgents as Load[]);
       setLeads((leadsRes.data as unknown as Lead[]) || []);
       setCallsToday(callsRes.data?.length || 0);
+      setConfirmedToday(confirmedTodayRes.data?.length || 0);
       setVoicemails((voicemailRes.data as unknown as CallLog[]) || []);
       setCallLogs((allCallsRes.data as unknown as CallLog[]) || []);
       setTranscripts((transcriptsRes.data as unknown as CallTranscript[]) || []);
@@ -503,11 +508,14 @@ export default function TruckingDashboardPage() {
         </Button>
       </div>
 
+      {/* Welcome Banner */}
+      <TruckingWelcomeBanner />
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Load Board</h1>
-          <p className="text-slate-500 text-sm">Overview of your loads and leads</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Load Board</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm">Overview of your loads and leads</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Owner Filter Toggle */}
@@ -650,15 +658,16 @@ export default function TruckingDashboardPage() {
           </div>
         </Card>
         <Card 
-          className={`p-4 bg-white cursor-pointer transition-all hover:shadow-md ${activeTab === 'confirmed' ? 'ring-2 ring-green-500' : ''}`}
+          className={`p-4 bg-white dark:bg-slate-800 cursor-pointer transition-all hover:shadow-md ${activeTab === 'confirmed' ? 'ring-2 ring-green-500' : ''}`}
           onClick={() => setActiveTab("confirmed")}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-500">Confirmed Loads</p>
-              <p className="text-3xl font-bold text-slate-900">{confirmedLoads.length}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Confirmed Today</p>
+              <p className="text-3xl font-bold text-slate-900 dark:text-slate-100">{confirmedToday}</p>
+              <p className="text-xs text-slate-400">{confirmedLoads.length} total</p>
             </div>
-            <div className="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <CheckCircle2 className="h-6 w-6 text-green-600" />
             </div>
           </div>
