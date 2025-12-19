@@ -55,6 +55,15 @@ export function useWIPScoring(
     []
   );
 
+  // Convert 0-100 score to -4 to +4 rank scale for display
+  const scoreToRank = useCallback(
+    (stdScore: number): number => {
+      // Map 0-100 to -4 to +4 (linear: 0→-4, 50→0, 100→+4)
+      return ((stdScore / 100) * 8) - 4;
+    },
+    []
+  );
+
   // Calculate all scores from round responses
   const calculateScores = useCallback(
     (responses: RoundResponse[]): WIPScoreResult => {
@@ -162,6 +171,7 @@ export function useWIPScoring(
     needAppearanceMap,
     getNeedMinMax,
     normalizeScore,
+    scoreToRank,
     calculateScores,
     calculatePartialScores,
     getTopValues,

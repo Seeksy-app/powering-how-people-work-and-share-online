@@ -1,19 +1,27 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Trophy, Star, TrendingUp, Loader2, Download, Share2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Trophy, Star, TrendingUp, Loader2, Download, Share2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { WIPValueBars } from '@/components/wip/WIPValueBars';
 import { WIPScoreResult, WIPNeed, WIPValue } from '@/types/wip';
 
+// Convert 0-100 score to -4 to +4 display rank
+function scoreToRank(stdScore: number): number {
+  return ((stdScore / 100) * 8) - 4;
+}
+
 export default function WIPResults() {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
+  const [showAllNeeds, setShowAllNeeds] = useState(false);
 
   // Fetch assessment data
   const { data: assessment, isLoading: assessmentLoading } = useQuery({
@@ -30,7 +38,7 @@ export default function WIPResults() {
     enabled: !!assessmentId,
   });
 
-  // Fetch need scores
+  // Fetch need scores with value data
   const { data: needScores = [], isLoading: needScoresLoading } = useQuery({
     queryKey: ['wip-need-scores', assessmentId],
     queryFn: async () => {
@@ -38,7 +46,7 @@ export default function WIPResults() {
         .from('wip_need_score')
         .select(`
           *,
-          need:wip_need(*)
+          need:wip_need(*, value:wip_value(*))
         `)
         .eq('assessment_id', assessmentId)
         .order('std_score_0_100', { ascending: false });
@@ -114,6 +122,23 @@ export default function WIPResults() {
   const topValues = valueScores.slice(0, 3);
   const topNeeds = needScores.slice(0, 5);
 
+  // Group needs by value for the "All Needs" view
+  const needsByValue: Record<string, any[]> = {};
+  needScores.forEach((ns: any) => {
+    const valueCode = ns.need?.value?.code || 'Unknown';
+    if (!needsByValue[valueCode]) {
+      needsByValue[valueCode] = [];
+    }
+    needsByValue[valueCode].push(ns);
+  });
+
+  // Sort values by their aggregate score
+  const sortedValueCodes = Object.keys(needsByValue).sort((a, b) => {
+    const aScore = valueScores.find((v: any) => v.value.code === a)?.std_score_0_100 || 0;
+    const bScore = valueScores.find((v: any) => v.value.code === b)?.std_score_0_100 || 0;
+    return bScore - aScore;
+  });
+
   const VALUE_DESCRIPTIONS: Record<string, string> = {
     ACHIEVEMENT: 'You thrive when you can use your abilities and see results from your efforts.',
     RECOGNITION: 'You value advancement opportunities, leadership, and being recognized for your contributions.',
@@ -121,6 +146,15 @@ export default function WIPResults() {
     WORKING_CONDITIONS: 'You prioritize job security, good pay, variety, and comfortable working environments.',
     RELATIONSHIPS: 'You value working with supportive co-workers and contributing to others\' well-being.',
     SUPPORT: 'You appreciate supervisors who provide guidance, training, and advocate for their team.',
+  };
+
+  const VALUE_LABELS: Record<string, string> = {
+    ACHIEVEMENT: 'Achievement',
+    RECOGNITION: 'Recognition',
+    INDEPENDENCE: 'Independence',
+    WORKING_CONDITIONS: 'Working Conditions',
+    RELATIONSHIPS: 'Relationships',
+    SUPPORT: 'Support',
   };
 
   return (
@@ -195,7 +229,7 @@ export default function WIPResults() {
         <Tabs defaultValue="values" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="values">All Values</TabsTrigger>
-            <TabsTrigger value="needs">Top Needs</TabsTrigger>
+            <TabsTrigger value="needs">All 21 Needs</TabsTrigger>
             <TabsTrigger value="careers">Career Matches</TabsTrigger>
           </TabsList>
 
@@ -216,43 +250,106 @@ export default function WIPResults() {
           <TabsContent value="needs">
             <Card>
               <CardHeader>
-                <CardTitle>Your Top 5 Work Needs</CardTitle>
+                <CardTitle>Your Full Scores</CardTitle>
                 <CardDescription>
-                  These are the specific aspects of work that matter most to you.
+                  All 21 work needs ranked from -4 (least important) to +4 (most important), grouped by their parent value.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {topNeeds.map((ns: any, index: number) => (
-                  <motion.div
-                    key={ns.need.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center gap-4"
-                  >
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Star className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium">{ns.need.label}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {Math.round(ns.std_score_0_100)}
-                        </span>
+              <CardContent className="space-y-6">
+                {/* Top 5 Needs First */}
+                <div className="space-y-4 mb-6">
+                  <h3 className="font-semibold text-lg">Your Top 5 Work Needs</h3>
+                  <p className="text-sm text-muted-foreground">These are the specific aspects of work that matter most to you.</p>
+                  {topNeeds.map((ns: any, index: number) => (
+                    <motion.div
+                      key={ns.need.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="flex items-center gap-4"
+                    >
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Star className="h-4 w-4 text-primary" />
                       </div>
-                      <Progress value={ns.std_score_0_100} className="h-2" />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {ns.need.description}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-medium">{ns.need.label}</span>
+                          <span className="text-sm font-mono font-semibold">
+                            {scoreToRank(ns.std_score_0_100).toFixed(2)}
+                          </span>
+                        </div>
+                        <Progress value={ns.std_score_0_100} className="h-2" />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {ns.need.description}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
 
-                {/* Show all needs link */}
-                <Button variant="ghost" className="w-full mt-4">
-                  View all 21 needs
+                {/* View All Needs Button */}
+                <Button 
+                  variant="outline" 
+                  className="w-full bg-amber-50 border-primary hover:bg-amber-100"
+                  onClick={() => setShowAllNeeds(!showAllNeeds)}
+                >
+                  {showAllNeeds ? 'Hide' : 'View all 21 needs'}
                   <TrendingUp className="h-4 w-4 ml-2" />
                 </Button>
+
+                {/* All Needs Grouped by Value */}
+                <AnimatePresence>
+                  {showAllNeeds && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      {sortedValueCodes.map((valueCode) => {
+                        const valueData = valueScores.find((v: any) => v.value.code === valueCode);
+                        const valueNeeds = needsByValue[valueCode] || [];
+                        // Sort needs within value by score descending
+                        const sortedNeeds = [...valueNeeds].sort((a, b) => b.std_score_0_100 - a.std_score_0_100);
+                        
+                        return (
+                          <Collapsible key={valueCode} defaultOpen>
+                            <CollapsibleTrigger className="w-full">
+                              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-primary underline">
+                                    {VALUE_LABELS[valueCode] || valueCode}
+                                  </span>
+                                  <Badge variant="outline" className="ml-2">
+                                    {sortedNeeds.length} needs
+                                  </Badge>
+                                </div>
+                                <ChevronDown className="h-4 w-4" />
+                              </div>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="pl-4 pt-2 space-y-2">
+                                {sortedNeeds.map((ns: any) => (
+                                  <div key={ns.need.id} className="flex items-center justify-between py-1">
+                                    <div className="flex-1">
+                                      <span className="font-medium">{ns.need.label}:</span>
+                                      <span className="text-muted-foreground text-sm ml-2">
+                                        {ns.need.description}
+                                      </span>
+                                    </div>
+                                    <span className="font-mono font-semibold text-sm min-w-[60px] text-right">
+                                      {scoreToRank(ns.std_score_0_100).toFixed(2)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </CardContent>
             </Card>
           </TabsContent>
