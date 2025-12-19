@@ -504,7 +504,7 @@ export default function TruckingLayout({ children }: TruckingLayoutProps) {
             </Button>
           </div>
 
-          {/* AI Toggle + Earnings */}
+          {/* AI Toggle + Earnings - earnings = confirmed loads × $5 */}
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100">
               <span className="relative flex h-2 w-2">
@@ -514,7 +514,7 @@ export default function TruckingLayout({ children }: TruckingLayoutProps) {
               <span className="text-sm font-medium text-slate-700">AI On</span>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-50 border border-green-200">
-              <span className="text-sm font-medium text-green-700">$5</span>
+              <span className="text-sm font-medium text-green-700">${costStats.confirmedCount * 5}</span>
               <span className="text-xs text-green-600">earned</span>
             </div>
           </div>
