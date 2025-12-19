@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   ArrowRight, Check, Sparkles, Lock, Zap, 
-  ChevronDown, ChevronUp, Loader2, PartyPopper
+  ChevronDown, ChevronUp, Loader2, PartyPopper, Folder, AlertTriangle
 } from "lucide-react";
 import { UserIntent, getRequiredModules, getEnhancingModules } from "@/config/moduleRelationships";
 import { SEEKSY_MODULES } from "@/components/modules/moduleData";
@@ -25,6 +25,8 @@ interface IntentConfirmationModalProps {
   onClose: () => void;
   intent: UserIntent | null;
   installedModuleIds: string[];
+  workspaceName: string | null;
+  workspaceId: string | null;
 }
 
 export function IntentConfirmationModal({
@@ -32,6 +34,8 @@ export function IntentConfirmationModal({
   onClose,
   intent,
   installedModuleIds,
+  workspaceName,
+  workspaceId,
 }: IntentConfirmationModalProps) {
   const navigate = useNavigate();
   const { activateModule, isActivating } = useModuleActivation();
@@ -68,7 +72,10 @@ export function IntentConfirmationModal({
     }
   }, [isOpen, intent, installedModuleIds]);
 
+  // Guard: no workspace = can't install
   if (!intent) return null;
+  
+  const canInstall = !!workspaceId;
 
   const Icon = intent.icon;
 
@@ -101,6 +108,11 @@ export function IntentConfirmationModal({
   };
 
   const handleConfirm = async () => {
+    // Guardrail: Prevent install without workspace
+    if (!canInstall) {
+      return;
+    }
+    
     const toInstall = Array.from(selectedModules).filter(id => !isModuleInstalled(id));
     
     if (toInstall.length === 0) {
@@ -219,6 +231,28 @@ export function IntentConfirmationModal({
                   </div>
                 </div>
               </DialogHeader>
+
+              {/* Workspace destination */}
+              {workspaceName && (
+                <div className="p-3 rounded-lg bg-muted/50 border border-border mb-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Folder className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Installing to:</span>
+                    <span className="font-medium text-foreground">{workspaceName}</span>
+                    <span className="text-xs text-muted-foreground">(editable later)</span>
+                  </div>
+                </div>
+              )}
+
+              {/* No workspace warning */}
+              {!canInstall && (
+                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 mb-4">
+                  <div className="flex items-center gap-2 text-sm text-destructive">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>No workspace available. Please wait while we set one up.</span>
+                  </div>
+                </div>
+              )}
 
               {/* Workflow Preview */}
               <div className="p-4 rounded-xl bg-muted/50 mb-4">
@@ -373,10 +407,15 @@ export function IntentConfirmationModal({
                 </Button>
                 <Button
                   onClick={handleConfirm}
-                  disabled={newModulesCount === 0 || installState === "installing"}
+                  disabled={!canInstall || newModulesCount === 0 || installState === "installing"}
                   className={cn("gap-2 bg-gradient-to-r", intent.color)}
                 >
-                  {installState === "installing" ? (
+                  {!canInstall ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4" />
+                      No Workspace
+                    </>
+                  ) : installState === "installing" ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Installing...

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,13 +9,14 @@ import {
   Search, Sparkles, Grid3X3, Layers, Package, 
   ChevronRight, Filter, SortAsc, ArrowRight,
   Mic, Scissors, Calendar, Megaphone, Users, Shield, 
-  BrainCircuit, Check, Plus, X
+  BrainCircuit, Check, Plus, X, Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { usePortal } from "@/contexts/PortalContext";
 import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useModuleActivation } from "@/hooks/useModuleActivation";
+import { toast } from "sonner";
 
 // New components
 import { SparkOnboardingGuide } from "@/components/apps/SparkOnboardingGuide";
@@ -33,7 +34,14 @@ type ViewMode = "spark" | "collections" | "modules";
 
 export default function AppsRedesigned() {
   const navigate = useNavigate();
-  const { workspaceModules } = useWorkspace();
+  const { 
+    workspaces, 
+    currentWorkspace, 
+    workspaceModules, 
+    createWorkspace, 
+    setCurrentWorkspace, 
+    isLoading: workspaceLoading 
+  } = useWorkspace();
   const { activateModule } = useModuleActivation();
   
   // Derive installed module IDs from workspace modules
@@ -43,11 +51,40 @@ export default function AppsRedesigned() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [isCreatingWorkspace, setIsCreatingWorkspace] = useState(false);
+  const [sparkMessage, setSparkMessage] = useState<string | null>(null);
   
   // Modals
   const [selectedIntent, setSelectedIntent] = useState<UserIntent | null>(null);
   const [intentModalOpen, setIntentModalOpen] = useState(false);
   const [previewCollection, setPreviewCollection] = useState<SeeksyCollection | null>(null);
+
+  // Auto-create workspace if user has none
+  useEffect(() => {
+    const autoCreateWorkspace = async () => {
+      // Wait for loading to finish, then check if no workspaces
+      if (workspaceLoading || isCreatingWorkspace) return;
+      if (workspaces.length > 0) return;
+      
+      setIsCreatingWorkspace(true);
+      try {
+        const newWorkspace = await createWorkspace("My Workspace");
+        if (newWorkspace) {
+          setCurrentWorkspace(newWorkspace);
+          setSparkMessage("I've set up a workspace for you — you can rename it anytime!");
+          // Clear message after display
+          setTimeout(() => setSparkMessage(null), 5000);
+        }
+      } catch (error) {
+        console.error("Failed to auto-create workspace:", error);
+        toast.error("Failed to create workspace. Please try again.");
+      } finally {
+        setIsCreatingWorkspace(false);
+      }
+    };
+    
+    autoCreateWorkspace();
+  }, [workspaceLoading, workspaces.length, createWorkspace, setCurrentWorkspace, isCreatingWorkspace]);
 
   // Filter modules based on search and category
   const filteredModules = useMemo(() => {
@@ -70,12 +107,23 @@ export default function AppsRedesigned() {
   }, [searchQuery]);
 
   const handleIntentSelect = (intent: UserIntent) => {
+    // Guardrail: Block if no workspace
+    if (!currentWorkspace) {
+      toast.error("No workspace available. Please wait while we set one up.");
+      return;
+    }
     setSelectedIntent(intent);
     setIntentModalOpen(true);
   };
 
 
   const handleInstallModule = async (moduleId: string) => {
+    // Guardrail: Block if no workspace
+    if (!currentWorkspace) {
+      toast.error("No workspace available. Please create a workspace first.");
+      return;
+    }
+    
     // Check for required dependencies
     const required = getRequiredModules(moduleId);
     const missingRequired = required.filter(r => !installedModuleIds.includes(r.moduleId));
@@ -90,6 +138,12 @@ export default function AppsRedesigned() {
   };
 
   const handleInstallCollection = async (collection: SeeksyCollection) => {
+    // Guardrail: Block if no workspace
+    if (!currentWorkspace) {
+      toast.error("No workspace available. Please create a workspace first.");
+      return;
+    }
+    
     for (const moduleId of collection.includedApps) {
       if (!installedModuleIds.includes(moduleId)) {
         await activateModule(moduleId);
@@ -101,9 +155,40 @@ export default function AppsRedesigned() {
     return collection.includedApps.every(id => installedModuleIds.includes(id));
   };
 
+  // Show loading state while creating workspace
+  if (workspaceLoading || isCreatingWorkspace) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">
+            {isCreatingWorkspace ? "Setting up your workspace..." : "Loading..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Spark auto-create message */}
+        <AnimatePresence>
+          {sparkMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200/50 dark:border-amber-800/30"
+            >
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                <p className="text-sm text-foreground">{sparkMessage}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -115,6 +200,11 @@ export default function AppsRedesigned() {
           </h1>
           <p className="text-muted-foreground">
             Build your perfect creator toolkit with AI-powered modules
+            {currentWorkspace && (
+              <span className="ml-2 text-foreground font-medium">
+                → {currentWorkspace.name}
+              </span>
+            )}
           </p>
         </motion.div>
 
@@ -364,6 +454,8 @@ export default function AppsRedesigned() {
         onClose={() => setIntentModalOpen(false)}
         intent={selectedIntent}
         installedModuleIds={installedModuleIds}
+        workspaceName={currentWorkspace?.name || null}
+        workspaceId={currentWorkspace?.id || null}
       />
 
       {previewCollection && (
