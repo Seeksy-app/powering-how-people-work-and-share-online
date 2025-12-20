@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { CookieConsent } from "@/components/CookieConsent";
 import { TopNavigation } from "@/components/homepage/TopNavigation";
+import { AppLoading } from "@/components/ui/AppLoading";
 
 // Homepage sections
 import { HeroWorkspaceSection } from "@/components/homepage/HeroWorkspaceSection";
@@ -84,13 +85,9 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Show nothing while checking auth to prevent flash
+  // Show branded loading while checking auth to prevent flash
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <AppLoading message="Welcome to Seeksy..." />;
   }
 
   return (
