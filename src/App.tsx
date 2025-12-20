@@ -518,6 +518,10 @@ import AdvertiserBilling from "./pages/advertiser/AdvertiserBilling";
 import AdvertiserIntegrations from "./pages/advertiser/AdvertiserIntegrations";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { OnboardingGuard } from "./components/OnboardingGuard";
+// SEO Manager
+import AdminSeoList from "./pages/admin/seo/AdminSeoList";
+import AdminSeoEdit from "./pages/admin/seo/AdminSeoEdit";
+import AdminSeoAssets from "./pages/admin/seo/AdminSeoAssets";
 import MyDay from "./pages/MyDay";
 import Recents from "./pages/Recents";
 import Audience from "./pages/Audience";
@@ -1254,6 +1258,11 @@ const AppContent = () => {
               <Route path="/admin/notes" element={<AdminNotes />} />
               <Route path="/admin/data-mode" element={<AdminDataModeSettings />} />
               <Route path="/admin/users" element={<UserManagement />} />
+              {/* SEO Manager */}
+              <Route path="/admin/seo" element={<AdminSeoList />} />
+              <Route path="/admin/seo/new" element={<AdminSeoEdit />} />
+              <Route path="/admin/seo/assets" element={<AdminSeoAssets />} />
+              <Route path="/admin/seo/:seo_page_id" element={<AdminSeoEdit />} />
           <Route path="/demo-videos" element={<DemoVideos />} />
           <Route path="/admin/demo-videos" element={<DemoVideos />} />
           <Route path="/admin/video-pages" element={<AdminVideoPages />} />
