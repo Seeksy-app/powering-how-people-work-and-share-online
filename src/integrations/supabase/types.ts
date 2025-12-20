@@ -14182,6 +14182,48 @@ export type Database = {
         }
         Relationships: []
       }
+      google_business_tokens: {
+        Row: {
+          access_token: string
+          account_id: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          location_id: string | null
+          refresh_token: string | null
+          scope: string | null
+          token_type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          account_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          location_id?: string | null
+          refresh_token?: string | null
+          scope?: string | null
+          token_type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          account_id?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          location_id?: string | null
+          refresh_token?: string | null
+          scope?: string | null
+          token_type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gtm_actions: {
         Row: {
           channel_id: string | null
