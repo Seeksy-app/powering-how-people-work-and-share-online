@@ -613,6 +613,7 @@ import StateTaxBenefitsCalculator from "./pages/veterans/calculators/StateTaxBen
 import PropertyTaxExemptionCalculator from "./pages/veterans/calculators/PropertyTaxExemptionCalculator";
 import VeteransAuth from "./pages/veterans/VeteransAuth";
 import VeteransSettings from "./pages/veterans/VeteransSettings";
+import VeteransProfile from "./pages/veterans/VeteransProfile";
 import VeteransDashboard from "./pages/veterans/VeteransDashboard";
 import { VeteransLayout } from "./components/veterans/VeteransLayout";
 import { VenueLayout } from "./components/venues/VenueLayout";
@@ -795,6 +796,7 @@ const AppContent = () => {
         <Route path="/yourbenefits/auth" element={<VeteransAuth />} />
         <Route path="/yourbenefits/dashboard" element={<VeteransLayout><VeteransDashboard /></VeteransLayout>} />
         <Route path="/yourbenefits/settings" element={<VeteransLayout><VeteransSettings /></VeteransLayout>} />
+        <Route path="/yourbenefits/profile" element={<VeteransLayout><VeteransProfile /></VeteransLayout>} />
         <Route path="/yourbenefits/claims-agent" element={<VeteransLayout><VeteranClaimsAgent /></VeteransLayout>} />
         <Route path="/yourbenefits/intent-to-file" element={<IntentToFilePage />} />
         <Route path="/yourbenefits/calculators/military-buyback" element={<VeteransLayout><MilitaryBuyBackCalculator /></VeteransLayout>} />
