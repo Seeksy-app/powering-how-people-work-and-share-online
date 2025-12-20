@@ -528,113 +528,8 @@ export default function ClaimsAgent() {
     );
   }
 
-  // Require authentication for full access
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-orange-500/5">
-        <Helmet>
-          <title>AI Benefits Agent | Veterans Benefits Hub</title>
-        </Helmet>
-
-        {/* Header */}
-        <header className="border-b bg-background/95 backdrop-blur">
-          <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-            <Link to="/yourbenefits" className="flex items-center gap-2">
-              <Shield className="w-6 h-6 text-primary" />
-              <span className="font-semibold">Military & Federal Benefits Hub</span>
-            </Link>
-            <div className="flex items-center gap-2">
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/yourbenefits/auth">Login</Link>
-              </Button>
-              <Button asChild size="sm">
-                <Link to="/yourbenefits/auth">Sign Up Free</Link>
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <div className="container mx-auto px-4 py-16 max-w-2xl">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <MessageSquare className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold mb-4">AI Benefits Agent</h1>
-            <p className="text-lg text-muted-foreground mb-2">
-              Get personalized, step-by-step guidance for your VA disability claim
-            </p>
-            <p className="text-muted-foreground">
-              Create a free account to save your progress and access the full agent
-            </p>
-          </div>
-
-          <Card className="mb-8">
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <ClipboardList className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Step-by-step claim guidance</h3>
-                    <p className="text-sm text-muted-foreground">Walk through the entire claims process with expert AI support</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Intent to File assistance</h3>
-                    <p className="text-sm text-muted-foreground">Lock in your effective date and preserve retroactive benefits</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Personalized recommendations</h3>
-                    <p className="text-sm text-muted-foreground">Get advice tailored to your service history and conditions</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Calculator className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Integrated benefit calculators</h3>
-                    <p className="text-sm text-muted-foreground">Estimate compensation, TSP growth, military buy-back, and more</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild size="lg" className="text-lg">
-              <Link to="/yourbenefits/auth">
-                Create Free Account
-                <ChevronRight className="w-5 h-5 ml-1" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/yourbenefits">
-                Explore Calculators
-              </Link>
-            </Button>
-          </div>
-
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            Already have an account?{" "}
-            <Link to="/yourbenefits/auth" className="text-primary hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Guest mode banner for unauthenticated users
+  const showGuestBanner = !user;
 
   return (
     <div className="h-full flex flex-col bg-background">
@@ -642,14 +537,29 @@ export default function ClaimsAgent() {
         <title>AI Benefits Agent | Veterans Benefits Hub</title>
       </Helmet>
 
-      {/* Header */}
-      <header className="border-b bg-card flex-shrink-0 px-4 py-3">
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <div className="flex items-center gap-3">
-            <Link to="/yourbenefits/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
-              ← Dashboard
-            </Link>
+      {/* Guest Banner for unauthenticated users */}
+      {showGuestBanner && (
+        <div className="bg-primary/10 border-b px-4 py-2 flex-shrink-0">
+          <div className="flex items-center justify-between max-w-4xl mx-auto">
+            <p className="text-sm text-foreground">
+              <span className="font-medium">Guest Mode:</span> Sign up to save your chat history
+            </p>
+            <Button asChild size="sm" variant="default">
+              <Link to="/yourbenefits/auth">Sign Up Free</Link>
+            </Button>
           </div>
+        </div>
+      )}
+
+      {/* Subheader with actions */}
+      <div className="border-b bg-card flex-shrink-0 px-4 py-2">
+        <div className="flex items-center justify-between max-w-4xl mx-auto">
+          <Link 
+            to={user ? "/yourbenefits/dashboard" : "/yourbenefits"} 
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            ← {user ? "Dashboard" : "Back"}
+          </Link>
           <Button 
             variant="outline" 
             size="sm" 
@@ -659,7 +569,7 @@ export default function ClaimsAgent() {
             Calculators
           </Button>
         </div>
-      </header>
+      </div>
 
       {/* Calculators Modal - Organized by Category */}
       <Dialog open={showCalculators} onOpenChange={setShowCalculators}>

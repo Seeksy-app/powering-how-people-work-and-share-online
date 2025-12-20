@@ -128,8 +128,7 @@ export default function ReferralPartnersPage() {
             <span className="font-semibold text-lg">Military & Federal Benefits Hub</span>
           </div>
           <Button 
-            variant="outline" 
-            className="border-white/30 text-white hover:bg-white/10"
+            variant="secondary"
             onClick={() => window.location.href = '/yourbenefits'}
           >
             Back to Hub
