@@ -57,13 +57,13 @@ const SUGGESTION_PROMPTS = [
 ];
 
 // Intent patterns that should trigger handoff to the structured form
+// Only trigger on EXPLICIT requests to FILE, not just discuss
 const INTENT_TO_FILE_PATTERNS = [
-  /file.*intent\s*to\s*file/i,
-  /intent\s*to\s*file.*protect/i,
-  /protect\s*my\s*date/i,
-  /start.*intent/i,
-  /begin.*claim/i,
-  /file.*claim.*now/i,
+  /^file\s+(an?\s+)?intent\s*to\s*file/i,
+  /^start\s+(my\s+)?intent\s*to\s*file/i,
+  /^begin\s+(my\s+)?intent\s*to\s*file/i,
+  /take\s+me\s+to\s+(the\s+)?intent\s*to\s*file\s+form/i,
+  /^i\s+want\s+to\s+file\s+(an?\s+)?intent/i,
 ];
 
 const createSystemPrompt = (notes: ClaimsNote[], userName?: string, profile?: VeteranProfile | null) => {
@@ -90,28 +90,28 @@ CAPABILITIES:
 2. Guide them through the Intent to File process
 3. Collect information about service-connected conditions
 4. Explain claims process in simple terms
-5. CALCULATOR REQUESTS: When users ask to calculate things like TSP growth, VA compensation, military buy-back, sick leave credit, or any benefit calculation, you should explain what the calculation does and offer to help them understand the inputs. Then suggest they use the calculator in the sidebar.
+
+OUT OF SCOPE - DO NOT HELP WITH:
+- TSP growth, retirement estimates, pension calculations
+- Any financial projections or investment advice
+If asked, say: "I focus on VA claims preparation. Use the Calculators button above for financial tools."
 
 FORMATTING RULES:
 1. Use <strong>text</strong> for emphasis, NEVER markdown **text**
-2. Keep messages to 4 sentences or fewer when possible
-3. After asking a question, add "For example:" with 1-3 very short sample answers
-4. Split long explanations into numbered steps
+2. Keep responses SHORT: 2-4 sentences per paragraph max
+3. Add blank lines between paragraphs
+4. After asking a question, add "For example:" with 1-3 short sample answers
 5. Be encouraging and supportive
 
-CRITICAL: At the END of EVERY response, include suggested prompts in this exact format:
+CRITICAL: At the END of EVERY response, include suggested prompts:
 <prompts>["First suggestion", "Second suggestion", "Third suggestion"]</prompts>
 
-These should be short, helpful next-step suggestions.
-
-IMPORTANT: After user responses about their conditions/situation, include a JSON block to extract key information:
+IMPORTANT: After user responses about their conditions/situation, include:
 <notes>
 {"category": "Category Name", "value": "Brief bullet phrase"}
 </notes>
 
-Categories: Years of Service, Separation Year, Claimed Conditions, Current Symptoms, Available Evidence, Existing VA Rating, Medical History, Service Connection, Important Dates
-
-At the end of meaningful conversations, offer to connect them with a filing partner.`;
+Categories: Years of Service, Separation Year, Claimed Conditions, Current Symptoms, Available Evidence, Existing VA Rating, Medical History, Service Connection, Important Dates`;
 };
 
 export default function ClaimsAgent() {
