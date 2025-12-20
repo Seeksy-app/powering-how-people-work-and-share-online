@@ -66,10 +66,17 @@ export default function VeteransHome() {
         </div>
       </header>
 
-      {/* Hero Section - Clean Gradient */}
-      <section className="relative w-full min-h-[70vh] overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-primary/80">
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: "radial-gradient(circle at 30% 40%, rgba(255,255,255,0.2) 0%, transparent 50%), radial-gradient(circle at 70% 60%, hsl(var(--primary) / 0.3) 0%, transparent 40%)" }} />
+      {/* Hero Section with Real People */}
+      <section className="relative w-full min-h-[70vh] overflow-hidden">
+        {/* Background image with overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ 
+            backgroundImage: "url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=2832&auto=format&fit=crop')"
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/80 to-slate-900/60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/50 to-transparent" />
 
         {/* Hero Content */}
         <div className="relative z-10 container mx-auto px-4 pt-32 pb-20 flex flex-col items-center justify-center min-h-[70vh] text-center">
@@ -99,6 +106,22 @@ export default function VeteransHome() {
               <Calculator className="w-5 h-5 mr-2" />
               Use Calculators
             </Button>
+          </div>
+        </div>
+
+        {/* Trusted by section */}
+        <div className="relative z-10 pb-8">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-white/60 text-sm">
+              <span>Trusted by veterans and federal employees nationwide</span>
+              <div className="flex -space-x-2">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" alt="Veteran" className="w-8 h-8 rounded-full border-2 border-white/20 object-cover" />
+                <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face" alt="Veteran" className="w-8 h-8 rounded-full border-2 border-white/20 object-cover" />
+                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" alt="Veteran" className="w-8 h-8 rounded-full border-2 border-white/20 object-cover" />
+                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" alt="Veteran" className="w-8 h-8 rounded-full border-2 border-white/20 object-cover" />
+                <div className="w-8 h-8 rounded-full border-2 border-white/20 bg-primary/80 flex items-center justify-center text-xs font-medium text-white">+5k</div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

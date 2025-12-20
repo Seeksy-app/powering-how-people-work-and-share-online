@@ -56,6 +56,16 @@ const SUGGESTION_PROMPTS = [
   { title: "Help Me Choose", description: "Guide me through options", icon: FileText },
 ];
 
+// Intent patterns that should trigger handoff to the structured form
+const INTENT_TO_FILE_PATTERNS = [
+  /file.*intent\s*to\s*file/i,
+  /intent\s*to\s*file.*protect/i,
+  /protect\s*my\s*date/i,
+  /start.*intent/i,
+  /begin.*claim/i,
+  /file.*claim.*now/i,
+];
+
 const createSystemPrompt = (notes: ClaimsNote[], userName?: string, profile?: VeteranProfile | null) => {
   const notesContext = notes.length > 0 
     ? `\n\nCollected information:\n${notes.map(n => `- ${n.category}: ${n.value}`).join('\n')}`
@@ -330,6 +340,29 @@ export default function ClaimsAgent() {
   const sendMessage = async (messageText?: string) => {
     const userMessage = (messageText || input).trim();
     if (!userMessage || isLoading) return;
+
+    // Check if user wants to file Intent to File - hand off to structured form
+    const isIntentToFileRequest = INTENT_TO_FILE_PATTERNS.some(pattern => pattern.test(userMessage));
+    if (isIntentToFileRequest) {
+      setInput("");
+      const handoffMessage: Message = { role: "user", content: userMessage };
+      setMessages(prev => [...prev, handoffMessage]);
+      
+      // Brief assistant response before redirect
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: "Great choice! I'll take you to our **Intent to File form** where we'll collect your information step by step. This ensures everything is captured accurately.\n\nYou'll be able to:\n• Enter your veteran info\n• Select your claim type and conditions\n• Choose a representative (optional)\n• Download your completed forms",
+          quickReplies: []
+        }]);
+        
+        // Navigate after a brief delay to show the message
+        setTimeout(() => {
+          navigate('/yourbenefits/intent-to-file');
+        }, 2000);
+      }, 500);
+      return;
+    }
 
     setInput("");
     setError(null);
