@@ -584,3 +584,6 @@ verify_jwt = true
 
 [functions.import-va-representatives]
 verify_jwt = true
+
+[functions.google-business-callback]
+verify_jwt = false
