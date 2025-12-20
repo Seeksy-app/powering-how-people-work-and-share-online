@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calculator, FileText, MessageSquare, Shield, Clock, DollarSign, Award, TrendingUp, Heart, CheckCircle, Calendar, MapPin, GraduationCap, Stethoscope, Home, Car, Scale } from "lucide-react";
+import { Calculator, FileText, MessageSquare, Shield, Clock, DollarSign, Award, TrendingUp, Heart, CheckCircle, Calendar, MapPin, GraduationCap, Stethoscope, Home, Car, Scale, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { BenefitsOfRatingModal } from "@/components/veterans/BenefitsOfRatingModal";
 import { VeteransFaq } from "@/components/veterans/VeteransFaq";
@@ -86,25 +86,31 @@ export default function VeteransHome() {
           </div>
           
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 text-white drop-shadow-2xl">
-            Maximize Your{" "}
-            <span className="text-primary">Military
-            <br className="hidden sm:inline" /> and Federal Benefits</span>
+            Understand, Prepare, and{" "}
+            <span className="text-primary">Maximize
+            <br className="hidden sm:inline" /> Your Benefits</span>
           </h1>
           
           <p className="text-lg md:text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-            Free calculators and AI-powered guidance to help service members, veterans, and federal employees understand and claim the benefits they've&nbsp;earned.
+            AI-powered guidance for VA claims, military benefits, calculators, and accredited support — all in one place.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="text-lg shadow-lg shadow-primary/30">
               <Link to="/yourbenefits/claims-agent">
                 <MessageSquare className="w-5 h-5 mr-2" />
-                Start Your Claim
+                Talk to AI Agent
+              </Link>
+            </Button>
+            <Button asChild variant="secondary" size="lg" className="text-lg bg-white/20 border-white/20 text-white hover:bg-white/30 backdrop-blur-sm">
+              <Link to="/yourbenefits/calculators/va-compensation">
+                <DollarSign className="w-5 h-5 mr-2" />
+                Estimate My Benefits
               </Link>
             </Button>
             <Button variant="outline" size="lg" className="text-lg bg-white/10 border-white/20 text-white hover:bg-white/20 backdrop-blur-sm" onClick={scrollToCalculators}>
               <Calculator className="w-5 h-5 mr-2" />
-              Use Calculators
+              Explore Calculators
             </Button>
           </div>
         </div>
@@ -126,12 +132,53 @@ export default function VeteransHome() {
         </div>
       </section>
 
+      {/* How We Help Section */}
+      <section className="py-12 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-2xl font-bold text-center mb-8">How We Help</h2>
+            <div className="grid md:grid-cols-5 gap-4 text-center">
+              <div className="p-4">
+                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-3">
+                  <Shield className="w-6 h-6 text-blue-500" />
+                </div>
+                <p className="font-medium text-sm">Understand Eligibility</p>
+              </div>
+              <div className="p-4">
+                <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-3">
+                  <Calculator className="w-6 h-6 text-green-500" />
+                </div>
+                <p className="font-medium text-sm">Estimate Benefits</p>
+              </div>
+              <div className="p-4">
+                <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-3">
+                  <FileText className="w-6 h-6 text-orange-500" />
+                </div>
+                <p className="font-medium text-sm">Prepare Forms</p>
+              </div>
+              <div className="p-4">
+                <div className="w-12 h-12 rounded-full bg-purple-500/10 flex items-center justify-center mx-auto mb-3">
+                  <User className="w-6 h-6 text-purple-500" />
+                </div>
+                <p className="font-medium text-sm">Connect with Reps</p>
+              </div>
+              <div className="p-4">
+                <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-3">
+                  <TrendingUp className="w-6 h-6 text-amber-500" />
+                </div>
+                <p className="font-medium text-sm">Track Progress</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* AI Benefits Agent Featured - Combined entry with actions + input */}
-      <section className="py-16 container mx-auto px-4 -mt-8">
+      <section className="py-12 container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <h2 className="text-2xl font-bold mb-2">Get Started with AI-Powered Guidance</h2>
-            <p className="text-muted-foreground">Let our AI Benefits Agent walk you through the claims process step by step</p>
+            <p className="text-muted-foreground">Let our AI Benefits Agent walk you through claims, benefits, and next steps</p>
           </div>
           <Card className="border-2 border-primary/30 bg-gradient-to-r from-primary/5 to-orange-500/5">
             <CardHeader className="pb-4">
@@ -145,8 +192,8 @@ export default function VeteransHome() {
               </div>
               <CardTitle className="text-2xl mt-4">AI Benefits Agent</CardTitle>
               <CardDescription className="text-base">
-                Get personalized guidance on filing your VA disability claim with Intent to File support. 
-                Our AI walks you through each step and helps you gather the right documentation.
+                Get personalized guidance on benefits, claims, and forms. 
+                Our AI helps you understand eligibility, estimate benefits, and prepare documentation.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
