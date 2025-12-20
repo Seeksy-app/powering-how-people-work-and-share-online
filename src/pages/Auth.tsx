@@ -11,6 +11,7 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
 import { validatePasswordStrength } from "@/lib/password-validation";
 import { WelcomeBackToast } from "@/components/WelcomeBackToast";
+import { AppLoading } from "@/components/ui/AppLoading";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -28,6 +29,7 @@ const Auth = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -104,9 +106,13 @@ const Auth = () => {
           />
         ), { duration: 4000 });
         
+        // Show loading state during redirect
+        setIsRedirecting(true);
+        
         // Get user from session
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) {
+          setIsRedirecting(false);
           navigate("/dashboard");
           return;
         }
@@ -336,6 +342,11 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  // Show branded loading during redirect
+  if (isRedirecting) {
+    return <AppLoading message="Signing you in..." />;
+  }
 
   const isAdvertiserSignup = !isLogin && localStorage.getItem("advertiserSignupData");
 

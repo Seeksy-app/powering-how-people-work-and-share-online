@@ -1,6 +1,6 @@
 import { User } from "@supabase/supabase-js";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/contexts/WorkspaceContext";
 import { usePortal } from "@/contexts/PortalContext";
 import { WorkspaceSidebar } from "@/components/workspace/WorkspaceSidebar";
@@ -12,6 +12,7 @@ import { useUserRoles } from "@/hooks/useUserRoles";
 import { useAdminViewMode } from "@/hooks/useAdminViewMode";
 import { AdminNotesFloatingButton } from "@/components/admin/notes/AdminNotesFloatingButton";
 import { HelpDrawer } from "@/components/help/HelpDrawer";
+import { AppLoading } from "@/components/ui/AppLoading";
 
 interface WorkspaceLayoutProps {
   user: User | null;
@@ -120,7 +121,20 @@ function WorkspaceLayoutInner({
   const { portal } = usePortal();
   const useLegacyNav = useShouldUseLegacyNav();
   const isAdvertiserRoute = location.pathname.startsWith('/advertiser');
-  const { isAdmin } = useUserRoles();
+  const { isAdmin, isLoading: isRolesLoading } = useUserRoles();
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Track initialization to prevent flash
+  useEffect(() => {
+    // Wait for both auth and workspace to be ready
+    if (!isLoading && !isRolesLoading) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setIsInitializing(false);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, isRolesLoading]);
 
   // Enforce role-based routing
   useRoleBasedRouting(user);
@@ -174,6 +188,27 @@ function WorkspaceLayoutInner({
   const isAdminRouteForNotes = location.pathname.startsWith('/admin') || 
                                 location.pathname.startsWith('/cfo') ||
                                 location.pathname.startsWith('/helpdesk');
+
+  // Show branded loading state during initialization for authenticated users
+  // This prevents the white flash during auth → app transition
+  if (user && isInitializing && !isPublicRoute && !isOnboardingRoute) {
+    return (
+      <div className="h-screen flex w-full bg-background overflow-hidden">
+        {/* Keep sidebar shell visible to prevent layout shift */}
+        {shouldShowSidebar && (
+          <div className="w-64 flex-shrink-0 bg-sidebar border-r border-border" />
+        )}
+        <div className="flex-1 flex flex-col h-screen overflow-hidden">
+          {shouldShowTopNav && (
+            <div className="h-14 border-b border-border bg-background" />
+          )}
+          <main className="flex-1 flex items-center justify-center bg-background">
+            <AppLoading message="Loading your workspace..." variant="inline" />
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   if (useLegacyNav || isPublicRoute || !user) {
     return (
