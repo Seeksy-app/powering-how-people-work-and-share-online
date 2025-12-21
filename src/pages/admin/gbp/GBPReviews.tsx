@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { RequireAdmin } from "@/components/auth/RequireAdmin";
+import { GBPLayout } from "@/components/admin/gbp/GBPLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -388,7 +389,9 @@ function GBPReviewsContent() {
 export default function GBPReviews() {
   return (
     <RequireAdmin>
-      <GBPReviewsContent />
+      <GBPLayout title="Reviews">
+        <GBPReviewsContent />
+      </GBPLayout>
     </RequireAdmin>
   );
 }

@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { RequireAdmin } from "@/components/auth/RequireAdmin";
+import { GBPLayout } from "@/components/admin/gbp/GBPLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
@@ -110,7 +111,9 @@ function GBPPerformanceContent() {
 export default function GBPPerformance() {
   return (
     <RequireAdmin>
-      <GBPPerformanceContent />
+      <GBPLayout title="Performance">
+        <GBPPerformanceContent />
+      </GBPLayout>
     </RequireAdmin>
   );
 }

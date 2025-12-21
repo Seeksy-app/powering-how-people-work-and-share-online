@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { RequireAdmin } from "@/components/auth/RequireAdmin";
+import { GBPLayout } from "@/components/admin/gbp/GBPLayout";
+import { GBPNotFound } from "@/components/admin/gbp/GBPNotFound";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -175,14 +177,7 @@ function GBPLocationDetailContent() {
   }
 
   if (!location) {
-    return (
-      <div className="container max-w-4xl py-8 text-center">
-        <p className="text-muted-foreground">Location not found</p>
-        <Button variant="link" onClick={() => navigate('/admin/gbp/locations')}>
-          Back to Locations
-        </Button>
-      </div>
-    );
+    return <GBPNotFound />;
   }
 
   const hours = formatHours(location.regular_hours_json);
@@ -404,7 +399,9 @@ function GBPLocationDetailContent() {
 export default function GBPLocationDetail() {
   return (
     <RequireAdmin>
-      <GBPLocationDetailContent />
+      <GBPLayout title="Location Detail">
+        <GBPLocationDetailContent />
+      </GBPLayout>
     </RequireAdmin>
   );
 }

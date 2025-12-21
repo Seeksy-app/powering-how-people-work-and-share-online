@@ -667,6 +667,13 @@ import CFOProForma from "./pages/cfo/CFOProForma";
 import CFOStudioV2 from "./pages/cfo/CFOStudioV2";
 import AdminSalesOpportunities from "./pages/admin/cfo/SalesOpportunities";
 import OpportunityProFormas from "./pages/admin/cfo/OpportunityProFormas";
+// GBP Manager
+import GBPHome from "./pages/admin/gbp/GBPHome";
+import GBPLocations from "./pages/admin/gbp/GBPLocations";
+import GBPLocationDetail from "./pages/admin/gbp/GBPLocationDetail";
+import GBPReviews from "./pages/admin/gbp/GBPReviews";
+import GBPPerformance from "./pages/admin/gbp/GBPPerformance";
+import GBPAudit from "./pages/admin/gbp/GBPAudit";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1265,6 +1272,13 @@ const AppContent = () => {
               <Route path="/admin/seo/new" element={<AdminSeoEdit />} />
               <Route path="/admin/seo/assets" element={<AdminSeoAssets />} />
               <Route path="/admin/seo/:seo_page_id" element={<AdminSeoEdit />} />
+              {/* GBP Manager */}
+              <Route path="/admin/gbp" element={<GBPHome />} />
+              <Route path="/admin/gbp/locations" element={<GBPLocations />} />
+              <Route path="/admin/gbp/location/:location_id" element={<GBPLocationDetail />} />
+              <Route path="/admin/gbp/reviews" element={<GBPReviews />} />
+              <Route path="/admin/gbp/performance" element={<GBPPerformance />} />
+              <Route path="/admin/gbp/audit" element={<GBPAudit />} />
           <Route path="/demo-videos" element={<DemoVideos />} />
           <Route path="/admin/demo-videos" element={<DemoVideos />} />
           <Route path="/admin/video-pages" element={<AdminVideoPages />} />
