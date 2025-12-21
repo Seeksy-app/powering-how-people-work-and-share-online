@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { RequireAdmin } from "@/components/auth/RequireAdmin";
+import { GBPLayout } from "@/components/admin/gbp/GBPLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -200,63 +201,34 @@ function GBPHomeContent() {
   const isConnected = connection?.status === 'connected';
   const isExpired = connection?.expires_at && new Date(connection.expires_at) < new Date();
 
-  const tabs = [
-    { value: 'locations', label: 'Locations', icon: MapPin, path: '/admin/gbp/locations' },
-    { value: 'reviews', label: 'Reviews', icon: MessageSquare, path: '/admin/gbp/reviews' },
-    { value: 'performance', label: 'Performance', icon: BarChart3, path: '/admin/gbp/performance' },
-    { value: 'audit', label: 'Audit', icon: FileText, path: '/admin/gbp/audit' },
-  ];
-
   return (
-    <div className="container max-w-6xl py-4 space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <MapPin className="h-6 w-6" />
-            GBP Manager
-          </h1>
-          <p className="text-sm text-muted-foreground">Manage Google Business Profile listings</p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => syncMutation.mutate()}
-            disabled={!isConnected || syncMutation.isPending}
-          >
-            {syncMutation.isPending ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <RefreshCw className="h-4 w-4 mr-2" />
-            )}
-            Sync Now
-          </Button>
-          <Button
-            onClick={() => connectMutation.mutate()}
-            disabled={connectMutation.isPending}
-          >
-            {connectMutation.isPending ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Link2 className="h-4 w-4 mr-2" />
-            )}
-            {isConnected ? 'Reconnect' : 'Connect GBP'}
-          </Button>
-        </div>
+    <div className="space-y-4">
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={() => syncMutation.mutate()}
+          disabled={!isConnected || syncMutation.isPending}
+        >
+          {syncMutation.isPending ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2" />
+          )}
+          Sync Now
+        </Button>
+        <Button
+          onClick={() => connectMutation.mutate()}
+          disabled={connectMutation.isPending}
+        >
+          {connectMutation.isPending ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Link2 className="h-4 w-4 mr-2" />
+          )}
+          {isConnected ? 'Reconnect' : 'Connect GBP'}
+        </Button>
       </div>
-
-      {/* Write Mode Warning */}
-      {settings?.write_mode_enabled && (
-        <Alert variant="destructive" className="border-orange-500 bg-orange-500/10">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>
-              <strong>Write Mode Active</strong> — Changes will be published to Google.
-              {settings.write_mode_reason && ` Reason: ${settings.write_mode_reason}`}
-            </span>
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -350,22 +322,6 @@ function GBPHomeContent() {
         </Card>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 border-b pb-2">
-        {tabs.map((tab) => (
-          <Button
-            key={tab.value}
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(tab.path)}
-            className="gap-2"
-          >
-            <tab.icon className="h-4 w-4" />
-            {tab.label}
-          </Button>
-        ))}
-      </div>
-
       {/* Quick Info */}
       <Card>
         <CardHeader className="pb-2">
@@ -441,7 +397,9 @@ function GBPHomeContent() {
 export default function GBPHome() {
   return (
     <RequireAdmin>
-      <GBPHomeContent />
+      <GBPLayout title="GBP Manager" showTabs={true}>
+        <GBPHomeContent />
+      </GBPLayout>
     </RequireAdmin>
   );
 }

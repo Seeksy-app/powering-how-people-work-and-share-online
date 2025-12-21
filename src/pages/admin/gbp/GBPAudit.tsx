@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { RequireAdmin } from "@/components/auth/RequireAdmin";
+import { GBPLayout } from "@/components/admin/gbp/GBPLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -267,7 +268,9 @@ function GBPAuditContent() {
 export default function GBPAudit() {
   return (
     <RequireAdmin>
-      <GBPAuditContent />
+      <GBPLayout title="Audit Log">
+        <GBPAuditContent />
+      </GBPLayout>
     </RequireAdmin>
   );
 }

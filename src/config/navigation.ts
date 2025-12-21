@@ -379,6 +379,14 @@ export const NAVIGATION_CONFIG: {
           "roles": ["admin", "super_admin", "cmo"]
         },
         {
+          "id": "admin_gbp_manager",
+          "label": "GBP Manager",
+          "icon": "map-pin",
+          "path": "/admin/gbp",
+          "roles": ["admin", "super_admin", "cmo"],
+          "description": "Manage Google Business Profile listings"
+        },
+        {
           "id": "admin_logo_manager",
           "label": "Logo Manager",
           "icon": "image",
