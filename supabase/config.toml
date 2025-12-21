@@ -602,3 +602,15 @@ verify_jwt = true
 
 [functions.seo-ai-suggest-from-gbp]
 verify_jwt = true
+
+[functions.google-analytics-auth]
+verify_jwt = true
+
+[functions.google-analytics-callback]
+verify_jwt = false
+
+[functions.gsc-sync]
+verify_jwt = true
+
+[functions.ga4-sync]
+verify_jwt = true
