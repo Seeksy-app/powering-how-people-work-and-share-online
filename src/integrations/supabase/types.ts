@@ -10859,6 +10859,63 @@ export type Database = {
         }
         Relationships: []
       }
+      credits_ledger: {
+        Row: {
+          created_at: string
+          dedupe_key: string | null
+          event_type: string
+          id: string
+          identity_id: string | null
+          lead_id: string | null
+          metadata: Json
+          occurred_at: string
+          provider: string | null
+          units: number
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key?: string | null
+          event_type: string
+          id?: string
+          identity_id?: string | null
+          lead_id?: string | null
+          metadata?: Json
+          occurred_at?: string
+          provider?: string | null
+          units: number
+          workspace_id?: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string | null
+          event_type?: string
+          id?: string
+          identity_id?: string | null
+          lead_id?: string | null
+          metadata?: Json
+          occurred_at?: string
+          provider?: string | null
+          units?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credits_ledger_identity_id_fkey"
+            columns: ["identity_id"]
+            isOneToOne: false
+            referencedRelation: "lead_identities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credits_ledger_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       crm_activity_timeline: {
         Row: {
           activity_type: string
@@ -16854,6 +16911,173 @@ export type Database = {
           },
         ]
       }
+      lead_actions: {
+        Row: {
+          action_type: string
+          ai_generated: boolean
+          ai_model: string | null
+          channel: string | null
+          content: Json
+          created_at: string
+          id: string
+          lead_id: string
+          performed_at: string
+          performed_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          action_type: string
+          ai_generated?: boolean
+          ai_model?: string | null
+          channel?: string | null
+          content?: Json
+          created_at?: string
+          id?: string
+          lead_id: string
+          performed_at?: string
+          performed_by?: string | null
+          workspace_id?: string
+        }
+        Update: {
+          action_type?: string
+          ai_generated?: boolean
+          ai_model?: string | null
+          channel?: string | null
+          content?: Json
+          created_at?: string
+          id?: string
+          lead_id?: string
+          performed_at?: string
+          performed_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_actions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_events: {
+        Row: {
+          created_at: string
+          dedupe_key: string | null
+          event_type: string
+          id: string
+          identity_id: string | null
+          intent_weight: number
+          lead_id: string | null
+          occurred_at: string
+          page_title: string | null
+          page_url: string | null
+          payload: Json
+          provider: string
+          referrer: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key?: string | null
+          event_type: string
+          id?: string
+          identity_id?: string | null
+          intent_weight?: number
+          lead_id?: string | null
+          occurred_at?: string
+          page_title?: string | null
+          page_url?: string | null
+          payload?: Json
+          provider?: string
+          referrer?: string | null
+          workspace_id?: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string | null
+          event_type?: string
+          id?: string
+          identity_id?: string | null
+          intent_weight?: number
+          lead_id?: string | null
+          occurred_at?: string
+          page_title?: string | null
+          page_url?: string | null
+          payload?: Json
+          provider?: string
+          referrer?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_events_identity_id_fkey"
+            columns: ["identity_id"]
+            isOneToOne: false
+            referencedRelation: "lead_identities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_identities: {
+        Row: {
+          company_domain: string | null
+          company_name: string | null
+          contact_fields: Json
+          created_at: string
+          email_hash: string | null
+          enrichment_data: Json
+          external_id: string | null
+          first_seen_at: string
+          id: string
+          identity_type: string
+          last_seen_at: string
+          provider: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          company_domain?: string | null
+          company_name?: string | null
+          contact_fields?: Json
+          created_at?: string
+          email_hash?: string | null
+          enrichment_data?: Json
+          external_id?: string | null
+          first_seen_at?: string
+          id?: string
+          identity_type: string
+          last_seen_at?: string
+          provider?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Update: {
+          company_domain?: string | null
+          company_name?: string | null
+          contact_fields?: Json
+          created_at?: string
+          email_hash?: string | null
+          enrichment_data?: Json
+          external_id?: string | null
+          first_seen_at?: string
+          id?: string
+          identity_type?: string
+          last_seen_at?: string
+          provider?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       lead_magnet_analytics: {
         Row: {
           created_at: string
@@ -17051,6 +17275,131 @@ export type Database = {
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_sources: {
+        Row: {
+          api_key_configured: boolean
+          contact_level_enabled: boolean
+          created_at: string
+          id: string
+          include_contact_in_ai: boolean
+          is_active: boolean
+          name: string
+          privacy_notice_acknowledged_at: string | null
+          privacy_notice_acknowledged_by: string | null
+          provider: string
+          provider_account_id: string | null
+          retention_days: number
+          settings: Json
+          updated_at: string
+          webhook_health: Json
+          workspace_id: string
+        }
+        Insert: {
+          api_key_configured?: boolean
+          contact_level_enabled?: boolean
+          created_at?: string
+          id?: string
+          include_contact_in_ai?: boolean
+          is_active?: boolean
+          name: string
+          privacy_notice_acknowledged_at?: string | null
+          privacy_notice_acknowledged_by?: string | null
+          provider: string
+          provider_account_id?: string | null
+          retention_days?: number
+          settings?: Json
+          updated_at?: string
+          webhook_health?: Json
+          workspace_id?: string
+        }
+        Update: {
+          api_key_configured?: boolean
+          contact_level_enabled?: boolean
+          created_at?: string
+          id?: string
+          include_contact_in_ai?: boolean
+          is_active?: boolean
+          name?: string
+          privacy_notice_acknowledged_at?: string | null
+          privacy_notice_acknowledged_by?: string | null
+          provider?: string
+          provider_account_id?: string | null
+          retention_days?: number
+          settings?: Json
+          updated_at?: string
+          webhook_health?: Json
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          converted_at: string | null
+          created_at: string
+          first_seen_at: string
+          id: string
+          identity_id: string | null
+          intent_score: number
+          intent_signals: Json
+          last_activity_at: string
+          notes: string | null
+          page_views: number
+          provider: string
+          sessions: number
+          status: string
+          tags: string[]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          converted_at?: string | null
+          created_at?: string
+          first_seen_at?: string
+          id?: string
+          identity_id?: string | null
+          intent_score?: number
+          intent_signals?: Json
+          last_activity_at?: string
+          notes?: string | null
+          page_views?: number
+          provider?: string
+          sessions?: number
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          converted_at?: string | null
+          created_at?: string
+          first_seen_at?: string
+          id?: string
+          identity_id?: string | null
+          intent_score?: number
+          intent_signals?: Json
+          last_activity_at?: string
+          notes?: string | null
+          page_views?: number
+          provider?: string
+          sessions?: number
+          status?: string
+          tags?: string[]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_identity_id_fkey"
+            columns: ["identity_id"]
+            isOneToOne: false
+            referencedRelation: "lead_identities"
             referencedColumns: ["id"]
           },
         ]
@@ -33881,6 +34230,7 @@ export type Database = {
       }
       is_adm: { Args: never; Returns: boolean }
       is_gbp_admin: { Args: never; Returns: boolean }
+      is_lead_intel_admin: { Args: never; Returns: boolean }
       is_load_shared_with_user: {
         Args: { _load_id: string; _user_id: string }
         Returns: boolean
