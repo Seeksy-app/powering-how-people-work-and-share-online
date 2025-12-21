@@ -14143,6 +14143,66 @@ export type Database = {
         }
         Relationships: []
       }
+      ga4_page_daily: {
+        Row: {
+          avg_engagement_time: number | null
+          conversions: number | null
+          created_at: string
+          date: string
+          engagement_rate: number | null
+          id: string
+          page_path: string
+          sessions: number
+          workspace_id: string
+        }
+        Insert: {
+          avg_engagement_time?: number | null
+          conversions?: number | null
+          created_at?: string
+          date: string
+          engagement_rate?: number | null
+          id?: string
+          page_path: string
+          sessions?: number
+          workspace_id: string
+        }
+        Update: {
+          avg_engagement_time?: number | null
+          conversions?: number | null
+          created_at?: string
+          date?: string
+          engagement_rate?: number | null
+          id?: string
+          page_path?: string
+          sessions?: number
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      ga4_properties: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          property_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          property_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          property_id?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       gbp_admin_settings: {
         Row: {
           created_at: string
@@ -14538,6 +14598,105 @@ export type Database = {
           token_type?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      google_connections: {
+        Row: {
+          access_token: string | null
+          created_at: string
+          enabled_products: Json
+          expires_at: string | null
+          google_account_email: string | null
+          id: string
+          provider: string
+          refresh_token: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          created_at?: string
+          enabled_products?: Json
+          expires_at?: string | null
+          google_account_email?: string | null
+          id?: string
+          provider?: string
+          refresh_token?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          access_token?: string | null
+          created_at?: string
+          enabled_products?: Json
+          expires_at?: string | null
+          google_account_email?: string | null
+          id?: string
+          provider?: string
+          refresh_token?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      gsc_page_daily: {
+        Row: {
+          clicks: number
+          created_at: string
+          ctr: number | null
+          date: string
+          id: string
+          impressions: number
+          page: string
+          position: number | null
+          workspace_id: string
+        }
+        Insert: {
+          clicks?: number
+          created_at?: string
+          ctr?: number | null
+          date: string
+          id?: string
+          impressions?: number
+          page: string
+          position?: number | null
+          workspace_id: string
+        }
+        Update: {
+          clicks?: number
+          created_at?: string
+          ctr?: number | null
+          date?: string
+          id?: string
+          impressions?: number
+          page?: string
+          position?: number | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      gsc_sites: {
+        Row: {
+          created_at: string
+          id: string
+          permission_level: string | null
+          site_url: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_level?: string | null
+          site_url: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_level?: string | null
+          site_url?: string
+          workspace_id?: string
         }
         Relationships: []
       }
@@ -32858,6 +33017,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      workspace_analytics_settings: {
+        Row: {
+          created_at: string
+          ga4_property_id: string | null
+          gsc_site_url: string | null
+          last_synced_at: string | null
+          sync_enabled: boolean
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          ga4_property_id?: string | null
+          gsc_site_url?: string | null
+          last_synced_at?: string | null
+          sync_enabled?: boolean
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          ga4_property_id?: string | null
+          gsc_site_url?: string | null
+          last_synced_at?: string | null
+          sync_enabled?: boolean
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: []
       }
       workspace_members: {
         Row: {
