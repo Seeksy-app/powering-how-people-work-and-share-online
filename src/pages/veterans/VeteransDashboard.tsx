@@ -146,7 +146,7 @@ export default function VeteransDashboard() {
 
       <div className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Welcome Header */}
-        <div className="mb-8">
+        <div className="mb-8 p-6 rounded-xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/10">
           <h1 className="text-3xl font-bold mb-2">Welcome back, {userName}!</h1>
           <p className="text-muted-foreground">
             Continue exploring your benefits or start a new conversation.
@@ -157,7 +157,7 @@ export default function VeteransDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {quickActions.map((action) => (
             <Link key={action.href} to={action.href}>
-              <Card className="h-full hover:shadow-md hover:border-primary/30 transition-all cursor-pointer">
+              <Card className="h-full hover:shadow-md hover:border-primary/30 transition-all cursor-pointer bg-gradient-to-br from-background to-muted/30">
                 <CardHeader className="pb-2">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${action.color}`}>
                     <action.icon className="w-5 h-5" />
@@ -175,15 +175,15 @@ export default function VeteransDashboard() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Recent Conversations */}
-            <Card>
+            {/* Recent Conversations - Limited to 5 since sidebar has full history */}
+            <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-transparent">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <MessageSquare className="w-5 h-5 text-orange-500" />
                     Recent Conversations
                   </CardTitle>
-                  <CardDescription>Continue where you left off</CardDescription>
+                  <CardDescription>Quick access to your latest 5 chats • Full history in sidebar</CardDescription>
                 </div>
                 <Button asChild variant="outline" size="sm">
                   <Link to="/yourbenefits/claims-agent">
@@ -206,18 +206,18 @@ export default function VeteransDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {conversations.map((convo) => (
+                    {conversations.slice(0, 5).map((convo) => (
                       <Link
                         key={convo.id}
                         to={`/yourbenefits/claims-agent?conversation=${convo.id}`}
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group"
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-orange-500/10 bg-background/50 transition-colors group border border-transparent hover:border-orange-500/20"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center">
                             <MessageSquare className="w-4 h-4 text-orange-500" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{convo.title || 'New conversation'}</p>
+                            <p className="font-medium text-sm">{convo.title || 'Benefits Discussion'}</p>
                             <p className="text-xs text-muted-foreground">
                               {format(new Date(convo.last_message_at), 'MMM d, h:mm a')}
                             </p>
@@ -232,7 +232,7 @@ export default function VeteransDashboard() {
             </Card>
 
             {/* Popular Calculators */}
-            <Card>
+            <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -251,9 +251,9 @@ export default function VeteransDashboard() {
                     <Link
                       key={calc.id}
                       to={calc.route}
-                      className="p-3 rounded-lg border hover:border-primary/30 hover:bg-muted/50 transition-all text-center"
+                      className="p-3 rounded-lg border border-blue-500/10 hover:border-blue-500/30 hover:bg-blue-500/10 bg-background/50 transition-all text-center"
                     >
-                      <Calculator className="w-5 h-5 mx-auto mb-2 text-muted-foreground" />
+                      <Calculator className="w-5 h-5 mx-auto mb-2 text-blue-500" />
                       <p className="text-sm font-medium line-clamp-2">{calc.title}</p>
                     </Link>
                   ))}
@@ -265,24 +265,27 @@ export default function VeteransDashboard() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Profile Summary */}
-            <Card>
-              <CardHeader>
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Shield className="w-5 h-5 text-primary" />
                   Your Profile
                 </CardTitle>
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/yourbenefits/profile">Edit</Link>
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between p-2 rounded bg-background/50">
                     <span className="text-muted-foreground">Status</span>
                     <span className="font-medium capitalize">{profile?.service_status || 'Not set'}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between p-2 rounded bg-background/50">
                     <span className="text-muted-foreground">Branch</span>
                     <span className="font-medium capitalize">{profile?.branch_of_service || 'Not set'}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between p-2 rounded bg-background/50">
                     <span className="text-muted-foreground">Intent to File</span>
                     <span className={`font-medium ${profile?.has_intent_to_file ? 'text-green-600' : 'text-amber-600'}`}>
                       {profile?.has_intent_to_file ? 'Yes' : 'Not yet'}
@@ -293,7 +296,7 @@ export default function VeteransDashboard() {
             </Card>
 
             {/* Saved Calculations */}
-            <Card>
+            <Card className="border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <FileText className="w-5 h-5 text-green-500" />
@@ -308,7 +311,7 @@ export default function VeteransDashboard() {
                 ) : (
                   <div className="space-y-2">
                     {savedCalcs.map((calc) => (
-                      <div key={calc.id} className="p-2 rounded-lg bg-muted/50 text-sm">
+                      <div key={calc.id} className="p-2 rounded-lg bg-background/50 border border-green-500/10 text-sm">
                         <p className="font-medium">{calc.calculator_id.replace(/_/g, ' ')}</p>
                         <p className="text-xs text-muted-foreground">
                           {format(new Date(calc.created_at), 'MMM d, yyyy')}

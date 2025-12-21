@@ -7,7 +7,7 @@ import { VeteransFaq } from "@/components/veterans/VeteransFaq";
 import { FloatingBenefitsChat } from "@/components/veterans/FloatingBenefitsChat";
 import { Helmet } from "react-helmet";
 import { CALCULATORS, CALCULATOR_CATEGORIES } from "@/lib/veteranCalculatorRegistry";
-import veteransHeroImage from "@/assets/veterans-hero-diverse-group.jpg";
+import veteransHeroImage from "@/assets/veterans-hero-professionals-mature.jpg";
 
 const ICON_MAP: Record<string, any> = {
   DollarSign, Clock, Calculator, MessageSquare, Shield, Award, TrendingUp, Heart, 
