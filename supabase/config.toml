@@ -614,3 +614,18 @@ verify_jwt = true
 
 [functions.ga4-sync]
 verify_jwt = true
+
+[functions.lead-pixel-ingest]
+verify_jwt = false
+
+[functions.lead-warmly-webhook]
+verify_jwt = false
+
+[functions.lead-opensend-webhook]
+verify_jwt = false
+
+[functions.lead-score-recompute]
+verify_jwt = true
+
+[functions.lead-export]
+verify_jwt = true

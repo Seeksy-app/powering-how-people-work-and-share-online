@@ -16961,6 +16961,135 @@ export type Database = {
           },
         ]
       }
+      lead_audit_log: {
+        Row: {
+          actor_user_id: string | null
+          created_at: string
+          details: Json | null
+          event: string
+          id: string
+          ip_address: string | null
+          target_id: string | null
+          target_type: string | null
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json | null
+          event: string
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          actor_user_id?: string | null
+          created_at?: string
+          details?: Json | null
+          event?: string
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_audit_log_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_credits_ledger: {
+        Row: {
+          balance_after: number | null
+          created_at: string
+          event: string
+          id: string
+          meta: Json | null
+          units: number
+          workspace_id: string
+        }
+        Insert: {
+          balance_after?: number | null
+          created_at?: string
+          event: string
+          id?: string
+          meta?: Json | null
+          units: number
+          workspace_id: string
+        }
+        Update: {
+          balance_after?: number | null
+          created_at?: string
+          event?: string
+          id?: string
+          meta?: Json | null
+          units?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_credits_ledger_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_domains: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          status: string
+          updated_at: string
+          verification_method: string | null
+          verification_token: string | null
+          verified_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          status?: string
+          updated_at?: string
+          verification_method?: string | null
+          verification_token?: string | null
+          verified_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          verification_method?: string | null
+          verification_token?: string | null
+          verified_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_domains_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_events: {
         Row: {
           created_at: string
@@ -17077,6 +17206,213 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: []
+      }
+      lead_intel_actions: {
+        Row: {
+          action_type: string
+          created_at: string
+          created_by: string | null
+          error: string | null
+          id: string
+          lead_id: string
+          payload: Json | null
+          status: string
+          workspace_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          lead_id: string
+          payload?: Json | null
+          status?: string
+          workspace_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          id?: string
+          lead_id?: string
+          payload?: Json | null
+          status?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_intel_actions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "lead_intel_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_intel_actions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_intel_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          lead_id: string | null
+          metadata: Json | null
+          occurred_at: string
+          referrer: string | null
+          session_id: string | null
+          url: string | null
+          utm: Json | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          occurred_at?: string
+          referrer?: string | null
+          session_id?: string | null
+          url?: string | null
+          utm?: Json | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          occurred_at?: string
+          referrer?: string | null
+          session_id?: string | null
+          url?: string | null
+          utm?: Json | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_intel_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "lead_intel_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_intel_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_intel_leads: {
+        Row: {
+          assigned_to_user_id: string | null
+          company_domain: string | null
+          company_industry: string | null
+          company_name: string | null
+          company_size: string | null
+          confidence: number | null
+          created_at: string
+          domain_id: string | null
+          email: string | null
+          external_id: string | null
+          first_seen_at: string
+          geo: Json | null
+          id: string
+          intent_score: number | null
+          last_seen_at: string
+          lead_type: string
+          metadata: Json | null
+          person_name: string | null
+          person_title: string | null
+          phone: string | null
+          source: string
+          status: string
+          tags: string[] | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          assigned_to_user_id?: string | null
+          company_domain?: string | null
+          company_industry?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          confidence?: number | null
+          created_at?: string
+          domain_id?: string | null
+          email?: string | null
+          external_id?: string | null
+          first_seen_at?: string
+          geo?: Json | null
+          id?: string
+          intent_score?: number | null
+          last_seen_at?: string
+          lead_type?: string
+          metadata?: Json | null
+          person_name?: string | null
+          person_title?: string | null
+          phone?: string | null
+          source?: string
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          assigned_to_user_id?: string | null
+          company_domain?: string | null
+          company_industry?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          confidence?: number | null
+          created_at?: string
+          domain_id?: string | null
+          email?: string | null
+          external_id?: string | null
+          first_seen_at?: string
+          geo?: Json | null
+          id?: string
+          intent_score?: number | null
+          last_seen_at?: string
+          lead_type?: string
+          metadata?: Json | null
+          person_name?: string | null
+          person_title?: string | null
+          phone?: string | null
+          source?: string
+          status?: string
+          tags?: string[] | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_intel_leads_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "lead_domains"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lead_intel_leads_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lead_magnet_analytics: {
         Row: {
@@ -17279,6 +17615,147 @@ export type Database = {
           },
         ]
       }
+      lead_provider_tokens: {
+        Row: {
+          created_at: string
+          encrypted_token: string
+          expires_at: string | null
+          id: string
+          provider: string
+          refresh_token: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_token: string
+          expires_at?: string | null
+          id?: string
+          provider: string
+          refresh_token?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_token?: string
+          expires_at?: string | null
+          id?: string
+          provider?: string
+          refresh_token?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_provider_tokens_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_providers: {
+        Row: {
+          created_at: string
+          external_account_id: string | null
+          id: string
+          last_sync_at: string | null
+          provider: string
+          scopes: string[] | null
+          status: string
+          sync_error: string | null
+          updated_at: string
+          webhook_secret: string | null
+          webhook_url: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          external_account_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          provider: string
+          scopes?: string[] | null
+          status?: string
+          sync_error?: string | null
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          external_account_id?: string | null
+          id?: string
+          last_sync_at?: string | null
+          provider?: string
+          scopes?: string[] | null
+          status?: string
+          sync_error?: string | null
+          updated_at?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_providers_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_scoring_rules: {
+        Row: {
+          created_at: string
+          decay_half_life_days: number | null
+          description: string | null
+          enabled: boolean
+          id: string
+          name: string
+          priority: number | null
+          rules: Json
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          decay_half_life_days?: number | null
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          name: string
+          priority?: number | null
+          rules?: Json
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          decay_half_life_days?: number | null
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          name?: string
+          priority?: number | null
+          rules?: Json
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_scoring_rules_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_sources: {
         Row: {
           api_key_configured: boolean
@@ -17333,6 +17810,100 @@ export type Database = {
           updated_at?: string
           webhook_health?: Json
           workspace_id?: string
+        }
+        Relationships: []
+      }
+      lead_workspace_credits: {
+        Row: {
+          balance: number
+          id: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          balance?: number
+          id?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          balance?: number
+          id?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_workspace_credits_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_workspace_memberships: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_workspace_memberships_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "lead_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_workspaces: {
+        Row: {
+          allow_pii_export: boolean
+          created_at: string
+          id: string
+          mode: string
+          name: string
+          owner_user_id: string
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          allow_pii_export?: boolean
+          created_at?: string
+          id?: string
+          mode?: string
+          name: string
+          owner_user_id: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          allow_pii_export?: boolean
+          created_at?: string
+          id?: string
+          mode?: string
+          name?: string
+          owner_user_id?: string
+          settings?: Json | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -34108,6 +34679,15 @@ export type Database = {
       }
     }
     Functions: {
+      add_lead_credits: {
+        Args: {
+          _event: string
+          _meta?: Json
+          _units: number
+          _workspace_id: string
+        }
+        Returns: number
+      }
       add_to_system_list: {
         Args: { _contact_id: string; _list_name: string }
         Returns: undefined
@@ -34192,6 +34772,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string[]
       }
+      get_user_lead_workspace_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: {
@@ -34200,6 +34784,10 @@ export type Database = {
       }
       get_user_tenant_ids: { Args: { _user_id?: string }; Returns: string[] }
       has_board_access: { Args: { check_tenant_id: string }; Returns: boolean }
+      has_lead_workspace_access: {
+        Args: { _user_id: string; _workspace_id: string }
+        Returns: boolean
+      }
       has_multiple_roles: { Args: { _user_id: string }; Returns: boolean }
       has_permission: {
         Args: { _permission: string; _user_id: string }
@@ -34296,6 +34884,15 @@ export type Database = {
       }
       soft_delete_media: {
         Args: { media_id: string; media_type: string }
+        Returns: boolean
+      }
+      use_lead_credits: {
+        Args: {
+          _event: string
+          _meta?: Json
+          _units: number
+          _workspace_id: string
+        }
         Returns: boolean
       }
       user_has_any_role: {
