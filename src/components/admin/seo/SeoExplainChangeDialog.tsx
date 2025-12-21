@@ -10,6 +10,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { 
   Loader2, 
   Sparkles, 
@@ -81,6 +86,11 @@ interface ExplanationResult {
     gsc_available: boolean;
     ga4_available: boolean;
     notes: string[];
+    // Scoring breakdown from deterministic confidence scoring
+    confidenceScore?: number;
+    completeness?: number;
+    coveragePenalty?: number;
+    lowVolumePenalty?: number;
   };
 }
 
@@ -291,9 +301,29 @@ export function SeoExplainChangeDialog({
 
                 {/* Data Quality & Confidence */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Badge variant="outline" className={CONFIDENCE_COLORS[result.confidence_overall]}>
-                    {result.confidence_overall} confidence
-                  </Badge>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className={`cursor-help ${CONFIDENCE_COLORS[result.confidence_overall]}`}>
+                        {result.confidence_overall} confidence
+                        {result.data_quality.confidenceScore != null && (
+                          <span className="ml-1 opacity-70">({result.data_quality.confidenceScore})</span>
+                        )}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs text-xs">
+                      <div className="space-y-1">
+                        {result.data_quality.completeness != null && (
+                          <div>Completeness: {result.data_quality.completeness}/100</div>
+                        )}
+                        {result.data_quality.coveragePenalty != null && result.data_quality.coveragePenalty > 0 && (
+                          <div>Coverage penalty: -{result.data_quality.coveragePenalty}</div>
+                        )}
+                        {result.data_quality.lowVolumePenalty != null && result.data_quality.lowVolumePenalty > 0 && (
+                          <div>Low volume penalty: -{result.data_quality.lowVolumePenalty}</div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                   {result.data_quality.gsc_available && (
                     <Badge variant="outline" className="text-xs">GSC ✓</Badge>
                   )}
