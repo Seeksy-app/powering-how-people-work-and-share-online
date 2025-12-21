@@ -387,6 +387,14 @@ export const NAVIGATION_CONFIG: {
           "description": "Manage Google Business Profile listings"
         },
         {
+          "id": "admin_analytics_gsc_ga4",
+          "label": "Analytics (GSC + GA4)",
+          "icon": "bar-chart-3",
+          "path": "/admin/analytics",
+          "roles": ["admin", "super_admin", "cmo"],
+          "description": "Google Search Console and GA4 metrics"
+        },
+        {
           "id": "admin_logo_manager",
           "label": "Logo Manager",
           "icon": "image",
