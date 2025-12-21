@@ -49,6 +49,14 @@ interface UserProfile {
   service_status: string | null;
   branch_of_service: string | null;
   has_intent_to_file: boolean | null;
+  full_name: string | null;
+  phone: string | null;
+  email: string | null;
+  address_line1: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  address_zip: string | null;
+  photo_url: string | null;
 }
 
 interface DownloadItem {
@@ -64,13 +72,19 @@ export default function VeteransProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [userEmail, setUserEmail] = useState("");
-  const [userPhone, setUserPhone] = useState("");
-  const [userState, setUserState] = useState("");
   const [serviceEra, setServiceEra] = useState("");
   const [profile, setProfile] = useState<Partial<UserProfile>>({
     service_status: "",
     branch_of_service: "",
     has_intent_to_file: false,
+    full_name: "",
+    phone: "",
+    email: "",
+    address_line1: "",
+    address_city: "",
+    address_state: "",
+    address_zip: "",
+    photo_url: "",
   });
   const [downloads, setDownloads] = useState<DownloadItem[]>([]);
 
@@ -103,7 +117,17 @@ export default function VeteransProfile() {
           service_status: data.service_status || "",
           branch_of_service: data.branch_of_service || "",
           has_intent_to_file: data.has_intent_to_file || false,
+          full_name: (data as any).full_name || "",
+          phone: (data as any).phone || "",
+          email: (data as any).email || user.email || "",
+          address_line1: (data as any).address_line1 || "",
+          address_city: (data as any).address_city || "",
+          address_state: (data as any).address_state || "",
+          address_zip: (data as any).address_zip || "",
+          photo_url: (data as any).photo_url || "",
         });
+      } else {
+        setProfile(prev => ({ ...prev, email: user.email || "" }));
       }
 
       // Load downloads (placeholder - would come from storage/documents table)
@@ -128,6 +152,14 @@ export default function VeteransProfile() {
           service_status: profile.service_status || null,
           branch_of_service: profile.branch_of_service || null,
           has_intent_to_file: profile.has_intent_to_file,
+          full_name: profile.full_name || null,
+          phone: profile.phone || null,
+          email: profile.email || null,
+          address_line1: profile.address_line1 || null,
+          address_city: profile.address_city || null,
+          address_state: profile.address_state || null,
+          address_zip: profile.address_zip || null,
+          photo_url: profile.photo_url || null,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
 
@@ -221,15 +253,45 @@ export default function VeteransProfile() {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input 
+                      id="fullName" 
+                      value={profile.full_name || ""} 
+                      onChange={(e) => setProfile(p => ({ ...p, full_name: e.target.value }))}
+                      placeholder="Your full name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="phone" className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-muted-foreground" />
-                      Phone (optional)
+                      Phone
                     </Label>
                     <Input 
                       id="phone" 
-                      value={userPhone} 
-                      onChange={(e) => setUserPhone(e.target.value)}
+                      value={profile.phone || ""} 
+                      onChange={(e) => setProfile(p => ({ ...p, phone: e.target.value }))}
                       placeholder="(555) 555-5555"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address</Label>
+                    <Input 
+                      id="address" 
+                      value={profile.address_line1 || ""} 
+                      onChange={(e) => setProfile(p => ({ ...p, address_line1: e.target.value }))}
+                      placeholder="Street address"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Input 
+                      id="city" 
+                      value={profile.address_city || ""} 
+                      onChange={(e) => setProfile(p => ({ ...p, address_city: e.target.value }))}
+                      placeholder="City"
                     />
                   </div>
 
@@ -240,12 +302,29 @@ export default function VeteransProfile() {
                     </Label>
                     <Input 
                       id="state" 
-                      value={userState} 
-                      onChange={(e) => setUserState(e.target.value)}
+                      value={profile.address_state || ""} 
+                      onChange={(e) => setProfile(p => ({ ...p, address_state: e.target.value }))}
                       placeholder="e.g., TX, CA, FL"
                       maxLength={2}
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="zip">ZIP Code</Label>
+                    <Input 
+                      id="zip" 
+                      value={profile.address_zip || ""} 
+                      onChange={(e) => setProfile(p => ({ ...p, address_zip: e.target.value }))}
+                      placeholder="12345"
+                      maxLength={10}
+                    />
+                  </div>
+                </div>
+                <div className="pt-4 border-t mt-6">
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? "Saving..." : "Save Profile"}
+                  </Button>
                 </div>
               </CardContent>
             </Card>

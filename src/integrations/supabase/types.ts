@@ -32435,12 +32435,20 @@ export type Database = {
       }
       veteran_profiles: {
         Row: {
+          address_city: string | null
+          address_line1: string | null
+          address_state: string | null
+          address_zip: string | null
           branch_of_service: string | null
           created_at: string | null
+          email: string | null
+          full_name: string | null
           has_active_claim: boolean | null
           has_intent_to_file: boolean | null
           id: string
           last_claim_stage: string | null
+          phone: string | null
+          photo_url: string | null
           service_end_date: string | null
           service_start_date: string | null
           service_status: string | null
@@ -32448,12 +32456,20 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          address_city?: string | null
+          address_line1?: string | null
+          address_state?: string | null
+          address_zip?: string | null
           branch_of_service?: string | null
           created_at?: string | null
+          email?: string | null
+          full_name?: string | null
           has_active_claim?: boolean | null
           has_intent_to_file?: boolean | null
           id?: string
           last_claim_stage?: string | null
+          phone?: string | null
+          photo_url?: string | null
           service_end_date?: string | null
           service_start_date?: string | null
           service_status?: string | null
@@ -32461,12 +32477,20 @@ export type Database = {
           user_id: string
         }
         Update: {
+          address_city?: string | null
+          address_line1?: string | null
+          address_state?: string | null
+          address_zip?: string | null
           branch_of_service?: string | null
           created_at?: string | null
+          email?: string | null
+          full_name?: string | null
           has_active_claim?: boolean | null
           has_intent_to_file?: boolean | null
           id?: string
           last_claim_stage?: string | null
+          phone?: string | null
+          photo_url?: string | null
           service_end_date?: string | null
           service_start_date?: string | null
           service_status?: string | null
