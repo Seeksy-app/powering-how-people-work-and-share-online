@@ -65,6 +65,147 @@ interface RequestBody {
     baseline?: BaselineInput | null;
     alerts?: AlertsInput | null;
     gbp_context?: GbpContextInput | null;
+    // Coverage data for confidence scoring
+    daysWithData7?: number | null;
+    daysWithData28?: number | null;
+  };
+}
+
+// ============ Confidence Scoring (inline) ============
+interface ConfidenceResult {
+  confidence_overall: "low" | "medium" | "high";
+  confidenceScore: number;
+  completeness: number;
+  coveragePenalty: number;
+  lowVolumePenalty: number;
+  data_quality_notes: string[];
+}
+
+function clampNum(n: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, n));
+}
+
+function isFiniteNum(v: unknown): v is number {
+  return typeof v === "number" && Number.isFinite(v);
+}
+
+function hasAllGsc(m?: MetricsInput["gsc"]): boolean {
+  if (!m) return false;
+  return isFiniteNum(m.clicks) && isFiniteNum(m.impressions) && isFiniteNum(m.ctr) && isFiniteNum(m.position);
+}
+
+function hasAllGa4(m?: MetricsInput["ga4"]): boolean {
+  if (!m) return false;
+  return isFiniteNum(m.users) && isFiniteNum(m.sessions) && isFiniteNum(m.views) && isFiniteNum(m.engagementRate);
+}
+
+function scoreConfidence(
+  gsc7: MetricsInput["gsc"],
+  gsc28: MetricsInput["gsc"],
+  ga47: MetricsInput["ga4"],
+  ga428: MetricsInput["ga4"],
+  daysWithData7: number | null | undefined,
+  daysWithData28: number | null | undefined,
+  hasBaseline: boolean
+): ConfidenceResult {
+  const notes: string[] = [];
+
+  const hasGSC7 = hasAllGsc(gsc7);
+  const hasGSC28 = hasAllGsc(gsc28);
+  const hasGA47 = hasAllGa4(ga47);
+  const hasGA428 = hasAllGa4(ga428);
+
+  // Step 1: completeness (0..100)
+  let completeness = 0;
+  if (hasGSC7) completeness += 35;
+  if (hasGSC28) completeness += 20;
+  if (hasGA47) completeness += 25;
+  if (hasGA428) completeness += 15;
+  if (hasBaseline) completeness += 5;
+
+  // Step 2: coverage penalty (0..30)
+  const days7 = clampNum(Number(daysWithData7 ?? 7), 0, 7); // default to 7 if not provided
+  const days28 = clampNum(Number(daysWithData28 ?? 28), 0, 28);
+
+  let coveragePenalty = 0;
+  if (hasGSC7 || hasGA47) {
+    const missing7 = 7 - days7;
+    coveragePenalty += clampNum(missing7 * 4, 0, 20);
+    if (days7 < 7) notes.push(`Incomplete 7-day coverage: ${days7}/7 days.`);
+  }
+  if (hasGSC28 || hasGA428) {
+    const missing28 = 28 - days28;
+    coveragePenalty += clampNum(missing28 * 0.5, 0, 10);
+    if (days28 < 28) notes.push(`Incomplete 28-day coverage: ${days28}/28 days.`);
+  }
+  coveragePenalty = clampNum(coveragePenalty, 0, 30);
+
+  // Step 3: low-volume penalty (0..25)
+  let lowVolumePenalty = 0;
+  const impressions7 = hasGSC7 && isFiniteNum(gsc7?.impressions) ? gsc7!.impressions! : null;
+  const clicks7 = hasGSC7 && isFiniteNum(gsc7?.clicks) ? gsc7!.clicks! : null;
+  const views7 = hasGA47 && isFiniteNum(ga47?.views) ? ga47!.views! : null;
+
+  if (hasGSC7 && impressions7 !== null) {
+    if (impressions7 < 50) {
+      lowVolumePenalty += 15;
+      notes.push("Low volume: GSC impressions (7d) < 50.");
+    }
+    if (impressions7 < 10) {
+      lowVolumePenalty += 10;
+      notes.push("Very low volume: GSC impressions (7d) < 10.");
+    }
+    if (clicks7 !== null && clicks7 < 5) {
+      lowVolumePenalty += 5;
+      notes.push("Low clicks (7d) < 5; CTR may be unstable.");
+    }
+  } else if (hasGA47 && views7 !== null) {
+    if (views7 < 50) {
+      lowVolumePenalty += 10;
+      notes.push("Low volume: GA4 views (7d) < 50.");
+    }
+    if (views7 < 10) {
+      lowVolumePenalty += 10;
+      notes.push("Very low volume: GA4 views (7d) < 10.");
+    }
+  } else {
+    notes.push("Volume signals unavailable.");
+  }
+  lowVolumePenalty = clampNum(lowVolumePenalty, 0, 25);
+
+  // Step 4: raw score
+  const raw = completeness - coveragePenalty - lowVolumePenalty;
+  const confidenceScore = clampNum(raw, 0, 100);
+
+  // Step 5: map to level
+  let confidence_overall: "low" | "medium" | "high";
+  if (confidenceScore >= 70) confidence_overall = "high";
+  else if (confidenceScore >= 40) confidence_overall = "medium";
+  else confidence_overall = "low";
+
+  // Overrides
+  if (!hasGSC7 && !hasGA47) {
+    confidence_overall = "low";
+    notes.push("No usable 7-day metrics.");
+  }
+  if ((hasGSC7 || hasGA47) && days7 <= 2) {
+    confidence_overall = "low";
+    notes.push("Only 0–2 days of 7d data; unreliable.");
+  }
+  if (hasGSC7 && impressions7 !== null && impressions7 < 10) {
+    confidence_overall = "low";
+  }
+  if (!hasBaseline) {
+    notes.push("No baseline; using 7d vs 28d only.");
+  }
+
+  return {
+    confidence_overall,
+    confidenceScore,
+    completeness,
+    coveragePenalty,
+    lowVolumePenalty,
+    data_quality_notes: notes.slice(0, 5)
   };
 }
 
@@ -415,6 +556,30 @@ Tasks:
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // ===== Override with deterministic confidence scoring =====
+    const confidenceResult = scoreConfidence(
+      context.metrics_7d?.gsc,
+      context.metrics_28d?.gsc,
+      context.metrics_7d?.ga4,
+      context.metrics_28d?.ga4,
+      context.daysWithData7,
+      context.daysWithData28,
+      !!context.baseline?.exists
+    );
+
+    // Merge deterministic confidence into AI result
+    result.confidence_overall = confidenceResult.confidence_overall;
+    result.data_quality = {
+      gsc_available: gscAvailable,
+      ga4_available: ga4Available,
+      notes: confidenceResult.data_quality_notes,
+      // Include scoring breakdown for transparency
+      confidenceScore: confidenceResult.confidenceScore,
+      completeness: confidenceResult.completeness,
+      coveragePenalty: confidenceResult.coveragePenalty,
+      lowVolumePenalty: confidenceResult.lowVolumePenalty
+    };
 
     return new Response(JSON.stringify(result), {
       status: 200,
