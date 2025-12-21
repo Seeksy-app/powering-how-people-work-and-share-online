@@ -523,6 +523,7 @@ import { OnboardingGuard } from "./components/OnboardingGuard";
 import AdminSeoList from "./pages/admin/seo/AdminSeoList";
 import AdminSeoEdit from "./pages/admin/seo/AdminSeoEdit";
 import AdminSeoAssets from "./pages/admin/seo/AdminSeoAssets";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import MyDay from "./pages/MyDay";
 import Recents from "./pages/Recents";
 import Audience from "./pages/Audience";
@@ -1273,6 +1274,8 @@ const AppContent = () => {
               <Route path="/admin/seo/new" element={<AdminSeoEdit />} />
               <Route path="/admin/seo/assets" element={<AdminSeoAssets />} />
               <Route path="/admin/seo/:seo_page_id" element={<AdminSeoEdit />} />
+              {/* Analytics (GSC + GA4) */}
+              <Route path="/admin/analytics" element={<AdminAnalytics />} />
               {/* GBP Manager */}
               <Route path="/admin/gbp" element={<GBPHome />} />
               <Route path="/admin/gbp/locations" element={<GBPLocations />} />

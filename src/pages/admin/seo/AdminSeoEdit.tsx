@@ -34,6 +34,7 @@ import {
 import { RequireAdmin } from "@/components/auth/RequireAdmin";
 import { LinkedGbpPanel } from "@/components/admin/seo/LinkedGbpPanel";
 import { SeoAiSuggestionsPanel } from "@/components/admin/seo/SeoAiSuggestionsPanel";
+import { SeoPerformancePanel } from "@/components/admin/seo/SeoPerformancePanel";
 
 interface FormData {
   route_path: string;
@@ -344,6 +345,11 @@ function AdminSeoEditContent() {
             queryClient.invalidateQueries({ queryKey: ['seo-page', seo_page_id] });
           }}
         />
+      )}
+
+      {/* Performance Panel - show only for existing pages */}
+      {!isNew && form.route_path && (
+        <SeoPerformancePanel routePath={form.route_path} />
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
