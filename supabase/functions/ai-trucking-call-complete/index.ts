@@ -766,6 +766,8 @@ serve(async (req) => {
         // This ensures every meaningful call gets a pending lead for follow-up
         console.log('Auto-creating pending lead for completed call without existing lead');
         try {
+          // If phone number exists in conversation, mark as pending lead
+          const leadStatus = callerPhone ? 'pending' : 'new';
           const autoLeadData = {
             owner_id,
             load_id: actualLoadId,
@@ -774,7 +776,7 @@ serve(async (req) => {
             mc_number: mc_number || null,
             notes: `Auto-created from AI call. ${summary || ''}\nCall outcome: ${callOutcome}`,
             source: 'ai_voice_agent',
-            status: 'new',
+            status: leadStatus,
             is_confirmed: false,
             requires_callback: true,
             call_source: 'inbound',
