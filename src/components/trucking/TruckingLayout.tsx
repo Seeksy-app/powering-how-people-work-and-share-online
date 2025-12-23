@@ -28,7 +28,8 @@ import {
   Moon,
   Shield,
   Calculator,
-  RefreshCw
+  RefreshCw,
+  Mail
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -73,6 +74,7 @@ const allNavItems = [
 const adminNavItems = [
   { label: "Users", href: "/trucking/admin/users", icon: Shield },
   { label: "Rate Preferences", href: "/trucking/admin/rate-preferences", icon: Calculator },
+  { label: "Email Tracking", href: "/trucking/extension-install", icon: Mail },
 ];
 
 interface TruckingLayoutProps {

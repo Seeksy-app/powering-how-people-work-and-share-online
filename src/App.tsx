@@ -89,6 +89,7 @@ import TruckingCitiesPage from "./pages/trucking/TruckingCitiesPage";
 import TruckingAgentsPage from "./pages/trucking/TruckingAgentsPage";
 import TruckingAdminUsersPage from "./pages/trucking/admin/TruckingAdminUsersPage";
 import TruckingAdminRatePreferencesPage from "./pages/trucking/admin/TruckingAdminRatePreferencesPage";
+import ExtensionInstallPage from "./pages/trucking/ExtensionInstallPage";
 import TruckingLayout from "./components/trucking/TruckingLayout";
 import AdminMeetings from "./pages/admin/AdminMeetings";
 import AdminMeetingsDashboard from "./pages/admin/meetings/AdminMeetingsDashboard";
@@ -879,6 +880,7 @@ const AppContent = () => {
         <Route path="/trucking/agents" element={<TruckingLayout><TruckingAgentsPage /></TruckingLayout>} />
         <Route path="/trucking/admin/users" element={<TruckingLayout><TruckingAdminUsersPage /></TruckingLayout>} />
         <Route path="/trucking/admin/rate-preferences" element={<TruckingLayout><TruckingAdminRatePreferencesPage /></TruckingLayout>} />
+        <Route path="/trucking/extension-install" element={<TruckingLayout><ExtensionInstallPage /></TruckingLayout>} />
       </Routes>
     );
   }
