@@ -84,7 +84,7 @@ const Auth = () => {
     try {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({
-          email,
+          email: email.trim().toLowerCase(),
           password,
         });
 
@@ -186,12 +186,12 @@ const Auth = () => {
 
         // Password-based signup
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: email.trim().toLowerCase(),
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
             data: {
-              full_name: fullName,
+              full_name: fullName.trim(),
             },
           },
         });
