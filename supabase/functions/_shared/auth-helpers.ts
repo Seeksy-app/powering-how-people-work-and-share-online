@@ -3,7 +3,7 @@
  * Use these to verify JWT and check user roles.
  */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 export interface AuthResult {
   authenticated: boolean;
