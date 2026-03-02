@@ -307,6 +307,19 @@ export function WorkspaceSidebar() {
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
+  const normalizeModuleRoute = (route?: string) => {
+    if (!route) return route;
+
+    const legacyRouteMap: Record<string, string> = {
+      '/studio/record': '/studio',
+      '/studio/recording': '/studio',
+      '/studio-recording': '/studio',
+      '/recording-studio': '/studio',
+    };
+
+    return legacyRouteMap[route] || route;
+  };
+
   const handleRemoveModule = async (moduleId: string, moduleName: string) => {
     setRemovingModule(moduleId);
     try {
@@ -335,12 +348,13 @@ export function WorkspaceSidebar() {
       <SidebarMenuItem key={module.id} className="group/item relative">
         <SidebarMenuButton
           onClick={() => {
-            if (module.route) {
+            const safeRoute = normalizeModuleRoute(module.route);
+            if (safeRoute) {
               trackModuleOpened(module.id, portal);
-              navigate(module.route);
+              navigate(safeRoute);
             }
           }}
-          isActive={module.route ? isActive(module.route) : false}
+          isActive={module.route ? isActive(normalizeModuleRoute(module.route) || module.route) : false}
           tooltip={module.name}
           className="text-sidebar-foreground hover:bg-sidebar-accent pr-8"
         >
@@ -519,8 +533,10 @@ export function WorkspaceSidebar() {
                   return (
                     <SidebarMenuItem key={`fav-${module.id}`} className="group/item relative">
                       <SidebarMenuButton
-                        onClick={() => module.route && navigate(module.route)}
-                        isActive={module.route ? isActive(module.route) : false}
+                        onClick={() => {
+                          const safeRoute = normalizeModuleRoute(module.route);
+                          if (safeRoute) navigate(safeRoute);
+                        }}
                         tooltip={module.name}
                         className="text-sidebar-foreground hover:bg-sidebar-accent pr-8"
                       >

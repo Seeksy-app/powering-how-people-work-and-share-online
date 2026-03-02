@@ -1159,6 +1159,8 @@ const AppContent = () => {
               <Route path="/recording-studio" element={<RecordingStudio />} />
               <Route path="/studio-recording" element={<Navigate to="/studio" replace />} />
               <Route path="/studio-recording/*" element={<Navigate to="/studio" replace />} />
+              <Route path="/studio/record" element={<Navigate to="/studio" replace />} />
+              <Route path="/studio/record/*" element={<Navigate to="/studio" replace />} />
               <Route path="/studio" element={<TourModeWrapper><StudioHubPremium /></TourModeWrapper>} />
               <Route path="/studio/new" element={<CreateStudio />} />
               <Route path="/studio/advertising" element={<StudioAdvertising />} />
