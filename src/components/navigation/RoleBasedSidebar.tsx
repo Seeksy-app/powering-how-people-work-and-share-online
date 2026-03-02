@@ -307,6 +307,8 @@ const MODULE_ROUTE_MAP: Record<string, string> = {
   'email': '/email/inbox',
   'content-library': '/studio/media',
   'clips': '/clips',
+  'studio-recording': '/studio',
+  'recording-studio': '/studio',
 };
 
 // Module ID to display name mapping
