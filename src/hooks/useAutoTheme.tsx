@@ -18,24 +18,17 @@ export function useAutoTheme() {
 
   useEffect(() => {
     if (isStudioRecording) {
-      // Entering Studio recording - force dark theme
-      if (!wasInStudioRecording.current) {
-        wasInStudioRecording.current = true;
-      }
+      wasInStudioRecording.current = true;
       if (resolvedTheme !== 'dark') {
         setTheme('dark');
       }
       return;
     }
 
-    // All other pages: force light theme immediately
-    if (wasInStudioRecording.current) {
-      wasInStudioRecording.current = false;
-    }
-    
-    // Always use light theme for non-studio pages - no async calls, no flicker
+    // Leaving studio or on any other page: force light immediately
+    wasInStudioRecording.current = false;
     if (resolvedTheme !== 'light') {
       setTheme('light');
     }
-  }, [resolvedTheme, setTheme, isStudioRecording, location.pathname]);
+  }, [setTheme, isStudioRecording]); // removed resolvedTheme to avoid re-trigger loops
 }

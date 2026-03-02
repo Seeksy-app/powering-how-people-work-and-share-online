@@ -1695,7 +1695,7 @@ const AppContent = () => {
 const App = () => (
   <AppErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="seeksy-theme">
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="seeksy-theme" forcedTheme={undefined}>
         <TooltipProvider>
           <Toaster />
           <Sonner />
