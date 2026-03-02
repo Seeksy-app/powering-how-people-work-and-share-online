@@ -417,7 +417,7 @@ export function WorkspaceSidebar() {
                 title="Go to Dashboard"
               >
                 <img 
-                  src="/spark/holiday/seeksy-logo-santa.png" 
+                  src="/seeksy-logo.png" 
                   alt="Seeksy" 
                   className="h-10 w-10"
                 />
@@ -431,7 +431,7 @@ export function WorkspaceSidebar() {
                 title="Go to Dashboard"
               >
                 <img 
-                  src="/spark/holiday/seeksy-logo-santa.png" 
+                  src="/seeksy-logo.png" 
                   alt="Seeksy" 
                   className="h-8 w-8"
                 />
