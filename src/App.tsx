@@ -311,6 +311,7 @@ import TechStack from "./pages/TechStack";
 import Onboarding from "./pages/Onboarding";
 import PlatformOnePager from "./pages/PlatformOnePager";
 import YourBenefitsPlatform from "./pages/public/YourBenefitsPlatform";
+import SeeksyAppsDirectory from "./pages/public/SeeksyAppsDirectory";
 
 import OnboardingComplete from "./pages/OnboardingComplete";
 import SalesDashboard from "./pages/SalesDashboard";
