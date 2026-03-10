@@ -916,6 +916,7 @@ const AppContent = () => {
               <Route path="/" element={<Index />} />
               <Route path="/logo-asset" element={<LogoAsset />} />
               <Route path="/platform" element={<PlatformOnePager />} />
+              <Route path="/apps-directory" element={<SeeksyAppsDirectory />} />
               <Route path="/yourbenefits-platform" element={<YourBenefitsPlatform />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/signup-select" element={<SignupSelect />} />
