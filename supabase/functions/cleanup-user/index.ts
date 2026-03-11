@@ -19,8 +19,8 @@ serve(async (req) => {
     );
 
     // Reset password for jheeter@dltransport.com
-    const targetEmail = "jheeter@dltransport.com";
-    const newPassword = "Aitrucking!";
+    const targetEmail = "andrew@podlogix.co";
+    const newPassword = "Jayme2020!";
 
     // Get user by email
     const { data: users } = await supabaseAdmin.auth.admin.listUsers();
